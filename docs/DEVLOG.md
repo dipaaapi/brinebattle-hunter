@@ -2,6 +2,11 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Idea Round 2
+- Branch `round/2-ideas`: **C-4** `Durability` (shared): Harpoon has 20, each throw uses 1, broken = can't throw; repair +10 for 1 material on the HUD. **U-13** `ItemType.Module` + `ModuleRules` (U-13 scaling table, Lv 1–5) + `RaftModules`: modules sit on the raft grid; Lv 1 Drift Net grabs one touching drift every 20 s, dead/weakened = loot (−1), alive = bites (−5) and swims off; durability shown over the module, repair in the build panel (Lv 1 = materials). Removing and re-placing keeps the wear. Starter: 1 Drift Net in the bag.
+- Phase 5 feedback fixes: build panel X button; drifts bump off the raft edge instead of passing through.
+- `unity-verify`: 90/90 passed. Play mode not yet checked by hand.
+
 ## 2026-10-28 — Phase 5
 - Branch `phase/5-raft`: `RaftGrid` (cells, place/remove rules, connectivity, size, HP, tier upgrade), `Inventory.SpendEssence`, `Raft` draws tiles from the grid (colour by rarity), `RaftBuilder` (R: ghost cells, place/remove, upgrade panel).
 - Removed the debug raft-size −/+; size now comes from parts. Bag's raft tier now reads the real raft. New item: Driftwood Plank (starter raft, also drops from Gale Gull).

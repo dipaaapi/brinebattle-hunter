@@ -117,6 +117,13 @@ namespace BrineBattle.Editor
                 i.rarity = Rarity.Common; i.element = Element.None;
                 i.description = "Grey, salt-bleached wood. What every raft starts as.";
             });
+            // Idea Round 2 (U-13): Lv 1 auto-loot module.
+            var net = LoadOrCreate<ItemDefinition>($"{Root}/Items/DriftNet.asset", i =>
+            {
+                i.id = "drift_net"; i.displayName = "Drift Net"; i.type = ItemType.Module;
+                i.rarity = Rarity.Common; i.element = Element.None; i.moduleLevel = 1;
+                i.description = "A basic net for the raft's edge. Catches whatever floats into it, a little at a time.";
+            });
             EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);

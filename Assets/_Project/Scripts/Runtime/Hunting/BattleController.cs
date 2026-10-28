@@ -36,6 +36,7 @@ namespace BrineBattle.Hunting
             onEnd = onFinished;
             state = new BattleState(Combatant.Hunter(), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
+            state.Weapon = FindFirstObjectByType<HookController>()?.Harpoon;
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
             state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.{first}");
             timer = 0f;
@@ -130,7 +131,7 @@ namespace BrineBattle.Hunting
                 GUI.enabled = waiting;
                 if (GUILayout.Button("Attack")) Play(BattleAction.Attack);
                 GUI.enabled = waiting && state.CanUse(BattleAction.Harpoon);
-                if (GUILayout.Button($"Harpoon ({BattleRules.HarpoonCost} st)")) Play(BattleAction.Harpoon);
+                if (GUILayout.Button(state.Weapon != null && state.Weapon.Broken ? "Harpoon (broken)" : $"Harpoon ({BattleRules.HarpoonCost} st · {state.Weapon})")) Play(BattleAction.Harpoon);
                 GUI.enabled = waiting;
                 if (GUILayout.Button("Brace")) Play(BattleAction.Brace);
                 GUI.enabled = true;

@@ -26,6 +26,10 @@ namespace BrineBattle.Hunting
         [Range(0f, 1f)] public float sedateChance = 0.5f;
 
         public Inventory Inventory { get; } = new Inventory();
+        /// <summary>Harpoon wear (idea C-4).</summary>
+        public Durability Harpoon { get; } = new Durability(Battle.BattleRules.HarpoonDurability);
+        [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
+        public ItemDefinition starterModule;
         /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
         public event System.Action LootAdded;
         /// <summary>Raised when a monster is harvested, finished or defeated (collection book).</summary>
@@ -53,6 +57,7 @@ namespace BrineBattle.Hunting
             line.positionCount = 2;
             line.startWidth = line.endWidth = 0.05f;
             line.enabled = false;
+            if (starterModule != null) Inventory.Add(starterModule, 1);
         }
 
         void Update()
@@ -160,7 +165,7 @@ namespace BrineBattle.Hunting
             {
                 case DriftState.Dead:
                     resultTitle = $"{m.displayName} — Dead";
-                    pendingLoot = RollLoot(m);
+                    pendingLoot = RollLoot(m, tensionHit);
                     resultBody = $"{hintNote}\nHarvest:\n{Describe(pendingLoot)}";
                     break;
                 case DriftState.Weakened:
@@ -183,15 +188,30 @@ namespace BrineBattle.Hunting
             }
         }
 
-        List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m)
+        List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m) => RollLoot(m, tensionHit);
+
+        List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m, bool clean)
         {
             var drops = m.loot != null ? m.loot.Roll(rng) : new List<Drop<ItemDefinition>>();
-            if (!tensionHit) return drops;
+            if (!clean) return drops;
             return drops.Select(d => new Drop<ItemDefinition>(d.Item, d.Quantity + TensionRules.CleanReelBonus)).ToList();
         }
 
         static string Describe(List<Drop<ItemDefinition>> drops) =>
             drops.Count == 0 ? "  (nothing)" : string.Join("\n", drops.Select(d => $"  {d.Quantity} × {d.Item.displayName} ({d.Item.rarity})"));
+
+        /// <summary>A raft module harvested a drift without the hook (idea U-13). No clean-reel bonus.</summary>
+        public void AutoLoot(Drift d, string source)
+        {
+            if (d == null || d.Hooked) return;
+            var drops = RollLoot(d.Monster, false);
+            MonsterAcquired?.Invoke(d.Monster);
+            foreach (var x in drops) Inventory.Add(x.Item, x.Quantity);
+            string got = drops.Count == 0 ? "nothing" : string.Join(", ", drops.Select(x => $"{x.Quantity} {x.Item.displayName}"));
+            Log($"{source} caught a {d.Monster.displayName}: {got}.");
+            LootAdded?.Invoke();
+            Destroy(d.gameObject);
+        }
 
         void Finish(string message, bool keepLoot, bool destroy)
         {
@@ -337,6 +357,12 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
             int stacks = Inventory.Items.Count(), essence = Inventory.Essence.Sum(kv => kv.Value);
             GUILayout.Label($"<b>Bag</b>: {stacks} stacks, {essence} essence", Rich);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(Harpoon.Broken ? "Harpoon: <color=#f77>BROKEN</color>" : $"Harpoon: {Harpoon}", Rich);
+            GUI.enabled = !Harpoon.Full && Inventory.MaterialCount() >= 1;
+            if (GUILayout.Button("Repair +10 (1 mat)", GUILayout.Width(130)) && Inventory.SpendMaterials(1)) Harpoon.Repair(10);
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Bag (B)")) BagToggleRequested?.Invoke();
             if (GUILayout.Button("Book (C)")) BookToggleRequested?.Invoke();

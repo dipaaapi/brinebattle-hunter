@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BrineBattle.Items;
 using BrineBattle.Monsters;
 
 namespace BrineBattle.Battle
@@ -15,6 +16,8 @@ namespace BrineBattle.Battle
         public int Round { get; private set; }
         public BattleOutcome Outcome { get; private set; }
         public Initiative FirstRound { get; set; } = Initiative.Speed;
+        /// <summary>Harpoon durability (idea C-4). Null = no wear.</summary>
+        public Durability Weapon { get; set; }
         public readonly List<string> Log = new List<string>();
 
         readonly Random rng;
@@ -27,7 +30,8 @@ namespace BrineBattle.Battle
             this.rng = rng;
         }
 
-        public bool CanUse(BattleAction a) => a != BattleAction.Harpoon || Stamina >= BattleRules.HarpoonCost;
+        public bool CanUse(BattleAction a) =>
+            a != BattleAction.Harpoon || (Stamina >= BattleRules.HarpoonCost && (Weapon == null || !Weapon.Broken));
 
         /// <summary>Plays one round: both sides act in speed order. Returns false if the battle was already over.</summary>
         public bool PlayRound(BattleAction hunterAction)
@@ -66,6 +70,7 @@ namespace BrineBattle.Battle
                     return;
                 case BattleAction.Harpoon:
                     Stamina -= BattleRules.HarpoonCost;
+                    Weapon?.Use(BattleRules.HarpoonWear);
                     Hit(BattleRules.HarpoonPower, "Harpoon");
                     return;
                 default:

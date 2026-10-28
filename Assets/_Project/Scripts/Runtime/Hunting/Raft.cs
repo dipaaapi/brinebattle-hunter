@@ -64,8 +64,10 @@ namespace BrineBattle.Hunting
                     Destroy(tile.GetComponent<Collider>());
                     tiles[kv.Key] = tile;
                 }
-                tile.transform.position = CellToWorld(kv.Key);
-                Tint.Apply(tile.GetComponent<Renderer>(), PartColor(kv.Value.rarity));
+                bool module = kv.Value.type == ItemType.Module;
+                tile.transform.localScale = new Vector3(module ? 0.8f : 1f, module ? 0.7f : 0.3f, module ? 0.8f : 1f);
+                tile.transform.position = CellToWorld(kv.Key) + (module ? Vector3.up * 0.2f : Vector3.zero);
+                Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f) : PartColor(kv.Value.rarity));
             }
         }
 

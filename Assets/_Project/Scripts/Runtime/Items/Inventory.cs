@@ -52,6 +52,26 @@ namespace BrineBattle.Items
             return true;
         }
 
+        /// <summary>Total count of Material items (any rarity).</summary>
+        public int MaterialCount() => items.Where(kv => kv.Key.type == ItemType.Material).Sum(kv => kv.Value);
+
+        /// <summary>Spends materials, lowest rarity first. All or nothing.</summary>
+        public bool SpendMaterials(int amount)
+        {
+            if (amount <= 0) return true;
+            if (MaterialCount() < amount) return false;
+            foreach (var item in items.Keys.Where(i => i.type == ItemType.Material).OrderBy(i => i.rarity).ThenBy(i => i.displayName).ToList())
+            {
+                int take = Math.Min(amount, items[item]);
+                if (take == items[item]) items.Remove(item);
+                else items[item] -= take;
+                amount -= take;
+                if (amount == 0) break;
+            }
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Turns items into essence of the item's rarity and element. Returns essence gained.</summary>
         public int Salvage(ItemDefinition item, int quantity)
         {

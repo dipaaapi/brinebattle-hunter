@@ -30,6 +30,13 @@ namespace BrineBattle.Hunting
             transform.localScale = new Vector3(s, s * 0.5f, s * 1.4f);
         }
 
+        /// <summary>An alive drift that bit a raft module swims away from it, faster.</summary>
+        public void SwimOff(Vector3 away)
+        {
+            if (away.sqrMagnitude < 0.0001f) away = Vector3.forward;
+            velocity = away.normalized * Mathf.Max(2f, velocity.magnitude * 1.5f);
+        }
+
         /// <summary>After a successful sedate (GDD §4).</summary>
         public void MakeWeakened() => Actual = DriftState.Weakened;
 

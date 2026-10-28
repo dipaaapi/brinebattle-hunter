@@ -10,5 +10,7 @@ namespace BrineBattle.Items
         Companion = 4,
         Consumable = 5,
         Essence = 6,
+        /// <summary>Raft module (idea U-13): placed on the raft grid like a part.</summary>
+        Module = 7,
     }
 }

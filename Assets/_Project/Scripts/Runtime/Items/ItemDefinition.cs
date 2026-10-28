@@ -13,6 +13,8 @@ namespace BrineBattle.Items
         public Rarity rarity;
         public Element element;
         [Min(1)] public int maxStack = 99;
+        [Tooltip("Modules only: level 1-5 (idea U-13).")]
+        [Range(1, 5)] public int moduleLevel = 1;
         public Sprite icon;
         [TextArea] public string description;
     }

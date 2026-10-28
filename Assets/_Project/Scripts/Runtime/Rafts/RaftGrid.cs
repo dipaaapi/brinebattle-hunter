@@ -92,7 +92,7 @@ namespace BrineBattle.Rafts
 
         public PlaceResult CanPlace(Cell c, ItemDefinition part)
         {
-            if (part == null || part.type != ItemType.Raft) return PlaceResult.NotARaftPart;
+            if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module)) return PlaceResult.NotARaftPart;
             if (Math.Abs(c.X) > RaftRules.MaxRadius || Math.Abs(c.Z) > RaftRules.MaxRadius) return PlaceResult.OutOfBounds;
             if (parts.ContainsKey(c)) return PlaceResult.Occupied;
             if (parts.Count > 0 && !c.Neighbours().Any(parts.ContainsKey)) return PlaceResult.NotAdjacent;

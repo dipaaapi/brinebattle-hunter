@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 5 — Raft builder (vertical slice) |
-| **Next step** | Ed: play `Hook.unity`, press R, place a part, salvage for essence and upgrade the tier; then Idea Round 2 |
+| **Current phase** | Idea Round 2 — Auto-loot module + durability |
+| **Next step** | Ed: play `Hook.unity`, place the Drift Net on the raft edge (R), watch it catch drifts, repair it; check Harpoon wear in battle. Then Phase 6 |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -85,9 +85,9 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** the loop hook → battle → salvage → upgrade works end to end. **Vertical slice complete.**
 
-### ⬜ Idea Round 2 (after Phase 5)
-- [ ] **U-13 Auto-loot raft module** — Lv 1 basic net first (touch-only, random state, durability), upgrade path per the U-13 scaling table.
-- [ ] **C-4 Stamina + durability** — one durability system shared by the module's hooks and the Harpoon (answers U-7; Ed can swap it).
+### 🟨 Idea Round 2 (after Phase 5)
+- [x] **U-13 Auto-loot raft module** — Lv 1 basic net first (touch-only, random state, durability), upgrade path per the U-13 scaling table.
+- [x] **C-4 Stamina + durability** — one durability system shared by the module's hooks and the Harpoon (answers U-7; Ed can swap it).
 
 **Done when:** a module can be built on the raft edge and loots passing drifts until its durability runs out; Harpoon uses weapon durability.
 

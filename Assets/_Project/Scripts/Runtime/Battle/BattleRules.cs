@@ -15,6 +15,9 @@ namespace BrineBattle.Battle
         public const int BraceStaminaBonus = 3;
         public const int HarpoonCost = 4;
         public const float HarpoonPower = 1.8f;
+        /// <summary>Harpoon durability (idea C-4); each throw uses 1.</summary>
+        public const int HarpoonDurability = 20;
+        public const int HarpoonWear = 1;
         /// <summary>Chance a sea monster hits the raft instead of the hunter; sky monsters use 1 minus this.</summary>
         public const float SeaHitsRaftChance = 0.7f;
 

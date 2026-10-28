@@ -5,7 +5,7 @@ namespace BrineBattle.Items
     {
         /// <summary>Types that go onto something with a tier (raft, weapon, armor, companion).</summary>
         public static bool IsEquippable(ItemType t) =>
-            t == ItemType.Raft || t == ItemType.Weapon || t == ItemType.Armor || t == ItemType.Companion;
+            t == ItemType.Raft || t == ItemType.Module || t == ItemType.Weapon || t == ItemType.Armor || t == ItemType.Companion;
 
         /// <summary>
         /// An equippable item fits only if its rarity is at least the target's tier

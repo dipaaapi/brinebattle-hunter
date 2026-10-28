@@ -17,6 +17,7 @@ namespace BrineBattle.Hunting
 
         public Raft raft;
         public HookController hook;
+        public RaftModules modules;
 
         public bool Active { get; private set; }
 
@@ -159,7 +160,7 @@ namespace BrineBattle.Hunting
         void OnGUI()
         {
             if (!Active || raft == null) return;
-            float w = 380, h = Mathf.Min(420, Screen.height - 40);
+            float w = 380, h = Mathf.Min(520, Screen.height - 40);
             panelRect = new Rect(Screen.width - w - 12, 20, w, h);
             GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
@@ -176,7 +177,7 @@ namespace BrineBattle.Hunting
 
             GUILayout.Label("<b>Raft parts in your bag</b>", Rich);
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(110));
-            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft).ToList();
+            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module).ToList();
             if (parts.Count == 0) GUILayout.Label("  (none — harvest some)");
             foreach (var kv in parts)
             {
@@ -188,6 +189,21 @@ namespace BrineBattle.Hunting
                 GUI.enabled = true;
             }
             GUILayout.EndScrollView();
+
+            if (modules != null && modules.Slots.Count > 0)
+            {
+                GUILayout.Label("<b>Modules</b> (auto-loot what touches them)", Rich);
+                foreach (var kv in modules.Slots)
+                {
+                    var s = kv.Value;
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"{s.Item.displayName} {kv.Key}: {(s.Durability.Broken ? "<color=#f77>broken</color>" : s.Durability.ToString())}", Rich);
+                    GUI.enabled = !s.Durability.Full;
+                    if (GUILayout.Button($"Repair ({RaftModules.CostText(s)})", GUILayout.Width(170))) message = modules.Repair(s);
+                    GUI.enabled = true;
+                    GUILayout.EndHorizontal();
+                }
+            }
 
             int cost = RaftRules.UpgradeCost(g.Tier);
             if (cost > 0)
