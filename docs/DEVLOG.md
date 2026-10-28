@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-28 — Phase 2
+- Branch `phase/2-hook` (from `phase/1-data`): `EncounterRules` (weighted state roll, unreliable hint, raft-size gate), `DriftSpawner`, `Drift`, `HookController` (click → cast → reel → result panel, inventory + log HUD, raft size −/+ for testing), `Raft`.
+- Sample monsters now 3: Brinefang Eel (size 1), Gale Gull (Sky, size 1), Shellback Crab (size 3, tests the gate).
+- Scene built from code (`HookSceneBuilder`), placeholder IMGUI. `unity-verify`: 31/31 passed. Play mode not yet checked by hand.
+- Sedate: 50% → Weakened, else line snaps (placeholder until sedative items).
+- Next: Ed plays the scene.
+
 ## 2026-10-28 — Phase 1
 - Branch `phase/1-data`: `Element` + `ElementRules` (combine, components, type chart) + `ElementChart` asset; `Rarity`, `ItemType`, `ItemDefinition`; `MonsterDefinition` (habitat, size class, stats, loot); `LootTable` + `LootRoller`.
 - Sample data via `SampleDataBuilder` (Brinefang Eel, Eel Scale, Eel Fang). `unity-verify`: 21/21 passed.

@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 1 — Data foundation |
-| **Next step** | Ed: open `Assets/_Project/Data/Monsters/BrinefangEel` in the Inspector, decide the type chart (COMPARISON.md), then merge `phase/1-data` |
+| **Current phase** | Phase 2 — Hook & encounter (Phase 1 waiting for merge) |
+| **Next step** | Ed: play `Assets/_Project/Scenes/Hook.unity` and check each outcome; merge Phase 1 PR; decide type chart (C-9) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -46,11 +46,12 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a monster and its loot can be created in the Inspector and tests pass.
 
-### ⬜ Phase 2 — Hook & encounter
-- [ ] Drift spawner (objects float toward the raft)
-- [ ] Hook action (aim, cast, reel)
-- [ ] State roll: Dead / Weakened / Alive, with unreliable hints
-- [ ] Raft-size gate: cut line / flee / sedate when too small
+### 🟨 Phase 2 — Hook & encounter
+- [x] Drift spawner (objects float toward the raft)
+- [x] Hook action (click to cast, reel)
+- [x] State roll: Dead / Weakened / Alive, with unreliable hints
+- [x] Raft-size gate: cut line / flee / sedate when too small
+- [x] Placeholder scene `Hook.unity` built by `HookSceneBuilder` (menu BrineBattle → Build Hook Scene), 3 sample monsters
 
 **Done when:** you can hook a drift and see the correct outcome for each state.
 

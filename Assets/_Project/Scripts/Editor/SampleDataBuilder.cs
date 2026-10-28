@@ -52,6 +52,45 @@ namespace BrineBattle.Editor
                 m.description = "A small eel that drifts belly-up to lure hunters close.";
             });
 
+            var feather = LoadOrCreate<ItemDefinition>($"{Root}/Items/GaleFeather.asset", i =>
+            {
+                i.id = "gale_feather"; i.displayName = "Gale Feather"; i.type = ItemType.Material;
+                i.rarity = Rarity.Common; i.element = Element.Wind;
+                i.description = "Light as foam. Sky-raft material.";
+            });
+            var gullLoot = LoadOrCreate<LootTable>($"{Root}/Loot/GaleGull_Loot.asset", t =>
+            {
+                t.entries.Add(new LootEntry { item = feather, chance = 1f, minQuantity = 1, maxQuantity = 3 });
+            });
+            LoadOrCreate<MonsterDefinition>($"{Root}/Monsters/GaleGull.asset", m =>
+            {
+                m.id = "gale_gull"; m.displayName = "Gale Gull"; m.element = Element.Wind;
+                m.habitat = Habitat.Sky; m.rarity = Rarity.Common; m.sizeClass = 1;
+                m.stats = new MonsterStats { hp = 20, attack = 5, defense = 1, speed = 9 };
+                m.loot = gullLoot;
+                m.description = "A storm gull that dives at anything shiny on a raft.";
+            });
+
+            var shell = LoadOrCreate<ItemDefinition>($"{Root}/Items/ShellbackPlate.asset", i =>
+            {
+                i.id = "shellback_plate"; i.displayName = "Shellback Plate"; i.type = ItemType.Raft;
+                i.rarity = Rarity.Rare; i.element = Element.Earth;
+                i.description = "A slab of crab shell. Fortress-raft part.";
+            });
+            var crabLoot = LoadOrCreate<LootTable>($"{Root}/Loot/ShellbackCrab_Loot.asset", t =>
+            {
+                t.entries.Add(new LootEntry { item = shell, chance = 1f, minQuantity = 1, maxQuantity = 2 });
+                t.entries.Add(new LootEntry { item = scale, chance = 0.5f, minQuantity = 1, maxQuantity = 2 });
+            });
+            LoadOrCreate<MonsterDefinition>($"{Root}/Monsters/ShellbackCrab.asset", m =>
+            {
+                m.id = "shellback_crab"; m.displayName = "Shellback Crab"; m.element = Element.Earth;
+                m.habitat = Habitat.Sea; m.rarity = Rarity.Rare; m.sizeClass = 3;
+                m.stats = new MonsterStats { hp = 120, attack = 14, defense = 12, speed = 2 };
+                m.loot = crabLoot;
+                m.description = "Too big for a starter raft. Tests the raft-size gate.";
+            });
+
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }

@@ -1,0 +1,12 @@
+using UnityEngine;
+
+namespace BrineBattle.Hunting
+{
+    /// <summary>The player's raft. Phase 2 only needs its size for the gate; parts come in Phase 5.</summary>
+    public class Raft : MonoBehaviour
+    {
+        [Range(1, 10)] public int size = 1;
+        [Tooltip("How far the hook reaches from the raft centre.")]
+        public float hookRange = 14f;
+    }
+}
