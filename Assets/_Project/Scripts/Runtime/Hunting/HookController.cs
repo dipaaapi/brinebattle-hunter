@@ -20,6 +20,7 @@ namespace BrineBattle.Hunting
 
         public Raft raft;
         public BattleController battle;
+        public RaftBuilder builder;
         public float castTime = 0.35f;
         public float reelTime = 1.8f;
         [Range(0f, 1f)] public float sedateChance = 0.5f;
@@ -66,6 +67,7 @@ namespace BrineBattle.Hunting
 
         void UpdateIdle()
         {
+            if (builder != null && builder.Active) return;
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.wasPressedThisFrame || Camera.main == null) return;
             var ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());
@@ -74,7 +76,7 @@ namespace BrineBattle.Hunting
             if (drift == null) return;
 
             float dist = Vector3.Distance(Flat(drift.transform.position), Flat(raft.transform.position));
-            if (dist > raft.hookRange)
+            if (dist > raft.HookReach)
             {
                 Log($"{drift.Monster.displayName} is out of reach.");
                 return;
@@ -123,7 +125,7 @@ namespace BrineBattle.Hunting
             }
             // Semi-auto: the player may press first; otherwise the reel presses itself late.
             if (!tensionPressed && tensionSemi && t >= TensionRules.SemiAutoPressAt) AutoPress();
-            var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * 2.2f;
+            var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * raft.EdgeDistance;
             edge.y = reelFrom.y;
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
             line.SetPosition(0, HookOrigin());
@@ -326,20 +328,19 @@ namespace BrineBattle.Hunting
         {
             GUILayout.BeginArea(new Rect(10, 10, 260, Screen.height - 20));
             GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("<b>BrineBattle Hunter — Idea Round 1</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Phase 5</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.Label("Battle mode (Settings)");
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Raft size: {raft.size}");
-            if (GUILayout.Button("-", GUILayout.Width(24))) raft.size = Mathf.Max(1, raft.size - 1);
-            if (GUILayout.Button("+", GUILayout.Width(24))) raft.size = Mathf.Min(10, raft.size + 1);
+            GUILayout.Label($"Raft: size {raft.size} · {raft.Grid.Count} parts · {raft.Tier} tier · {raft.MaxHp} HP");
             GUILayout.EndHorizontal();
             int stacks = Inventory.Items.Count(), essence = Inventory.Essence.Sum(kv => kv.Value);
             GUILayout.Label($"<b>Bag</b>: {stacks} stacks, {essence} essence", Rich);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Bag (B)")) BagToggleRequested?.Invoke();
             if (GUILayout.Button("Book (C)")) BookToggleRequested?.Invoke();
+            if (builder != null && GUILayout.Button("Build (R)")) builder.Toggle();
             GUILayout.EndHorizontal();
             GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "Reeling: AUTO (50% clean)"
                 : BattleSettings.Mode == BattleMode.SemiAuto ? "Reeling: SEMI-AUTO (press first, or auto 50%)"

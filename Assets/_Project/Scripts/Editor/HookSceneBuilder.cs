@@ -49,6 +49,7 @@ namespace BrineBattle.Editor
 
             var raftGo = new GameObject("Raft");
             var raft = raftGo.AddComponent<Raft>();
+            raft.starterPart = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/_Project/Data/Items/DriftwoodPlank.asset");
             var plank = Mat("RaftBone", new Color(0.85f, 0.8f, 0.68f));
             for (int x = -1; x <= 1; x++)
                 for (int z = -1; z <= 1; z++)
@@ -81,6 +82,10 @@ namespace BrineBattle.Editor
             var hook = hookGo.AddComponent<HookController>();
             hook.raft = raft;
             hook.battle = battle;
+            var builder = new GameObject("Raft Builder").AddComponent<RaftBuilder>();
+            builder.raft = raft;
+            builder.hook = hook;
+            hook.builder = builder;
             var bag = new GameObject("Bag").AddComponent<BagPanel>();
             bag.hook = hook;
             var book = new GameObject("Collection Book").AddComponent<CollectionBook>();

@@ -13,7 +13,7 @@ Reeling an Alive creature is one short timing input; success = you act first in 
 ### C-3 Weather and currents decide what drifts — 2026-10-28 · 💡 · §2, §4 · M · Phase 2–5
 Storm = bigger/Alive drifts, calm = more Dead loot, fog = hints unreliable. One system that gives the endless ocean variety and a reason to wait or move.
 
-### C-4 Action resource = weapon durability + stamina (answer to U-7) — 2026-10-28 · 💡 · §5 · S · Phase 3
+### C-4 Action resource = weapon durability + stamina (answer to U-7) — 2026-10-28 · ✅ Idea Round 2 · §5 · S · Phase 3
 Stamina per turn for basic actions, weapon durability for skills. Both are fed by alchemy (potions refill stamina, oils repair weapons), which ties battle back to the core pillar.
 
 ### C-5 Fusion keeps one "echo" (answer to U-8) — 2026-10-28 · 💡 · §10 · M · Phase 7

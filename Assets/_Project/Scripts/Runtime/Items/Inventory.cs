@@ -64,6 +64,30 @@ namespace BrineBattle.Items
             return gained;
         }
 
+        /// <summary>Total essence with rarity ≥ <paramref name="minRarity"/>, any element.</summary>
+        public int EssenceAtLeast(Rarity minRarity) =>
+            essence.Where(kv => kv.Key.Rarity >= minRarity).Sum(kv => kv.Value);
+
+        /// <summary>
+        /// Spends essence of rarity ≥ <paramref name="minRarity"/>, lowest rarity first.
+        /// All or nothing: returns false and spends nothing if there isn't enough.
+        /// </summary>
+        public bool SpendEssence(Rarity minRarity, int amount)
+        {
+            if (amount <= 0) return true;
+            if (EssenceAtLeast(minRarity) < amount) return false;
+            foreach (var key in essence.Keys.Where(k => k.Rarity >= minRarity).OrderBy(k => k.Rarity).ThenBy(k => k.Element).ToList())
+            {
+                int take = Math.Min(amount, essence[key]);
+                if (take == essence[key]) essence.Remove(key);
+                else essence[key] -= take;
+                amount -= take;
+                if (amount == 0) break;
+            }
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Salvages every stack that doesn't fit its target tier. Returns essence gained.</summary>
         public int SalvageIncompatible(Func<ItemType, Rarity> tierOf)
         {

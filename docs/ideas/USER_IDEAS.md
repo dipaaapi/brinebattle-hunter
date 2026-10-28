@@ -53,7 +53,7 @@ The number of skill slots (passive and active) on weapons, gear **and accessorie
 Builds on the GDD §9 rarity table (Common = element only, Rare = 1 passive, Epic = 1 active + 1 passive, Legendary/Mythic = multiple slots). New here: **accessories** as a gear type, and slots as a hard limit.
 Open: exact slot count per rarity, and whether slots can be added later (refine +, alchemy).
 
-### U-13 Auto-loot raft module — 2026-10-28 · 💡 · GDD §3, §6
+### U-13 Auto-loot raft module — 2026-10-28 · ✅ Idea Round 2 · GDD §3, §6
 A raft part built on the **edge of the raft** that automatically loots monsters floating past (no manual hook).
 
 **Upgrades (added 2026-10-28):**

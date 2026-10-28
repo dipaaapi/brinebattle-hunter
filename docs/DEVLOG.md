@@ -2,6 +2,12 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-28 — Phase 5
+- Branch `phase/5-raft`: `RaftGrid` (cells, place/remove rules, connectivity, size, HP, tier upgrade), `Inventory.SpendEssence`, `Raft` draws tiles from the grid (colour by rarity), `RaftBuilder` (R: ghost cells, place/remove, upgrade panel).
+- Removed the debug raft-size −/+; size now comes from parts. Bag's raft tier now reads the real raft. New item: Driftwood Plank (starter raft, also drops from Gale Gull).
+- `unity-verify`: 85/85 passed. Play mode not yet checked by hand.
+- Idea Round 2 picked: U-13 Auto-loot module + C-4 Stamina + durability.
+
 ## 2026-10-28 — Idea Round 1
 - Branch `round/1-ideas`: **C-2** `TensionRules` (sweet spot shrinks / sweep speeds up with size) + reel timing bar (Space or click) + `BattleState.FirstRound` initiative; **U-11** `CollectionLog` (ids per page, save string) + `CollectionBook` panel (C key; Monsters / Items / Pets, silhouettes, completion %, saved in PlayerPrefs).
 - Bag panel widened ("All" buttons were cut off). GDD v0.2.

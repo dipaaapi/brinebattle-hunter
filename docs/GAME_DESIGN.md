@@ -1,6 +1,6 @@
 # BrineBattle Hunter — Game Design Document
 
-*Living document · v0.2*
+*Living document · v0.3*
 
 ## 1. Overview
 
@@ -61,6 +61,8 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
   - **Sky Raft:** wings and gas bladders; can fly.
   - **Beast-Driven Raft:** powered by reanimated/tamed monsters; fast.
   - Hybrids possible, with trade-offs.
+- **Grid (Phase 5):** parts snap to a grid (max 9x9), must touch the raft and can't split it. Raft size = 1 at 9 parts, +1 per 4 more parts; size gates fights. Battle HP = sum of part HP (10 × (rarity + 1), +20% per raft tier).
+- **Raft tier:** raised with Monster Essence (10 × next tier, essence rarity ≥ current tier). A higher tier gives more HP, but parts with rarity below the tier can no longer be added.
 - Raft holds weapon stations, alchemy stations, Transmutation Circle, and companion habitats.
 - **Absorption / downgrade:** when you lose, flee, or are exhausted, monsters eat raft parts. The monster grows stronger; defeating it later recovers your parts plus a bonus.
 

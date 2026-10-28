@@ -27,4 +27,5 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`
 
 - (2026-10-28) Rule set by owner: every core phase is followed by an Idea Round of two ideas, one owner (top priority) + one Claude (top priority), picked by Claude.
+- (2026-10-28) Idea Round 2 → **U-13** Auto-loot module (it is a raft part, so it builds directly on Phase 5) and **C-4** Stamina + durability (U-13's hooks need a durability system; sharing it with the Harpoon also answers U-7). Not picked yet: U-14 needs crafting (Phase 6); U-10/U-15/C-3 are one larger World-conditions system; U-12 belongs with Phase 6 gear.
 - (2026-10-28) Idea Round 1 → **U-11** Collection book (cheap, builds on Phase 4 inventory + Phase 1 ids; C-6 merged into it) and **C-2** Line tension (small, makes the Phase 2 hook a skill moment and feeds Phase 3 turn order). Not picked yet: U-6/U-7/U-8 need design answers first; U-9 needs C-2's timing input to exist; U-10 is a larger system.

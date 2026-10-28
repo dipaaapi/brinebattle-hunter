@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 5 — Raft builder (vertical slice) |
-| **Next step** | Build the raft grid, build mode, tier upgrade |
+| **Next step** | Ed: play `Hook.unity`, press R, place a part, salvage for essence and upgrade the tier; then Idea Round 2 |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -79,11 +79,17 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 **Done when:** the book opens from the HUD with silhouettes and reveals, and reeling has a timing check that changes who acts first.
 
 ### 🟨 Phase 5 — Raft builder (vertical slice)
-- [ ] Grid-snapped modular parts
-- [ ] Raft size/strength stats feeding the Phase 2 gate
-- [ ] Upgrade with parts + essence
+- [x] Grid-snapped modular parts (9x9 max, must touch the raft, can't split it; Build mode R: place / remove)
+- [x] Raft size from part count (9 = size 1, +1 per 4 parts) feeds the gate; battle HP = sum of part HP
+- [x] Upgrade raft tier with essence (10 × next tier, rarity ≥ current tier); higher tier = +20% part HP but parts below the tier can't be added
 
 **Done when:** the loop hook → battle → salvage → upgrade works end to end. **Vertical slice complete.**
+
+### ⬜ Idea Round 2 (after Phase 5)
+- [ ] **U-13 Auto-loot raft module** — Lv 1 basic net first (touch-only, random state, durability), upgrade path per the U-13 scaling table.
+- [ ] **C-4 Stamina + durability** — one durability system shared by the module's hooks and the Harpoon (answers U-7; Ed can swap it).
+
+**Done when:** a module can be built on the raft edge and loots passing drifts until its durability runs out; Harpoon uses weapon durability.
 
 ### ⬜ Phase 6 — Alchemy & gear
 Craft, refine (+), gear rarity skills, consumables. Also a real **Settings menu** (battle mode lives on the HUD until then).

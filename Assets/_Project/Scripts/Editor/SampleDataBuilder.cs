@@ -110,6 +110,14 @@ namespace BrineBattle.Editor
                 i.rarity = Rarity.Common; i.element = Element.Wind; i.maxStack = 1;
                 i.description = "Hollow bones woven into a light shield.";
             });
+            // Phase 5: the starter raft is made of this; it also drifts in as loot.
+            var plank = LoadOrCreate<ItemDefinition>($"{Root}/Items/DriftwoodPlank.asset", i =>
+            {
+                i.id = "driftwood_plank"; i.displayName = "Driftwood Plank"; i.type = ItemType.Raft;
+                i.rarity = Rarity.Common; i.element = Element.None;
+                i.description = "Grey, salt-bleached wood. What every raft starts as.";
+            });
+            EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);
             EnsureEntry(gullLoot, buckler, 0.2f, 1, 1);

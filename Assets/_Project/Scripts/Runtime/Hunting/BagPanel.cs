@@ -50,7 +50,7 @@ namespace BrineBattle.Hunting
         {
             switch (t)
             {
-                case ItemType.Raft: return raftTier;
+                case ItemType.Raft: return hook != null && hook.raft != null ? hook.raft.Tier : raftTier;
                 case ItemType.Weapon: return weaponTier;
                 case ItemType.Armor: return armorTier;
                 case ItemType.Companion: return companionTier;
@@ -73,7 +73,8 @@ namespace BrineBattle.Hunting
             GUILayout.BeginArea(new Rect(Screen.width - w - 12, 20, w, h), "Bag", GUI.skin.window);
 
             GUILayout.Label("<b>Gear tiers</b> (an item fits if its rarity ≥ the tier)", Rich);
-            raftTier = TierRow("Raft", raftTier);
+            if (hook.raft != null) raftTier = hook.raft.Tier;
+            GUILayout.Label($"Raft        <color={RarityColor(raftTier)}>{raftTier}</color>  (upgrade it in Build mode)", Rich);
             weaponTier = TierRow("Weapon", weaponTier);
             armorTier = TierRow("Armor", armorTier);
             companionTier = TierRow("Companion", companionTier);
