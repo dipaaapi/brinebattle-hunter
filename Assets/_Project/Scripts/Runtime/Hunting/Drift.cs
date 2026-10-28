@@ -15,6 +15,7 @@ namespace BrineBattle.Hunting
         Vector3 velocity;
         float bobPhase;
         float lifetime;
+        static Raft raft;
 
         public void Init(MonsterDefinition monster, DriftState actual, DriftState hint, Vector3 velocity)
         {
@@ -37,6 +38,18 @@ namespace BrineBattle.Hunting
             if (Hooked) return;
             lifetime += Time.deltaTime;
             var p = transform.position + velocity * Time.deltaTime;
+            if (raft == null) raft = FindFirstObjectByType<Raft>();
+            if (raft != null)
+            {
+                // Drifts bump off the raft instead of sailing through it.
+                var away = p - raft.transform.position; away.y = 0;
+                float min = raft.EdgeDistance;
+                if (away.magnitude < min && away.sqrMagnitude > 0.0001f)
+                {
+                    p = raft.transform.position + away.normalized * min;
+                    velocity = Vector3.ProjectOnPlane(velocity, away.normalized);
+                }
+            }
             p.y = 0.1f + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.08f;
             transform.position = p;
             if (velocity.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(velocity);

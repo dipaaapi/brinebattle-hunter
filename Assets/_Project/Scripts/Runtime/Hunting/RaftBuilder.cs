@@ -163,6 +163,7 @@ namespace BrineBattle.Hunting
             panelRect = new Rect(Screen.width - w - 12, 20, w, h);
             GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
+            if (GUI.Button(new Rect(w - 34, 4, 26, 20), "X")) { Toggle(); GUILayout.EndArea(); return; }
             var g = raft.Grid;
             GUILayout.Label($"Size {g.Size} · {g.Count} parts · {g.MaxHp} HP · tier <color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>", Rich);
             int next = 0;
