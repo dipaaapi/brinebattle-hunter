@@ -14,6 +14,8 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | Essence | U-6 combine up | | | | | |
 | Harvest mode | U-9 Auto 50% / Manual 70% (30% miss) | | | | | |
 | Day/night | U-10 sun/moon affinity boosts monsters, hunter, party, companions | | | | | |
+| Collection book | U-11 monsters + items + pets, silhouette until acquired | | | | | |
+| | C-6 Hunter's Journal (monsters only, fills in with info) | | | | | |
 | Type chart | C-9 RO cycle, secondaries multiply (current default) | | | | | |
 | | *(owner alternative)* | | | | | |
 

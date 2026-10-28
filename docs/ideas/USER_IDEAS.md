@@ -42,3 +42,8 @@ Add a day/night cycle as its own system. Some monsters, dead or alive, are tied 
 
 Open: which stats it changes (attack, catch/tame chance, hint accuracy, drift spawns?), whether gear or alchemy can grant sun/moon affinity, and how long a full day lasts.
 
+### U-11 Collection book (Pokédex-style) — 2026-10-28 · 💡 · GDD §4, §10, §11
+A collection book with pages for **monsters, items, and pets/companions**. Entries you haven't acquired show as a **silhouette**; once acquired, the full entry becomes visible.
+
+Related: C-6 (Hunter's Journal) is similar but only for monsters; U-11 covers all three and adds the silhouette reveal.
+

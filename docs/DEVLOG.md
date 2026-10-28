@@ -7,7 +7,8 @@
 - Actions: Attack, Harpoon (4 stamina, ×1.8), Brace (half damage, +3 stamina). Stamina is a placeholder for U-7/C-4.
 - Win → loot to inventory; loss → monster leaves (absorption in Phase 8). `unity-verify`: 42/42 passed. Play mode not yet checked by hand.
 - Owner ideas added: U-9 harvest Auto/Manual toggle, U-10 day/night sun/moon affinity.
-- Next: Ed plays a battle in each mode.
+- Ed played it: battle works (Auto won vs Gale Gull). No Settings screen yet; mode is on the HUD. Phase 3 done.
+- Owner idea U-11: collection book (Pokédex-style, silhouettes until acquired).
 
 ## 2026-10-28 — Phase 2
 - Branch `phase/2-hook` (from `phase/1-data`): `EncounterRules` (weighted state roll, unreliable hint, raft-size gate), `DriftSpawner`, `Drift`, `HookController` (click → cast → reel → result panel, inventory + log HUD, raft size −/+ for testing), `Raft`.

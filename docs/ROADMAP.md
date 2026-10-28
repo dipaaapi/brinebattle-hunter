@@ -55,7 +55,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** you can hook a drift and see the correct outcome for each state.
 
-### 🟨 Phase 3 — Turn-based battle
+### ✅ Phase 3 — Turn-based battle
 - [x] Battle view (camera moves in) + turn order by speed
 - [x] 1v1; sea monsters mostly hit the raft, sky monsters mostly hit the hunter
 - [x] Battle modes Manual / Semi-auto / Auto (HUD setting, saved; switchable mid-battle)
@@ -64,7 +64,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a full battle can be won or lost in all three modes.
 
-### ⬜ Phase 4 — Loot & salvage
+### 🟨 Phase 4 — Loot & salvage
 - [ ] Harvest on Dead / victory
 - [ ] Inventory with Type + Rarity
 - [ ] Compatibility check → salvage to Monster Essence
@@ -79,7 +79,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 **Done when:** the loop hook → battle → salvage → upgrade works end to end. **Vertical slice complete.**
 
 ### ⬜ Phase 6 — Alchemy & gear
-Craft, refine (+), gear rarity skills, consumables.
+Craft, refine (+), gear rarity skills, consumables. Also a real **Settings menu** (battle mode lives on the HUD until then).
 
 ### ⬜ Phase 7 — Companions
 Taming Weakened monsters, habitats, feeding/infusion, fusion in the Transmutation Circle.
