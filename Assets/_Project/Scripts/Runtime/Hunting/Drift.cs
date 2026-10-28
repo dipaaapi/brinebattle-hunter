@@ -10,7 +10,25 @@ namespace BrineBattle.Hunting
         public MonsterDefinition Monster { get; private set; }
         public DriftState Actual { get; private set; }
         public DriftState Hint { get; private set; }
-        public bool Hooked { get; set; }
+        /// <summary>
+        /// Who has this drift: the player's hook, one hook arm, or one net. Only one at a time; nobody
+        /// else can grab it until the owner lets go (or it's looted and gone).
+        /// </summary>
+        public object Owner { get; private set; }
+        public bool Hooked => Owner != null;
+
+        /// <summary>Takes the drift if nobody has it. Returns false if someone else already does.</summary>
+        public bool TryClaim(object who)
+        {
+            if (Owner != null && Owner != who) return false;
+            Owner = who;
+            return true;
+        }
+
+        public void Release(object who)
+        {
+            if (Owner == who) Owner = null;
+        }
         /// <summary>This drift's temperament, 0 calm – 1 aggressive (idea U-17).</summary>
         public float Aggression { get; set; } = 0.5f;
 

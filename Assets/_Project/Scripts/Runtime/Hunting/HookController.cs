@@ -87,8 +87,12 @@ namespace BrineBattle.Hunting
                 Log($"{drift.Monster.displayName} is out of reach.");
                 return;
             }
+            if (!drift.TryClaim(this))
+            {
+                Log($"{drift.Monster.displayName} is already being caught by a raft module.");
+                return;
+            }
             target = drift;
-            target.Hooked = true;
             phase = Phase.Casting;
             t = 0f;
             line.enabled = true;
@@ -213,9 +217,9 @@ namespace BrineBattle.Hunting
             drops.Count == 0 ? "  (nothing)" : string.Join("\n", drops.Select(d => $"  {d.Quantity} × {d.Item.displayName} ({d.Item.rarity})"));
 
         /// <summary>A raft module harvested a drift without the hook (idea U-13). No clean-reel bonus.</summary>
-        public void AutoLoot(Drift d, string source)
+        public void AutoLoot(Drift d, string source, object claimer)
         {
-            if (d == null || d.Hooked) return;
+            if (d == null || !d.TryClaim(claimer)) return;
             var drops = RollLoot(d.Monster, false);
             MonsterAcquired?.Invoke(d.Monster);
             foreach (var x in drops) Inventory.Add(x.Item, x.Quantity);
@@ -238,7 +242,7 @@ namespace BrineBattle.Hunting
             if (target != null)
             {
                 if (destroy) Destroy(target.gameObject);
-                else target.Hooked = false;
+                else target.Release(this);
             }
             target = null;
             pendingLoot = null;

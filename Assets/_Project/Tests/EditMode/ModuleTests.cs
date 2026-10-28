@@ -112,5 +112,22 @@ namespace BrineBattle.Tests
             Assert.AreEqual(2, inv.Count(plank));
             Assert.AreEqual(0, inv.Count(net));
         }
+
+        [Test]
+        public void OnlyOneOwnerCanHoldADrift()
+        {
+            var go = new GameObject("drift");
+            var d = go.AddComponent<BrineBattle.Hunting.Drift>();
+            object player = new object(), arm = new object(), net = new object();
+            Assert.IsTrue(d.TryClaim(arm));
+            Assert.IsFalse(d.TryClaim(player));
+            Assert.IsFalse(d.TryClaim(net));
+            Assert.IsTrue(d.TryClaim(arm));
+            d.Release(player);
+            Assert.IsTrue(d.Hooked);
+            d.Release(arm);
+            Assert.IsTrue(d.TryClaim(player));
+            Object.DestroyImmediate(go);
+        }
     }
 }

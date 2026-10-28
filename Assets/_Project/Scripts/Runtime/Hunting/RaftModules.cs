@@ -84,7 +84,7 @@ namespace BrineBattle.Hunting
                 // Calm weakened drifts are left for the player to tame or finish (idea U-17), never auto-looted.
                 var d = drifts.Where(x => x != null && !x.Hooked && !Tameable(x) && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x)
                               .OrderBy(x => Flat(x.transform.position - at).sqrMagnitude).FirstOrDefault();
-                if (d == null) continue;
+                if (d == null || !d.TryClaim(s)) continue;   // claim first: no other net, arm or the player can take it
                 s.Timer = ModuleRules.Interval(s.Level);
                 if (s.Level >= 2) StartCoroutine(HookIn(s, d, at));
                 else Grab(s, d, at);
@@ -97,7 +97,6 @@ namespace BrineBattle.Hunting
         /// <summary>Hook arm (Lv 2+): the line stretches out to the drift, then reels it in, like the player's hook.</summary>
         System.Collections.IEnumerator HookIn(Slot s, Drift d, Vector3 at)
         {
-            d.Hooked = true;
             var go = new GameObject("Hook arm line");
             var lr = go.AddComponent<LineRenderer>();
             lr.material = new Material(Shader.Find("Sprites/Default"));
@@ -127,7 +126,6 @@ namespace BrineBattle.Hunting
             }
             Destroy(go);
             if (d == null) yield break;
-            d.Hooked = false;
             Grab(s, d, at);
         }
 
@@ -138,13 +136,14 @@ namespace BrineBattle.Hunting
             if (d.Actual == DriftState.Alive)
             {
                 s.Durability.Use(ModuleRules.AliveBite);
+                d.Release(s);
                 d.SwimOff(Flat(d.transform.position - at));
                 hook.Log($"{d.Monster.displayName} was alive! It bit the {name} (−{ModuleRules.AliveBite}) and swam off.");
             }
             else
             {
                 s.Durability.Use(1);
-                hook.AutoLoot(d, name);
+                hook.AutoLoot(d, name, s);
             }
             if (s.Durability.Broken) hook.Log($"The {name} is broken. Repair it in build mode (R).");
         }
