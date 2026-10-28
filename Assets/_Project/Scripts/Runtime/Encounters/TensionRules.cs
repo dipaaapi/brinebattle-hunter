@@ -17,6 +17,8 @@ namespace BrineBattle.Encounters
         public const float AutoCleanChance = 0.5f;
         /// <summary>Extra quantity per drop after a clean reel.</summary>
         public const int CleanReelBonus = 1;
+        /// <summary>In Semi-auto the reel presses itself at this point of the reel unless the player presses first.</summary>
+        public const float SemiAutoPressAt = 0.8f;
 
         /// <summary>Bigger monsters pull harder: smaller sweet spot.</summary>
         public static float ZoneWidth(int sizeClass) =>

@@ -82,3 +82,17 @@ A raft part built on the **edge of the raft** that automatically loots monsters 
 - **Repair** (per 10 durability): Lv 1–2 = materials only; Lv 3 = materials + essence of the module's rarity; Lv 4–5 = essence only. Cost = level × (rarity + 1). Same-element essence repairs 25% more.
 - Fits Phase 5 (raft builder) as a buildable part; durability shares a system with C-4 weapon durability.
 
+### U-14 Crafting knowledge unlocks the book — 2026-10-28 · 💡 · GDD §7, §9, §11, U-11
+The book should also show **how to craft** things, but you only know a recipe once you have the **skill/knowledge** for it. That is the point of harvesting: harvesting builds your skills, skills let you craft, and crafting unlocks more.
+- Right now the book only lists what you've looted.
+- As skills grow, **new "???" entries appear** (craftable items, gear, potions, raft parts) that you can now learn to make.
+- Each revealed craftable shows its recipe (ingredients + required skill level).
+
+Open: is the skill the same as Alchemy Mastery (GDD §7) or separate per craft (smithing, raft-building, potions)? Do harvests of a monster type give knowledge of that monster's recipes?
+
+### U-15 Rough seas and thunderstrikes — 2026-10-28 · 💡 · GDD §2, §4, §6
+The ocean isn't always calm. Sometimes the sea gets rough, which makes hunting and looting harder. Sometimes the enemy is the weather itself: **thunderstrikes** hit the raft, damaging it or stopping the hunter from looting further until it's dealt with.
+
+Related: C-3 (weather and currents decide what drifts) and U-10 (day/night). These three could become one **World conditions** system.
+Open: how rough seas hurt hunting (smaller sweet spot, shorter hook range, drifts move faster?), whether a lightning rod / Fortress parts protect the raft, and whether storms also bring rarer drifts as a reward.
+

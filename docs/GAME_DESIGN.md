@@ -42,7 +42,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - Hints (shadows, movement, alchemy readings) may suggest the state but are not always accurate.
 - **Raft size gate:** you can only fight once your raft is big and strong enough. If it isn't, cut the line, flee, or sedate the creature.
 - Formats: **1 vs 1**, **1 vs Many**, **Many vs Many** (player + companions + party).
-- **Line tension (C-2):** while reeling, one timing press in a sweet spot (smaller and faster for bigger monsters). No press → the catch slips away. Sloppy → normal result, and an Alive monster acts first. Clean → +1 per drop, and the hunter acts first against an Alive monster. In **Auto** mode the reel presses itself: 50% clean (from U-9), never slips; the bar is shown greyed out as AUTO.
+- **Line tension (C-2):** while reeling, one timing press in a sweet spot (smaller and faster for bigger monsters). No press → the catch slips away. Sloppy → normal result, and an Alive monster acts first. Clean → +1 per drop, and the hunter acts first against an Alive monster. In **Auto** mode the reel presses itself: 50% clean (from U-9), never slips; the bar is shown greyed out as AUTO. In **Semi-auto** the bar stays active and labelled SEMI-AUTO: the player may press first, otherwise it presses itself at 80% of the reel (50% clean).
 
 ## 5. Battle
 

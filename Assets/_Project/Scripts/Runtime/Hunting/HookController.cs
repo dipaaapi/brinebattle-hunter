@@ -44,7 +44,7 @@ namespace BrineBattle.Hunting
 
         // Line tension (idea C-2)
         float tensionStart, tensionWidth, tensionSpeed, tensionTime;
-        bool tensionPressed, tensionHit, tensionAuto;
+        bool tensionPressed, tensionHit, tensionAuto, tensionSemi, tensionByAuto;
 
         void Awake()
         {
@@ -105,11 +105,9 @@ namespace BrineBattle.Hunting
                 tensionTime = 0f;
                 tensionPressed = tensionHit = false;
                 tensionAuto = BattleSettings.Mode == BattleMode.Auto;
-                if (tensionAuto)
-                {
-                    tensionPressed = true;
-                    tensionHit = rng.NextDouble() < TensionRules.AutoCleanChance;
-                }
+                tensionSemi = BattleSettings.Mode == BattleMode.SemiAuto;
+                tensionByAuto = false;
+                if (tensionAuto) AutoPress();
             }
         }
 
@@ -123,6 +121,8 @@ namespace BrineBattle.Hunting
                 tensionPressed = true;
                 tensionHit = TensionRules.IsHit(TensionRules.Marker(tensionTime, tensionSpeed), tensionStart, tensionWidth);
             }
+            // Semi-auto: the player may press first; otherwise the reel presses itself late.
+            if (!tensionPressed && tensionSemi && t >= TensionRules.SemiAutoPressAt) AutoPress();
             var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * 2.2f;
             edge.y = reelFrom.y;
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
@@ -151,7 +151,7 @@ namespace BrineBattle.Hunting
             }
             phase = Phase.Result;
             string hintNote = target.Hint == target.Actual ? "The hint was right." : $"The hint was wrong ({Drift.HintText(target.Hint)}).";
-            hintNote += (tensionAuto ? " Auto reel:" : "") + (tensionHit ? $" Clean reel! (+{TensionRules.CleanReelBonus} per drop)" : " Sloppy reel.");
+            hintNote += (tensionByAuto ? " Auto reel:" : "") + (tensionHit ? $" Clean reel! (+{TensionRules.CleanReelBonus} per drop)" : " Sloppy reel.");
             pendingLoot = null;
 
             switch (target.Actual)
@@ -211,6 +211,13 @@ namespace BrineBattle.Hunting
             phase = Phase.Idle;
         }
 
+        void AutoPress()
+        {
+            tensionPressed = true;
+            tensionByAuto = true;
+            tensionHit = rng.NextDouble() < TensionRules.AutoCleanChance;
+        }
+
         bool PressedTension()
         {
             var kb = Keyboard.current;
@@ -222,7 +229,10 @@ namespace BrineBattle.Hunting
         {
             float w = 360, h = 26;
             var r = new Rect((Screen.width - w) / 2f, Screen.height - 120, w, h);
-            string label = tensionAuto ? (t < 0.5f ? "<b>AUTO</b> reel..." : tensionHit ? "<b>AUTO</b> — clean reel!" : "<b>AUTO</b> — sloppy reel")
+            string result = tensionHit ? "clean reel!" : "sloppy reel";
+            string label = tensionAuto ? (t < 0.5f ? "<b>AUTO</b> reel..." : $"<b>AUTO</b> — {result}")
+                : tensionSemi ? (!tensionPressed ? "<b>SEMI-AUTO</b> — press Space first, or it reels for you"
+                    : tensionByAuto ? $"<b>SEMI-AUTO</b> reeled for you — {result}" : $"<b>SEMI-AUTO</b> — you: {result}")
                 : tensionPressed ? (tensionHit ? "<b>Clean reel!</b>" : "<b>Sloppy...</b>") : "Press <b>Space</b> or click in the green zone!";
             var prev = GUI.color;
             if (tensionAuto) GUI.color = new Color(1f, 1f, 1f, 0.45f);
@@ -331,7 +341,9 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Bag (B)")) BagToggleRequested?.Invoke();
             if (GUILayout.Button("Book (C)")) BookToggleRequested?.Invoke();
             GUILayout.EndHorizontal();
-            GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "Reeling: AUTO (50% clean)" : "Reeling: press Space in the green zone.");
+            GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "Reeling: AUTO (50% clean)"
+                : BattleSettings.Mode == BattleMode.SemiAuto ? "Reeling: SEMI-AUTO (press first, or auto 50%)"
+                : "Reeling: press Space in the green zone.");
             GUILayout.Label("<b>Log</b>", Rich);
             foreach (var l in log) GUILayout.Label(l);
             GUILayout.EndVertical();

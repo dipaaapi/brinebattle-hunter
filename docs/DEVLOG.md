@@ -7,6 +7,8 @@
 - Bag panel widened ("All" buttons were cut off). GDD v0.2.
 - `unity-verify`: 70/70 passed. Play mode not yet checked by hand.
 - Ed played it. Fixes from his feedback: no press now lets the catch slip away; clean reel gives +1 per drop; in Auto mode the bar is greyed "AUTO" and presses itself (50% clean, from U-9).
+- Semi-auto reel: player can press first; otherwise auto-press at 80% of the reel (50% clean); bar labelled SEMI-AUTO, not greyed.
+- Owner ideas U-14 (crafting knowledge unlocks book entries) and U-15 (rough seas, thunderstrikes).
 - Next: Phase 5 + Idea Round 2.
 
 ## 2026-10-28 — Phase 4
