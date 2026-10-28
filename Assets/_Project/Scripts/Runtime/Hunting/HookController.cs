@@ -353,7 +353,9 @@ namespace BrineBattle.Hunting
 
         void DrawHud()
         {
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, Screen.height - 20));
+            DrawLog();
+            if (BattleController.InBattle) return;
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, Screen.height - LogHeight - 30));
             GUILayout.BeginVertical(HuntStyles.Box);
             GUILayout.Label("<b>BrineBattle Hunter — Phase 5</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
@@ -378,18 +380,29 @@ namespace BrineBattle.Hunting
             GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "Reeling: AUTO (50% clean)"
                 : BattleSettings.Mode == BattleMode.SemiAuto ? "Reeling: SEMI-AUTO (press first, or auto 50%)"
                 : "Reeling: press Space in the green zone.");
-            if (builder != null && builder.Active)
-            {
-                GUILayout.Label("<i>Building — see the panel on the right.</i>", Rich);
-                GUILayout.EndVertical();
-                GUILayout.EndArea();
-                return;
-            }
-            GUILayout.Label("<b>Log</b>", Rich);
-            foreach (var l in log) GUILayout.Label(l);
+            if (builder != null && builder.Active) GUILayout.Label("<i>Building — see the panel on the right.</i>", Rich);
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
+
+        const int LogRows = 3;
+        const float LogHeight = 18f * LogRows + 12f;
+
+        /// <summary>Activity log: its own small box in the bottom-left corner, newest on top, 3 rows.</summary>
+        void DrawLog()
+        {
+            if (log.Count == 0) return;
+            var r = new Rect(10, Screen.height - LogHeight - 10, HudRight - 10, LogHeight);
+            GUI.Box(r, GUIContent.none, HuntStyles.Box);
+            for (int i = 0; i < Mathf.Min(LogRows, log.Count); i++)
+            {
+                var row = new Rect(r.x + 8, r.y + 6 + i * 18, r.width - 16, 18);
+                GUI.Label(row, new GUIContent(log[i], log[i]), LogStyle);
+            }
+        }
+
+        static GUIStyle logStyle;
+        static GUIStyle LogStyle => logStyle ??= new GUIStyle(GUI.skin.label) { fontSize = 11, wordWrap = false, clipping = TextClipping.Clip, richText = true };
 
         /// <summary>Right edge of the HUD column; panels open to the right of it.</summary>
         public const float HudRight = 270f;

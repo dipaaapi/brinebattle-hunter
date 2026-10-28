@@ -16,6 +16,8 @@ namespace BrineBattle.Hunting
         public float cameraBlend = 3f;
 
         public bool Active => state != null;
+        /// <summary>True while any battle runs: the world around the raft holds still.</summary>
+        public static bool InBattle { get; private set; }
 
         BattleState state;
         Drift drift;
@@ -35,6 +37,7 @@ namespace BrineBattle.Hunting
         {
             drift = target;
             onEnd = onFinished;
+            InBattle = true;
             endTimer = 0f;
             state = new BattleState(Combatant.Hunter(), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
@@ -102,6 +105,7 @@ namespace BrineBattle.Hunting
         {
             var outcome = state.Outcome;
             state = null;
+            InBattle = false;
             drift = null;
             onEnd?.Invoke(outcome);
         }

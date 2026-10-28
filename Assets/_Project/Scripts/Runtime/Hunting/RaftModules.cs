@@ -68,7 +68,7 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
-            if (hook == null || slots.Count == 0) return;
+            if (hook == null || slots.Count == 0 || BattleController.InBattle) return;
             Drift[] drifts = null;
             foreach (var kv in slots)
             {
@@ -129,7 +129,7 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
-            if (Camera.main == null) return;
+            if (Camera.main == null || BattleController.InBattle) return;
             foreach (var kv in slots)
             {
                 Vector3 sp = Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f);
