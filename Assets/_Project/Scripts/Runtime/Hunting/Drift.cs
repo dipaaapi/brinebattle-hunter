@@ -17,6 +17,7 @@ namespace BrineBattle.Hunting
         Vector3 velocity;
         float bobPhase;
         float lifetime;
+        Vector3 current;
         static Raft raft;
 
         public void Init(MonsterDefinition monster, DriftState actual, DriftState hint, Vector3 velocity)
@@ -24,7 +25,7 @@ namespace BrineBattle.Hunting
             Monster = monster;
             Actual = actual;
             Hint = hint;
-            this.velocity = velocity;
+            this.velocity = current = velocity;
             bobPhase = Random.value * 10f;
             name = $"Drift ({monster.displayName})";
             Tint.Apply(GetComponent<Renderer>(), Tint.Of(monster.element));
@@ -35,8 +36,11 @@ namespace BrineBattle.Hunting
         /// <summary>An alive drift that bit a raft module swims away from it, faster.</summary>
         public void SwimOff(Vector3 away)
         {
-            if (away.sqrMagnitude < 0.0001f) away = Vector3.forward;
-            velocity = away.normalized * Mathf.Max(2f, velocity.magnitude * 1.5f);
+            // Away from the raft sideways, but always carried downstream: never against the current.
+            var down = current.sqrMagnitude > 0.0001f ? current.normalized : Vector3.right;
+            var side = Vector3.ProjectOnPlane(away, down);
+            side.y = 0f;
+            velocity = down * Mathf.Max(2f, current.magnitude * 1.5f) + (side.sqrMagnitude > 0.0001f ? side.normalized * 1.2f : Vector3.zero);
         }
 
         /// <summary>After a successful sedate (GDD §4).</summary>

@@ -27,8 +27,8 @@ namespace BrineBattle.Hunting
         {
             var r = GetComponent<Renderer>();
             mat = r.material;
-            var tex = WaveTexture(128);
-            const float tiling = 30f;
+            var tex = WaveTexture(256);
+            const float tiling = 10f;
             mat.SetTexture("_BaseMap", tex);
             mat.mainTexture = tex;
             mat.SetColor("_BaseColor", Color.white);
@@ -94,25 +94,49 @@ namespace BrineBattle.Hunting
 
         static Texture2D WaveTexture(int n)
         {
-            var tex = new Texture2D(n, n, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear };
-            var deep = new Color(0.06f, 0.28f, 0.48f);
-            var light = new Color(0.22f, 0.55f, 0.75f);
-            var px = new Color[n * n];
+            // A smooth swell (sines in scattered directions) plus thin bright ridges for wave crests.
+            // Every wave has a whole number of periods across the tile, so it still repeats seamlessly.
+            var rng = new System.Random(7);
+            var swell = Waves(rng, 10, -5, 5);
+            var ridges = Waves(rng, 6, 1, 7);
+            var h = new float[n * n]; var r = new float[n * n];
+            float hMax = 0f, rMax = 0f;
             for (int y = 0; y < n; y++)
                 for (int x = 0; x < n; x++)
                 {
-                    float u = x / (float)n, v = y / (float)n;
-                    // Tileable waves: sums of whole-period sines.
-                    float w = Mathf.Sin((u * 3 + v * 1) * Mathf.PI * 2) * 0.35f
-                            + Mathf.Sin((u * 1 - v * 4) * Mathf.PI * 2 + 1.3f) * 0.25f
-                            + Mathf.Sin((u * 7 + v * 5) * Mathf.PI * 2 + 0.4f) * 0.15f;
-                    float k = Mathf.Clamp01(0.5f + w * 0.6f);
-                    k = k > 0.86f ? 1f : k * 0.8f;   // thin bright crests
-                    px[y * n + x] = Color.Lerp(deep, light, k);
+                    float u = x / (float)n, v = y / (float)n, sum = 0f, ridge = 0f;
+                    foreach (var w in swell) sum += w.w * Mathf.Sin((w.x * u + w.y * v) * Mathf.PI * 2f + w.z);
+                    foreach (var w in ridges) ridge += Mathf.Pow(1f - Mathf.Abs(Mathf.Sin((w.x * u + w.y * v) * Mathf.PI + w.z)), 6f);
+                    int i = y * n + x;
+                    h[i] = sum; r[i] = ridge;
+                    hMax = Mathf.Max(hMax, Mathf.Abs(sum)); rMax = Mathf.Max(rMax, ridge);
                 }
+            var deep = new Color(0.04f, 0.22f, 0.40f);
+            var mid = new Color(0.10f, 0.38f, 0.58f);
+            var crest = new Color(0.55f, 0.78f, 0.90f);
+            var px = new Color[n * n];
+            for (int i = 0; i < px.Length; i++)
+            {
+                var c = Color.Lerp(deep, mid, Mathf.SmoothStep(0f, 1f, 0.5f + 0.5f * h[i] / hMax));
+                px[i] = Color.Lerp(c, crest, Mathf.SmoothStep(0.35f, 0.9f, r[i] / rMax) * 0.55f);
+            }
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear };
             tex.SetPixels(px);
             tex.Apply(true);
             return tex;
+        }
+
+        /// <summary>Random whole-number wave directions: x, y = frequency, z = phase, w = amplitude.</summary>
+        static Vector4[] Waves(System.Random rng, int count, int xMin, int max)
+        {
+            var list = new Vector4[count];
+            for (int i = 0; i < count; i++)
+            {
+                int fx, fy;
+                do { fx = rng.Next(xMin, max + 1); fy = rng.Next(-max, max + 1); } while (fx == 0 && fy == 0);
+                list[i] = new Vector4(fx, fy, (float)rng.NextDouble() * Mathf.PI * 2f, 1f / Mathf.Sqrt(fx * fx + fy * fy));
+            }
+            return list;
         }
     }
 }

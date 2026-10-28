@@ -406,6 +406,9 @@ namespace BrineBattle.Hunting
         }
 
         const int LogRows = 3;
+        /// <summary>Oldest entries are deleted past this.</summary>
+        const int MaxLog = 99;
+        Vector2 logScroll;
         const float LogHeight = 18f * LogRows + 12f;
 
         /// <summary>Activity log: its own small box in the bottom-left corner, newest on top, 3 rows.</summary>
@@ -414,11 +417,12 @@ namespace BrineBattle.Hunting
             if (log.Count == 0) return;
             var r = new Rect(10, Screen.height - LogHeight - 10, HudRight - 10, LogHeight);
             GUI.Box(r, GUIContent.none, HuntStyles.Box);
-            for (int i = 0; i < Mathf.Min(LogRows, log.Count); i++)
-            {
-                var row = new Rect(r.x + 8, r.y + 6 + i * 18, r.width - 16, 18);
-                GUI.Label(row, new GUIContent(log[i], log[i]), LogStyle);
-            }
+            var view = new Rect(r.x + 6, r.y + 6, r.width - 8, r.height - 12);
+            var content = new Rect(0, 0, view.width - 16, log.Count * 18);
+            logScroll = GUI.BeginScrollView(view, logScroll, content, false, true);
+            for (int i = 0; i < log.Count; i++)
+                GUI.Label(new Rect(2, i * 18, content.width - 2, 18), new GUIContent(log[i], log[i]), LogStyle);
+            GUI.EndScrollView();
         }
 
         static GUIStyle logStyle;
@@ -437,7 +441,8 @@ namespace BrineBattle.Hunting
         {
             if (log.Count > 0 && log[0] == message) return;
             log.Insert(0, message);
-            if (log.Count > 6) log.RemoveAt(log.Count - 1);
+            if (log.Count > MaxLog) log.RemoveAt(log.Count - 1);
+            logScroll = Vector2.zero;   // jump to the newest so you see it arrive
         }
 
         Vector3 HookOrigin() => raft.transform.position + Vector3.up * 1.2f;

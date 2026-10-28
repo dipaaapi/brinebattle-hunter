@@ -81,7 +81,8 @@ namespace BrineBattle.Hunting
                 Vector3 at = raft.CellToWorld(kv.Key);
                 float reach = ModuleRules.Range(s.Level);
                 // Measured to the drift's edge, so a big crab counts as touching when it looks like it.
-                var d = drifts.Where(x => x != null && !x.Hooked && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x)
+                // Calm weakened drifts are left for the player to tame or finish (idea U-17), never auto-looted.
+                var d = drifts.Where(x => x != null && !x.Hooked && !Tameable(x) && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x)
                               .OrderBy(x => Flat(x.transform.position - at).sqrMagnitude).FirstOrDefault();
                 if (d == null) continue;
                 s.Timer = ModuleRules.Interval(s.Level);
@@ -197,6 +198,9 @@ namespace BrineBattle.Hunting
             lr.SetPosition(1, to + Vector3.up * 0.2f);
             Destroy(go, 0.5f);
         }
+
+        static bool Tameable(Drift d) =>
+            d.Actual == DriftState.Weakened && !EncounterRules.IsAggressive(d.Aggression);
 
         static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
     }
