@@ -85,13 +85,54 @@ namespace BrineBattle.Hunting
                               .OrderBy(x => Flat(x.transform.position - at).sqrMagnitude).FirstOrDefault();
                 if (d == null) continue;
                 s.Timer = ModuleRules.Interval(s.Level);
-                Grab(s, d, at);
+                if (s.Level >= 2) StartCoroutine(HookIn(s, d, at));
+                else Grab(s, d, at);
             }
+        }
+
+        public float castTime = 0.4f;
+        public float reelTime = 1.1f;
+
+        /// <summary>Hook arm (Lv 2+): the line stretches out to the drift, then reels it in, like the player's hook.</summary>
+        System.Collections.IEnumerator HookIn(Slot s, Drift d, Vector3 at)
+        {
+            d.Hooked = true;
+            var go = new GameObject("Hook arm line");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.startColor = lr.endColor = new Color(0.95f, 0.95f, 0.85f);
+            lr.startWidth = lr.endWidth = 0.05f;
+            lr.positionCount = 2;
+            Vector3 origin = at + Vector3.up * 0.6f;
+
+            for (float t = 0f; t < castTime && d != null; )
+            {
+                if (!WorldPause.Active) t += Time.deltaTime;
+                lr.SetPosition(0, origin);
+                lr.SetPosition(1, Vector3.Lerp(origin, d.transform.position, t / castTime));
+                yield return null;
+            }
+            Vector3 start = d != null ? d.transform.position : at;
+            Vector3 end = at + Flat(start - at).normalized * 0.9f;
+            for (float t = 0f; t < reelTime && d != null; )
+            {
+                if (!WorldPause.Active) t += Time.deltaTime;
+                var p = Vector3.Lerp(start, end, t / reelTime);
+                p.y = 0.1f + Mathf.Sin(t * 12f) * 0.05f;
+                d.transform.position = p;
+                lr.SetPosition(0, origin);
+                lr.SetPosition(1, p);
+                yield return null;
+            }
+            Destroy(go);
+            if (d == null) yield break;
+            d.Hooked = false;
+            Grab(s, d, at);
         }
 
         void Grab(Slot s, Drift d, Vector3 at)
         {
-            Flash(at, d.transform.position, s.Level >= 2);
+            if (s.Level < 2) Flash(at, d.transform.position, false);
             string name = s.Item.displayName;
             if (d.Actual == DriftState.Alive)
             {
