@@ -82,7 +82,7 @@ namespace BrineBattle.Hunting
                 float reach = ModuleRules.Range(s.Level);
                 // Measured to the drift's edge, so a big crab counts as touching when it looks like it.
                 // Calm weakened drifts are left for the player to tame or finish (idea U-17), never auto-looted.
-                var d = drifts.Where(x => x != null && !x.Hooked && !Tameable(x) && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x)
+                var d = drifts.Where(x => x != null && !x.Hooked && !x.Spooked && !Tameable(x) && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x)
                               .OrderBy(x => Flat(x.transform.position - at).sqrMagnitude).FirstOrDefault();
                 if (d == null || !d.TryClaim(s)) continue;   // claim first: no other net, arm or the player can take it
                 s.Timer = ModuleRules.Interval(s.Level);

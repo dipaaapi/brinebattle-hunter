@@ -16,6 +16,8 @@ namespace BrineBattle.Hunting
         /// </summary>
         public object Owner { get; private set; }
         public bool Hooked => Owner != null;
+        /// <summary>Bit a raft module and fled: modules leave it alone from now on, so one drift can't chew them down.</summary>
+        public bool Spooked { get; private set; }
 
         /// <summary>Takes the drift if nobody has it. Returns false if someone else already does.</summary>
         public bool TryClaim(object who)
@@ -54,6 +56,7 @@ namespace BrineBattle.Hunting
         /// <summary>An alive drift that bit a raft module swims away from it, faster.</summary>
         public void SwimOff(Vector3 away)
         {
+            Spooked = true;
             // Away from the raft sideways, but always carried downstream: never against the current.
             var down = current.sqrMagnitude > 0.0001f ? current.normalized : Vector3.right;
             var side = Vector3.ProjectOnPlane(away, down);
