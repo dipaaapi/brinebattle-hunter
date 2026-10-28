@@ -7,7 +7,7 @@
 - Sample monsters now 3: Brinefang Eel (size 1), Gale Gull (Sky, size 1), Shellback Crab (size 3, tests the gate).
 - Scene built from code (`HookSceneBuilder`), placeholder IMGUI. `unity-verify`: 31/31 passed. Play mode not yet checked by hand.
 - Sedate: 50% → Weakened, else line snaps (placeholder until sedative items).
-- Next: Ed plays the scene.
+- Ed played it: harvest, tame placeholder, flee and the size gate all work. Phase 2 done.
 
 ## 2026-10-28 — Phase 1
 - Branch `phase/1-data`: `Element` + `ElementRules` (combine, components, type chart) + `ElementChart` asset; `Rarity`, `ItemType`, `ItemDefinition`; `MonsterDefinition` (habitat, size class, stats, loot); `LootTable` + `LootRoller`.

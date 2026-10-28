@@ -46,7 +46,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a monster and its loot can be created in the Inspector and tests pass.
 
-### 🟨 Phase 2 — Hook & encounter
+### ✅ Phase 2 — Hook & encounter
 - [x] Drift spawner (objects float toward the raft)
 - [x] Hook action (click to cast, reel)
 - [x] State roll: Dead / Weakened / Alive, with unreliable hints
@@ -55,7 +55,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** you can hook a drift and see the correct outcome for each state.
 
-### ⬜ Phase 3 — Turn-based battle
+### 🟨 Phase 3 — Turn-based battle
 - [ ] Battle scene + turn order
 - [ ] 1v1 first; sea vs sky attackers
 - [ ] Battle modes Manual / Semi-auto / Auto (Settings + switchable mid-battle)
