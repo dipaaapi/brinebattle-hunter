@@ -29,4 +29,16 @@ Monsters eat raft parts when you lose or flee; beat them later to recover parts 
 ### U-8 Are fused companions consumed? — 2026-10-28 · 💡 · GDD §10, §14
 
 ## New ideas
-*(add here)*
+
+### U-9 Harvest mode toggle: Auto / Manual — 2026-10-28 · 💡 · GDD §4, §11
+A toggle when harvesting a monster.
+- **Auto:** 50% chance to catch / get the harvest.
+- **Manual:** the player does it themselves and gets it, but with a 30% chance to miss (so 70% success).
+
+Open: what Manual asks of the player (timing input? see C-2), and what a miss costs (lose the loot, or just less?).
+
+### U-10 Day/night cycle (sun & moon) that boosts or weakens — 2026-10-28 · 💡 · new system (GDD §4, §5, §10, §12)
+Add a day/night cycle as its own system. Some monsters, dead or alive, are tied to the sun or the moon, and the time of day boosts (or weakens) them. The same system also affects the hunter, the party, and companions/pets.
+
+Open: which stats it changes (attack, catch/tame chance, hint accuracy, drift spawns?), whether gear or alchemy can grant sun/moon affinity, and how long a full day lasts.
+

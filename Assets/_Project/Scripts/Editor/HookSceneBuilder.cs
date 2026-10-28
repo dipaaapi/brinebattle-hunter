@@ -75,7 +75,11 @@ namespace BrineBattle.Editor
 
             var hookGo = new GameObject("Hook");
             hookGo.AddComponent<LineRenderer>().sharedMaterial = Mat("Line", new Color(0.95f, 0.95f, 0.9f));
-            hookGo.AddComponent<HookController>().raft = raft;
+            var battle = new GameObject("Battle").AddComponent<BattleController>();
+            battle.raft = raft;
+            var hook = hookGo.AddComponent<HookController>();
+            hook.raft = raft;
+            hook.battle = battle;
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings(ScenePath);

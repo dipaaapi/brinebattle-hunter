@@ -12,6 +12,8 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | Fused companions | U-8 consumed / kept | | | | | |
 | | C-5 consumed + echo | | | | | |
 | Essence | U-6 combine up | | | | | |
+| Harvest mode | U-9 Auto 50% / Manual 70% (30% miss) | | | | | |
+| Day/night | U-10 sun/moon affinity boosts monsters, hunter, party, companions | | | | | |
 | Type chart | C-9 RO cycle, secondaries multiply (current default) | | | | | |
 | | *(owner alternative)* | | | | | |
 

@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 2 — Hook & encounter (Phase 1 waiting for merge) |
-| **Next step** | Ed: play `Assets/_Project/Scenes/Hook.unity` and check each outcome; merge Phase 1 PR; decide type chart (C-9) |
+| **Current phase** | Phase 3 — Turn-based battle (Phases 1–2 waiting for merge) |
+| **Next step** | Ed: play `Hook.unity`, fight an Alive drift in all three modes; decide action resource (U-7/C-4) and type chart (C-9) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -56,11 +56,11 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 **Done when:** you can hook a drift and see the correct outcome for each state.
 
 ### 🟨 Phase 3 — Turn-based battle
-- [ ] Battle scene + turn order
-- [ ] 1v1 first; sea vs sky attackers
-- [ ] Battle modes Manual / Semi-auto / Auto (Settings + switchable mid-battle)
-- [ ] Raft parts take damage
-- [ ] Decide the action resource (stamina vs weapon charge) — see Open Questions in GDD
+- [x] Battle view (camera moves in) + turn order by speed
+- [x] 1v1; sea monsters mostly hit the raft, sky monsters mostly hit the hunter
+- [x] Battle modes Manual / Semi-auto / Auto (HUD setting, saved; switchable mid-battle)
+- [x] Raft parts take damage (raft HP = parts × 10)
+- [ ] Decide the action resource (stamina vs weapon charge) — **stamina used as placeholder**; see U-7 / C-4
 
 **Done when:** a full battle can be won or lost in all three modes.
 

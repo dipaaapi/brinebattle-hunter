@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-28 — Phase 3
+- Branch `phase/3-battle`: `BattleState` (1v1 rounds in speed order, raft HP, stamina), `BattleRules` (damage with element multiplier, brace), `BattleAI` (Manual waits; Semi-auto auto-attacks but waits on low HP or harpoon ready; Auto plays all), `BattleSettings` (saved mode), `BattleController` (battle camera, HP bars, mode toolbar, actions).
+- Actions: Attack, Harpoon (4 stamina, ×1.8), Brace (half damage, +3 stamina). Stamina is a placeholder for U-7/C-4.
+- Win → loot to inventory; loss → monster leaves (absorption in Phase 8). `unity-verify`: 42/42 passed. Play mode not yet checked by hand.
+- Owner ideas added: U-9 harvest Auto/Manual toggle, U-10 day/night sun/moon affinity.
+- Next: Ed plays a battle in each mode.
+
 ## 2026-10-28 — Phase 2
 - Branch `phase/2-hook` (from `phase/1-data`): `EncounterRules` (weighted state roll, unreliable hint, raft-size gate), `DriftSpawner`, `Drift`, `HookController` (click → cast → reel → result panel, inventory + log HUD, raft size −/+ for testing), `Raft`.
 - Sample monsters now 3: Brinefang Eel (size 1), Gale Gull (Sky, size 1), Shellback Crab (size 3, tests the gate).

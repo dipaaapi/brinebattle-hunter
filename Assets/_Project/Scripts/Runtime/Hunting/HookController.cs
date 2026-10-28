@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using BrineBattle.Battle;
 using BrineBattle.Encounters;
 using BrineBattle.Items;
 using BrineBattle.Loot;
@@ -15,9 +16,10 @@ namespace BrineBattle.Hunting
     [RequireComponent(typeof(LineRenderer))]
     public class HookController : MonoBehaviour
     {
-        enum Phase { Idle, Casting, Reeling, Result }
+        enum Phase { Idle, Casting, Reeling, Result, Battle }
 
         public Raft raft;
+        public BattleController battle;
         public float castTime = 0.35f;
         public float reelTime = 1.2f;
         [Range(0f, 1f)] public float sedateChance = 0.5f;
@@ -137,7 +139,7 @@ namespace BrineBattle.Hunting
                     else
                     {
                         resultTitle = $"{m.displayName} — ALIVE!";
-                        resultBody = $"{hintNote}\nIt lunges at the raft. Battle starts! (Turn-based battle comes in Phase 3.)";
+                        resultBody = $"{hintNote}\nIt lunges at the raft. Battle starts!";
                     }
                     break;
             }
@@ -201,11 +203,35 @@ namespace BrineBattle.Hunting
                             else Finish($"Sedative failed! {m.displayName} snapped the line.", false, true);
                         }
                     }
-                    else if (GUILayout.Button("OK")) Finish($"Battled {m.displayName} (placeholder until Phase 3).", false, true);
+                    else if (GUILayout.Button("Fight!")) StartBattle();
                     break;
             }
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        void StartBattle()
+        {
+            if (battle == null)
+            {
+                Finish($"No BattleController in the scene; released {target.Monster.displayName}.", false, true);
+                return;
+            }
+            phase = Phase.Battle;
+            var m = target.Monster;
+            battle.Begin(target, outcome =>
+            {
+                if (outcome == BattleOutcome.Won)
+                {
+                    pendingLoot = RollLoot(m);
+                    Finish($"Defeated {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
+                }
+                else
+                {
+                    string why = outcome == BattleOutcome.LostRaft ? "broke your raft" : "knocked you out";
+                    Finish($"{m.displayName} {why} and swam off. (It will eat raft parts in Phase 8.)", false, true);
+                }
+            });
         }
 
         void Sedated()
@@ -221,8 +247,10 @@ namespace BrineBattle.Hunting
         {
             GUILayout.BeginArea(new Rect(10, 10, 260, Screen.height - 20));
             GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("<b>BrineBattle Hunter — Phase 2</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Phase 3</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
+            GUILayout.Label("Battle mode (Settings)");
+            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Raft size: {raft.size}");
             if (GUILayout.Button("-", GUILayout.Width(24))) raft.size = Mathf.Max(1, raft.size - 1);
