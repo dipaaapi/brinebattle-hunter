@@ -81,8 +81,9 @@ namespace BrineBattle.Hunting
         void OnGUI()
         {
             if (!open || (hook != null && hook.builder != null && hook.builder.Active)) return;
-            float w = 640, h = Mathf.Min(520, Screen.height - 40);
-            GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, 20, w, h), "Collection Book", HuntStyles.Window);
+            GUI.depth = -5;
+            float left = HookController.HudRight + 10, w = Mathf.Min(640, Screen.width - left - 12), h = Mathf.Min(520, Screen.height - 40);
+            GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
 
             var newPage = (CollectionPage)GUILayout.Toolbar((int)page, Tabs);
             if (newPage != page) { page = newPage; selected = null; scroll = Vector2.zero; }

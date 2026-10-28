@@ -166,8 +166,8 @@ namespace BrineBattle.Hunting
                 case DriftState.Dead:
                     resultTitle = $"{m.displayName} — Dead";
                     pendingLoot = RollLoot(m, tensionHit);
-                    resultBody = $"{hintNote}\nHarvest:\n{Describe(pendingLoot)}";
-                    break;
+                    Finish($"Harvested {m.displayName}{(tensionHit ? " (clean reel)" : "")}: {Brief(pendingLoot)}", true, true);
+                    return;
                 case DriftState.Weakened:
                     resultTitle = $"{m.displayName} — Weakened";
                     resultBody = $"{hintNote}\nIt can barely move. Finish it for loot, or tame it.";
@@ -181,6 +181,9 @@ namespace BrineBattle.Hunting
                     else
                     {
                         resultTitle = $"{m.displayName} — ALIVE!";
+                        Log($"{m.displayName} was ALIVE! {(tensionHit ? "You strike first." : "It strikes first.")}");
+                        StartBattle();
+                        return;
                         resultBody = $"{hintNote}\nIt lunges at the raft. Battle starts!\n" +
                             (tensionHit ? "Your clean reel lets you strike first." : "It caught you off guard and strikes first.");
                     }
@@ -196,6 +199,9 @@ namespace BrineBattle.Hunting
             if (!clean) return drops;
             return drops.Select(d => new Drop<ItemDefinition>(d.Item, d.Quantity + TensionRules.CleanReelBonus)).ToList();
         }
+
+        static string Brief(List<Drop<ItemDefinition>> drops) =>
+            drops.Count == 0 ? "nothing" : string.Join(", ", drops.Select(d => $"{d.Quantity} {d.Item.displayName}"));
 
         static string Describe(List<Drop<ItemDefinition>> drops) =>
             drops.Count == 0 ? "  (nothing)" : string.Join("\n", drops.Select(d => $"  {d.Quantity} × {d.Item.displayName} ({d.Item.rarity})"));
@@ -274,6 +280,7 @@ namespace BrineBattle.Hunting
             if (phase != Phase.Result || target == null) return;
 
             var m = target.Monster;
+            GUI.depth = -5;
             var rect = new Rect(Screen.width / 2f - 200, Screen.height / 2f - 120, 400, 240);
             GUILayout.BeginArea(rect, resultTitle, HuntStyles.Window);
             GUILayout.Space(6);
@@ -325,12 +332,12 @@ namespace BrineBattle.Hunting
                 if (outcome == BattleOutcome.Won)
                 {
                     pendingLoot = RollLoot(m);
-                    Finish($"Defeated {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
+                    Finish($"Victory! Defeated {m.displayName}: {Brief(pendingLoot)}", true, true);
                 }
                 else
                 {
                     string why = outcome == BattleOutcome.LostRaft ? "broke your raft" : "knocked you out";
-                    Finish($"{m.displayName} {why} and swam off. (It will eat raft parts in Phase 8.)", false, true);
+                    Finish($"Defeat. {m.displayName} {why} and swam off. (It will eat raft parts in Phase 8.)", false, true);
                 }
             });
         }
@@ -346,7 +353,7 @@ namespace BrineBattle.Hunting
 
         void DrawHud()
         {
-            GUILayout.BeginArea(new Rect(10, 10, 260, Screen.height - 20));
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, Screen.height - 20));
             GUILayout.BeginVertical(HuntStyles.Box);
             GUILayout.Label("<b>BrineBattle Hunter — Phase 5</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
@@ -383,6 +390,9 @@ namespace BrineBattle.Hunting
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
+
+        /// <summary>Right edge of the HUD column; panels open to the right of it.</summary>
+        public const float HudRight = 270f;
 
         static GUIStyle rich;
         static GUIStyle Rich => rich ??= new GUIStyle(GUI.skin.label) { richText = true };

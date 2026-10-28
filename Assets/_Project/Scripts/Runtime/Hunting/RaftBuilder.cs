@@ -26,7 +26,7 @@ namespace BrineBattle.Hunting
         readonly List<GameObject> ghosts = new List<GameObject>();
         GameObject hover;
         Rect panelRect;
-        Vector2 scroll;
+        Vector2 panelScroll;
         string message = "";
 
         public void Toggle()
@@ -160,11 +160,13 @@ namespace BrineBattle.Hunting
         void OnGUI()
         {
             if (!Active || raft == null) return;
-            float w = 380, h = Mathf.Min(520, Screen.height - 40);
+            float w = 380, h = Screen.height - 40;
             panelRect = new Rect(Screen.width - w - 12, 20, w, h);
+            GUI.depth = -5;
             GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
             if (GUI.Button(new Rect(w - 34, 4, 26, 20), "X")) { Toggle(); GUILayout.EndArea(); return; }
+            panelScroll = GUILayout.BeginScrollView(panelScroll);
             var g = raft.Grid;
             GUILayout.Label($"Size {g.Size} · {g.Count} parts · {g.MaxHp} HP · tier <color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>", Rich);
             int next = 0;
@@ -176,7 +178,7 @@ namespace BrineBattle.Hunting
             mode = (Mode)GUILayout.Toolbar((int)mode, new[] { "Place", "Remove" });
 
             GUILayout.Label("<b>Raft parts in your bag</b>", Rich);
-            scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(110));
+            GUILayout.BeginVertical();
             var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module).ToList();
             if (parts.Count == 0) GUILayout.Label("  (none — harvest some)");
             foreach (var kv in parts)
@@ -188,7 +190,7 @@ namespace BrineBattle.Hunting
                 if (GUILayout.Toggle(selected == p, label, ToggleStyle) && selected != p) { selected = p; mode = Mode.Place; }
                 GUI.enabled = true;
             }
-            GUILayout.EndScrollView();
+            GUILayout.EndVertical();
 
             if (modules != null && modules.Slots.Count > 0)
             {
@@ -220,6 +222,7 @@ namespace BrineBattle.Hunting
             else GUILayout.Label("Raft is at the highest tier.");
 
             GUILayout.Label(message, Rich);
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
 

@@ -69,7 +69,8 @@ namespace BrineBattle.Hunting
         {
             if (!open || hook == null || (hook.builder != null && hook.builder.Active)) return;
             var inv = hook.Inventory;
-            float w = 600, h = Mathf.Min(560, Screen.height - 40);
+            GUI.depth = -5;
+            float w = Mathf.Min(600, Screen.width - HookController.HudRight - 22), h = Mathf.Min(560, Screen.height - 40);
             GUILayout.BeginArea(new Rect(Screen.width - w - 12, 20, w, h), "Bag", HuntStyles.Window);
 
             GUILayout.Label("<b>Gear tiers</b> (an item fits if its rarity ≥ the tier)", Rich);

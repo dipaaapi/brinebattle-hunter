@@ -20,6 +20,7 @@ namespace BrineBattle.Hunting
         BattleState state;
         Drift drift;
         Action<BattleOutcome> onEnd;
+        float endTimer;
         float timer;
         float shake;
         Vector3 driftHome;
@@ -34,6 +35,7 @@ namespace BrineBattle.Hunting
         {
             drift = target;
             onEnd = onFinished;
+            endTimer = 0f;
             state = new BattleState(Combatant.Hunter(), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
             state.Weapon = FindFirstObjectByType<HookController>()?.Harpoon;
@@ -66,7 +68,12 @@ namespace BrineBattle.Hunting
                 drift.transform.position = p;
             }
 
-            if (state.Outcome != BattleOutcome.Ongoing) return;
+            if (state.Outcome != BattleOutcome.Ongoing)
+            {
+                endTimer += Time.deltaTime;
+                if (endTimer >= 1.2f) End();
+                return;
+            }
             var pick = BattleAI.Choose(state, BattleSettings.Mode);
             if (pick == null) { timer = 0f; return; }
             timer += Time.deltaTime;
@@ -102,6 +109,7 @@ namespace BrineBattle.Hunting
         void OnGUI()
         {
             if (!Active) return;
+            GUI.depth = -5;
             float w = 520, h = 300;
             GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}", HuntStyles.Window);
 
@@ -122,8 +130,7 @@ namespace BrineBattle.Hunting
             GUILayout.BeginHorizontal();
             if (state.Outcome != BattleOutcome.Ongoing)
             {
-                GUILayout.Label(OutcomeText(state.Outcome));
-                if (GUILayout.Button("Continue", GUILayout.Width(120))) End();
+                GUILayout.Label($"<b>{OutcomeText(state.Outcome)}</b>", new GUIStyle(GUI.skin.label) { richText = true });
             }
             else
             {
