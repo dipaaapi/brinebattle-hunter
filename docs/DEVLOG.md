@@ -7,7 +7,8 @@
 - New sample gear: Eel-Skin Patch (Raft, Common → misfit at the default Uncommon raft tier), Eel-Fang Spear (Weapon), Gull-Bone Buckler (Armor).
 - Rule from owner: an **Idea Round** (top U + top C) after every core phase. Round 1 = U-11 Collection book + C-2 Line tension.
 - `unity-verify`: 53/53 passed. Play mode not yet checked by hand.
-- Next: Ed plays the bag; then Idea Round 1.
+- Ed played it: bag, tiers and salvage work. Phase 4 done.
+- Owner ideas U-12 (skill slots by rarity) and U-13 (auto-loot raft module).
 
 ## 2026-10-28 — Phase 3
 - Branch `phase/3-battle`: `BattleState` (1v1 rounds in speed order, raft HP, stamina), `BattleRules` (damage with element multiplier, brace), `BattleAI` (Manual waits; Semi-auto auto-attacks but waits on low HP or harpoon ready; Auto plays all), `BattleSettings` (saved mode), `BattleController` (battle camera, HP bars, mode toolbar, actions).

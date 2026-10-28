@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 4 — Loot & salvage (Phases 1–3 waiting for merge) |
-| **Next step** | Ed: play `Hook.unity`, open the bag (B), salvage a misfit; then Idea Round 1 (U-11 + C-2) |
+| **Current phase** | Idea Round 1 — U-11 Collection book + C-2 Line tension (Phases 1–4 waiting for merge) |
+| **Next step** | Build U-11 Collection book, then C-2 Line tension |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -65,14 +65,14 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a full battle can be won or lost in all three modes.
 
-### 🟨 Phase 4 — Loot & salvage
+### ✅ Phase 4 — Loot & salvage
 - [x] Harvest on Dead / victory
 - [x] Inventory with Type + Rarity (bag panel, B key)
 - [x] Compatibility check (item rarity ≥ target tier) → salvage to Monster Essence (rarity + element; yield 1–6); manual, all-misfits, or auto on pickup
 
 **Done when:** a kill produces loot, and incompatible loot becomes essence.
 
-### ⬜ Idea Round 1 (after Phase 4)
+### 🟨 Idea Round 1 (after Phase 4)
 - [ ] **U-11 Collection book** — monsters, items, pets; silhouette until acquired (reads the Phase 4 inventory). Absorbs C-6.
 - [ ] **C-2 Line tension** — one timing input while reeling; success = you act first in battle, fail = monster does.
 
