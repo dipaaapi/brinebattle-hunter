@@ -12,6 +12,8 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | Fused companions | U-8 consumed / kept | | | | | |
 | | C-5 consumed + echo | | | | | |
 | Essence | U-6 combine up | | | | | |
+| Type chart | C-9 RO cycle, secondaries multiply (current default) | | | | | |
+| | *(owner alternative)* | | | | | |
 
 ## Decision log
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`

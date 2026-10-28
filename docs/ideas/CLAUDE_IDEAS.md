@@ -27,3 +27,6 @@ A monster that ate your Fortress shell shows it and gains armor; you see what yo
 
 ### C-8 Asynchronous hunters before real multiplayer — 2026-10-28 · 💡 · §12 · M · Phase 10
 Other hunters first appear as NPC/ghost rafts (trade, message-in-a-bottle) before live party play. Delivers "rare human contact" early and lets multiplayer stay a later, separate risk.
+
+### C-9 Type chart: RO-style cycle, secondaries multiply their parts — 2026-10-28 · 💡 · §8 · S · Phase 1
+Main cycle Water > Fire > Earth > Wind > Water: strong ×1.5, weak ×0.75, otherwise ×1. A secondary element counts as both of its parts and the multipliers are multiplied (Steam vs Earth = 1 × 1.5 = 1.5), clamped to 0.5–2. None is neutral. Implemented in Phase 1 as a **tunable default** (`ElementChart` asset), so changing the cycle or numbers later costs nothing.

@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 1 — Data foundation |
-| **Next step** | Branch `phase/1-data`, then write `Element` + combination table with EditMode tests |
+| **Next step** | Ed: open `Assets/_Project/Data/Monsters/BrinefangEel` in the Inspector, decide the type chart (COMPARISON.md), then merge `phase/1-data` |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -37,11 +37,12 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 **Done when:** the project opens with no errors, `git status` is clean, and the headless check passes.
 
 ### 🟨 Phase 1 — Data foundation
-- [ ] `Element` (4 main + 6 secondary, combination table, type-chart multipliers)
-- [ ] `Rarity` (Common → Mythic) and `ItemType` (Raft, Weapon, Armor, Companion, Consumable)
-- [ ] `MonsterDefinition` (stats, element, habitat sea/sky, size class, loot table)
-- [ ] `LootTable` + `ItemDefinition`
-- [ ] EditMode tests for element combination and type chart
+- [x] `Element` (4 main + 6 secondary, combination table, type-chart multipliers)
+- [x] `Rarity` (Common → Mythic) and `ItemType` (Raft, Weapon, Armor, Companion, Consumable)
+- [x] `MonsterDefinition` (stats, element, habitat sea/sky, size class, loot table)
+- [x] `LootTable` + `ItemDefinition`
+- [x] EditMode tests for element combination, type chart and loot rolls (21)
+- [x] Sample data: Brinefang Eel + loot table + 2 items (menu BrineBattle → Create Sample Data)
 
 **Done when:** a monster and its loot can be created in the Inspector and tests pass.
 

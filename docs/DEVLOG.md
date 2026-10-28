@@ -2,7 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
-## 2026-10-28
+## 2026-10-28 — Phase 1
+- Branch `phase/1-data`: `Element` + `ElementRules` (combine, components, type chart) + `ElementChart` asset; `Rarity`, `ItemType`, `ItemDefinition`; `MonsterDefinition` (habitat, size class, stats, loot); `LootTable` + `LootRoller`.
+- Sample data via `SampleDataBuilder` (Brinefang Eel, Eel Scale, Eel Fang). `unity-verify`: 21/21 passed.
+- Type chart is a tunable default (C-9), waiting for Ed's decision.
+- Next: Ed checks the sample in the Inspector, then merge.
+
+## 2026-10-28 — Phase 0
 - Concept docs imported (README, GAME_DESIGN v0.1).
 - Decided: develop in phases (see [ROADMAP.md](ROADMAP.md)); first commit = docs + Unity project skeleton, not docs alone.
 - Added CLAUDE.md, project skills (`roadmap`, `unity-verify`) and the tooling plan ([TOOLING.md](TOOLING.md)).

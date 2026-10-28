@@ -93,6 +93,8 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 
 Applies to gear, companions, and monsters (type chart).
 
+**Type chart (current default, pending owner decision — see `ideas/CLAUDE_IDEAS.md` C-9):** Water > Fire > Earth > Wind > Water; strong ×1.5, weak ×0.75. Secondary elements count as both parts and multiply (clamped 0.5–2). Tunable in the `ElementChart` asset.
+
 ## 9. Gear
 
 - Weapons and armor crafted from monster parts via alchemy.
