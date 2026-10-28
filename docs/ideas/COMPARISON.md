@@ -16,6 +16,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | Day/night | U-10 sun/moon affinity boosts monsters, hunter, party, companions | | | | | |
 | Collection book | U-11 monsters + items + pets, silhouette until acquired | | | | | |
 | | C-6 Hunter's Journal (monsters only, fills in with info) | | | | | |
+| Skill slots | U-12 slots by rarity, Common = 0, includes accessories | | | | | |
 | Type chart | C-9 RO cycle, secondaries multiply (current default) | | | | | |
 | | *(owner alternative)* | | | | | |
 

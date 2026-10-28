@@ -47,3 +47,9 @@ A collection book with pages for **monsters, items, and pets/companions**. Entri
 
 Related: C-6 (Hunter's Journal) is similar but only for monsters; U-11 covers all three and adds the silhouette reveal.
 
+### U-12 Skill slots limited by rarity (weapons, gear, accessories) — 2026-10-28 · 💡 · GDD §9
+The number of skill slots (passive and active) on weapons, gear **and accessories** depends on rarity. Example: a **Common** weapon literally can't hold any passive or active skill; rarer items get more slots.
+
+Builds on the GDD §9 rarity table (Common = element only, Rare = 1 passive, Epic = 1 active + 1 passive, Legendary/Mythic = multiple slots). New here: **accessories** as a gear type, and slots as a hard limit.
+Open: exact slot count per rarity, and whether slots can be added later (refine +, alchemy).
+
