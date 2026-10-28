@@ -30,12 +30,14 @@ namespace BrineBattle.Hunting
         Vector3 battleCamPos;
         Quaternion battleCamRot;
 
-        public void Begin(Drift target, Action<BattleOutcome> onFinished)
+        public void Begin(Drift target, Initiative firstRound, Action<BattleOutcome> onFinished)
         {
             drift = target;
             onEnd = onFinished;
             state = new BattleState(Combatant.Hunter(), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
-            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.");
+            state.FirstRound = firstRound;
+            string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
+            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.{first}");
             timer = 0f;
             driftHome = target.transform.position;
 

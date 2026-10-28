@@ -26,4 +26,12 @@ namespace BrineBattle.Battle
         /// <summary>Raft broken apart.</summary>
         LostRaft = 3,
     }
+
+    /// <summary>Who acts first in round 1. Speed = normal rule; the line-tension check (C-2) can override it.</summary>
+    public enum Initiative
+    {
+        Speed = 0,
+        Hunter = 1,
+        Monster = 2,
+    }
 }

@@ -1,6 +1,6 @@
 # BrineBattle Hunter — Game Design Document
 
-*Living document · v0.1 (initial patch)*
+*Living document · v0.2*
 
 ## 1. Overview
 
@@ -42,6 +42,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - Hints (shadows, movement, alchemy readings) may suggest the state but are not always accurate.
 - **Raft size gate:** you can only fight once your raft is big and strong enough. If it isn't, cut the line, flee, or sedate the creature.
 - Formats: **1 vs 1**, **1 vs Many**, **Many vs Many** (player + companions + party).
+- **Line tension (C-2):** while reeling, one timing press in a sweet spot (smaller and faster for bigger monsters). Clean reel → if the creature is Alive, the hunter acts first in round 1; sloppy or no press → the monster does.
 
 ## 5. Battle
 
@@ -133,6 +134,10 @@ Applies to gear, companions, and monsters (type chart).
   - Companion growth
 - Proposed: combine low-rarity essence into higher-rarity essence.
 - **Implemented (Phase 4):** an equippable item fits when its rarity ≥ the target's tier. Salvage gives essence of the item's rarity and element, Common 1 … Mythic 6 per item.
+
+### Collection book (U-11)
+
+Pages for **Monsters**, **Items** and **Pets**. Unacquired entries are silhouettes ("???"). A monster unlocks when harvested, finished or defeated; an item when it enters the bag; a pet when tamed. Revealed monster pages show element, habitat, size, stats, drops (unknown drops stay "???") and description. Shows % completion per page.
 
 ### Consumables
 

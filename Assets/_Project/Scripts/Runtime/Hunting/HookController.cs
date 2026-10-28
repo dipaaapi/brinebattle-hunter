@@ -21,12 +21,16 @@ namespace BrineBattle.Hunting
         public Raft raft;
         public BattleController battle;
         public float castTime = 0.35f;
-        public float reelTime = 1.2f;
+        public float reelTime = 1.8f;
         [Range(0f, 1f)] public float sedateChance = 0.5f;
 
         public Inventory Inventory { get; } = new Inventory();
         /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
         public event System.Action LootAdded;
+        /// <summary>Raised when a monster is harvested, finished or defeated (collection book).</summary>
+        public event System.Action<Monsters.MonsterDefinition> MonsterAcquired;
+        /// <summary>Raised by the HUD button; the collection book listens.</summary>
+        public event System.Action BookToggleRequested;
         readonly List<string> log = new List<string>();
         readonly System.Random rng = new System.Random();
 
@@ -37,6 +41,10 @@ namespace BrineBattle.Hunting
         Vector3 reelFrom;
         List<Drop<ItemDefinition>> pendingLoot;
         string resultTitle, resultBody;
+
+        // Line tension (idea C-2)
+        float tensionStart, tensionWidth, tensionSpeed, tensionTime;
+        bool tensionPressed, tensionHit;
 
         void Awake()
         {
@@ -90,6 +98,12 @@ namespace BrineBattle.Hunting
                 phase = Phase.Reeling;
                 t = 0f;
                 reelFrom = target.transform.position;
+                int size = target.Monster.sizeClass;
+                tensionWidth = TensionRules.ZoneWidth(size);
+                tensionSpeed = TensionRules.Speed(size);
+                tensionStart = TensionRules.RandomZoneStart(tensionWidth, rng);
+                tensionTime = 0f;
+                tensionPressed = tensionHit = false;
             }
         }
 
@@ -97,6 +111,12 @@ namespace BrineBattle.Hunting
         {
             if (!CheckTarget()) return;
             t += Time.deltaTime / reelTime;
+            tensionTime += Time.deltaTime;
+            if (!tensionPressed && PressedTension())
+            {
+                tensionPressed = true;
+                tensionHit = TensionRules.IsHit(TensionRules.Marker(tensionTime, tensionSpeed), tensionStart, tensionWidth);
+            }
             var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * 2.2f;
             edge.y = reelFrom.y;
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
@@ -119,6 +139,7 @@ namespace BrineBattle.Hunting
             line.enabled = false;
             var m = target.Monster;
             string hintNote = target.Hint == target.Actual ? "The hint was right." : $"The hint was wrong ({Drift.HintText(target.Hint)}).";
+            hintNote += tensionHit ? " Clean reel!" : tensionPressed ? " Sloppy reel." : " You never set the hook.";
             pendingLoot = null;
 
             switch (target.Actual)
@@ -141,7 +162,8 @@ namespace BrineBattle.Hunting
                     else
                     {
                         resultTitle = $"{m.displayName} — ALIVE!";
-                        resultBody = $"{hintNote}\nIt lunges at the raft. Battle starts!";
+                        resultBody = $"{hintNote}\nIt lunges at the raft. Battle starts!\n" +
+                            (tensionHit ? "Your clean reel lets you strike first." : "It caught you off guard and strikes first.");
                     }
                     break;
             }
@@ -157,6 +179,7 @@ namespace BrineBattle.Hunting
         {
             if (keepLoot && pendingLoot != null)
             {
+                if (target != null) MonsterAcquired?.Invoke(target.Monster);
                 foreach (var d in pendingLoot) Inventory.Add(d.Item, d.Quantity);
                 Log(message);
                 LootAdded?.Invoke();
@@ -172,9 +195,30 @@ namespace BrineBattle.Hunting
             phase = Phase.Idle;
         }
 
+        bool PressedTension()
+        {
+            var kb = Keyboard.current;
+            var mouse = Mouse.current;
+            return (kb != null && kb.spaceKey.wasPressedThisFrame) || (mouse != null && mouse.leftButton.wasPressedThisFrame);
+        }
+
+        void DrawTension()
+        {
+            float w = 360, h = 26;
+            var r = new Rect((Screen.width - w) / 2f, Screen.height - 120, w, h);
+            string label = tensionPressed ? (tensionHit ? "<b>Clean reel!</b>" : "<b>Sloppy...</b>") : "Press <b>Space</b> or click in the green zone!";
+            GUI.Label(new Rect(r.x, r.y - 22, w, 20), label, Rich);
+            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.6f), 0, 0);
+            var zone = new Rect(r.x + tensionStart * w, r.y, tensionWidth * w, h);
+            GUI.DrawTexture(zone, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.3f, 0.85f, 0.4f, 0.9f), 0, 0);
+            float m = TensionRules.Marker(tensionTime, tensionSpeed);
+            GUI.DrawTexture(new Rect(r.x + m * w - 2, r.y - 4, 4, h + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, Color.white, 0, 0);
+        }
+
         void OnGUI()
         {
             DrawHud();
+            if (phase == Phase.Reeling && target != null) DrawTension();
             if (phase != Phase.Result || target == null) return;
 
             var m = target.Monster;
@@ -224,7 +268,7 @@ namespace BrineBattle.Hunting
             }
             phase = Phase.Battle;
             var m = target.Monster;
-            battle.Begin(target, outcome =>
+            battle.Begin(target, tensionHit ? Initiative.Hunter : Initiative.Monster, outcome =>
             {
                 if (outcome == BattleOutcome.Won)
                 {
@@ -252,7 +296,7 @@ namespace BrineBattle.Hunting
         {
             GUILayout.BeginArea(new Rect(10, 10, 260, Screen.height - 20));
             GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("<b>BrineBattle Hunter — Phase 4</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Idea Round 1</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.Label("Battle mode (Settings)");
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
@@ -263,7 +307,11 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
             int stacks = Inventory.Items.Count(), essence = Inventory.Essence.Sum(kv => kv.Value);
             GUILayout.Label($"<b>Bag</b>: {stacks} stacks, {essence} essence", Rich);
-            if (GUILayout.Button("Open bag (B)")) BagToggleRequested?.Invoke();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Bag (B)")) BagToggleRequested?.Invoke();
+            if (GUILayout.Button("Book (C)")) BookToggleRequested?.Invoke();
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Reeling: press Space in the green zone.");
             GUILayout.Label("<b>Log</b>", Rich);
             foreach (var l in log) GUILayout.Label(l);
             GUILayout.EndVertical();

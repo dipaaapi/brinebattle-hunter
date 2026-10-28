@@ -69,7 +69,7 @@ namespace BrineBattle.Hunting
         {
             if (!open || hook == null) return;
             var inv = hook.Inventory;
-            float w = 460, h = Mathf.Min(560, Screen.height - 40);
+            float w = 600, h = Mathf.Min(560, Screen.height - 40);
             GUILayout.BeginArea(new Rect(Screen.width - w - 12, 20, w, h), "Bag", GUI.skin.window);
 
             GUILayout.Label("<b>Gear tiers</b> (an item fits if its rarity ≥ the tier)", Rich);
@@ -87,7 +87,7 @@ namespace BrineBattle.Hunting
                 var item = kv.Key;
                 bool fits = SalvageRules.IsCompatible(item.type, item.rarity, TierOf(item.type));
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}</size>", Rich, GUILayout.Width(250));
+                GUILayout.Label($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}</size>", Rich, GUILayout.Width(320));
                 GUILayout.Label(fits ? "<color=#7f7>fits</color>" : "<color=#f77>misfit</color>", Rich, GUILayout.Width(50));
                 int yield = SalvageRules.EssenceYield(item.type, item.rarity);
                 if (GUILayout.Button($"Salvage 1 (+{yield})")) Salvage(item, 1);

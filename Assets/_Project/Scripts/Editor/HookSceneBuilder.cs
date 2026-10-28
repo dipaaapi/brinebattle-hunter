@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BrineBattle.Hunting;
+using BrineBattle.Items;
 using BrineBattle.Monsters;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -82,6 +83,10 @@ namespace BrineBattle.Editor
             hook.battle = battle;
             var bag = new GameObject("Bag").AddComponent<BagPanel>();
             bag.hook = hook;
+            var book = new GameObject("Collection Book").AddComponent<CollectionBook>();
+            book.hook = hook;
+            book.monsters = LoadMonsters();
+            book.items = LoadItems();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings(ScenePath);
@@ -93,6 +98,14 @@ namespace BrineBattle.Editor
             var list = new List<MonsterDefinition>();
             foreach (var guid in AssetDatabase.FindAssets("t:MonsterDefinition", new[] { "Assets/_Project/Data" }))
                 list.Add(AssetDatabase.LoadAssetAtPath<MonsterDefinition>(AssetDatabase.GUIDToAssetPath(guid)));
+            return list;
+        }
+
+        static List<ItemDefinition> LoadItems()
+        {
+            var list = new List<ItemDefinition>();
+            foreach (var guid in AssetDatabase.FindAssets("t:ItemDefinition", new[] { "Assets/_Project/Data" }))
+                list.Add(AssetDatabase.LoadAssetAtPath<ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid)));
             return list;
         }
 

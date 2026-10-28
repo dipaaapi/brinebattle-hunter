@@ -14,6 +14,7 @@ namespace BrineBattle.Battle
         public int Stamina { get; private set; } = BattleRules.StartStamina;
         public int Round { get; private set; }
         public BattleOutcome Outcome { get; private set; }
+        public Initiative FirstRound { get; set; } = Initiative.Speed;
         public readonly List<string> Log = new List<string>();
 
         readonly Random rng;
@@ -36,7 +37,10 @@ namespace BrineBattle.Battle
             Round++;
             Hunter.Bracing = hunterAction == BattleAction.Brace;
 
-            if (BattleRules.HunterFirst(Hunter, Monster))
+            bool hunterFirst = Round == 1 && FirstRound != Initiative.Speed
+                ? FirstRound == Initiative.Hunter
+                : BattleRules.HunterFirst(Hunter, Monster);
+            if (hunterFirst)
             {
                 HunterTurn(hunterAction);
                 if (Outcome == BattleOutcome.Ongoing) MonsterTurn();
