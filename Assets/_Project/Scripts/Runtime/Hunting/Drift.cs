@@ -62,12 +62,18 @@ namespace BrineBattle.Hunting
                 var d = p - raft.CellToWorld(c);
                 float ox = half - Mathf.Abs(d.x), oz = half - Mathf.Abs(d.z);
                 if (ox <= 0f || oz <= 0f) continue;
-                if (ox < oz) { p.x += Mathf.Sign(d.x) * ox; velocity.x = 0f; }
-                else { p.z += Mathf.Sign(d.z) * oz; velocity.z = 0f; }
+                // Push out of the part only; the current (velocity) stays the same, so the drift
+                // slides along the raft's side and carries on downstream.
+                float slide = velocity.magnitude * Time.deltaTime;
+                if (ox < oz) { p.x += Mathf.Sign(d.x) * ox; p.z += SlideSign(d.z, velocity.z) * slide; }
+                else { p.z += Mathf.Sign(d.z) * oz; p.x += SlideSign(d.x, velocity.x) * slide; }
             }
-            if (velocity.sqrMagnitude < 0.01f) velocity = (p - raft.transform.position).normalized * 0.5f;
             return p;
         }
+
+        /// <summary>Slide the way the current already leans; if it hits head-on, go round the nearer side.</summary>
+        static float SlideSign(float offset, float along) =>
+            Mathf.Abs(along) > 0.05f ? 0f : (offset >= 0f ? 1f : -1f);
 
         public static string HintText(DriftState s)
         {

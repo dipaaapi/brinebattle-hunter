@@ -72,6 +72,7 @@ namespace BrineBattle.Editor
 
             var spawnerGo = new GameObject("Drift Spawner");
             var spawner = spawnerGo.AddComponent<DriftSpawner>();
+            water.AddComponent<OceanSurface>().spawner = spawner;
             spawner.raft = raft;
             spawner.monsters = LoadMonsters();
 
