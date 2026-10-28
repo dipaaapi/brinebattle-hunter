@@ -18,6 +18,7 @@ namespace BrineBattle.Hunting
         public Raft raft;
         public HookController hook;
         public RaftModules modules;
+        public List<RecipeDefinition> recipes = new List<RecipeDefinition>();
 
         public bool Active { get; private set; }
 
@@ -192,6 +193,24 @@ namespace BrineBattle.Hunting
             }
             GUILayout.EndVertical();
 
+            if (recipes.Count > 0)
+            {
+                GUILayout.Label("<b>Workbench</b> (uses the bag; take a module off the raft to upgrade or dismantle it)", Rich);
+                foreach (var r in recipes)
+                {
+                    if (r == null) continue;
+                    string verb = r.kind == RecipeKind.Upgrade ? "Upgrade" : r.kind == RecipeKind.Dismantle ? "Dismantle" : "Craft";
+                    GUI.enabled = CraftRules.CanCraft(hook.Inventory, r);
+                    if (GUILayout.Button($"{verb}: {CraftRules.Describe(r.inputs)} → {CraftRules.Describe(r.outputs)}", ButtonWrap))
+                    {
+                        CraftRules.Craft(hook.Inventory, r);
+                        message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
+                        hook.Log(message);
+                    }
+                    GUI.enabled = true;
+                }
+            }
+
             if (modules != null && modules.Slots.Count > 0)
             {
                 GUILayout.Label("<b>Modules</b> (auto-loot what touches them)", Rich);
@@ -226,7 +245,8 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
-        static GUIStyle rich, toggle;
+        static GUIStyle rich, toggle, buttonWrap;
+        static GUIStyle ButtonWrap => buttonWrap ??= new GUIStyle(GUI.skin.button) { wordWrap = true, alignment = TextAnchor.MiddleLeft };
         static GUIStyle Rich => rich ??= new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true };
         static GUIStyle ToggleStyle => toggle ??= new GUIStyle(GUI.skin.toggle) { richText = true };
     }

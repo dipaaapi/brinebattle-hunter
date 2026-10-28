@@ -87,5 +87,30 @@ namespace BrineBattle.Tests
             s.PlayRound(BattleAction.Brace);
             Assert.IsFalse(s.CanUse(BattleAction.Harpoon));
         }
+
+        [Test]
+        public void RecipeIsAllOrNothingAndRoundTrips()
+        {
+            var plank = Item(ItemType.Raft, name: "plank");
+            var net = Item(ItemType.Module, name: "net");
+            var craft = ScriptableObject.CreateInstance<RecipeDefinition>();
+            craft.inputs.Add(new Ingredient { item = plank, count = 3 });
+            craft.outputs.Add(new Ingredient { item = net, count = 1 });
+            var dismantle = ScriptableObject.CreateInstance<RecipeDefinition>();
+            dismantle.inputs.Add(new Ingredient { item = net, count = 1 });
+            dismantle.outputs.Add(new Ingredient { item = plank, count = 2 });
+
+            var inv = new Inventory();
+            inv.Add(plank, 2);
+            Assert.IsFalse(CraftRules.Craft(inv, craft));
+            Assert.AreEqual(2, inv.Count(plank));
+            inv.Add(plank, 1);
+            Assert.IsTrue(CraftRules.Craft(inv, craft));
+            Assert.AreEqual(0, inv.Count(plank));
+            Assert.AreEqual(1, inv.Count(net));
+            Assert.IsTrue(CraftRules.Craft(inv, dismantle));
+            Assert.AreEqual(2, inv.Count(plank));
+            Assert.AreEqual(0, inv.Count(net));
+        }
     }
 }

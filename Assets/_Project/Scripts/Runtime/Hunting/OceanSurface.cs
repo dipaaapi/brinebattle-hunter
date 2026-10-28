@@ -63,7 +63,7 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
-            if (BattleController.InBattle) return;
+            if (WorldPause.Active) return;
             var dir = Dir;
             offset -= new Vector2(dir.x * uvPerWorld.x, dir.z * uvPerWorld.y) * Speed * 0.6f * Time.deltaTime;
             offset.x %= 1f; offset.y %= 1f;

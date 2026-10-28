@@ -96,3 +96,8 @@ The ocean isn't always calm. Sometimes the sea gets rough, which makes hunting a
 Related: C-3 (weather and currents decide what drifts) and U-10 (day/night). These three could become one **World conditions** system.
 Open: how rough seas hurt hunting (smaller sweet spot, shorter hook range, drifts move faster?), whether a lightning rod / Fortress parts protect the raft, and whether storms also bring rarer drifts as a reward.
 
+### U-16 Parts become modules, and back — 2026-10-29 · ✅ partly (Idea Round 2 feedback) · GDD §6, U-13
+Some patches and planks can be turned into a net or a hook, upgraded, and taken apart again. Owner left the recipes to Claude.
+- Built: Workbench in build mode. Craft Drift Net = 3 Driftwood Plank + 2 Eel-Skin Patch. Upgrade to Hook Arm (Lv 2, 4 m reach) = Drift Net + 2 Eel Fang + 2 Driftwood Plank. Dismantle returns part of the cost.
+- Later: Lv 3–5 recipes, and folding this into Phase 6 crafting.
+

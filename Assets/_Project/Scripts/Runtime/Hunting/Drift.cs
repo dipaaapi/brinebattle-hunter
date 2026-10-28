@@ -42,7 +42,7 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
-            if (Hooked || BattleController.InBattle) return;
+            if (Hooked || WorldPause.Active) return;
             lifetime += Time.deltaTime;
             var p = transform.position + velocity * Time.deltaTime;
             if (raft == null) raft = FindFirstObjectByType<Raft>();
@@ -87,7 +87,7 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
-            if (Hooked || BattleController.InBattle || Camera.main == null) return;
+            if (Hooked || WorldPause.Active || Camera.main == null) return;
             Vector3 sp = Camera.main.WorldToScreenPoint(transform.position + Vector3.up);
             if (sp.z < 0) return;
             var rect = new Rect(sp.x - 70, Screen.height - sp.y - 22, 140, 22);

@@ -62,6 +62,7 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
+            WorldPause.Prompt = phase == Phase.Result;
             switch (phase)
             {
                 case Phase.Idle: UpdateIdle(); break;

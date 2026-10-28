@@ -6,6 +6,8 @@
 - Branch `round/2-ideas`: **C-4** `Durability` (shared): Harpoon has 20, each throw uses 1, broken = can't throw; repair +10 for 1 material on the HUD. **U-13** `ItemType.Module` + `ModuleRules` (U-13 scaling table, Lv 1–5) + `RaftModules`: modules sit on the raft grid; Lv 1 Drift Net grabs one touching drift every 20 s, dead/weakened = loot (−1), alive = bites (−5) and swims off; durability shown over the module, repair in the build panel (Lv 1 = materials). Removing and re-placing keeps the wear. Starter: 1 Drift Net in the bag.
 - Phase 5 feedback fixes: build panel X button; drifts bump off the raft edge instead of passing through.
 - `unity-verify`: 90/90 passed. Play mode not yet checked by hand.
+- Ed's playtest fixes: notices go to the log (popup only for real choices), battle closes itself, Book/Bag beside the HUD, build panel scrolls, drifts collide with real parts and keep the current, visible ocean (waves + current streaks), activity log = 3-row box bottom-left, world pauses (`WorldPause`) during battle and prompts.
+- **U-16** recipes: `RecipeDefinition` + `CraftRules`; Workbench in build mode (craft Drift Net, upgrade to Hook Arm Lv 2, dismantle). 91/91 passed.
 
 ## 2026-10-28 — Phase 5
 - Branch `phase/5-raft`: `RaftGrid` (cells, place/remove rules, connectivity, size, HP, tier upgrade), `Inventory.SpendEssence`, `Raft` draws tiles from the grid (colour by rarity), `RaftBuilder` (R: ghost cells, place/remove, upgrade panel).

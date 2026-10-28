@@ -1,3 +1,4 @@
+using System.Linq;
 using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Loot;
@@ -124,6 +125,17 @@ namespace BrineBattle.Editor
                 i.rarity = Rarity.Common; i.element = Element.None; i.moduleLevel = 1;
                 i.description = "A basic net for the raft's edge. Catches whatever floats into it, a little at a time.";
             });
+            var hookArm = LoadOrCreate<ItemDefinition>($"{Root}/Items/HookArm.asset", i =>
+            {
+                i.id = "hook_arm"; i.displayName = "Hook Arm"; i.type = ItemType.Module;
+                i.rarity = Rarity.Common; i.element = Element.None; i.moduleLevel = 2;
+                i.description = "A Drift Net with a fang hook on a pole. Reaches drifts that pass nearby.";
+            });
+            // Idea U-16: planks and patches become modules, modules upgrade, and come apart again.
+            Recipe("craft_drift_net", "Drift Net", RecipeKind.Craft, new[] { (plank, 3), (patch, 2) }, new[] { (net, 1) });
+            Recipe("upgrade_hook_arm", "Hook Arm", RecipeKind.Upgrade, new[] { (net, 1), (fang, 2), (plank, 2) }, new[] { (hookArm, 1) });
+            Recipe("dismantle_drift_net", "Drift Net", RecipeKind.Dismantle, new[] { (net, 1) }, new[] { (plank, 2), (patch, 1) });
+            Recipe("dismantle_hook_arm", "Hook Arm", RecipeKind.Dismantle, new[] { (hookArm, 1) }, new[] { (net, 1), (fang, 1) });
             EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);
@@ -131,6 +143,16 @@ namespace BrineBattle.Editor
 
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
+        }
+
+        static void Recipe(string id, string name, RecipeKind kind, (ItemDefinition, int)[] inputs, (ItemDefinition, int)[] outputs)
+        {
+            if (!AssetDatabase.IsValidFolder($"{Root}/Recipes")) AssetDatabase.CreateFolder(Root, "Recipes");
+            var r = LoadOrCreate<RecipeDefinition>($"{Root}/Recipes/{id}.asset");
+            r.id = id; r.displayName = name; r.kind = kind;
+            r.inputs = inputs.Select(x => new Ingredient { item = x.Item1, count = x.Item2 }).ToList();
+            r.outputs = outputs.Select(x => new Ingredient { item = x.Item1, count = x.Item2 }).ToList();
+            EditorUtility.SetDirty(r);
         }
 
         static void EnsureEntry(LootTable table, ItemDefinition item, float chance, int min, int max)

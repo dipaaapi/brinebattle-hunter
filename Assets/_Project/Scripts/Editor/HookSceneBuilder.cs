@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using BrineBattle.Hunting;
 using BrineBattle.Items;
@@ -92,6 +93,9 @@ namespace BrineBattle.Editor
             modules.raft = raft;
             modules.hook = hook;
             builder.modules = modules;
+            builder.recipes = AssetDatabase.FindAssets("t:RecipeDefinition", new[] { "Assets/_Project/Data/Recipes" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<RecipeDefinition>(AssetDatabase.GUIDToAssetPath(g)))
+                .OrderBy(r => r.kind).ThenBy(r => r.id).ToList();
             var bag = new GameObject("Bag").AddComponent<BagPanel>();
             bag.hook = hook;
             var book = new GameObject("Collection Book").AddComponent<CollectionBook>();

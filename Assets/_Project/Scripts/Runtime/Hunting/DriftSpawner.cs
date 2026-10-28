@@ -40,7 +40,7 @@ namespace BrineBattle.Hunting
         void Update()
         {
             live.RemoveAll(d => d == null);
-            if (BattleController.InBattle) return;
+            if (WorldPause.Active) return;
             timer += Time.deltaTime;
             if (timer >= spawnInterval && live.Count < maxDrifts)
             {
