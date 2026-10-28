@@ -159,9 +159,9 @@ namespace BrineBattle.Hunting
         void OnGUI()
         {
             if (!Active || raft == null) return;
-            float w = 360, h = 330;
-            panelRect = new Rect(12, Screen.height - h - 12, w, h);
-            GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", GUI.skin.window);
+            float w = 380, h = Mathf.Min(420, Screen.height - 40);
+            panelRect = new Rect(Screen.width - w - 12, 20, w, h);
+            GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
             var g = raft.Grid;
             GUILayout.Label($"Size {g.Size} · {g.Count} parts · {g.MaxHp} HP · tier <color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>", Rich);
@@ -170,10 +170,11 @@ namespace BrineBattle.Hunting
                 if (RaftRules.SizeFor(g.Count + n) > g.Size) { next = n; break; }
             if (next > 0 && g.Size < 10) GUILayout.Label($"{next} more part(s) to reach size {g.Size + 1}.");
 
+            GUILayout.Label("1. Pick a part  2. Click a green tile next to the raft.\nYellow cursor = OK, red = not allowed.", Rich);
             mode = (Mode)GUILayout.Toolbar((int)mode, new[] { "Place", "Remove" });
 
             GUILayout.Label("<b>Raft parts in your bag</b>", Rich);
-            scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(100));
+            scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(110));
             var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft).ToList();
             if (parts.Count == 0) GUILayout.Label("  (none — harvest some)");
             foreach (var kv in parts)

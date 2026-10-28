@@ -102,7 +102,7 @@ namespace BrineBattle.Hunting
         {
             if (!Active) return;
             float w = 520, h = 300;
-            GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}", GUI.skin.window);
+            GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}", HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
             Bar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.4f));

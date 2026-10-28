@@ -255,7 +255,7 @@ namespace BrineBattle.Hunting
 
             var m = target.Monster;
             var rect = new Rect(Screen.width / 2f - 200, Screen.height / 2f - 120, 400, 240);
-            GUILayout.BeginArea(rect, resultTitle, GUI.skin.window);
+            GUILayout.BeginArea(rect, resultTitle, HuntStyles.Window);
             GUILayout.Space(6);
             GUILayout.Label(resultBody);
             GUILayout.FlexibleSpace();
@@ -327,7 +327,7 @@ namespace BrineBattle.Hunting
         void DrawHud()
         {
             GUILayout.BeginArea(new Rect(10, 10, 260, Screen.height - 20));
-            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginVertical(HuntStyles.Box);
             GUILayout.Label("<b>BrineBattle Hunter — Phase 5</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.Label("Battle mode (Settings)");
@@ -345,6 +345,13 @@ namespace BrineBattle.Hunting
             GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "Reeling: AUTO (50% clean)"
                 : BattleSettings.Mode == BattleMode.SemiAuto ? "Reeling: SEMI-AUTO (press first, or auto 50%)"
                 : "Reeling: press Space in the green zone.");
+            if (builder != null && builder.Active)
+            {
+                GUILayout.Label("<i>Building — see the panel on the right.</i>", Rich);
+                GUILayout.EndVertical();
+                GUILayout.EndArea();
+                return;
+            }
             GUILayout.Label("<b>Log</b>", Rich);
             foreach (var l in log) GUILayout.Label(l);
             GUILayout.EndVertical();
