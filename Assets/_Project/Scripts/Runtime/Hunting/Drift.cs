@@ -46,21 +46,27 @@ namespace BrineBattle.Hunting
             lifetime += Time.deltaTime;
             var p = transform.position + velocity * Time.deltaTime;
             if (raft == null) raft = FindFirstObjectByType<Raft>();
-            if (raft != null)
-            {
-                // Drifts bump off the raft instead of sailing through it.
-                var away = p - raft.transform.position; away.y = 0;
-                float min = raft.EdgeDistance;
-                if (away.magnitude < min && away.sqrMagnitude > 0.0001f)
-                {
-                    p = raft.transform.position + away.normalized * min;
-                    velocity = Vector3.ProjectOnPlane(velocity, away.normalized);
-                }
-            }
+            if (raft != null) p = BumpOffParts(p);
             p.y = 0.1f + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.08f;
             transform.position = p;
             if (velocity.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(velocity);
             if (lifetime > 60f) Destroy(gameObject);
+        }
+
+        /// <summary>Drifts slide along the raft's actual parts (not a circle around it) instead of passing through.</summary>
+        Vector3 BumpOffParts(Vector3 p)
+        {
+            float half = Raft.CellSize * 0.5f + 0.25f * transform.localScale.x;
+            foreach (var c in raft.Grid.Parts.Keys)
+            {
+                var d = p - raft.CellToWorld(c);
+                float ox = half - Mathf.Abs(d.x), oz = half - Mathf.Abs(d.z);
+                if (ox <= 0f || oz <= 0f) continue;
+                if (ox < oz) { p.x += Mathf.Sign(d.x) * ox; velocity.x = 0f; }
+                else { p.z += Mathf.Sign(d.z) * oz; velocity.z = 0f; }
+            }
+            if (velocity.sqrMagnitude < 0.01f) velocity = (p - raft.transform.position).normalized * 0.5f;
+            return p;
         }
 
         public static string HintText(DriftState s)
