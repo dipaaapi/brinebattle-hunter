@@ -56,5 +56,11 @@ Open: exact slot count per rarity, and whether slots can be added later (refine 
 ### U-13 Auto-loot raft module — 2026-10-28 · 💡 · GDD §3, §6
 A raft part built on the **edge of the raft** that automatically loots monsters floating past (no manual hook).
 
-Open: does it only take Dead drifts (Weakened/Alive still need the hook)? Range, speed and capacity per module rarity? Does it fit Phase 5 (raft builder) as a buildable part?
+**Upgrades (added 2026-10-28):**
+- The module is **upgradable**, and each level/version has different capabilities.
+- Some versions have their own **hooks**, so the raft harvests by itself, and some hook **multiple** drifts at once.
+- Some versions act as a **weapon**: a drift that looked dead but is actually alive gets **killed automatically** by the module.
+- **Durability limit:** the hooks wear out and break after use, so auto-loot is never unlimited. It must not replace hunting, which would hurt the game.
+
+Open: does the basic version only take Dead drifts? Range, speed and capacity per level/rarity? Repair with essence or materials? Fits Phase 5 (raft builder) as a buildable part, with durability tying into C-4.
 
