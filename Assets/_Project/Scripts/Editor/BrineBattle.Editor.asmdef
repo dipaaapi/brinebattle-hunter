@@ -1,0 +1,6 @@
+{
+    "name": "BrineBattle.Editor",
+    "rootNamespace": "BrineBattle.Editor",
+    "references": ["BrineBattle.Runtime"],
+    "includePlatforms": ["Editor"]
+}

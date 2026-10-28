@@ -1,0 +1,6 @@
+{
+    "name": "BrineBattle.Runtime",
+    "rootNamespace": "BrineBattle",
+    "references": [],
+    "autoReferenced": true
+}
