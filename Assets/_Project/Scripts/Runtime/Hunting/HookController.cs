@@ -44,7 +44,7 @@ namespace BrineBattle.Hunting
 
         // Line tension (idea C-2)
         float tensionStart, tensionWidth, tensionSpeed, tensionTime;
-        bool tensionPressed, tensionHit;
+        bool tensionPressed, tensionHit, tensionAuto;
 
         void Awake()
         {
@@ -104,6 +104,12 @@ namespace BrineBattle.Hunting
                 tensionStart = TensionRules.RandomZoneStart(tensionWidth, rng);
                 tensionTime = 0f;
                 tensionPressed = tensionHit = false;
+                tensionAuto = BattleSettings.Mode == BattleMode.Auto;
+                if (tensionAuto)
+                {
+                    tensionPressed = true;
+                    tensionHit = rng.NextDouble() < TensionRules.AutoCleanChance;
+                }
             }
         }
 
@@ -135,11 +141,17 @@ namespace BrineBattle.Hunting
 
         void Resolve()
         {
-            phase = Phase.Result;
             line.enabled = false;
             var m = target.Monster;
+            if (!tensionPressed)
+            {
+                // Never set the hook: the catch slips away whatever it was.
+                Finish($"{m.displayName} slipped off the hook. Press Space in the green zone to set it!", false, false);
+                return;
+            }
+            phase = Phase.Result;
             string hintNote = target.Hint == target.Actual ? "The hint was right." : $"The hint was wrong ({Drift.HintText(target.Hint)}).";
-            hintNote += tensionHit ? " Clean reel!" : tensionPressed ? " Sloppy reel." : " You never set the hook.";
+            hintNote += (tensionAuto ? " Auto reel:" : "") + (tensionHit ? $" Clean reel! (+{TensionRules.CleanReelBonus} per drop)" : " Sloppy reel.");
             pendingLoot = null;
 
             switch (target.Actual)
@@ -169,8 +181,12 @@ namespace BrineBattle.Hunting
             }
         }
 
-        List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m) =>
-            m.loot != null ? m.loot.Roll(rng) : new List<Drop<ItemDefinition>>();
+        List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m)
+        {
+            var drops = m.loot != null ? m.loot.Roll(rng) : new List<Drop<ItemDefinition>>();
+            if (!tensionHit) return drops;
+            return drops.Select(d => new Drop<ItemDefinition>(d.Item, d.Quantity + TensionRules.CleanReelBonus)).ToList();
+        }
 
         static string Describe(List<Drop<ItemDefinition>> drops) =>
             drops.Count == 0 ? "  (nothing)" : string.Join("\n", drops.Select(d => $"  {d.Quantity} × {d.Item.displayName} ({d.Item.rarity})"));
@@ -206,13 +222,17 @@ namespace BrineBattle.Hunting
         {
             float w = 360, h = 26;
             var r = new Rect((Screen.width - w) / 2f, Screen.height - 120, w, h);
-            string label = tensionPressed ? (tensionHit ? "<b>Clean reel!</b>" : "<b>Sloppy...</b>") : "Press <b>Space</b> or click in the green zone!";
+            string label = tensionAuto ? (t < 0.5f ? "<b>AUTO</b> reel..." : tensionHit ? "<b>AUTO</b> — clean reel!" : "<b>AUTO</b> — sloppy reel")
+                : tensionPressed ? (tensionHit ? "<b>Clean reel!</b>" : "<b>Sloppy...</b>") : "Press <b>Space</b> or click in the green zone!";
+            var prev = GUI.color;
+            if (tensionAuto) GUI.color = new Color(1f, 1f, 1f, 0.45f);
             GUI.Label(new Rect(r.x, r.y - 22, w, 20), label, Rich);
             GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.6f), 0, 0);
             var zone = new Rect(r.x + tensionStart * w, r.y, tensionWidth * w, h);
             GUI.DrawTexture(zone, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.3f, 0.85f, 0.4f, 0.9f), 0, 0);
             float m = TensionRules.Marker(tensionTime, tensionSpeed);
             GUI.DrawTexture(new Rect(r.x + m * w - 2, r.y - 4, 4, h + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, Color.white, 0, 0);
+            GUI.color = prev;
         }
 
         void OnGUI()
@@ -311,7 +331,7 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Bag (B)")) BagToggleRequested?.Invoke();
             if (GUILayout.Button("Book (C)")) BookToggleRequested?.Invoke();
             GUILayout.EndHorizontal();
-            GUILayout.Label("Reeling: press Space in the green zone.");
+            GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "Reeling: AUTO (50% clean)" : "Reeling: press Space in the green zone.");
             GUILayout.Label("<b>Log</b>", Rich);
             foreach (var l in log) GUILayout.Label(l);
             GUILayout.EndVertical();

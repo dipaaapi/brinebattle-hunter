@@ -13,6 +13,10 @@ namespace BrineBattle.Encounters
         public const float MinZone = 0.08f;
         public const float BaseSpeed = 1.1f;
         public const float SpeedPerSize = 0.15f;
+        /// <summary>In Auto mode the reel presses itself (owner idea U-9: auto = 50/50).</summary>
+        public const float AutoCleanChance = 0.5f;
+        /// <summary>Extra quantity per drop after a clean reel.</summary>
+        public const int CleanReelBonus = 1;
 
         /// <summary>Bigger monsters pull harder: smaller sweet spot.</summary>
         public static float ZoneWidth(int sizeClass) =>

@@ -6,7 +6,8 @@
 - Branch `round/1-ideas`: **C-2** `TensionRules` (sweet spot shrinks / sweep speeds up with size) + reel timing bar (Space or click) + `BattleState.FirstRound` initiative; **U-11** `CollectionLog` (ids per page, save string) + `CollectionBook` panel (C key; Monsters / Items / Pets, silhouettes, completion %, saved in PlayerPrefs).
 - Bag panel widened ("All" buttons were cut off). GDD v0.2.
 - `unity-verify`: 70/70 passed. Play mode not yet checked by hand.
-- Next: Ed plays; then Phase 5 + Idea Round 2.
+- Ed played it. Fixes from his feedback: no press now lets the catch slip away; clean reel gives +1 per drop; in Auto mode the bar is greyed "AUTO" and presses itself (50% clean, from U-9).
+- Next: Phase 5 + Idea Round 2.
 
 ## 2026-10-28 — Phase 4
 - Branch `phase/4-loot`: `Inventory` (stacks + essence keyed by rarity/element), `SalvageRules` (compatibility, yield), `BagPanel` (B key: tiers −/+, fits/misfit, salvage 1/all/misfits, auto-salvage toggle).

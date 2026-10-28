@@ -30,7 +30,7 @@ Monsters eat raft parts when you lose or flee; beat them later to recover parts 
 
 ## New ideas
 
-### U-9 Harvest mode toggle: Auto / Manual — 2026-10-28 · 💡 · GDD §4, §11
+### U-9 Harvest mode toggle: Auto / Manual — 2026-10-28 · 🟨 partly in (Auto reel = 50% clean) · GDD §4, §11
 A toggle when harvesting a monster.
 - **Auto:** 50% chance to catch / get the harvest.
 - **Manual:** the player does it themselves and gets it, but with a 30% chance to miss (so 70% success).
