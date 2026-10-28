@@ -68,6 +68,7 @@ namespace BrineBattle.Hunting
             go.transform.position = pos;
             var drift = go.AddComponent<Drift>();
             drift.Init(monster, state, hint, dir * driftSpeed * Random.Range(0.7f, 1.3f));
+            drift.Aggression = Encounters.EncounterRules.RollAggression(monster.aggression, new System.Random(Random.Range(0, int.MaxValue)));
             live.Add(drift);
         }
     }

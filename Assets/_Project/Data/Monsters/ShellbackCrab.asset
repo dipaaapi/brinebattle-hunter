@@ -18,6 +18,7 @@ MonoBehaviour:
   habitat: 0
   rarity: 2
   sizeClass: 3
+  aggression: 0.45
   stats:
     hp: 120
     attack: 14

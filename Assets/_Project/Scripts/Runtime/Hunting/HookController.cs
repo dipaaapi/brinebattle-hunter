@@ -170,8 +170,13 @@ namespace BrineBattle.Hunting
                     Finish($"Harvested {m.displayName}{(tensionHit ? " (clean reel)" : "")}: {Brief(pendingLoot)}", true, true);
                     return;
                 case DriftState.Weakened:
-                    resultTitle = $"{m.displayName} — Weakened";
-                    resultBody = $"{hintNote}\nIt can barely move. Finish it for loot, or tame it.";
+                    if (EncounterRules.IsAggressive(target.Aggression))
+                    {
+                        KillWeakened("too aggressive to tame");
+                        return;
+                    }
+                    resultTitle = $"{m.displayName} — Weakened, calm";
+                    resultBody = $"{hintNote}\nIt can barely move and isn't hostile. Finish it for loot, or tame it.";
                     break;
                 default:
                     if (EncounterRules.IsGated(target.Actual, raft.size, m.sizeClass))
@@ -343,10 +348,24 @@ namespace BrineBattle.Hunting
             });
         }
 
+        /// <summary>Idea U-17: a weakened aggressive monster is finished off without a prompt.</summary>
+        void KillWeakened(string why)
+        {
+            var m = target.Monster;
+            pendingLoot = RollLoot(m);
+            Finish($"{m.displayName} was weakened but {why}, so you finished it: {Brief(pendingLoot)}", true, true);
+        }
+
         void Sedated()
         {
             var m = target.Monster;
             target.MakeWeakened();
+            if (EncounterRules.IsAggressive(target.Aggression))
+            {
+                Log($"Sedated {m.displayName}.");
+                KillWeakened("sedated but still aggressive");
+                return;
+            }
             resultTitle = $"{m.displayName} — Sedated";
             resultBody = "The sedative worked. It is now Weakened.";
             Log($"Sedated {m.displayName}.");

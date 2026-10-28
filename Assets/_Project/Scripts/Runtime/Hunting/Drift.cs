@@ -11,6 +11,8 @@ namespace BrineBattle.Hunting
         public DriftState Actual { get; private set; }
         public DriftState Hint { get; private set; }
         public bool Hooked { get; set; }
+        /// <summary>This drift's temperament, 0 calm – 1 aggressive (idea U-17).</summary>
+        public float Aggression { get; set; } = 0.5f;
 
         Vector3 velocity;
         float bobPhase;

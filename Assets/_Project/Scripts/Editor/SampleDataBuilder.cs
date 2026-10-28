@@ -141,6 +141,11 @@ namespace BrineBattle.Editor
             EnsureEntry(loot, spear, 0.15f, 1, 1);
             EnsureEntry(gullLoot, buckler, 0.2f, 1, 1);
 
+            // Idea U-17 temperament (set every build so older assets get it too).
+            SetAggression("BrinefangEel", 0.8f);
+            SetAggression("GaleGull", 0.3f);
+            SetAggression("ShellbackCrab", 0.45f);
+
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }
@@ -153,6 +158,14 @@ namespace BrineBattle.Editor
             r.inputs = inputs.Select(x => new Ingredient { item = x.Item1, count = x.Item2 }).ToList();
             r.outputs = outputs.Select(x => new Ingredient { item = x.Item1, count = x.Item2 }).ToList();
             EditorUtility.SetDirty(r);
+        }
+
+        static void SetAggression(string asset, float value)
+        {
+            var m = AssetDatabase.LoadAssetAtPath<MonsterDefinition>($"{Root}/Monsters/{asset}.asset");
+            if (m == null || Mathf.Approximately(m.aggression, value)) return;
+            m.aggression = value;
+            EditorUtility.SetDirty(m);
         }
 
         static void EnsureEntry(LootTable table, ItemDefinition item, float chance, int min, int max)

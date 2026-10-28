@@ -76,5 +76,18 @@ namespace BrineBattle.Tests
             Assert.IsFalse(EncounterRules.IsGated(DriftState.Dead, 1, 3));
             Assert.IsFalse(EncounterRules.IsGated(DriftState.Alive, 3, 3));
         }
+
+        [Test]
+        public void AggressionDecidesAutoKillAndStaysInRange()
+        {
+            Assert.IsTrue(EncounterRules.IsAggressive(0.5f));
+            Assert.IsFalse(EncounterRules.IsAggressive(0.49f));
+            var rng = new System.Random(3);
+            for (int i = 0; i < 200; i++)
+            {
+                float a = EncounterRules.RollAggression(0.95f, rng);
+                Assert.That(a, Is.InRange(0.8f, 1f));
+            }
+        }
     }
 }

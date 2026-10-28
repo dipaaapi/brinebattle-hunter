@@ -101,3 +101,7 @@ Some patches and planks can be turned into a net or a hook, upgraded, and taken 
 - Built: Workbench in build mode. Craft Drift Net = 3 Driftwood Plank + 2 Eel-Skin Patch. Upgrade to Hook Arm (Lv 2, 4 m reach) = Drift Net + 2 Eel Fang + 2 Driftwood Plank. Dismantle returns part of the cost.
 - Later: Lv 3–5 recipes, and folding this into Phase 6 crafting.
 
+### U-17 Temperament decides the weakened prompt — 2026-10-29 · ✅ built · GDD §4, §5
+Each monster has an aggression (temperament). A weakened monster that is aggressive is killed outright, with no prompt and no menu, because there's no point taming it. Only a calm weakened monster asks Finish or Tame. A strong (alive) monster still goes straight to battle.
+- Built: `MonsterDefinition.aggression` (Eel 0.8, Crab 0.45, Gull 0.3), each drift ±0.15; aggressive = 0.5 or more. Also applies after a successful sedate.
+

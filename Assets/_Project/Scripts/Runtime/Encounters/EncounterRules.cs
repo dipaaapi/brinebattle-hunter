@@ -33,6 +33,16 @@ namespace BrineBattle.Encounters
         /// <summary>Only Alive creatures fight, so only they are gated by raft size.</summary>
         public static bool CanFight(int raftSize, int monsterSizeClass) => raftSize >= monsterSizeClass;
 
+        /// <summary>Aggression at or above this: a weakened monster is killed without asking (idea U-17).</summary>
+        public const float AggressiveAt = 0.5f;
+        public const float AggressionSpread = 0.15f;
+
+        public static bool IsAggressive(float aggression) => aggression >= AggressiveAt;
+
+        /// <summary>One drift's temperament: the species' value ± spread, clamped 0–1.</summary>
+        public static float RollAggression(float species, Random rng) =>
+            Math.Max(0f, Math.Min(1f, species + ((float)rng.NextDouble() * 2f - 1f) * AggressionSpread));
+
         public static bool IsGated(DriftState state, int raftSize, int monsterSizeClass) =>
             state == DriftState.Alive && !CanFight(raftSize, monsterSizeClass);
     }
