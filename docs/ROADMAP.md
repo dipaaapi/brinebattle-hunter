@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Idea Round 1 — U-11 Collection book + C-2 Line tension |
-| **Next step** | Ed: play `Hook.unity` — press Space while reeling, open the book (C); then Phase 5 + pick Idea Round 2 |
+| **Current phase** | Phase 5 — Raft builder (vertical slice) |
+| **Next step** | Build the raft grid, build mode, tier upgrade |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -72,13 +72,13 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a kill produces loot, and incompatible loot becomes essence.
 
-### 🟨 Idea Round 1 (after Phase 4)
+### ✅ Idea Round 1 (after Phase 4)
 - [x] **U-11 Collection book** — monsters, items, pets; silhouette until acquired (reads the Phase 4 inventory). Absorbs C-6.
 - [x] **C-2 Line tension** — one timing input while reeling; success = you act first in battle, fail = monster does.
 
 **Done when:** the book opens from the HUD with silhouettes and reveals, and reeling has a timing check that changes who acts first.
 
-### ⬜ Phase 5 — Raft builder (vertical slice)
+### 🟨 Phase 5 — Raft builder (vertical slice)
 - [ ] Grid-snapped modular parts
 - [ ] Raft size/strength stats feeding the Phase 2 gate
 - [ ] Upgrade with parts + essence
