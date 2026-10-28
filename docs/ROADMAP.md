@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 0 — Setup |
-| **Next step** | Push the first commit to `main`, then start Phase 1 (Element data) |
+| **Current phase** | Phase 1 — Data foundation |
+| **Next step** | Branch `phase/1-data`, then write `Element` + combination table with EditMode tests |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -26,17 +26,17 @@
 
 Status: ⬜ not started · 🟨 in progress · ✅ done
 
-### 🟨 Phase 0 — Setup
+### ✅ Phase 0 — Setup
 - [x] Unity project created (URP template)
 - [x] Repo connected; `.gitignore` + `.gitattributes` (Git LFS for `.blend`, `.fbx`, `.png`, `.psd`, audio)
 - [x] Folder layout: `Assets/_Project/{Scripts,Data,Art,Prefabs,Scenes,Tests}`
 - [x] Assembly definitions (`BrineBattle.Runtime`, `BrineBattle.Editor`, `BrineBattle.Tests`)
 - [x] Headless check: compile + EditMode tests from the command line (`unity-verify` skill)
-- [ ] First commit pushed to `main`
+- [x] First commit pushed to `main`
 
 **Done when:** the project opens with no errors, `git status` is clean, and the headless check passes.
 
-### ⬜ Phase 1 — Data foundation
+### 🟨 Phase 1 — Data foundation
 - [ ] `Element` (4 main + 6 secondary, combination table, type-chart multipliers)
 - [ ] `Rarity` (Common → Mythic) and `ItemType` (Raft, Weapon, Armor, Companion, Consumable)
 - [ ] `MonsterDefinition` (stats, element, habitat sea/sky, size class, loot table)
@@ -88,7 +88,7 @@ Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 ### ⬜ Phase 9 — Art pass
 Blender pipeline (chibi hunter, raft part, monster), `_col` collision meshes, toon shader + inverted-hull outline.
 
-### ⬜ Phase 10 — Other hunters & party
+### 🟨 Phase 10 — Other hunters & party
 Trade, tied rafts, RO-style EXP/item share. Starts with a multiplayer feasibility study.
 
 ## Ideas

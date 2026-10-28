@@ -9,4 +9,5 @@
 - Ideas split: owner's (`ideas/USER_IDEAS.md`) vs Claude's (`ideas/CLAUDE_IDEAS.md`), compared in `ideas/COMPARISON.md`.
 - Unity project created headless (6000.3.11f1, Universal 3D/URP template) at `C:\Users\USER\brinebattle-hunter`; not auto-registered in Unity Hub (Add → Add project from disk).
 - Added `Assets/_Project` layout, three asmdefs, `GameInfo` + smoke test. `unity-verify`: 1/1 passed, 0 compile errors.
-- Next: push first commit, then Phase 1.
+- Pushed to `main` (c502bb6). Phase 0 done.
+- Next: Phase 1, starting with Element data.
