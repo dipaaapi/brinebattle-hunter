@@ -62,5 +62,23 @@ A raft part built on the **edge of the raft** that automatically loots monsters 
 - Some versions act as a **weapon**: a drift that looked dead but is actually alive gets **killed automatically** by the module.
 - **Durability limit:** the hooks wear out and break after use, so auto-loot is never unlimited. It must not replace hunting, which would hurt the game.
 
-Open: does the basic version only take Dead drifts? Range, speed and capacity per level/rarity? Repair with essence or materials? Fits Phase 5 (raft builder) as a buildable part, with durability tying into C-4.
+**Owner answers (2026-10-28):**
+- **Basic version:** takes whatever comes, any state (random), but only what drifts close enough to touch it, since it has no hook, and only a little at a time.
+- **Range, speed, capacity:** grow with upgrades. Claude sets the scaling.
+- **Repair:** essence or materials depending on the module's level and rarity. Claude sets the scaling.
+
+**Scaling (proposed by Claude at the owner's request; numbers tunable):**
+
+| Lv | Version | Hooks | Range | Every | Durability | Alive drifts |
+|---|---|---|---|---|---|---|
+| 1 | Basic net (no hook) | 0 (touch only) | 1.5 m | 20 s | 30 | Bites the module (−5 durability) and swims off |
+| 2 | Hook arm | 1 | 4 m | 12 s | 40 | Breaks free (−5) |
+| 3 | Twin hooks | 2 | 6 m | 10 s | 50 | Breaks free (−5) |
+| 4 | Harpoon arm (weapon) | 2 | 8 m | 8 s | 60 | Killed if size ≤ raft size (−3 per kill), else breaks free |
+| 5 | Multi-harpoon | 3 | 10 m | 6 s | 80 | Same as Lv 4 |
+
+- Each loot uses 1 durability. At 0 the module stops until repaired.
+- **Rarity** of the module multiplies durability: Common ×1, +20% per rarity step (Mythic ×2).
+- **Repair** (per 10 durability): Lv 1–2 = materials only; Lv 3 = materials + essence of the module's rarity; Lv 4–5 = essence only. Cost = level × (rarity + 1). Same-element essence repairs 25% more.
+- Fits Phase 5 (raft builder) as a buildable part; durability shares a system with C-4 weapon durability.
 
