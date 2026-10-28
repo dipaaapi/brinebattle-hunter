@@ -6,7 +6,7 @@
 
 | | |
 |---|---|
-| **Current phase** | Idea Round 1 — U-11 Collection book + C-2 Line tension (Phases 1–4 waiting for merge) |
+| **Current phase** | Idea Round 1 — U-11 Collection book + C-2 Line tension |
 | **Next step** | Build U-11 Collection book, then C-2 Line tension |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
