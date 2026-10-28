@@ -20,7 +20,7 @@ namespace BrineBattle.Hunting
         public RaftModules modules;
         public List<RecipeDefinition> recipes = new List<RecipeDefinition>();
 
-        public bool Active { get; private set; }
+        public bool Active => WorldPause.Open == Menu.Build;
 
         Mode mode;
         ItemDefinition selected;
@@ -32,8 +32,7 @@ namespace BrineBattle.Hunting
 
         public void Toggle()
         {
-            Active = !Active;
-            if (!Active) ClearGhosts();
+            WorldPause.Toggle(Menu.Build);
             message = "";
         }
 
@@ -42,7 +41,11 @@ namespace BrineBattle.Hunting
             var kb = Keyboard.current;
             if (kb != null && kb.rKey.wasPressedThisFrame) Toggle();
             if (kb != null && Active && kb.escapeKey.wasPressedThisFrame) Toggle();
-            if (!Active || raft == null) return;
+            if (!Active || raft == null)
+            {
+                if (ghosts.Count > 0 || hover != null) ClearGhosts();
+                return;
+            }
 
             if (selected != null && hook.Inventory.Count(selected) == 0) selected = null;
             RefreshGhosts();

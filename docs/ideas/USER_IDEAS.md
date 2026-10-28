@@ -71,11 +71,11 @@ A raft part built on the **edge of the raft** that automatically loots monsters 
 
 | Lv | Version | Hooks | Range | Every | Durability | Alive drifts |
 |---|---|---|---|---|---|---|
-| 1 | Basic net (no hook) | 0 (touch only) | 1.5 m | 20 s | 30 | Bites the module (−5 durability) and swims off |
-| 2 | Hook arm | 1 | 4 m | 12 s | 40 | Breaks free (−5) |
-| 3 | Twin hooks | 2 | 6 m | 10 s | 50 | Breaks free (−5) |
-| 4 | Harpoon arm (weapon) | 2 | 8 m | 8 s | 60 | Killed if size ≤ raft size (−3 per kill), else breaks free |
-| 5 | Multi-harpoon | 3 | 10 m | 6 s | 80 | Same as Lv 4 |
+| 1 | Basic net (no hook) | 0 (touch only) | 1.5 m | 8 s | 30 | Bites the module (−5 durability) and swims off |
+| 2 | Hook arm | 1 | 4 m | 6 s | 40 | Breaks free (−5) |
+| 3 | Twin hooks | 2 | 6 m | 5 s | 50 | Breaks free (−5) |
+| 4 | Harpoon arm (weapon) | 2 | 8 m | 4 s | 60 | Killed if size ≤ raft size (−3 per kill), else breaks free |
+| 5 | Multi-harpoon | 3 | 10 m | 3 s | 80 | Same as Lv 4 |
 
 - Each loot uses 1 durability. At 0 the module stops until repaired.
 - **Rarity** of the module multiplies durability: Common ×1, +20% per rarity step (Mythic ×2).

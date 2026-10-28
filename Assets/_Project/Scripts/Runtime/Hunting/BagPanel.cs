@@ -21,7 +21,7 @@ namespace BrineBattle.Hunting
         [Tooltip("Salvage misfits as soon as they are picked up.")]
         public bool autoSalvage;
 
-        bool open;
+        static bool open => WorldPause.Open == Menu.Bag;
         Vector2 scroll;
 
         void OnEnable()
@@ -38,7 +38,7 @@ namespace BrineBattle.Hunting
             hook.LootAdded -= OnLoot;
         }
 
-        void Toggle() => open = !open;
+        void Toggle() => WorldPause.Toggle(Menu.Bag);
 
         void Update()
         {
@@ -67,7 +67,7 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
-            if (!open || hook == null || (hook.builder != null && hook.builder.Active)) return;
+            if (!open || hook == null) return;
             var inv = hook.Inventory;
             GUI.depth = -5;
             float w = Mathf.Min(600, Screen.width - HookController.HudRight - 22), h = Mathf.Min(560, Screen.height - 40);
@@ -110,7 +110,7 @@ namespace BrineBattle.Hunting
                 int gained = inv.SalvageIncompatible(TierOf);
                 hook.Log(gained > 0 ? $"Salvaged misfits into {gained} essence." : "No misfits to salvage.");
             }
-            if (GUILayout.Button("Close (B)")) open = false;
+            if (GUILayout.Button("Close (B)")) WorldPause.Close(Menu.Bag);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }

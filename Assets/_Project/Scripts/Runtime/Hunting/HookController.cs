@@ -73,7 +73,7 @@ namespace BrineBattle.Hunting
 
         void UpdateIdle()
         {
-            if (builder != null && builder.Active) return;
+            if (WorldPause.Open != Menu.None) return;
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.wasPressedThisFrame || Camera.main == null) return;
             var ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());

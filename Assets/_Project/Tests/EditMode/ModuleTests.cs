@@ -39,7 +39,7 @@ namespace BrineBattle.Tests
             Assert.AreEqual(30, ModuleRules.MaxDurability(1, Rarity.Common));
             Assert.AreEqual(160, ModuleRules.MaxDurability(5, Rarity.Mythic));
             Assert.AreEqual(1.5f, ModuleRules.Range(1));
-            Assert.AreEqual(20f, ModuleRules.Interval(1));
+            Assert.AreEqual(8f, ModuleRules.Interval(1));
             Assert.AreEqual(0, ModuleRules.Hooks(1));
             Assert.AreEqual(1, ModuleRules.RepairCost(1, Rarity.Common));
             Assert.AreEqual(16, ModuleRules.RepairCost(4, Rarity.Epic));

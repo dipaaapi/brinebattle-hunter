@@ -17,7 +17,7 @@ namespace BrineBattle.Rafts
 
         static readonly int[] hooks = { 0, 0, 1, 2, 2, 3 };
         static readonly float[] range = { 0, 1.5f, 4f, 6f, 8f, 10f };
-        static readonly float[] interval = { 0, 20f, 12f, 10f, 8f, 6f };
+        static readonly float[] interval = { 0, 8f, 6f, 5f, 4f, 3f };
         static readonly int[] baseDurability = { 0, 30, 40, 50, 60, 80 };
 
         static int L(int level) => Math.Max(1, Math.Min(MaxLevel, level));

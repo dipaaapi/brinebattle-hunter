@@ -23,7 +23,7 @@ namespace BrineBattle.Hunting
 
         public CollectionLog Log { get; private set; }
 
-        bool open;
+        static bool open => WorldPause.Open == Menu.Book;
         CollectionPage page;
         Vector2 scroll;
         string selected;
@@ -50,7 +50,7 @@ namespace BrineBattle.Hunting
             Log.Unlocked -= OnUnlocked;
         }
 
-        void Toggle() => open = !open;
+        void Toggle() => WorldPause.Toggle(Menu.Book);
 
         void Update()
         {
@@ -80,7 +80,7 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
-            if (!open || (hook != null && hook.builder != null && hook.builder.Active)) return;
+            if (!open) return;
             GUI.depth = -5;
             float left = HookController.HudRight + 10, w = Mathf.Min(640, Screen.width - left - 12), h = Mathf.Min(520, Screen.height - 40);
             GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
@@ -111,7 +111,7 @@ namespace BrineBattle.Hunting
                 selected = null;
             }
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Close (C)", GUILayout.Width(120))) open = false;
+            if (GUILayout.Button("Close (C)", GUILayout.Width(120))) WorldPause.Close(Menu.Book);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }

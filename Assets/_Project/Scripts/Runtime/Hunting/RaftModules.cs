@@ -80,7 +80,8 @@ namespace BrineBattle.Hunting
                 drifts ??= FindObjectsByType<Drift>(FindObjectsSortMode.None);
                 Vector3 at = raft.CellToWorld(kv.Key);
                 float reach = ModuleRules.Range(s.Level);
-                var d = drifts.Where(x => x != null && !x.Hooked && Flat(x.transform.position - at).magnitude <= reach)
+                // Measured to the drift's edge, so a big crab counts as touching when it looks like it.
+                var d = drifts.Where(x => x != null && !x.Hooked && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x)
                               .OrderBy(x => Flat(x.transform.position - at).sqrMagnitude).FirstOrDefault();
                 if (d == null) continue;
                 s.Timer = ModuleRules.Interval(s.Level);
@@ -90,6 +91,7 @@ namespace BrineBattle.Hunting
 
         void Grab(Slot s, Drift d, Vector3 at)
         {
+            Flash(at, d.transform.position, s.Level >= 2);
             string name = s.Item.displayName;
             if (d.Actual == DriftState.Alive)
             {
@@ -135,9 +137,24 @@ namespace BrineBattle.Hunting
                 Vector3 sp = Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f);
                 if (sp.z < 0) continue;
                 var s = kv.Value;
-                string text = s.Durability.Broken ? "<color=#f77>BROKEN</color>" : $"{s.Durability}";
+                string text = s.Durability.Broken ? "<color=#f77>BROKEN</color>"
+                    : s.Timer > 0f ? $"{s.Durability} · {Mathf.CeilToInt(s.Timer)}s" : $"{s.Durability} · <color=#8f8>ready</color>";
                 GUI.Label(new Rect(sp.x - 40, Screen.height - sp.y - 18, 80, 18), text, HuntStyles.WorldLabel);
             }
+        }
+
+        /// <summary>A short line (hook arm) or splash (net) so you can see the module grab.</summary>
+        void Flash(Vector3 from, Vector3 to, bool hookLine)
+        {
+            var go = new GameObject("Module grab");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.startColor = lr.endColor = hookLine ? new Color(1f, 0.95f, 0.6f) : new Color(0.7f, 1f, 0.8f);
+            lr.startWidth = lr.endWidth = hookLine ? 0.08f : 0.2f;
+            lr.positionCount = 2;
+            lr.SetPosition(0, from + Vector3.up * 0.5f);
+            lr.SetPosition(1, to + Vector3.up * 0.2f);
+            Destroy(go, 0.5f);
         }
 
         static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
