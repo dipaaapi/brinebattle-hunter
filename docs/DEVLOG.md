@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-28 — Phase 4
+- Branch `phase/4-loot`: `Inventory` (stacks + essence keyed by rarity/element), `SalvageRules` (compatibility, yield), `BagPanel` (B key: tiers −/+, fits/misfit, salvage 1/all/misfits, auto-salvage toggle).
+- New sample gear: Eel-Skin Patch (Raft, Common → misfit at the default Uncommon raft tier), Eel-Fang Spear (Weapon), Gull-Bone Buckler (Armor).
+- Rule from owner: an **Idea Round** (top U + top C) after every core phase. Round 1 = U-11 Collection book + C-2 Line tension.
+- `unity-verify`: 53/53 passed. Play mode not yet checked by hand.
+- Next: Ed plays the bag; then Idea Round 1.
+
 ## 2026-10-28 — Phase 3
 - Branch `phase/3-battle`: `BattleState` (1v1 rounds in speed order, raft HP, stamina), `BattleRules` (damage with element multiplier, brace), `BattleAI` (Manual waits; Semi-auto auto-attacks but waits on low HP or harpoon ready; Auto plays all), `BattleSettings` (saved mode), `BattleController` (battle camera, HP bars, mode toolbar, actions).
 - Actions: Attack, Harpoon (4 stamina, ×1.8), Brace (half damage, +3 stamina). Stamina is a placeholder for U-7/C-4.

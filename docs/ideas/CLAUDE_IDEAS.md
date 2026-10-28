@@ -7,7 +7,7 @@ Format: `### C-<n> Title` · date · status (💡 open / ✅ accepted / ❌ drop
 ### C-1 Drift "reading" as a skill check — 2026-10-28 · 💡 · §4 · S · Phase 2
 Alchemy Mastery raises the accuracy of the Dead/Weakened/Alive hint (e.g. 50% → 90%). Gives Mastery a use from the very first loop, and makes "hook the unknown" a choice instead of pure luck.
 
-### C-2 Line tension mini-step on reel-in — 2026-10-28 · 💡 · §4 · S · Phase 2
+### C-2 Line tension mini-step on reel-in — 2026-10-28 · ✅ Idea Round 1 · §4 · S · Phase 2
 Reeling an Alive creature is one short timing input; success = you act first in battle, fail = it does. Keeps the encounter launch from feeling random without adding real-time combat.
 
 ### C-3 Weather and currents decide what drifts — 2026-10-28 · 💡 · §2, §4 · M · Phase 2–5
@@ -19,7 +19,7 @@ Stamina per turn for basic actions, weapon durability for skills. Both are fed b
 ### C-5 Fusion keeps one "echo" (answer to U-8) — 2026-10-28 · 💡 · §10 · M · Phase 7
 Sources are consumed, but the result inherits one passive from the consumed one. Makes fusion a real trade-off without feeling like pure loss.
 
-### C-6 Bestiary / Hunter's Journal — 2026-10-28 · 💡 · §4, §11 · S · Phase 4
+### C-6 Bestiary / Hunter's Journal — 2026-10-28 · 🔀 merged into U-11 · §4, §11 · S · Phase 4
 Each monster entry fills in as you harvest/fight it: weakness, loot table, tame chance. Cheap to build on the Phase 1 data, rewards repeat hunts.
 
 ### C-7 Absorbed parts are visible on the monster — 2026-10-28 · 💡 · §6 · M · Phase 8

@@ -24,7 +24,9 @@ namespace BrineBattle.Hunting
         public float reelTime = 1.2f;
         [Range(0f, 1f)] public float sedateChance = 0.5f;
 
-        readonly Dictionary<ItemDefinition, int> inventory = new Dictionary<ItemDefinition, int>();
+        public Inventory Inventory { get; } = new Inventory();
+        /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
+        public event System.Action LootAdded;
         readonly List<string> log = new List<string>();
         readonly System.Random rng = new System.Random();
 
@@ -154,9 +156,12 @@ namespace BrineBattle.Hunting
         void Finish(string message, bool keepLoot, bool destroy)
         {
             if (keepLoot && pendingLoot != null)
-                foreach (var d in pendingLoot)
-                    inventory[d.Item] = (inventory.TryGetValue(d.Item, out var n) ? n : 0) + d.Quantity;
-            Log(message);
+            {
+                foreach (var d in pendingLoot) Inventory.Add(d.Item, d.Quantity);
+                Log(message);
+                LootAdded?.Invoke();
+            }
+            else Log(message);
             if (target != null)
             {
                 if (destroy) Destroy(target.gameObject);
@@ -247,7 +252,7 @@ namespace BrineBattle.Hunting
         {
             GUILayout.BeginArea(new Rect(10, 10, 260, Screen.height - 20));
             GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("<b>BrineBattle Hunter — Phase 3</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Phase 4</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.Label("Battle mode (Settings)");
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
@@ -256,9 +261,9 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("-", GUILayout.Width(24))) raft.size = Mathf.Max(1, raft.size - 1);
             if (GUILayout.Button("+", GUILayout.Width(24))) raft.size = Mathf.Min(10, raft.size + 1);
             GUILayout.EndHorizontal();
-            GUILayout.Label("<b>Inventory</b>", Rich);
-            if (inventory.Count == 0) GUILayout.Label("  (empty)");
-            foreach (var kv in inventory) GUILayout.Label($"  {kv.Value} × {kv.Key.displayName}");
+            int stacks = Inventory.Items.Count(), essence = Inventory.Essence.Sum(kv => kv.Value);
+            GUILayout.Label($"<b>Bag</b>: {stacks} stacks, {essence} essence", Rich);
+            if (GUILayout.Button("Open bag (B)")) BagToggleRequested?.Invoke();
             GUILayout.Label("<b>Log</b>", Rich);
             foreach (var l in log) GUILayout.Label(l);
             GUILayout.EndVertical();
@@ -268,8 +273,12 @@ namespace BrineBattle.Hunting
         static GUIStyle rich;
         static GUIStyle Rich => rich ??= new GUIStyle(GUI.skin.label) { richText = true };
 
-        void Log(string message)
+        /// <summary>Raised by the HUD button; the bag panel listens.</summary>
+        public event System.Action BagToggleRequested;
+
+        public void Log(string message)
         {
+            if (log.Count > 0 && log[0] == message) return;
             log.Insert(0, message);
             if (log.Count > 6) log.RemoveAt(log.Count - 1);
         }

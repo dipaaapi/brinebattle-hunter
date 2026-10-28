@@ -132,6 +132,7 @@ Applies to gear, companions, and monsters (type chart).
   - Secondary material for raft/gear upgrades
   - Companion growth
 - Proposed: combine low-rarity essence into higher-rarity essence.
+- **Implemented (Phase 4):** an equippable item fits when its rarity ≥ the target's tier. Salvage gives essence of the item's rarity and element, Common 1 … Mythic 6 per item.
 
 ### Consumables
 

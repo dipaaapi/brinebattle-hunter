@@ -91,8 +91,38 @@ namespace BrineBattle.Editor
                 m.description = "Too big for a starter raft. Tests the raft-size gate.";
             });
 
+            // Phase 4: gear so the bag has fits and misfits to salvage.
+            var patch = LoadOrCreate<ItemDefinition>($"{Root}/Items/EelSkinPatch.asset", i =>
+            {
+                i.id = "eel_skin_patch"; i.displayName = "Eel-Skin Patch"; i.type = ItemType.Raft;
+                i.rarity = Rarity.Common; i.element = Element.Water;
+                i.description = "A cheap waterproof patch. Too weak for a sturdy raft.";
+            });
+            var spear = LoadOrCreate<ItemDefinition>($"{Root}/Items/EelFangSpear.asset", i =>
+            {
+                i.id = "eel_fang_spear"; i.displayName = "Eel-Fang Spear"; i.type = ItemType.Weapon;
+                i.rarity = Rarity.Uncommon; i.element = Element.Water; i.maxStack = 1;
+                i.description = "A fang lashed to a pole.";
+            });
+            var buckler = LoadOrCreate<ItemDefinition>($"{Root}/Items/GullBoneBuckler.asset", i =>
+            {
+                i.id = "gull_bone_buckler"; i.displayName = "Gull-Bone Buckler"; i.type = ItemType.Armor;
+                i.rarity = Rarity.Common; i.element = Element.Wind; i.maxStack = 1;
+                i.description = "Hollow bones woven into a light shield.";
+            });
+            EnsureEntry(loot, patch, 0.4f, 1, 2);
+            EnsureEntry(loot, spear, 0.15f, 1, 1);
+            EnsureEntry(gullLoot, buckler, 0.2f, 1, 1);
+
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
+        }
+
+        static void EnsureEntry(LootTable table, ItemDefinition item, float chance, int min, int max)
+        {
+            if (table.entries.Exists(e => e.item == item)) return;
+            table.entries.Add(new LootEntry { item = item, chance = chance, minQuantity = min, maxQuantity = max });
+            EditorUtility.SetDirty(table);
         }
 
         static T LoadOrCreate<T>(string path, System.Action<T> init = null) where T : ScriptableObject

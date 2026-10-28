@@ -80,6 +80,8 @@ namespace BrineBattle.Editor
             var hook = hookGo.AddComponent<HookController>();
             hook.raft = raft;
             hook.battle = battle;
+            var bag = new GameObject("Bag").AddComponent<BagPanel>();
+            bag.hook = hook;
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings(ScenePath);

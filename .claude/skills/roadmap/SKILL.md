@@ -14,6 +14,7 @@ Where each kind of information goes — write it once, in the right place:
 | New idea from the owner | `docs/ideas/USER_IDEAS.md` as `U-<n>` |
 | New idea from Claude | `docs/ideas/CLAUDE_IDEAS.md` as `C-<n>` — never into the owner's file |
 | Ideas compared / decided (owner decides) | `docs/ideas/COMPARISON.md` table + decision log; mark status in the idea file |
+| Core phase finished | Add the next **Idea Round**: top open U-n + top open C-n (2 ideas), mark both ✅ in their files, log the pick and reason in `COMPARISON.md` |
 | Idea accepted | Add it to a phase checklist in `ROADMAP.md` **and** to `GAME_DESIGN.md` |
 | Design decision / open question answered | Edit the `GAME_DESIGN.md` section, remove it from §14 Open Questions, note it in DEVLOG |
 | Unity version or tooling changed | "Where we are" box and `docs/TOOLING.md` |

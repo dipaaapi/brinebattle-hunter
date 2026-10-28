@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 3 — Turn-based battle (Phases 1–2 waiting for merge) |
-| **Next step** | Ed: play `Hook.unity`, fight an Alive drift in all three modes; decide action resource (U-7/C-4) and type chart (C-9) |
+| **Current phase** | Phase 4 — Loot & salvage (Phases 1–3 waiting for merge) |
+| **Next step** | Ed: play `Hook.unity`, open the bag (B), salvage a misfit; then Idea Round 1 (U-11 + C-2) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-28 |
@@ -19,7 +19,8 @@
 - One phase at a time. Each phase is its own branch (`phase/<n>-<name>`) and PR into `main`.
 - A phase is **done** only when its *Done when* line is true in the Unity Editor (playable / testable), not just when code exists.
 - Placeholder art (primitives, flat colours) until Phase 5. Blender pipeline and toon shader come after the vertical slice.
-- New ideas go to `docs/ideas/` first (owner's and Claude's in separate files). They move into a phase only when we decide to build them; then `GAME_DESIGN.md` is updated too.
+- New ideas go to `docs/ideas/` first (owner's and Claude's in separate files). They move into a phase only when scheduled; then `GAME_DESIGN.md` is updated too.
+- **Idea Rounds:** after each core phase, add one Idea Round with exactly **two** ideas: the top-priority open owner idea (U-n) and the top-priority open Claude idea (C-n). Priority = fits the next core phase, cheapest first, unblocks other ideas. Claude picks and logs the reason in `COMPARISON.md`; the owner can swap either before the round starts.
 - Every finished task gets a line in [DEVLOG.md](DEVLOG.md).
 
 ## Phases
@@ -65,11 +66,17 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 **Done when:** a full battle can be won or lost in all three modes.
 
 ### 🟨 Phase 4 — Loot & salvage
-- [ ] Harvest on Dead / victory
-- [ ] Inventory with Type + Rarity
-- [ ] Compatibility check → salvage to Monster Essence
+- [x] Harvest on Dead / victory
+- [x] Inventory with Type + Rarity (bag panel, B key)
+- [x] Compatibility check (item rarity ≥ target tier) → salvage to Monster Essence (rarity + element; yield 1–6); manual, all-misfits, or auto on pickup
 
 **Done when:** a kill produces loot, and incompatible loot becomes essence.
+
+### ⬜ Idea Round 1 (after Phase 4)
+- [ ] **U-11 Collection book** — monsters, items, pets; silhouette until acquired (reads the Phase 4 inventory). Absorbs C-6.
+- [ ] **C-2 Line tension** — one timing input while reeling; success = you act first in battle, fail = monster does.
+
+**Done when:** the book opens from the HUD with silhouettes and reveals, and reeling has a timing check that changes who acts first.
 
 ### ⬜ Phase 5 — Raft builder (vertical slice)
 - [ ] Grid-snapped modular parts
