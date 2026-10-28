@@ -7,6 +7,8 @@
 - Phase 5 feedback fixes: build panel X button; drifts bump off the raft edge instead of passing through.
 - `unity-verify`: 90/90 passed. Play mode not yet checked by hand.
 - Ed's playtest fixes: notices go to the log (popup only for real choices), battle closes itself, Book/Bag beside the HUD, build panel scrolls, drifts collide with real parts and keep the current, visible ocean (waves + current streaks), activity log = 3-row box bottom-left, world pauses (`WorldPause`) during battle and prompts.
+- More playtest fixes: hook arm casts and reels (not instant), modules skip calm tameable drifts, one owner per drift (no stealing between player hook / hook arms / nets), a drift that bit a module is left alone, scrollable 99-entry log, new sea texture, swim-off follows the current, **U-17** temperament (weakened + aggressive = killed without a prompt).
+- Ed QA'd everything; Phases 5 + Round 2 merged to `main` (93/93 tests). Workflow note: keep Unity open while testing — Stop, click Unity to recompile, Play; use BrineBattle → Build Hook Scene after data/scene changes.
 - **U-16** recipes: `RecipeDefinition` + `CraftRules`; Workbench in build mode (craft Drift Net, upgrade to Hook Arm Lv 2, dismantle). 91/91 passed.
 
 ## 2026-10-28 — Phase 5

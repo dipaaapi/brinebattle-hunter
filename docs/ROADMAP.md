@@ -6,11 +6,11 @@
 
 | | |
 |---|---|
-| **Current phase** | Idea Round 2 — Auto-loot module + durability |
-| **Next step** | Ed: play `Hook.unity`, place the Drift Net on the raft edge (R), watch it catch drifts, repair it; check Harpoon wear in battle. Then Phase 6 |
+| **Current phase** | Idea Round 2 done (Phase 5 + Round 2 on main) |
+| **Next step** | Idea Round 2 QA'd by Ed and merged to main. Next: Phase 6 (Alchemy & gear + Settings menu) — wait for Ed's go |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
-| **Last updated** | 2026-10-28 |
+| **Last updated** | 2026-10-29 |
 
 > Start every session by reading this box. Finish every session by updating it.
 
@@ -85,7 +85,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** the loop hook → battle → salvage → upgrade works end to end. **Vertical slice complete.**
 
-### 🟨 Idea Round 2 (after Phase 5)
+### ✅ Idea Round 2 (after Phase 5)
 - [x] **U-13 Auto-loot raft module** — Lv 1 basic net first (touch-only, random state, durability), upgrade path per the U-13 scaling table.
 - [x] **C-4 Stamina + durability** — one durability system shared by the module's hooks and the Harpoon (answers U-7; Ed can swap it).
 
