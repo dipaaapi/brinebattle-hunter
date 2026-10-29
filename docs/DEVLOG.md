@@ -8,6 +8,7 @@
 - Ed's call: consumables are used automatically. Semi-auto and Auto use a Tar Patch at raft ≤35% HP and a Brine Tonic at hunter ≤35% (lower side first, `BattleAI.ChooseItem`); Manual = player presses.
 - New items via Create Sample Data: Brine Tonic (+25 HP; 2 Eel Scale + 1 Gale Feather; 20% eel drop), Tar Patch (+30 raft; 1 Eel-Skin Patch + 1 Plank).
 - Rules tests compiled and passed outside Unity (62 incl. 4 new); Unity run pending.
+- Ed's playtest: "net touches but doesn't loot". By design (calm weakened drifts are left to tame; a drift that bit a module is left alone), but silent. Modules now log once per drift why they leave it.
 
 ## 2026-10-29 — Phase 6 (slice 1: gear)
 - Ed picked gear first. Branch `phase/6-alchemy`: `ItemDefinition.gearPower`, `GearRules` (power + refine step = ¼ base, min 1; refine cost 2 × next level; max +10), `Equipment` (weapon/armor slots, equip/swap/take off, refine kept per item kind), `Combatant.Hunter(gear)`.
