@@ -134,3 +134,6 @@ Each role has varieties that only change the look and outfit. Companions can **e
 
 ### U-24 Rocking raft, moving waves, katig — 2026-10-29 · ✅ (first pass) · GDD §6, Phase 9 art later
 The raft should rock with the sea and the sea should have real waves, not only lines. A raft has katig (outriggers) and something to catch the wind; here they are looks only. Pulled forward by the owner during Phase 7: `Waves` swell shared by the ocean mesh, raft and drifts; `RaftDecor` adds katig and a sail. Real models come with U-18.
+
+### U-25 Kid-friendly, simpler UI — 2026-10-29 · 💡 · Phase 9
+The menus are too complicated; a child should be able to use them. Fewer words, bigger buttons, icons, one thing per screen. Ed to pick: a quick cleanup now or a full UI redesign with the art pass (Phase 9).
