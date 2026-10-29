@@ -25,6 +25,8 @@ namespace BrineBattle.Editor
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling) return;
             if (EditorPrefs.GetInt(Key, 0) >= DataVersion) return;
+            // The Hook scene is generated, but give the user a chance to keep unsaved edits first.
+            if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             EditorPrefs.SetInt(Key, DataVersion);
             Debug.Log($"[AutoRebuild] data version {DataVersion}: rebuilding sample data and the Hook scene.");
             HookSceneBuilder.Build();
