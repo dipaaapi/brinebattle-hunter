@@ -2,6 +2,12 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 6 (slice 4: elemental oils)
+- Same branch/PR as gear skills (#3). `ConsumableEffect.CoatWeapon`: the item's element becomes the hunter's attack element for `effectAmount` rounds (`BattleState.Coating`, `AttackElement`); defense keeps the weapon element. Battle title shows the oil while it lasts.
+- `BattleAI.BestOil`: Auto coats with the oil that beats the current attack element against the monster (after heals). Semi-auto/Manual = player.
+- New via sample data (`DataVersion` 4): Gale Oil (Wind, vs eel), Grit Oil (Earth, vs gull), Burning Pitch (Fire, vs crab), crafted at the workbench.
+- Companion consumables moved to Phase 7. Rules tests outside Unity: 80/80 (4 new). Unity run pending.
+
 ## 2026-10-29 — Phase 6 (slice 3: gear skills)
 - PR #2 (consumables + Settings) merged. Owner ideas U-19 battle effects, U-20 audio, U-21 fog/time of day logged.
 - Branch `phase/6-gear-skills`: `GearPassive` / `GearActive` on items, `GearSkillRules` (slots: Rare 1 passive, Epic 1+1, Legendary 2+2, Mythic 3+2; Common/Uncommon element only), `Equipment.Passives/Actives`, `BattleAction.Skill` + `BattleState.PlaySkill`.

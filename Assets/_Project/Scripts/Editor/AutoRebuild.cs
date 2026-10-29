@@ -12,7 +12,7 @@ namespace BrineBattle.Editor
     [InitializeOnLoad]
     static class AutoRebuild
     {
-        public const int DataVersion = 3;   // 1 gear, 2 consumables, 3 gear skills
+        public const int DataVersion = 4;   // 1 gear, 2 consumables, 3 gear skills, 4 elemental oils
         static string Key => $"brinebattle.dataVersion.{Application.dataPath.GetHashCode()}";
 
         static AutoRebuild()

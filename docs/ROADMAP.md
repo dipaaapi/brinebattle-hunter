@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — Alchemy & gear (gear, consumables, Settings merged; gear skills in review) |
-| **Next step** | Ed: Create Sample Data + Build Hook Scene, Run All, playtest gear skills on `phase/6-gear-skills`; then decide if Phase 6 is done (elemental oils left) |
+| **Current phase** | Phase 6 — Alchemy & gear (gear, consumables, Settings merged; gear skills + elemental oils in review, PR #3) |
+| **Next step** | Ed: on `phase/6-gear-skills` click Unity (AutoRebuild rebuilds data + Hook scene), Run All, playtest gear skills and oils; merge PR #3 → Phase 6 done; then Idea Round 3 or Phase 7 |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -97,13 +97,14 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Refine (+1…+10) with essence of the item's rarity or higher
 - [x] Gear rarity skills: passives (Leech, Thorns, Second Wind, Bulwark) and actives (Tidal Strike, Shell Guard), slots by rarity; Shell Maul (Rare), Tidecaller Lance and Shellback Carapace (Epic)
 - [x] Consumables: Brine Tonic (HP) and Tar Patch (raft) from the workbench, used in battle (takes the turn); Semi-auto/Auto use them at ≤35% HP
-- [ ] Elemental oils and companion consumables
+- [x] Elemental oils: Gale Oil (Wind), Grit Oil (Earth), Burning Pitch (Fire) turn attacks to that element for 3 rounds; Auto uses one that beats the monster
+- Companion consumables moved to Phase 7 (no companions yet)
 - [x] Real **Settings menu** (Esc / HUD button): battle mode, auto-use consumables toggle, controls
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 
 ### ⬜ Phase 7 — Companions
-Taming Weakened monsters, habitats, feeding/infusion, fusion in the Transmutation Circle.
+Taming Weakened monsters, habitats, feeding/infusion, fusion in the Transmutation Circle. Companion consumables (moved from Phase 6).
 
 ### ⬜ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.

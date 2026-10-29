@@ -187,6 +187,13 @@ namespace BrineBattle.Editor
             Recipe("craft_shell_maul", "Shell Maul", RecipeKind.Craft, new[] { (shell, 3), (fang, 2) }, new[] { (maul, 1) });
             Recipe("craft_tidecaller_lance", "Tidecaller Lance", RecipeKind.Craft, new[] { (spear, 1), (fang, 4), (shell, 3) }, new[] { (lance, 1) });
             Recipe("craft_shellback_carapace", "Shellback Carapace", RecipeKind.Craft, new[] { (shell, 5), (scale, 4) }, new[] { (carapace, 1) });
+            // Phase 6: elemental oils coat the weapon for a few rounds (Wind beats the eel, Earth the gull, Fire the crab).
+            var galeOil = Oil("GaleOil", "gale_oil", "Gale Oil", Element.Wind, "Feather down steeped in fish oil. Attacks turn Wind for 3 rounds.");
+            var gritOil = Oil("GritOil", "grit_oil", "Grit Oil", Element.Earth, "Ground crab shell in a paste. Attacks turn Earth for 3 rounds.");
+            var pitchOil = Oil("PitchOil", "pitch_oil", "Burning Pitch", Element.Fire, "Tar and plank shavings, lit before the swing. Attacks turn Fire for 3 rounds.");
+            Recipe("craft_gale_oil", "Gale Oil", RecipeKind.Craft, new[] { (feather, 2), (scale, 1) }, new[] { (galeOil, 1) });
+            Recipe("craft_grit_oil", "Grit Oil", RecipeKind.Craft, new[] { (shell, 1), (scale, 1) }, new[] { (gritOil, 1) });
+            Recipe("craft_burning_pitch", "Burning Pitch", RecipeKind.Craft, new[] { (patch, 1), (plank, 2) }, new[] { (pitchOil, 1) });
             EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);
@@ -200,6 +207,15 @@ namespace BrineBattle.Editor
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }
+
+        static ItemDefinition Oil(string file, string id, string name, Element element, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Common; i.element = element;
+                i.effect = ConsumableEffect.CoatWeapon; i.effectAmount = 3;
+                i.description = description;
+            });
 
         static void Recipe(string id, string name, RecipeKind kind, (ItemDefinition, int)[] inputs, (ItemDefinition, int)[] outputs)
         {

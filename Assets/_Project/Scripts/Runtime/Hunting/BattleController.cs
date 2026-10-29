@@ -150,7 +150,7 @@ namespace BrineBattle.Hunting
             if (!Active) return;
             GUI.depth = -5;
             float w = 520, h = state.Actives.Count > 0 ? 360 : 330;
-            GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}", HuntStyles.Window);
+            GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
             Bar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.4f));
@@ -208,9 +208,11 @@ namespace BrineBattle.Hunting
                 foreach (var kv in items)
                 {
                     var item = kv.Key;
-                    string what = item.effect == ConsumableEffect.HealHunter ? "HP" : "raft";
+                    string what = item.effect == ConsumableEffect.HealHunter ? $"+{item.effectAmount} HP"
+                        : item.effect == ConsumableEffect.RepairRaft ? $"+{item.effectAmount} raft"
+                        : $"{item.element}, {item.effectAmount} rounds";
                     GUI.enabled = waiting && state.CanUseItem(item);
-                    if (GUILayout.Button($"{item.displayName} ×{kv.Value} (+{item.effectAmount} {what})")) UseItem(item);
+                    if (GUILayout.Button($"{item.displayName} ×{kv.Value} ({what})")) UseItem(item);
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();

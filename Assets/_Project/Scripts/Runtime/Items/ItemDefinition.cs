@@ -23,7 +23,7 @@ namespace BrineBattle.Items
         public GearActive[] actives = new GearActive[0];
         [Tooltip("Consumables only: what using it does (Phase 6).")]
         public ConsumableEffect effect;
-        [Tooltip("Consumables only: HP restored to the hunter or the raft.")]
+        [Tooltip("Consumables only: HP restored to the hunter or the raft, or rounds an elemental oil lasts.")]
         [Min(0)] public int effectAmount;
         public Sprite icon;
         [TextArea] public string description;

@@ -149,6 +149,8 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 **Implemented (Phase 6, tunable):** Brine Tonic (+25 hunter HP) and Tar Patch (+30 raft HP), crafted at the workbench. Battle-only for now; using one takes the hunter's turn and can't be done at full HP. Semi-auto and Auto use them by themselves at ≤35% HP (the lower of hunter/raft first); Manual leaves it to the player.
 
+**Elemental oils (Phase 6, tunable):** Gale Oil (Wind; 2 Gale Feather + 1 Eel Scale), Grit Oil (Earth; 1 Shellback Plate + 1 Eel Scale) and Burning Pitch (Fire; 1 Eel-Skin Patch + 2 Plank). Using one takes the turn and makes the hunter's attacks that element for 3 rounds, replacing the weapon's element (defense keeps the weapon's). Can't re-apply the element already on. Auto uses an oil when it beats the current attack element against the monster; Semi-auto and Manual leave oils to the player. Companion consumables come with companions (Phase 7).
+
 ## 12. Other Hunters & Party
 
 - Other hunters appear rarely on the current.

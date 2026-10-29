@@ -8,5 +8,7 @@ namespace BrineBattle.Items
         HealHunter = 1,
         /// <summary>Restores raft HP.</summary>
         RepairRaft = 2,
+        /// <summary>Elemental oil: the hunter's attacks take the item's element for effectAmount rounds.</summary>
+        CoatWeapon = 3,
     }
 }

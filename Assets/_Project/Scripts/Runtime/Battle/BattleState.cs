@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Monsters;
 
@@ -24,6 +25,13 @@ namespace BrineBattle.Battle
         public HashSet<GearPassive> Passives { get; } = new HashSet<GearPassive>();
         public List<GearActive> Actives { get; } = new List<GearActive>();
         public readonly List<string> Log = new List<string>();
+
+        /// <summary>Element of an elemental oil on the weapon (None = no coating) and the rounds it has left.</summary>
+        public Element Coating { get; private set; }
+        public int CoatingRounds { get; private set; }
+
+        /// <summary>The element the hunter's attacks use: the oil while it lasts, otherwise the weapon's.</summary>
+        public Element AttackElement => CoatingRounds > 0 ? Coating : Hunter.Element;
 
         readonly Random rng;
         ItemDefinition pendingItem;
@@ -51,6 +59,7 @@ namespace BrineBattle.Battle
             {
                 case ConsumableEffect.HealHunter: return Hunter.Hp < Hunter.MaxHp;
                 case ConsumableEffect.RepairRaft: return RaftHp < RaftMaxHp;
+                case ConsumableEffect.CoatWeapon: return item.element != Element.None && AttackElement != item.element;
                 default: return false;
             }
         }
@@ -102,6 +111,7 @@ namespace BrineBattle.Battle
 
             Hunter.Bracing = false;
             shellGuard = false;
+            if (CoatingRounds > 0 && --CoatingRounds == 0) Add($"The {Coating} oil wears off.");
             int regen = BattleRules.StaminaPerRound + (Passives.Contains(GearPassive.SecondWind) ? GearSkillRules.SecondWindStamina : 0);
             Stamina = Math.Min(BattleRules.MaxStamina, Stamina + regen);
             return true;
@@ -136,7 +146,7 @@ namespace BrineBattle.Battle
 
         void Hit(float power, string label)
         {
-            int dmg = BattleRules.Damage(Hunter.Attack, Monster.Defense, power, Hunter.Element, Monster.Element, false, rng);
+            int dmg = BattleRules.Damage(Hunter.Attack, Monster.Defense, power, AttackElement, Monster.Element, false, rng);
             Monster.Hp = Math.Max(0, Monster.Hp - dmg);
             Add($"{label}: {dmg} damage to {Monster.Name}.");
             if (Passives.Contains(GearPassive.Leech) && Hunter.Hp < Hunter.MaxHp)
@@ -161,6 +171,13 @@ namespace BrineBattle.Battle
                 int gained = Math.Min(item.effectAmount, Hunter.MaxHp - Hunter.Hp);
                 Hunter.Hp += gained;
                 Add($"{item.displayName}: you recover {gained} HP.");
+            }
+            else if (item.effect == ConsumableEffect.CoatWeapon)
+            {
+                Coating = item.element;
+                // +1 because the round it is applied in counts down too.
+                CoatingRounds = item.effectAmount + 1;
+                Add($"{item.displayName}: your attacks are {item.element} for {item.effectAmount} rounds.");
             }
             else
             {
