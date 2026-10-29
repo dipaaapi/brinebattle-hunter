@@ -99,6 +99,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Consumables: Brine Tonic (HP) and Tar Patch (raft) from the workbench, used in battle (takes the turn); Semi-auto/Auto use them at ≤35% HP
 - [x] Elemental oils: Gale Oil (Wind), Grit Oil (Earth), Burning Pitch (Fire) turn attacks to that element for 3 rounds; Auto uses one that beats the monster
 - Companion consumables moved to Phase 7 (no companions yet)
+- [x] Workbench tabs per category (Gear, Potions, Oils, Raft, Dismantle)
 - [x] Real **Settings menu** (Esc / HUD button): battle mode, auto-use consumables toggle, controls
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.

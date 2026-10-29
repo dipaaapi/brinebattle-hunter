@@ -6,6 +6,9 @@ namespace BrineBattle.Items
 {
     public enum RecipeKind { Craft = 0, Upgrade = 1, Dismantle = 2 }
 
+    /// <summary>Workbench tab a recipe shows under.</summary>
+    public enum RecipeCategory { Gear = 0, Potions = 1, Oils = 2, Raft = 3, Dismantle = 4 }
+
     [Serializable]
     public class Ingredient
     {
@@ -45,6 +48,36 @@ namespace BrineBattle.Items
             foreach (var i in r.inputs) inv.Remove(i.item, i.count);
             foreach (var o in r.outputs) inv.Add(o.item, o.count);
             return true;
+        }
+
+        public static readonly string[] CategoryLabels = { "Gear", "Potions", "Oils", "Raft", "Dismantle" };
+
+        /// <summary>What each workbench tab is for.</summary>
+        public static readonly string[] CategoryHints =
+        {
+            "Weapons and armor. Equip them from the Bag (B).",
+            "Heal the hunter or repair the raft in battle.",
+            "Coat your weapon: attacks take the oil's element for a few rounds.",
+            "Raft modules and their upgrades. Take a module off the raft to upgrade it.",
+            "Take crafted things apart to get materials back.",
+        };
+
+        /// <summary>Dismantle recipes by kind; the rest by what the first output is.</summary>
+        public static RecipeCategory CategoryOf(RecipeDefinition r)
+        {
+            if (r.kind == RecipeKind.Dismantle) return RecipeCategory.Dismantle;
+            var item = r.outputs.Count > 0 ? r.outputs[0].item : null;
+            if (item == null) return RecipeCategory.Raft;
+            switch (item.type)
+            {
+                case ItemType.Weapon:
+                case ItemType.Armor:
+                    return RecipeCategory.Gear;
+                case ItemType.Consumable:
+                    return item.effect == ConsumableEffect.CoatWeapon ? RecipeCategory.Oils : RecipeCategory.Potions;
+                default:
+                    return RecipeCategory.Raft;
+            }
         }
 
         public static string Describe(List<Ingredient> list)

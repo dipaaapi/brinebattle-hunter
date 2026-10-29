@@ -7,6 +7,7 @@
 - `BattleAI.BestOil`: Auto coats with the oil that beats the current attack element against the monster (after heals). Semi-auto/Manual = player.
 - New via sample data (`DataVersion` 4): Gale Oil (Wind, vs eel), Grit Oil (Earth, vs gull), Burning Pitch (Fire, vs crab), crafted at the workbench.
 - Companion consumables moved to Phase 7. Rules tests outside Unity: 80/80 (4 new). Unity run pending.
+- Ed's playtest: the workbench list got long. Workbench now has tabs (Gear, Potions, Oils, Raft, Dismantle) with a one-line hint each; `CraftRules.CategoryOf` sorts recipes by output type. 82/82 outside Unity.
 
 ## 2026-10-29 — Phase 6 (slice 3: gear skills)
 - PR #2 (consumables + Settings) merged. Owner ideas U-19 battle effects, U-20 audio, U-21 fog/time of day logged.
