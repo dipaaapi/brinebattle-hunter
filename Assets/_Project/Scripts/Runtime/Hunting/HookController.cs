@@ -102,11 +102,18 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>After a lost battle the hunter rests before hooking again (Ed's call). Unscaled time.</summary>
+        float restUntil;
+        public float RestLeft => Mathf.Max(0f, restUntil - Time.unscaledTime);
+
         void UpdateIdle()
         {
+            Drift.Hunter = Combatant.Hunter(Gear);
+            Drift.Pet = Companions.Active != null ? Combatant.FromCompanion(Companions.Active) : null;
             if (WorldPause.Open != Menu.None) return;
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.wasPressedThisFrame || Camera.main == null) return;
+            if (RestLeft > 0f) { Log($"Still resting after that defeat: {Mathf.CeilToInt(RestLeft)} s."); return; }
             var ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());
             if (!Physics.Raycast(ray, out var hit, 200f)) return;
             var drift = hit.collider.GetComponent<Drift>();
@@ -388,7 +395,7 @@ namespace BrineBattle.Hunting
         /// </summary>
         public bool ModuleBattle(Drift d, object module)
         {
-            if (!CanFight(d) || BattleController.InBattle || WorldPause.Active) return false;
+            if (!CanFight(d) || BattleController.InBattle || WorldPause.Active || RestLeft > 0f) return false;
             // The module's catch comes first (owner's call): drop the hunter's own cast or reel.
             if (phase == Phase.Casting || phase == Phase.Reeling)
             {
@@ -434,10 +441,21 @@ namespace BrineBattle.Hunting
                 else
                 {
                     string why = outcome == BattleOutcome.LostRaft ? "broke your raft" : "knocked you out";
-                    Finish($"Defeat. {m.displayName} {why} and swam off. (It will eat raft parts in Phase 8.)", false, true);
+                    Finish($"Defeat. {m.displayName} {why} and swam off.", false, true);
+                    Defeated();
                     IdleWatch.Lost();
                 }
             });
+        }
+
+        /// <summary>A lost battle (Ed's call): rest a while, and the waves take a few Common materials.</summary>
+        void Defeated()
+        {
+            restUntil = Time.unscaledTime + DefeatRules.RestSeconds;
+            var lost = DefeatRules.WashAway(Inventory, rng);
+            Log(lost.Count > 0
+                ? $"The waves washed away {string.Join(", ", lost.Select(l => $"{l.count} {l.item.displayName}"))}. Resting {DefeatRules.RestSeconds:0} s."
+                : $"Resting {DefeatRules.RestSeconds:0} s.");
         }
 
         /// <summary>Idea U-17: a weakened aggressive monster is finished off without a prompt.</summary>
@@ -548,6 +566,7 @@ namespace BrineBattle.Hunting
             GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
             GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}", Rich);
             GUILayout.EndHorizontal();
+            if (RestLeft > 0f) GUILayout.Label($"<color=#ffb347>Resting… {Mathf.CeilToInt(RestLeft)} s</color>", Rich);
             GUILayout.EndVertical();
             GUILayout.EndArea();
 

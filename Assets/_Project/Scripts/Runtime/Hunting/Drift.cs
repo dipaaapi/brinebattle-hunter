@@ -1,3 +1,4 @@
+using BrineBattle.Battle;
 using BrineBattle.Encounters;
 using BrineBattle.Monsters;
 using UnityEngine;
@@ -146,6 +147,9 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>The hunter and battle pet as they'd fight now; set by the HookController for the danger check.</summary>
+        public static Combatant Hunter, Pet;
+
         void OnGUI()
         {
             HuntStyles.Begin();
@@ -153,7 +157,9 @@ namespace BrineBattle.Hunting
             Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(transform.position + Vector3.up));
             if (sp.z < 0) return;
             var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
-            GUI.Label(rect, $"{Monster.displayName}\n<i>{HintText(Hint)}</i>", HuntStyles.WorldLabel);
+            // "Danger!" before a fight (Ed's call): this monster would likely beat the hunter and pet.
+            bool danger = Hunter != null && DefeatRules.Danger(Hunter, Combatant.FromMonster(Monster), Pet);
+            GUI.Label(rect, $"{(danger ? "<color=#ff6b6b><b>⚠ Danger!</b></color> " : "")}{Monster.displayName}\n<i>{HintText(Hint)}</i>", HuntStyles.WorldLabel);
         }
     }
 }

@@ -46,8 +46,10 @@ namespace BrineBattle.Hunting
                     "Manual: you pick every action and press Space to reel.\nSemi-auto: basic attacks are automatic; you decide the important turns.\nAuto: the game plays every turn and reels for you.\nChange it in Settings → Game, or during a battle."),
                 new Entry("What is auto-use?",
                     "In Semi-auto and Auto, potions are used for you when HP is low. Turn it on or off in Settings → Game."),
+                new Entry("What does \"⚠ Danger!\" over a monster mean?",
+                    "That monster would probably beat you and your battle pet. Better gear, a stronger pet, or leaving it alone helps."),
                 new Entry("What happens if I lose?",
-                    "The monster swims off and you get no loot. Heal up and repair the raft (Tar Patch, or a Crew pet) before the next fight.")),
+                    "The monster swims off and you get no loot. You rest for 30 seconds before you can hook again, and the waves wash away up to 3 Common materials from your Bag. Gear, pets, raft parts, tools, potions and rarer items are never lost. You start the next fight with full HP.")),
 
             new Topic("Bag & loot",
                 new Entry("Where is my loot?",
@@ -103,7 +105,7 @@ namespace BrineBattle.Hunting
                 new Entry("How do I save?",
                     "Settings → Save → Save now. There is one save file. In Semi-auto and Auto it also saves by itself every 5 minutes once a save exists. The top-right corner shows when."),
                 new Entry("What if I fall asleep while playing?",
-                    "If you don't press anything for 10 minutes, the game pauses by itself and shows \"You fell asleep\". Nothing fights, gets hooked or gets lost while you're away. In Semi-auto and Auto it saves first. A battle that is already going finishes first. If you lose a battle while away (no input for a minute), it pauses right away, without waiting for the timer. Losing never costs items: the monster just swims off and you are back on the raft with full HP. Press any key or click to continue. Change the time (or turn it off) in Settings → Game → Pause when I'm away."),
+                    "If you don't press anything for 10 minutes, the game pauses by itself and shows \"You fell asleep\". Nothing fights, gets hooked or gets lost while you're away. In Semi-auto and Auto it saves first. A battle that is already going finishes first. If you lose a battle while away (no input for a minute), it pauses right away, without waiting for the timer. A loss costs a short rest and a few Common materials (see Battle). Press any key or click to continue. Change the time (or turn it off) in Settings → Game → Pause when I'm away."),
                 new Entry("How do I start over?",
                     "Settings → Save → Save and go to the main menu, then New game. Your old save is kept as a backup.")),
         };

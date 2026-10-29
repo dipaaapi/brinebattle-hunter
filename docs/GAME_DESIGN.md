@@ -52,6 +52,8 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **Battle modes:** Manual, Semi-auto, Auto.
   - Set in **Settings** (Esc); applied automatically when battle starts. Settings also has a toggle for auto-use of consumables in Semi-auto and Auto.
   - Can be changed anytime, including mid-battle.
+- **Losing (Ed's call: rest + a little lost):** the monster swims off, the hunter rests 30 s before hooking again (module catches wait too), and the waves wash away up to 3 Common materials. Gear, pets, raft parts, tools, potions and rarer items are never lost; the next fight starts at full HP. No game over. (Phase 8 may add a monster eating a raft part.)
+- **⚠ Danger!** shows over a drift whose monster would likely beat the hunter and the battle pet (hits needed on each side, average damage with elements).
 - Resource for actions: *TBD* (stamina only, or weapon charge/durability — no mana, since hunters have no magic).
 
 ## 6. Raft (Builder)
@@ -221,7 +223,7 @@ Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status ca
 
 ### Away pause (Ed's call)
 
-If the player falls asleep with the game running, nothing should happen while they're gone. After **10 minutes with no key, click or mouse move** (Settings → Game: Off / 5 / 10 / 20 min), the game **pauses**: no hooks, no module battles, no auto-save, and a "You fell asleep" screen. A battle already running finishes first. In Semi-auto and Auto it saves once when it pauses. Any key or click continues. Losing a battle still has no penalty (a raft-part penalty may come in Phase 8).
+If the player falls asleep with the game running, nothing should happen while they're gone. After **10 minutes with no key, click or mouse move** (Settings → Game: Off / 5 / 10 / 20 min), the game **pauses**: no hooks, no module battles, no auto-save, and a "You fell asleep" screen. A battle already running finishes first. In Semi-auto and Auto it saves once when it pauses. Any key or click continues. A battle lost after a minute with no input pauses the game at once.
 
 ### Main menu (Ed's ask)
 
