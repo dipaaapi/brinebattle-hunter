@@ -139,7 +139,7 @@ Applies to gear, companions, and monsters (type chart).
 
 ### Saving
 
-Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the persistent data path; "Open folder" button; to use a save from elsewhere, put it there under that name). **Auto-save every 5 minutes** into that file once a save exists (made or loaded), only in Semi-auto and Auto, and never during a battle, menu or prompt (owner's call). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts and tier, module wear, companions and the collection book. Items are stored by id, so renaming an asset is safe but changing an id is not.
+Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the persistent data path; "Open folder" button). **Upload save file** makes a save from anywhere the one save file and loads it; the previous save is kept as `save.backup.json` (owner's call). In the Editor it opens a file picker; in a build, paste the file path. **Auto-save every 5 minutes** into that file once a save exists (made or loaded), only in Semi-auto and Auto, and never during a battle, menu or prompt (owner's call). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts and tier, module wear, companions and the collection book. Items are stored by id, so renaming an asset is safe but changing an id is not.
 
 ## 11. Loot & Salvage
 

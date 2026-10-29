@@ -67,6 +67,7 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Load")) { saveMessage = SaveSystem.Load(); autoTimer = 0f; }
             GUI.enabled = true;
             GUILayout.EndHorizontal();
+            UploadRow();
             GUILayout.Label(BattleSettings.Mode == BattleMode.Manual
                 ? "<size=11>Auto-save is off in Manual. In Semi-auto and Auto it saves to this file every 5 minutes once a save exists.</size>"
                 : $"<size=11>Auto-save: every 5 minutes into this file{(SaveSystem.Exists ? $" (next in {Mathf.CeilToInt((SaveSystem.AutoSaveSeconds - autoTimer) / 60f)} min)" : " once you save or load")}.</size>", Rich);
@@ -85,6 +86,35 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
+        /// <summary>
+        /// "Upload save file": in the Editor a file picker; in a build, paste the file's path
+        /// (there is no built-in file picker outside the Editor).
+        /// </summary>
+        void UploadRow()
+        {
+            GUILayout.BeginHorizontal();
+#if UNITY_EDITOR
+            if (GUILayout.Button("Upload save file..."))
+            {
+                string picked = UnityEditor.EditorUtility.OpenFilePanel("Upload a BrineBattle save", "", "json");
+                if (!string.IsNullOrEmpty(picked)) Uploaded(SaveSystem.Upload(picked));
+            }
+#else
+            GUILayout.Label("Upload:", GUILayout.Width(50));
+            uploadPath = GUILayout.TextField(uploadPath ?? "");
+            if (GUILayout.Button("Upload", GUILayout.Width(70))) Uploaded(SaveSystem.Upload(uploadPath));
+#endif
+            GUILayout.EndHorizontal();
+        }
+
+        void Uploaded(string message)
+        {
+            saveMessage = message;
+            saveInfo = null;
+            autoTimer = 0f;
+        }
+
+        string uploadPath;
         string saveInfo;
         string saveMessage;
         static float autoTimer;

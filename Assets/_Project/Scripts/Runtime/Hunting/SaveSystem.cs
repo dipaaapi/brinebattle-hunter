@@ -11,7 +11,8 @@ namespace BrineBattle.Hunting
 {
     /// <summary>
     /// Writes and reads the one save file (JSON), <c>Application.persistentDataPath/Saves/save.json</c>.
-    /// To use a save from elsewhere, put it there under that name. The rules for what goes in a save
+    /// "Upload save file" copies a save from anywhere into that slot (the old one is kept as
+    /// <c>save.backup.json</c>) and loads it. The rules for what goes in a save
     /// live in <see cref="SaveGame"/>; this only finds the scene objects and touches the disk.
     /// Used from the Settings menu and the auto-save.
     /// </summary>
@@ -22,6 +23,7 @@ namespace BrineBattle.Hunting
 
         public static string Folder => Path.Combine(Application.persistentDataPath, "Saves");
         public static string FilePath => Path.Combine(Folder, "save.json");
+        public static string BackupPath => Path.Combine(Folder, "save.backup.json");
         public static bool Exists => File.Exists(FilePath);
 
         /// <summary>"2026-10-29 12:00" when there is a save, null when there is none.</summary>
@@ -52,6 +54,30 @@ namespace BrineBattle.Hunting
             catch (Exception e) { return $"Save failed: {e.Message}"; }
             hook.Log(auto ? $"Auto-saved ({data.savedAt})." : $"Game saved ({data.savedAt}).");
             return $"Saved ({data.savedAt}).";
+        }
+
+        /// <summary>
+        /// Makes the save at <paramref name="path"/> the one save file and loads it; auto-save then
+        /// writes into it. The current save is kept as save.backup.json first.
+        /// </summary>
+        public static string Upload(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return "Pick a save file first.";
+            path = path.Trim().Trim('"');
+            if (BattleController.InBattle) return "Can't load during a battle.";
+            try
+            {
+                if (!File.Exists(path)) return $"File not found: {path}";
+                string json = File.ReadAllText(path);
+                var data = JsonUtility.FromJson<SaveData>(json);
+                if (data == null || string.IsNullOrEmpty(data.savedAt)) return "That file isn't a BrineBattle save.";
+                Directory.CreateDirectory(Folder);
+                if (Path.GetFullPath(path) == Path.GetFullPath(FilePath)) return Load();
+                if (Exists) File.Copy(FilePath, BackupPath, true);
+                File.WriteAllText(FilePath, json);
+            }
+            catch (Exception e) { return $"Upload failed: {e.Message}"; }
+            return "Uploaded. " + Load();
         }
 
         public static string Load()
