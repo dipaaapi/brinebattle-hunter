@@ -25,6 +25,8 @@ namespace BrineBattle.Saving
         public List<Stack> refines = new List<Stack>();
         public int harpoon = -1;
         public int raftTier;
+        /// <summary>Monsters killed since the last raft tier upgrade.</summary>
+        public int raftKills;
         public List<Part> parts = new List<Part>();
         public List<Part> modules = new List<Part>();
         public List<Pet> companions = new List<Pet>();
@@ -61,6 +63,7 @@ namespace BrineBattle.Saving
             foreach (var kv in gear.Refines) d.refines.Add(new SaveData.Stack { id = kv.Key.id, count = kv.Value });
             d.harpoon = harpoon?.Current ?? -1;
             d.raftTier = (int)raft.Tier;
+            d.raftKills = raft.Kills;
             foreach (var kv in raft.Parts) d.parts.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, id = kv.Value.id });
             if (moduleDurability != null)
                 foreach (var kv in moduleDurability) d.modules.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, count = kv.Value });
@@ -100,6 +103,7 @@ namespace BrineBattle.Saving
             if (harpoon != null && d.harpoon >= 0) harpoon.Set(d.harpoon);
             if (d.parts.Count > 0)
                 raft.Restore(d.parts.Select(p => new KeyValuePair<Cell, ItemDefinition>(new Cell(p.x, p.z), Find(p.id))), (Rarity)d.raftTier);
+            raft.Kills = d.raftKills;
             moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
             pets.Restore(d.companions.Select(p => new Companion
             {

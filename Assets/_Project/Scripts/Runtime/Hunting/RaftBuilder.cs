@@ -101,6 +101,9 @@ namespace BrineBattle.Hunting
             }
         }
 
+        static string Have(int have, int need) =>
+            $"<color={(have >= need ? "#7CFC9A" : "#ff8a80")}>{Mathf.Min(have, need)}/{need}</color>";
+
         static string PlaceText(PlaceResult r)
         {
             switch (r)
@@ -109,6 +112,7 @@ namespace BrineBattle.Hunting
                 case PlaceResult.NotAdjacent: return "Parts must touch the raft.";
                 case PlaceResult.OutOfBounds: return "Too far out (max 9x9).";
                 case PlaceResult.BelowTier: return "That part's rarity is below the raft tier.";
+                case PlaceResult.NeedsModules: return "Install more auto-loot modules on the left edge first (half of its rows need one).";
                 default: return "That isn't a raft part.";
             }
         }
@@ -178,6 +182,9 @@ namespace BrineBattle.Hunting
             for (int n = 1; n <= RaftRules.StarterParts + RaftRules.PartsPerSize; n++)
                 if (RaftRules.SizeFor(g.Count + n) > g.Size) { next = n; break; }
             if (next > 0 && g.Size < 10) GUILayout.Label($"{next} more part(s) to reach size {g.Size + 1}.");
+            var (guarded, rows) = g.UpstreamModules();
+            GUILayout.Label($"Left edge modules: {guarded}/{rows} rows (need {g.ModulesNeeded} to widen or upgrade) "
+                + (g.ModulesReady ? "<color=#7CFC9A>ready</color>" : "<color=#ff8a80>install modules on the left first</color>"), Rich);
 
             GUILayout.Label("1. Pick a part  2. Click a green tile next to the raft.\nYellow cursor = OK, red = not allowed.", Rich);
             mode = (Mode)GUILayout.Toolbar((int)mode, new[] { "Place", "Remove" });
@@ -256,14 +263,19 @@ namespace BrineBattle.Hunting
             int cost = RaftRules.UpgradeCost(g.Tier);
             if (cost > 0)
             {
-                int have = hook.Inventory.EssenceAtLeast(g.Tier);
-                GUILayout.Label($"Upgrade to {g.Tier + 1}: {cost} essence ({g.Tier}+), you have {have}. Parts below the new tier can't be added after.");
-                GUI.enabled = have >= cost;
+                var inv = hook.Inventory;
+                int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier);
+                GUILayout.Label($"<b>Upgrade to {g.Tier + 1}</b> (parts below the new tier can't be added after):\n"
+                    + $"  Kills since last upgrade {Have(g.Kills, kills)} · monster materials {Have(inv.MaterialCount(), mats)}\n"
+                    + $"  {g.Tier}+ essence {Have(inv.EssenceAtLeast(g.Tier), cost)} · left-edge modules {Have(guarded, g.ModulesNeeded)}", Rich);
+                string blocker = g.UpgradeBlocker(inv);
+                GUI.enabled = blocker == null;
                 if (GUILayout.Button($"Upgrade raft tier → {g.Tier + 1}"))
                 {
-                    if (g.TryUpgrade(hook.Inventory)) hook.Log($"Raft upgraded to {g.Tier} tier. Max HP {g.MaxHp}.");
+                    if (g.TryUpgrade(inv)) hook.Log($"Raft upgraded to {g.Tier} tier. Max HP {g.MaxHp}.");
                 }
                 GUI.enabled = true;
+                if (blocker != null) GUILayout.Label($"<size=11>{blocker}</size>", Rich);
             }
             else GUILayout.Label("Raft is at the highest tier.");
 

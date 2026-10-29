@@ -45,6 +45,7 @@ namespace BrineBattle.Tests
             var raft = new RaftGrid();
             raft.FillSquare(plank, 1);
             raft.Place(new Cell(2, 0), net);
+            raft.Kills = 4;
             var pets = new CompanionRoster();
             pets.Add(new Companion { Id = "gull", Name = "Gale Gull", Element = Element.Wind, Habitat = Habitat.Sky, Rarity = Rarity.Common, Role = CompanionRole.Crew, MaxHp = 12 });
             pets.Add(new Companion { Id = "eel", Name = "Brinefang Eel", Role = CompanionRole.Familiar, MaxHp = 18, Attack = 4 });
@@ -69,6 +70,7 @@ namespace BrineBattle.Tests
             Assert.AreEqual(13, harpoon2.Current);
             Assert.AreEqual(raft.Count, raft2.Count);
             Assert.AreEqual(net, raft2.Parts[new Cell(2, 0)]);
+            Assert.AreEqual(4, raft2.Kills, "kills toward the next raft tier");
             Assert.AreEqual(9, modules[new Cell(2, 0)]);
             Assert.AreEqual(2, pets2.All.Count);
             Assert.AreEqual(CompanionRole.Crew, pets2.All[0].Role);

@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 7 (raft progression asks)
+- Settings: **Upload save file...** (Editor file picker; path field in a build) copies a save into the one slot, keeps the old one as `save.backup.json`, and loads it.
+- Raft tier upgrade now needs kills since the last upgrade (5, 10, 15 …) and monster materials (same numbers) on top of essence. `RaftGrid.Kills` (saved), `UpgradeBlocker` says what's missing; Build panel shows each requirement.
+- Widening and upgrading need auto-loot modules on half the left-edge rows (`RaftGrid.ModulesToGrow`, `PlaceResult.NeedsModules`). My reading of Ed's "50% of installed modules"; asked Ed to confirm.
+- A module that hooks a live aggressive monster starts a forced Auto battle (`HookController.ModuleBattle`, `BattleController.ForceAuto`).
+- Rules tests outside Unity: 117/117 (RaftGridTests now included). Unity run pending.
+
 ## 2026-10-29 — Phase 7 (slice 1: taming + companion in battle)
 - PR #3 merged → Phase 6 done. Ed picked Phase 7 next. Branch `phase/7-companions`.
 - `BrineBattle.Companions`: `CompanionRules` (tame chance by rarity, 60% stat share, capacity 1 + habitats, 25% targeted), `Companion.FromMonster`, `CompanionRoster` (add, active, release). `Combatant.FromCompanion`; `BattleState.Companion` attacks after the hunter, can be hit and knocked out.

@@ -112,6 +112,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Companions visible on the raft: Mystic at a workbench auto-refines gear, Crew walks the raft, installs modules upstream (left) and builds parts downstream (right) (switchable in the Bag)
 - [x] Save / Load (Settings, one JSON save file, auto-save every 5 min in Semi-auto/Auto)
 - [x] Crew repairs modules at a % set per module kind (Build); Mystic restocks potions/oils and heals the hunter or Familiar each battle round
+- [x] Upload a save file from anywhere (Settings)
+- [x] Raft tier upgrade needs kills + monster materials; widening/upgrading needs modules on half the left edge; module catches of live aggressive monsters start an Auto battle (owner's asks)
 - [ ] Habitats on the raft (each adds roster room)
 - [ ] Evolution and old age (U-23)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)

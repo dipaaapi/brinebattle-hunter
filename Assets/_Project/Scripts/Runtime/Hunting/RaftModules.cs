@@ -143,6 +143,11 @@ namespace BrineBattle.Hunting
         {
             if (s.Level < 2) Flash(at, d.transform.position, false);
             string name = s.Item.displayName;
+            if (d.Actual == DriftState.Alive && EncounterRules.IsAggressive(d.Aggression) && hook.ModuleBattle(d, s))
+            {
+                hook.Log($"The {name} hooked a live {d.Monster.displayName}! It's aggressive and can't escape: auto battle!");
+                return;
+            }
             if (d.Actual == DriftState.Alive)
             {
                 s.Durability.Use(ModuleRules.AliveBite);

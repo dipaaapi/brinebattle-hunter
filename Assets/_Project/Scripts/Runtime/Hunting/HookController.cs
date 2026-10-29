@@ -326,6 +326,7 @@ namespace BrineBattle.Hunting
                     if (GUILayout.Button("Finish it"))
                     {
                         pendingLoot = RollLoot(m);
+                        raft.Grid.Kills++;
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
                     GUI.enabled = !Companions.Full;
@@ -350,6 +351,25 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
+        /// <summary>
+        /// An auto-loot module hooked a live, aggressive monster: it can't swim off, so the battle starts
+        /// at once and plays in Auto (owner's call). False when the hunter is busy or the raft is too
+        /// small for it; the module then takes the bite as before.
+        /// </summary>
+        public bool ModuleBattle(Drift d, object module)
+        {
+            if (phase != Phase.Idle || battle == null || BattleController.InBattle || d == null) return false;
+            if (EncounterRules.IsGated(DriftState.Alive, raft.size, d.Monster.sizeClass)) return false;
+            d.Release(module);
+            if (!d.TryClaim(this)) return false;
+            target = d;
+            tensionHit = false;   // it ambushes the raft: the monster strikes first
+            pendingLoot = null;
+            battle.ForceAuto = true;
+            StartBattle();
+            return true;
+        }
+
         void StartBattle()
         {
             if (battle == null)
@@ -364,6 +384,7 @@ namespace BrineBattle.Hunting
                 if (outcome == BattleOutcome.Won)
                 {
                     pendingLoot = RollLoot(m);
+                    raft.Grid.Kills++;
                     Finish($"Victory! Defeated {m.displayName}: {Brief(pendingLoot)}", true, true);
                 }
                 else
@@ -379,6 +400,7 @@ namespace BrineBattle.Hunting
         {
             var m = target.Monster;
             pendingLoot = RollLoot(m);
+            raft.Grid.Kills++;
             Finish($"{m.displayName} was weakened but {why}, so you finished it: {Brief(pendingLoot)}", true, true);
         }
 

@@ -21,6 +21,13 @@ namespace BrineBattle.Hunting
         /// <summary>True while any battle runs: the world around the raft holds still.</summary>
         public static bool InBattle { get; private set; }
 
+        /// <summary>
+        /// True for a battle an auto-loot module started (an aggressive live catch, owner's call):
+        /// it plays in Auto whatever the setting, and the mode can't be switched.
+        /// </summary>
+        public bool ForceAuto { get; set; }
+        BattleMode Mode => ForceAuto ? BattleMode.Auto : BattleSettings.Mode;
+
         BattleState state;
         BattleStage stage;
         int shownEvents;
@@ -62,7 +69,7 @@ namespace BrineBattle.Hunting
                 state.Actives.AddRange(hook.Gear.Actives);
             }
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
-            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.{first}");
+            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)Mode]}{(ForceAuto ? " (module catch)" : "")}.{first}");
             timer = 0f;
             driftHome = target.transform.position;
 
@@ -94,10 +101,10 @@ namespace BrineBattle.Hunting
                 return;
             }
             var autoItem = AutoItem();
-            var autoSkill = autoItem == null ? BattleAI.ChooseSkill(state, BattleSettings.Mode) : GearActive.None;
+            var autoSkill = autoItem == null ? BattleAI.ChooseSkill(state, Mode) : GearActive.None;
             var pick = autoItem != null ? BattleAction.Item
                 : autoSkill != GearActive.None ? BattleAction.Skill
-                : BattleAI.Choose(state, BattleSettings.Mode);
+                : BattleAI.Choose(state, Mode);
             if (pick == null) { timer = 0f; return; }
             timer += Time.deltaTime;
             if (timer < autoDelay) return;
@@ -131,8 +138,8 @@ namespace BrineBattle.Hunting
             shownEvents = state.Events.Count;
         }
 
-        bool Waiting() => !stage.Busy && AutoItem() == null && BattleAI.ChooseSkill(state, BattleSettings.Mode) == GearActive.None
-            && BattleAI.Choose(state, BattleSettings.Mode) == null;
+        bool Waiting() => !stage.Busy && AutoItem() == null && BattleAI.ChooseSkill(state, Mode) == GearActive.None
+            && BattleAI.Choose(state, Mode) == null;
 
         void UseSkill(GearActive skill)
         {
@@ -141,7 +148,7 @@ namespace BrineBattle.Hunting
             timer = 0f;
         }
 
-        ItemDefinition AutoItem() => BattleSettings.AutoItems ? BattleAI.ChooseItem(state, BattleSettings.Mode) : null;
+        ItemDefinition AutoItem() => BattleSettings.AutoItems ? BattleAI.ChooseItem(state, Mode) : null;
 
         void UseItem(ItemDefinition item)
         {
@@ -156,6 +163,7 @@ namespace BrineBattle.Hunting
             stage.Clear();
             state = null;
             InBattle = false;
+            ForceAuto = false;
             drift = null;
             onEnd?.Invoke(outcome);
         }
@@ -176,7 +184,8 @@ namespace BrineBattle.Hunting
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Mode", GUILayout.Width(60));
-            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
+            if (ForceAuto) GUILayout.Label("Auto (a module caught it)");
+            else BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.EndHorizontal();
 
             int from = Mathf.Max(0, state.Log.Count - 3);
