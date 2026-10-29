@@ -10,29 +10,32 @@ using UnityEngine;
 namespace BrineBattle.Hunting
 {
     /// <summary>
-    /// Writes and reads save files (JSON) in <c>Application.persistentDataPath/Saves</c>, one per slot.
-    /// The rules for what goes in a save live in <see cref="SaveGame"/>; this only finds the scene
-    /// objects and touches the disk. Used from the Settings menu.
+    /// Writes and reads the one save file (JSON), <c>Application.persistentDataPath/Saves/save.json</c>.
+    /// To use a save from elsewhere, put it there under that name. The rules for what goes in a save
+    /// live in <see cref="SaveGame"/>; this only finds the scene objects and touches the disk.
+    /// Used from the Settings menu and the auto-save.
     /// </summary>
     public static class SaveSystem
     {
-        public const int Slots = 3;
+        /// <summary>Auto-save interval: every 5 minutes, in Semi-auto and Auto only (owner's call).</summary>
+        public const float AutoSaveSeconds = 300f;
 
         public static string Folder => Path.Combine(Application.persistentDataPath, "Saves");
-        public static string PathOf(int slot) => Path.Combine(Folder, $"save{slot}.json");
+        public static string FilePath => Path.Combine(Folder, "save.json");
+        public static bool Exists => File.Exists(FilePath);
 
-        /// <summary>"2026-10-29 12:00" for a used slot, null for an empty one.</summary>
-        public static string Describe(int slot)
+        /// <summary>"2026-10-29 12:00" when there is a save, null when there is none.</summary>
+        public static string Describe()
         {
             try
             {
-                if (!File.Exists(PathOf(slot))) return null;
-                return JsonUtility.FromJson<SaveData>(File.ReadAllText(PathOf(slot)))?.savedAt ?? "?";
+                if (!Exists) return null;
+                return JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath))?.savedAt ?? "?";
             }
             catch (Exception) { return "unreadable"; }
         }
 
-        public static string Save(int slot)
+        public static string Save(bool auto = false)
         {
             var hook = UnityEngine.Object.FindFirstObjectByType<HookController>();
             if (hook == null || hook.raft == null) return "Nothing to save (no Hook scene).";
@@ -44,14 +47,14 @@ namespace BrineBattle.Hunting
             try
             {
                 Directory.CreateDirectory(Folder);
-                File.WriteAllText(PathOf(slot), JsonUtility.ToJson(data, true));
+                File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
             }
             catch (Exception e) { return $"Save failed: {e.Message}"; }
-            hook.Log($"Saved to slot {slot}.");
-            return $"Saved slot {slot} ({data.savedAt}).";
+            hook.Log(auto ? $"Auto-saved ({data.savedAt})." : $"Game saved ({data.savedAt}).");
+            return $"Saved ({data.savedAt}).";
         }
 
-        public static string Load(int slot)
+        public static string Load()
         {
             var hook = UnityEngine.Object.FindFirstObjectByType<HookController>();
             if (hook == null || hook.raft == null) return "Nothing to load into (no Hook scene).";
@@ -59,8 +62,8 @@ namespace BrineBattle.Hunting
             SaveData data;
             try
             {
-                if (!File.Exists(PathOf(slot))) return $"Slot {slot} is empty.";
-                data = JsonUtility.FromJson<SaveData>(File.ReadAllText(PathOf(slot)));
+                if (!Exists) return "No save file yet.";
+                data = JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath));
             }
             catch (Exception e) { return $"Load failed: {e.Message}"; }
             if (data == null) return "Load failed: the file is empty or broken.";
@@ -83,8 +86,8 @@ namespace BrineBattle.Hunting
             if (book != null && data.collection != null) book.Restore(data.collection);
             hook.ApplyCompanionBonuses();
             string note = missing.Count > 0 ? $" Unknown items skipped: {string.Join(", ", missing)}." : "";
-            hook.Log($"Loaded slot {slot} (saved {data.savedAt}).{note}");
-            return $"Loaded slot {slot} ({data.savedAt}).{note}";
+            hook.Log($"Loaded the save from {data.savedAt}.{note}");
+            return $"Loaded ({data.savedAt}).{note}";
         }
     }
 }

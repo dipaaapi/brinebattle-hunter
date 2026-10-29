@@ -36,6 +36,8 @@ namespace BrineBattle.Hunting
             public GameObject Go;
             public float Phase;
             public float Busy;   // seconds of "working" hop left after a job
+            public Vector3 Walk;   // Crew: local spot on the raft it is walking to
+            public float NextWalk;
         }
 
         readonly Dictionary<Companion, Body> bodies = new Dictionary<Companion, Body>();
@@ -96,11 +98,9 @@ namespace BrineBattle.Hunting
 
         void Place()
         {
-            float edge = (Raft.Grid.Radius + 0.45f) * Raft.CellSize;
             var hunter = HunterTf;
             var hunterLocal = hunter != null ? hunter.localPosition : Vector3.up * 0.8f;
             if (bench != null) bench.transform.localPosition = new Vector3(-0.75f, 0.45f, 0.75f);
-            int crewIndex = 0;
             foreach (var b in bodies.Values)
             {
                 b.Phase += Time.deltaTime;
@@ -115,9 +115,11 @@ namespace BrineBattle.Hunting
                         p = new Vector3(-0.75f, 0.55f, 0.25f);
                         break;
                     case CompanionRole.Crew:
-                        // Walks the raft's edge, several crew spaced out.
-                        float a = b.Phase * 0.5f + crewIndex++ * 2.1f;
-                        p = new Vector3(Mathf.Cos(a) * edge, 0.5f, Mathf.Sin(a) * edge);
+                        // Walks from tile to tile, always on the raft.
+                        if (b.Phase >= b.NextWalk || !OnRaft(b.Walk)) { b.Walk = RandomTile(); b.NextWalk = b.Phase + Random.Range(2f, 4f); }
+                        var from = b.Go.transform.localPosition;
+                        from.y = 0.5f;
+                        p = OnRaft(from) ? Vector3.MoveTowards(from, b.Walk, Time.deltaTime * 1.2f) : b.Walk;
                         break;
                     default:
                         p = hunterLocal + new Vector3(0.6f, -0.3f, -0.2f);
@@ -125,6 +127,28 @@ namespace BrineBattle.Hunting
                 }
                 b.Go.transform.localPosition = p + Vector3.up * hop;
             }
+        }
+
+        static Vector3 Local(Rafts.Cell c) => new Vector3(c.X * Raft.CellSize, 0.5f, c.Z * Raft.CellSize);
+
+        Vector3 RandomTile()
+        {
+            int n = Raft.Grid.Count;
+            if (n == 0) return Vector3.up * 0.5f;
+            int i = Random.Range(0, n);
+            foreach (var kv in Raft.Grid.Parts) if (i-- == 0) return Local(kv.Key);
+            return Vector3.up * 0.5f;
+        }
+
+        /// <summary>True when a local point sits over a raft tile.</summary>
+        bool OnRaft(Vector3 local) =>
+            Raft.Grid.Has(new Rafts.Cell(Mathf.RoundToInt(local.x / Raft.CellSize), Mathf.RoundToInt(local.z / Raft.CellSize)));
+
+        /// <summary>−1 when drifts come from −X (the left), from the spawner's current.</summary>
+        int UpstreamX()
+        {
+            var spawner = FindFirstObjectByType<DriftSpawner>();
+            return spawner != null && spawner.currentDirection.x < 0f ? 1 : -1;
         }
 
         void Chores()
@@ -136,10 +160,12 @@ namespace BrineBattle.Hunting
                 if (crewTimer >= CompanionWork.JobSeconds)
                 {
                     crewTimer = 0f;
-                    if (CompanionWork.CrewBuild(Raft.Grid, hook.Inventory, out var part))
+                    if (CompanionWork.CrewBuild(Raft.Grid, hook.Inventory, out var part, UpstreamX()))
                     {
                         Work(crew);
-                        hook.Log($"{crew.Name} (Crew) built a {part.displayName} onto the raft.");
+                        hook.Log(part.type == ItemType.Module
+                            ? $"{crew.Name} (Crew) installed a {part.displayName} on the upstream side."
+                            : $"{crew.Name} (Crew) built a {part.displayName} onto the raft.");
                     }
                 }
             }

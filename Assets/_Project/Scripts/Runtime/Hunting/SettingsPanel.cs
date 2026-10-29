@@ -15,9 +15,25 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
+            AutoSave();
             var kb = Keyboard.current;
             if (kb != null && kb.escapeKey.wasPressedThisFrame && !BattleController.InBattle
                 && (WorldPause.Open == Menu.None || WorldPause.Open == Menu.Settings)) WorldPause.Toggle(Menu.Settings);
+        }
+
+        /// <summary>
+        /// Every 5 minutes of play, into the existing save file, only in Semi-auto and Auto (owner's call).
+        /// Waits while a menu, prompt or battle is open so it never saves mid-action.
+        /// </summary>
+        void AutoSave()
+        {
+            if (BattleSettings.Mode == BattleMode.Manual || !SaveSystem.Exists) return;
+            autoTimer += Time.unscaledDeltaTime;
+            if (autoTimer < SaveSystem.AutoSaveSeconds) return;
+            if (BattleController.InBattle || WorldPause.Open != Menu.None || WorldPause.Prompt) return;
+            autoTimer = 0f;
+            saveMessage = SaveSystem.Save(auto: true);
+            saveInfo = null;
         }
 
         void OnGUI()
@@ -42,18 +58,18 @@ namespace BrineBattle.Hunting
             GUILayout.Label("<size=11>Click a drift: cast · Space: reel · B: Bag · C: Book · R: Build · Esc: Settings</size>", Rich);
 
             GUILayout.Space(8);
-            GUILayout.Label("<b>Save game</b> (bag, gear, raft, modules, companions, book)", Rich);
-            for (int slot = 1; slot <= SaveSystem.Slots; slot++)
-            {
-                slotInfo[slot] ??= SaveSystem.Describe(slot) ?? "empty";
-                GUILayout.BeginHorizontal();
-                GUILayout.Label($"Slot {slot}: {slotInfo[slot]}", GUILayout.Width(170));
-                if (GUILayout.Button("Save")) { saveMessage = SaveSystem.Save(slot); slotInfo[slot] = null; }
-                GUI.enabled = slotInfo[slot] != "empty";
-                if (GUILayout.Button("Load")) saveMessage = SaveSystem.Load(slot);
-                GUI.enabled = true;
-                GUILayout.EndHorizontal();
-            }
+            GUILayout.Label("<b>Save game</b> (one save file: bag, gear, raft, modules, companions, book)", Rich);
+            saveInfo ??= SaveSystem.Describe() ?? "no save yet";
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Last save: {saveInfo}", GUILayout.Width(190));
+            if (GUILayout.Button("Save")) { saveMessage = SaveSystem.Save(); saveInfo = null; autoTimer = 0f; }
+            GUI.enabled = SaveSystem.Exists;
+            if (GUILayout.Button("Load")) { saveMessage = SaveSystem.Load(); autoTimer = 0f; }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+            GUILayout.Label(BattleSettings.Mode == BattleMode.Manual
+                ? "<size=11>Auto-save is off in Manual. In Semi-auto and Auto it saves to this file every 5 minutes once a save exists.</size>"
+                : $"<size=11>Auto-save: every 5 minutes into this file{(SaveSystem.Exists ? $" (next in {Mathf.CeilToInt((SaveSystem.AutoSaveSeconds - autoTimer) / 60f)} min)" : " once you save or load")}.</size>", Rich);
             if (!string.IsNullOrEmpty(saveMessage)) GUILayout.Label($"<size=11>{saveMessage}</size>", Rich);
             GUILayout.BeginHorizontal();
             GUILayout.Label($"<size=10>{SaveSystem.Folder}</size>", Rich);
@@ -69,8 +85,9 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
-        readonly string[] slotInfo = new string[SaveSystem.Slots + 1];
+        string saveInfo;
         string saveMessage;
+        static float autoTimer;
 
         static GUIStyle rich;
         static GUIStyle Rich => rich ??= new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true };

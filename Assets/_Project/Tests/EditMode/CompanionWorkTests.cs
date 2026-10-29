@@ -20,25 +20,28 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void CrewBuildsTheBestFittingPartNextToTheRaft()
+        public void CrewInstallsModulesUpstreamAndGrowsTheRaftDownstream()
         {
             var plank = Item(ItemType.Raft);
             var plate = Item(ItemType.Raft, Rarity.Rare);
             var net = Item(ItemType.Module);
             var raft = new RaftGrid();
-            raft.FillSquare(plank, 1);
+            raft.FillSquare(plank, 1);   // cells -1..1
             var bag = new Inventory();
             Assert.IsFalse(CompanionWork.CrewBuild(raft, bag, out _), "nothing in the bag");
+
             bag.Add(net, 1);
-            Assert.IsFalse(CompanionWork.CrewBuild(raft, bag, out _), "modules are the player's call");
             bag.Add(plank, 1);
             bag.Add(plate, 1);
-            int before = raft.Count;
-            Assert.IsTrue(CompanionWork.CrewBuild(raft, bag, out var built));
-            Assert.AreEqual(plate, built, "rarest part first");
-            Assert.AreEqual(before + 1, raft.Count);
-            Assert.AreEqual(0, bag.Count(plate));
-            Assert.AreEqual(1, bag.Count(net));
+            Assert.IsTrue(CompanionWork.CrewBuild(raft, bag, out var first));
+            Assert.AreEqual(net, first, "modules first");
+            Assert.AreEqual(net, raft.Parts[new Cell(-2, 0)], "on the upstream (left) edge, middle row");
+
+            Assert.IsTrue(CompanionWork.CrewBuild(raft, bag, out var second));
+            Assert.AreEqual(plate, second, "then the rarest part");
+            Assert.AreEqual(plate, raft.Parts[new Cell(2, 0)], "grows on the downstream (right) side");
+            Assert.AreEqual(0, bag.Count(net));
+            Assert.AreEqual(1, bag.Count(plank));
         }
 
         [Test]
