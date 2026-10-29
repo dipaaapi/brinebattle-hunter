@@ -8,6 +8,7 @@
 - Passives: Leech (heal 20% of damage dealt), Thorns (25% back), Second Wind (+1 stamina/round), Bulwark (raft −20%). Actives: Tidal Strike (×2.2, 6 st), Shell Guard (raft safe this round, 4 st). Auto uses them; Semi-auto waits for the player when one is ready.
 - New gear via Create Sample Data: Shell Maul (Rare, Thorns), Tidecaller Lance (Epic, Leech + Tidal Strike), Shellback Carapace (Epic, Bulwark + Shell Guard), all from Shellback Plates.
 - Rules tests outside Unity: 76/76 (14 new). Unity run pending.
+- Ed's playtest: refine (+8 spear, +6 buckler) and Settings work. But Build Hook Scene had never been re-run, so no new items/recipes/gear power on his PC. New `AutoRebuild` (editor): after a recompile it runs Build Hook Scene once per `DataVersion` bump (not in play mode or batch mode). Bump `AutoRebuild.DataVersion` when sample data or the scene builder changes.
 
 ## 2026-10-29 — Phase 6 (slice 2: consumables)
 - Gear slice: Ed ran the Test Runner (103/103) and played it; PR #1 merged. Bag gear row narrowed so Refine/Take off fit.
