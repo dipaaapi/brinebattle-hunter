@@ -70,6 +70,8 @@ namespace BrineBattle.Hunting
             if (starterModule != null) Inventory.Add(starterModule, 1);
             // Settings menu (Phase 6) needs no scene wiring, so older Hook scenes get it too.
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
+            // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
+            if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
             // Companions on the raft (Phase 7), likewise added at runtime.
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
             // Storage box = crafting table (owner's ask), likewise added at runtime.
@@ -538,11 +540,12 @@ namespace BrineBattle.Hunting
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             if (Companions.All.Count > 0)
-                GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}: " + string.Join(", ", Companions.All.Select(c => $"{c.Name} ({c.Role})")), Rich);
+                GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}: " + string.Join(", ", Companions.All.Select(c => $"{c.Name} ({c.Role})")) + "  (P)", Rich);
             GUILayout.Space(4);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Bag\n<size=10>B</size>", BigButton)) BagToggleRequested?.Invoke();
             if (GUILayout.Button("Book\n<size=10>C</size>", BigButton)) BookToggleRequested?.Invoke();
+            if (GUILayout.Button("Pets\n<size=10>P</size>", BigButton)) PetsPanel.Toggle();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (builder != null && GUILayout.Button("Build\n<size=10>R</size>", BigButton)) builder.Toggle();

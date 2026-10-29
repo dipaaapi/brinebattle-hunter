@@ -119,10 +119,11 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Quick UI cleanup (owner idea U-25): screen size setting, simpler HUD, fewer Build sliders
 - [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
 - [x] Evolution and old age (U-23): age in battles won, Young → Adult → Elder, death leaves essence + Book memorial (numbers wait for Ed)
-- [x] Feeding / infusion with loot and potions (companion growth, no EXP): Bag → Feed
-- [x] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; essence catalyst; source used up, keeps an echo): Bag → Fuse
+- [x] Pets menu (P), separate from the Bag (owner's ask)
+- [x] Feeding / infusion with loot and potions (companion growth, no EXP): Pets → Feed
+- [x] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; essence catalyst; source used up, keeps an echo): Pets → Fuse
 - [x] Companion consumables (moved from Phase 6): Kelp Biscuit heals or wakes the battle companion; Semi-auto/Auto use it
-- [x] Looks (U-23 varieties): Plain, Scarf, Bandana, Crown; random at taming, changeable in the Bag
+- [x] Looks (U-23 varieties): Plain, Scarf, Bandana, Crown; random at taming, changeable in the Pets menu
 - [x] Owner's asks during part 2: crafting materials kept after a raft level-up, Reinforce recipes per level, main menu scene, raft rocks with thicker planks per level, nothing overlaps
 
 **Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
