@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Companions, part 2 (`phase/7-growth`). Part 1 merged (PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
-| **Next step** | Phase 7 and Idea Round 3 (Alchemy Mastery) are both in `phase/7-growth` (PR #5, Ed asked to do them together). Ed tests in Unity, then decides on merging to main. Then Phase 8 (raft types & absorption) |
+| **Current phase** | Phase 8 — Raft types & absorption (not started). Phase 7 and Idea Round 3 merged (PR #4, PR #5) |
+| **Next step** | Start Phase 8 on `phase/8-raft-types` when Ed gives the go: raft types (Fortress / Sky / Beast-Driven), hybrids, monsters eating raft parts and recovery |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
@@ -104,7 +104,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 
-### 🟨 Phase 7 — Companions
+### ✅ Phase 7 — Companions
 - [x] Tame a weakened, calm drift (chance by rarity) → companion with 60% of its wild stats; roster with one active companion (Bag: set active / release); Collection book Pets page fills in
 - [x] Active companion fights beside the hunter: attacks after the hunter each round, can be targeted (25%) and knocked out; rests to full HP between battles
 - [x] Battle visuals first pass (owner idea U-19, asked for now): fighters lunge, harpoon and skills fly, hits flash and shake, damage numbers pop, KO sinks; battle panel moved bottom-right
@@ -129,12 +129,12 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
 
-### 🟨 Idea Round 3 (after Phase 7) — Alchemy knowledge
+### ✅ Idea Round 3 (after Phase 7) — Alchemy knowledge
 - [x] **U-14 Crafting knowledge** — recipes unlock by Alchemy Mastery; "???" in the Workbench and Book → Recipes
 - [x] **C-1 Drift reading** — mastery raises the hint accuracy (60% → 96%)
 - [x] (merged in) **U-6** essence combining from Mastery Lv 3
 
-**Done when:** mastery grows from hunting and crafting, reveals recipes, makes hints more accurate, and essence can be combined. (Built on `phase/7-growth` at Ed's ask, waiting for his test.)
+**Done when:** mastery grows from hunting and crafting, reveals recipes, makes hints more accurate, and essence can be combined. (Built on `phase/7-growth` at Ed's ask; merged with Phase 7 in PR #5.)
 
 ### ⬜ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
