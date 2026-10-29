@@ -18,7 +18,11 @@ namespace BrineBattle.Hunting
         public object Owner { get; private set; }
         public bool Hooked => Owner != null;
         /// <summary>Bit a raft module and fled: modules leave it alone from now on, so one drift can't chew them down.</summary>
-        public bool Spooked { get; private set; }
+        /// <summary>Bit a module: modules leave it alone for a while as it swims off (not forever).</summary>
+        public bool Spooked => Time.time < spookedUntil;
+        float spookedUntil = -1f;
+        /// <summary>Pressed against a raft part this frame (a module next to it should hook it, Ed's ask).</summary>
+        public bool TouchingRaft { get; private set; }
 
         /// <summary>Takes the drift if nobody has it. Returns false if someone else already does.</summary>
         public bool TryClaim(object who)
@@ -65,7 +69,7 @@ namespace BrineBattle.Hunting
         /// <summary>An alive drift that bit a raft module swims away from it, faster.</summary>
         public void SwimOff(Vector3 away)
         {
-            Spooked = true;
+            spookedUntil = Time.time + 20f;
             // Away from the raft sideways, but always carried downstream: never against the current.
             var down = current.sqrMagnitude > 0.0001f ? current.normalized : Vector3.right;
             var side = Vector3.ProjectOnPlane(away, down);
@@ -119,11 +123,13 @@ namespace BrineBattle.Hunting
         Vector3 BumpOffParts(Vector3 p)
         {
             float half = Raft.CellSize * 0.5f + 0.25f * transform.localScale.x;
+            TouchingRaft = false;
             foreach (var c in raft.Grid.Parts.Keys)
             {
                 var d = p - raft.CellToWorld(c);
                 float ox = half - Mathf.Abs(d.x), oz = half - Mathf.Abs(d.z);
                 if (ox <= 0f || oz <= 0f) continue;
+                TouchingRaft = true;
                 // Push out of the part only; the current (velocity) stays the same, so the drift
                 // slides along the raft's side and carries on downstream.
                 float slide = velocity.magnitude * Time.deltaTime;

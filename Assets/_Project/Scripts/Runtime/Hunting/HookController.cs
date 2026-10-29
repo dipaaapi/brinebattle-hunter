@@ -421,6 +421,31 @@ namespace BrineBattle.Hunting
             return true;
         }
 
+        /// <summary>
+        /// A module caught a weakened, calm drift (Ed: modules must hook what touches them). The hunter
+        /// gets the same Finish / Tame choice as a hand catch; in Auto with no pet room it's finished for loot.
+        /// False while the hunter is busy: the module keeps holding it.
+        /// </summary>
+        public bool ModuleCatchCalm(Drift d, object module)
+        {
+            if (phase != Phase.Idle || BattleController.InBattle || WorldPause.Open != Menu.None) return false;
+            d.Release(module);
+            if (!d.TryClaim(this)) return false;
+            target = d;
+            tensionHit = false;
+            pendingLoot = null;
+            var m = d.Monster;
+            phase = Phase.Result;
+            if (BattleSettings.Mode == BattleMode.Auto && Companions.Full)
+            {
+                KillWeakened("your pets are full (no room to tame)");
+                return true;
+            }
+            resultTitle = $"{m.displayName} — Weakened, calm";
+            resultBody = "A raft module caught it. It can barely move and isn't hostile. Finish it for loot, or tame it.";
+            return true;
+        }
+
         /// <summary>Room for companions follows the habitats on the raft.</summary>
         public void SyncHabitats()
         {
