@@ -41,8 +41,8 @@ namespace BrineBattle.Hunting
 
         void OnDestroy() => Grid.Changed -= Rebuild;
 
-        [Tooltip("How much of the water's rise and lean the raft follows (0 = still).")]
-        public float rock = 0.8f;
+        [Tooltip("How much of the water's lean the raft follows (0 = stays level).")]
+        public float rock = 0.6f;
         float restY = float.NaN;
 
         /// <summary>Rides the swell: rises and falls with the water under its centre and leans with the slope (owner's ask).</summary>
@@ -51,7 +51,7 @@ namespace BrineBattle.Hunting
             if (float.IsNaN(restY)) restY = transform.position.y;
             var p = transform.position;
             float span = Mathf.Max(1.5f, Grid.Radius * CellSize);
-            p.y = restY + Waves.Height(p.x, p.z) * rock;
+            p.y = restY + Waves.Height(p.x, p.z);   // always on the water, never under it
             transform.position = p;
             var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), rock);
             transform.rotation = Quaternion.FromToRotation(Vector3.up, up);

@@ -12,12 +12,14 @@ namespace BrineBattle.Hunting
         // x, z = direction (normalised in Height), w = wavelength in metres, amplitude and speed below.
         static readonly Vector4[] waves =
         {
-            new Vector4(1f, 0.2f, 0f, 9f),
-            new Vector4(0.4f, 1f, 0f, 6.5f),
-            new Vector4(-0.7f, 0.6f, 0f, 4.2f),
+            new Vector4(1f, 0.2f, 0f, 10f),
+            new Vector4(0.4f, 1f, 0f, 7f),
+            new Vector4(-0.7f, 0.6f, 0f, 4.5f),
+            new Vector4(0.9f, -0.5f, 0f, 3f),
         };
-        static readonly float[] amplitude = { 0.16f, 0.09f, 0.05f };
-        static readonly float[] speed = { 1.1f, 0.9f, 1.4f };
+        // Tall enough to read from the top-down camera (owner's ask: real waves, not lines).
+        static readonly float[] amplitude = { 0.38f, 0.22f, 0.11f, 0.06f };
+        static readonly float[] speed = { 1.1f, 0.9f, 1.4f, 1.2f };
 
         /// <summary>Water height (metres above y = 0) at a world point now.</summary>
         public static float Height(float x, float z) => Height(x, z, Time.time);

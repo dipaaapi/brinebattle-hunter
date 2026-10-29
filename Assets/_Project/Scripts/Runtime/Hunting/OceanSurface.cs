@@ -1,28 +1,21 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace BrineBattle.Hunting
 {
     /// <summary>
-    /// Placeholder ocean: a generated wave texture that scrolls with the current, plus white
-    /// streaks riding the current so you can see which way drifts will float. The surface itself
+    /// Placeholder ocean: a generated wave texture that scrolls with the current. The surface itself
     /// rises and falls with <see cref="BrineBattle.Hunting.Waves"/> (owner's ask), on a finer mesh made at start.
     /// </summary>
     public class OceanSurface : MonoBehaviour
     {
         public DriftSpawner spawner;
-        public int streakCount = 40;
-        public float streakArea = 26f;
 
         Material mat;
         Vector2 uvPerWorld;     // texture offset change per metre along world x / z
         Vector2 offset;
-        readonly List<Transform> streaks = new List<Transform>();
-        readonly List<float> streakSpeed = new List<float>();
-        Material streakMat;
         Mesh mesh;
         Vector3[] baseVerts, verts;
-        public int meshCells = 150;
+        public int meshCells = 200;
 
         Vector3 Dir => spawner != null ? spawner.currentDirection.normalized : Vector3.right;
         float Speed => spawner != null ? spawner.driftSpeed : 1.5f;
@@ -38,32 +31,10 @@ namespace BrineBattle.Hunting
             mat.mainTexture = tex;
             mat.SetColor("_BaseColor", Color.white);
             mat.mainTextureScale = new Vector2(tiling, tiling);
-            mat.SetFloat("_Smoothness", 0.6f);
+            mat.SetFloat("_Smoothness", 0.85f);   // sun glints on the wave slopes make the swell readable from above
             uvPerWorld = UvGradient(GetComponent<MeshFilter>().sharedMesh) * tiling;
 
-            streakMat = new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color"));
-            streakMat.SetColor("_BaseColor", new Color(0.85f, 0.95f, 1f));
-            streakMat.color = new Color(0.85f, 0.95f, 1f);
-            for (int i = 0; i < streakCount; i++)
-            {
-                var s = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                s.name = "Current streak";
-                Destroy(s.GetComponent<Collider>());
-                s.GetComponent<Renderer>().sharedMaterial = streakMat;
-                s.transform.SetParent(transform.parent, false);
-                streaks.Add(s.transform);
-                streakSpeed.Add(Random.Range(0.8f, 1.4f));
-                Place(s.transform, Random.Range(-streakArea, streakArea));
-            }
-        }
-
-        void Place(Transform s, float along)
-        {
-            var dir = Dir;
-            var side = Vector3.Cross(Vector3.up, dir);
-            s.position = new Vector3(0f, 0.03f, 0f) + dir * along + side * Random.Range(-streakArea, streakArea);
-            s.rotation = Quaternion.LookRotation(Vector3.down, dir);
-            s.localScale = new Vector3(0.06f, Random.Range(1.2f, 2.6f), 1f);
+            // No current streaks any more (owner's call): the moving swell and the scrolling texture show the sea.
         }
 
         /// <summary>Swaps the 10×10 Unity plane for a finer grid over the same area so the waves look smooth.</summary>
@@ -124,16 +95,6 @@ namespace BrineBattle.Hunting
             offset.x %= 1f; offset.y %= 1f;
             mat.mainTextureOffset = offset;
             mat.SetTextureOffset("_BaseMap", offset);
-
-            for (int i = 0; i < streaks.Count; i++)
-            {
-                var s = streaks[i];
-                s.position += dir * Speed * streakSpeed[i] * Time.deltaTime;
-                if (Vector3.Dot(s.position, dir) > streakArea) Place(s, -streakArea);
-                var p = s.position;
-                p.y = BrineBattle.Hunting.Waves.Height(p.x, p.z) + 0.03f;
-                s.position = p;
-            }
         }
 
         /// <summary>How much u and v change per world metre along x and z, read from the mesh itself.</summary>

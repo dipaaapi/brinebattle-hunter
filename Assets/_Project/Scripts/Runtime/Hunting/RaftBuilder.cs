@@ -112,7 +112,7 @@ namespace BrineBattle.Hunting
             var inv = hook.Inventory;
             int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier), cost = RaftRules.UpgradeCost(g.Tier);
             GUILayout.BeginVertical(HuntStyles.Box);
-            GUILayout.Label($"<b>Upgrade guide → {g.Tier + 1}</b>", Rich);
+            GUILayout.Label($"<b>Guide to raft Lv {(int)g.Tier + 2} ({g.Tier + 1})</b>", Rich);
 
             if (Step(g.Kills >= kills, $"Defeat monsters: {Mathf.Min(g.Kills, kills)}/{kills}",
                 "Hook monsters marked \"Something moves!\" and win the battle, or finish weakened ones (\"Twitching...\"). Module catches count too."))
@@ -228,7 +228,7 @@ namespace BrineBattle.Hunting
             if (GUI.Button(new Rect(w - 34, 4, 26, 20), "X")) { Toggle(); GUILayout.EndArea(); return; }
             panelScroll = GUILayout.BeginScrollView(panelScroll);
             var g = raft.Grid;
-            GUILayout.Label($"Size {g.Size} · {g.Count} parts · {g.MaxHp} HP · tier <color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>", Rich);
+            GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 1}</b> (<color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>) · size {g.Size} · {g.Count} parts · {g.MaxHp} HP", Rich);
             int next = 0;
             for (int n = 1; n <= RaftRules.StarterParts + RaftRules.PartsPerSize; n++)
                 if (RaftRules.SizeFor(g.Count + n) > g.Size) { next = n; break; }
@@ -236,7 +236,7 @@ namespace BrineBattle.Hunting
             var (guarded, rows) = g.UpstreamModules();
             GUILayout.Label($"Left edge modules: {guarded}/{rows} rows (need {g.ModulesNeeded} to widen or upgrade) "
                 + (g.ModulesReady ? "<color=#7CFC9A>ready</color>" : "<color=#ff8a80>install modules on the left first</color>"), Rich);
-            if (RaftRules.UpgradeCost(g.Tier) > 0 && GUILayout.Button(guide ? "Hide the upgrade guide" : $"Guide: how to upgrade to {g.Tier + 1}", GUILayout.Height(30)))
+            if (RaftRules.UpgradeCost(g.Tier) > 0 && GUILayout.Button(guide ? "Hide the upgrade guide" : $"Guide: how to reach raft Lv {(int)g.Tier + 2}", GUILayout.Height(30)))
                 guide = !guide;
             if (guide) DrawGuide();
 
@@ -323,14 +323,14 @@ namespace BrineBattle.Hunting
             {
                 var inv = hook.Inventory;
                 int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier);
-                GUILayout.Label($"<b>Upgrade to {g.Tier + 1}</b> (parts below the new tier can't be added after):\n"
+                GUILayout.Label($"<b>Level up to Lv {(int)g.Tier + 2} ({g.Tier + 1})</b> (parts below the new tier can't be added after):\n"
                     + $"  Kills since last upgrade {Have(g.Kills, kills)} · monster materials {Have(inv.MaterialCount(), mats)}\n"
                     + $"  {g.Tier}+ essence {Have(inv.EssenceAtLeast(g.Tier), cost)} · left-edge modules {Have(guarded, g.ModulesNeeded)}", Rich);
                 string blocker = g.UpgradeBlocker(inv);
                 GUI.enabled = blocker == null;
-                if (GUILayout.Button($"Upgrade raft tier → {g.Tier + 1}"))
+                if (GUILayout.Button($"Level up the raft → Lv {(int)g.Tier + 2} ({g.Tier + 1})"))
                 {
-                    if (g.TryUpgrade(inv)) hook.Log($"Raft upgraded to {g.Tier} tier. Max HP {g.MaxHp}.");
+                    if (g.TryUpgrade(inv)) hook.Log($"Raft leveled up to Lv {(int)g.Tier + 1} ({g.Tier})! Max HP {g.MaxHp}.");
                 }
                 GUI.enabled = true;
                 if (blocker != null)

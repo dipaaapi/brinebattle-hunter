@@ -194,6 +194,12 @@ namespace BrineBattle.Hunting
                         KillWeakened("too aggressive to tame");
                         return;
                     }
+                    // Auto mode: no prompt when there is nothing to choose (owner's call); the log says what happened.
+                    if (BattleSettings.Mode == BattleMode.Auto && Companions.Full)
+                    {
+                        KillWeakened("your pets are full (no room to tame)");
+                        return;
+                    }
                     resultTitle = $"{m.displayName} — Weakened, calm";
                     resultBody = $"{hintNote}\nIt can barely move and isn't hostile. Finish it for loot, or tame it.";
                     break;
@@ -486,7 +492,7 @@ namespace BrineBattle.Hunting
             GUILayout.Label(builder != null && builder.Active ? "<color=#ffd866>Building: use the panel on the right.</color>"
                 : "<color=#ffd866>Click a floating monster to hook it!</color>", Rich);
             GUILayout.Space(4);
-            Meter($"Raft ({raft.Tier}, size {raft.size})", 1f, $"{raft.MaxHp} HP", new Color(0.85f, 0.75f, 0.5f));
+            Meter($"Raft Lv {(int)raft.Tier + 1} ({raft.Tier}, size {raft.size})", 1f, $"{raft.MaxHp} HP", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
             Meter(Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon", Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));
             GUI.enabled = !Harpoon.Full && Inventory.MaterialCount() >= 1;
