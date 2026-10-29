@@ -198,7 +198,7 @@ namespace BrineBattle.Hunting
 
             if (recipes.Count > 0)
             {
-                GUILayout.Label("<b>Workbench</b> (uses the bag; take a module off the raft to upgrade or dismantle it)", Rich);
+                GUILayout.Label("<b>Workbench</b> (uses the bag; craft gear and modules; take a module off the raft to upgrade or dismantle it)", Rich);
                 foreach (var r in recipes)
                 {
                     if (r == null) continue;

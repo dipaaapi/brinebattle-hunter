@@ -39,9 +39,10 @@ namespace BrineBattle.Hunting
             onEnd = onFinished;
             InBattle = true;
             endTimer = 0f;
-            state = new BattleState(Combatant.Hunter(), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
+            var hook = FindFirstObjectByType<HookController>();
+            state = new BattleState(Combatant.Hunter(hook?.Gear), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
-            state.Weapon = FindFirstObjectByType<HookController>()?.Harpoon;
+            state.Weapon = hook?.Harpoon;
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
             state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.{first}");
             timer = 0f;

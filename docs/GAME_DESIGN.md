@@ -1,6 +1,6 @@
 # BrineBattle Hunter — Game Design Document
 
-*Living document · v0.3*
+*Living document · v0.4*
 
 ## 1. Overview
 
@@ -111,6 +111,7 @@ Applies to gear, companions, and monsters (type chart).
 | Legendary / Mythic | Multiple slots, secondary element |
 
 - Refine (+) with Monster Essence.
+- **Implemented (Phase 6, tunable):** one weapon and one armor slot. Gear has a power value (weapon = attack, armor = defense) added to the hunter; the weapon's element is the hunter's attack element. Equipping needs rarity ≥ the slot's tier. Refine +1…+10: each + adds ¼ of base power (min 1) and costs 2 × the new level in essence of the item's rarity or higher; no failure yet (Alchemy Mastery later). Gear is crafted at the workbench from monster parts.
 
 ## 10. Companions
 

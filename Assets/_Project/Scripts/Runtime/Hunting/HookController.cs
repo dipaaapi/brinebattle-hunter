@@ -28,6 +28,8 @@ namespace BrineBattle.Hunting
         public Inventory Inventory { get; } = new Inventory();
         /// <summary>Harpoon wear (idea C-4).</summary>
         public Durability Harpoon { get; } = new Durability(Battle.BattleRules.HarpoonDurability);
+        /// <summary>Weapon and armor slots (Phase 6); their power feeds the hunter in battle.</summary>
+        public Equipment Gear { get; } = new Equipment();
         [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
         public ItemDefinition starterModule;
         /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
@@ -381,7 +383,7 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, Screen.height - LogHeight - 30));
             GUILayout.BeginVertical(HuntStyles.Box);
-            GUILayout.Label("<b>BrineBattle Hunter — Phase 5</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Phase 6</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.Label("Battle mode (Settings)");
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
