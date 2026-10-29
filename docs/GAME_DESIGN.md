@@ -199,6 +199,10 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 - **Collision** meshes authored in Blender (simplified, `_col` naming) for easy iteration.
 - **Modular, grid-based** raft parts.
 
+### Main menu (Ed's ask)
+
+The game opens on its own **MainMenu scene** before the game (Hook) scene: **Continue** (shows the save's date; loads the save), **New game** (asks first if a save exists; the old save is kept as `save.backup.json`, so auto-save can't overwrite it, and Upload save file brings it back), **Settings** (screen size, battle mode, auto-use; saving needs a game) and **Quit**. In the game, Settings has **Save and go to main menu**. In the Editor, Play always starts at the main menu. Both scenes are built from code (`MainMenuSceneBuilder`, `HookSceneBuilder`).
+
 ## 14. Open Questions
 
 - Action resource in battle (stamina vs weapon charge).

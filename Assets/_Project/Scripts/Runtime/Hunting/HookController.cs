@@ -79,6 +79,9 @@ namespace BrineBattle.Hunting
             SyncHabitats();
         }
 
+        // Main menu: Continue loads the save here (New game starts fresh).
+        void Start() => StartCoroutine(GameStart.Apply(this));
+
         void Update()
         {
             WorldPause.Prompt = phase == Phase.Result;

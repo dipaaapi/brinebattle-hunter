@@ -137,3 +137,6 @@ The raft should rock with the sea and the sea should have real waves, not only l
 
 ### U-25 Kid-friendly, simpler UI — 2026-10-29 · 🟡 quick cleanup done, full redesign in Phase 9
 The menus are too complicated; a child should be able to use them. Fewer words, bigger buttons, icons, one thing per screen. Ed chose both: a quick cleanup now (done in Phase 7: Screen size setting Small/Big/Huge, default Big; shorter HUD with bars and big buttons; one Crew repair slider per module kind) and a full UI redesign with icons in Phase 9.
+
+### U-26 Main menu scene — 2026-10-29 · ✅ (first pass) · GDD §13, UI art in Phase 9
+Before the game starts or continues there should be a main menu: New game, Continue and Settings, so the player sets things up first and then plays without stopping. It is its own scene that loads first, not a pop-up over the game (Ed). Pulled forward by the owner during Phase 7.

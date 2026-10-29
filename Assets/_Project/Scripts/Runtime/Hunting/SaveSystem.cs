@@ -58,6 +58,22 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>
+        /// New game (main menu): the current save moves to save.backup.json so auto-save can't write
+        /// the new game over it. Saving the new game makes a fresh save.json. Returns null, or what went wrong.
+        /// </summary>
+        public static string StartNew()
+        {
+            try
+            {
+                if (!Exists) return null;
+                File.Copy(FilePath, BackupPath, true);
+                File.Delete(FilePath);
+                return null;
+            }
+            catch (Exception e) { return $"Couldn't put the old save aside: {e.Message}"; }
+        }
+
+        /// <summary>
         /// Makes the save at <paramref name="path"/> the one save file and loads it; auto-save then
         /// writes into it. The current save is kept as save.backup.json first.
         /// </summary>

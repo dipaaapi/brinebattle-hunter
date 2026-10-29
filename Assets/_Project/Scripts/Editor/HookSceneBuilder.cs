@@ -138,12 +138,7 @@ namespace BrineBattle.Editor
             return mat;
         }
 
-        static void AddToBuildSettings(string path)
-        {
-            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            scenes.RemoveAll(s => s.path == path);
-            scenes.Insert(0, new EditorBuildSettingsScene(path, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
-        }
+        // The main menu stays first in the build, the Hook scene right after it.
+        static void AddToBuildSettings(string path) => MainMenuSceneBuilder.OrderBuildScenes();
     }
 }

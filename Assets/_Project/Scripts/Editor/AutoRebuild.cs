@@ -12,7 +12,7 @@ namespace BrineBattle.Editor
     [InitializeOnLoad]
     static class AutoRebuild
     {
-        public const int DataVersion = 6;   // 1 gear, 2 consumables, 3 gear skills, 4 elemental oils, 5 habitats, 6 reinforced raft parts
+        public const int DataVersion = 7;   // 1 gear, 2 consumables, 3 gear skills, 4 elemental oils, 5 habitats, 6 reinforced raft parts, 7 main menu scene
         static string Key => $"brinebattle.dataVersion.{Application.dataPath.GetHashCode()}";
 
         static AutoRebuild()
@@ -28,8 +28,9 @@ namespace BrineBattle.Editor
             // The Hook scene is generated, but give the user a chance to keep unsaved edits first.
             if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             EditorPrefs.SetInt(Key, DataVersion);
-            Debug.Log($"[AutoRebuild] data version {DataVersion}: rebuilding sample data and the Hook scene.");
-            HookSceneBuilder.Build();
+            Debug.Log($"[AutoRebuild] data version {DataVersion}: rebuilding sample data, the main menu and the Hook scene.");
+            MainMenuSceneBuilder.Build();
+            HookSceneBuilder.Build();   // last, so the Hook scene is the one left open
         }
     }
 }

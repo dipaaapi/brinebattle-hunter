@@ -12,6 +12,10 @@ namespace BrineBattle.Hunting
     public class SettingsPanel : MonoBehaviour
     {
         static bool open => WorldPause.Open == Menu.Settings;
+        /// <summary>False in the main menu scene: there is no game to save or load yet.</summary>
+        bool inGame;
+
+        void Start() => inGame = FindFirstObjectByType<HookController>() != null;
 
         void Update()
         {
@@ -27,7 +31,7 @@ namespace BrineBattle.Hunting
         /// </summary>
         void AutoSave()
         {
-            if (BattleSettings.Mode == BattleMode.Manual || !SaveSystem.Exists) return;
+            if (!inGame || BattleSettings.Mode == BattleMode.Manual || !SaveSystem.Exists) return;
             autoTimer += Time.unscaledDeltaTime;
             if (autoTimer < SaveSystem.AutoSaveSeconds) return;
             if (BattleController.InBattle || WorldPause.Open != Menu.None || WorldPause.Prompt) return;
@@ -64,6 +68,14 @@ namespace BrineBattle.Hunting
             GUILayout.Label("<b>Controls</b>", Rich);
             GUILayout.Label("<size=11>Click a drift: cast · Space: reel · B: Bag · C: Book · R: Build · Esc: Settings</size>", Rich);
 
+            if (!inGame)
+            {
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Close (Esc)")) WorldPause.Close(Menu.Settings);
+                GUILayout.EndArea();
+                return;
+            }
+
             GUILayout.Space(8);
             GUILayout.Label("<b>Save game</b> (one save file: bag, gear, raft, modules, companions, book)", Rich);
             saveInfo ??= SaveSystem.Describe() ?? "no save yet";
@@ -89,7 +101,10 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
 
             GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Save and go to main menu")) { SaveSystem.Save(); GameStart.ToMenu(); }
             if (GUILayout.Button("Close (Esc)")) WorldPause.Close(Menu.Settings);
+            GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }
 
