@@ -80,6 +80,8 @@ namespace BrineBattle.Hunting
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
             if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
+            // The hunter's idle, pulling and knocked-out motions (Ed's ask), likewise added at runtime.
+            if (!TryGetComponent<HunterMotion>(out _)) gameObject.AddComponent<HunterMotion>().hook = this;
             // Companions on the raft (Phase 7), likewise added at runtime.
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
             // Storage box = crafting table (owner's ask), likewise added at runtime.
@@ -669,7 +671,17 @@ namespace BrineBattle.Hunting
             logScroll = Vector2.zero;   // jump to the newest so you see it arrive
         }
 
-        Vector3 HookOrigin() => raft.transform.position + Vector3.up * 1.2f;
+        Transform hunterTf;
+        /// <summary>The line starts at the hunter's hands, wherever the hunter stands (Ed's ask: walk to the edge to pull).</summary>
+        Vector3 HookOrigin()
+        {
+            if (hunterTf == null) hunterTf = raft.transform.Find("Hunter");
+            return hunterTf != null ? hunterTf.position + Vector3.up * 0.35f : raft.transform.position + Vector3.up * 1.2f;
+        }
+
+        /// <summary>The drift being cast at or reeled in, else null (for the hunter's pulling motion).</summary>
+        public Drift HookTarget => phase == Phase.Casting || phase == Phase.Reeling ? target : null;
+        public bool Reeling => phase == Phase.Reeling;
         static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
     }
 }

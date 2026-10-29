@@ -90,11 +90,15 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>After a lost battle the pets hide in the storage box until the hunter is up again (Ed's ask).</summary>
+        bool Scared => hook.RestLeft > 0f && !BattleController.InBattle;
+
         void Update()
         {
             if (hook == null || Raft == null) return;
             Place();
-            if (WorldPause.Open != Menu.None || BattleController.InBattle) return;
+            if (StorageBox.Instance != null) StorageBox.Instance.Scared = Scared && bodies.Count > 0;
+            if (WorldPause.Open != Menu.None || BattleController.InBattle || Scared) return;
             Chores();
         }
 
@@ -107,7 +111,22 @@ namespace BrineBattle.Hunting
                 b.Phase += Time.deltaTime;
                 b.Busy = Mathf.Max(0f, b.Busy - Time.deltaTime);
                 // In battle the stage shows the fighting Familiar; hide the idle one.
-                b.Go.SetActive(!(BattleController.InBattle && b.Pet == hook.Companions.Active));
+                if (Scared)
+                {
+                    // Scurry into the box in a little arc, then vanish inside it.
+                    if (!b.Go.activeSelf) continue;
+                    var inBox = Box + Vector3.up * 0.3f;
+                    var cur = b.Go.transform.localPosition;
+                    var next = Vector3.MoveTowards(cur, inBox, Time.deltaTime * 3f);
+                    float left = Vector3.Distance(next, inBox);
+                    b.Go.transform.localPosition = next + Vector3.up * Mathf.Min(0.4f, left * 0.5f);
+                    if (left < 0.08f) b.Go.SetActive(false);
+                    continue;
+                }
+                bool show = !(BattleController.InBattle && b.Pet == hook.Companions.Active);
+                // Back out of the box after the rest: pop out of the lid.
+                if (show && !b.Go.activeSelf && !BattleController.InBattle) b.Go.transform.localPosition = Box + Vector3.up * 0.8f;
+                b.Go.SetActive(show);
                 if (b.Look != b.Pet.Look) Dress(b);
                 float hop = Mathf.Abs(Mathf.Sin(b.Phase * (b.Busy > 0f ? 12f : 3f))) * (b.Busy > 0f ? 0.35f : 0.08f);
                 Vector3 p;

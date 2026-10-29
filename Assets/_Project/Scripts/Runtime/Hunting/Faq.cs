@@ -49,7 +49,7 @@ namespace BrineBattle.Hunting
                 new Entry("What does \"⚠ Danger!\" over a monster mean?",
                     "That monster would probably beat you and your battle pet. Better gear, a stronger pet, or leaving it alone helps."),
                 new Entry("What happens if I lose?",
-                    "The monster swims off and you get no loot. You rest for 30 seconds before you can hook again, and the waves wash away up to 3 Common materials from your Bag. Gear, pets, raft parts, tools, potions and rarer items are never lost. You start the next fight with full HP.")),
+                    "The monster swims off and you get no loot. You rest for 30 seconds before you can hook again, and the waves wash away up to 3 Common materials from your Bag. Gear, pets, raft parts, tools, potions and rarer items are never lost. Your pets hide in the storage box until you're back up. You start the next fight with full HP.")),
 
             new Topic("Bag & loot",
                 new Entry("Where is my loot?",

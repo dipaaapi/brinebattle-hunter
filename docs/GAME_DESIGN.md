@@ -53,6 +53,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
   - Set in **Settings** (Esc); applied automatically when battle starts. Settings also has a toggle for auto-use of consumables in Semi-auto and Auto.
   - Can be changed anytime, including mid-battle.
 - **Losing (Ed's call: rest + a little lost):** the monster swims off, the hunter rests 30 s before hooking again (module catches wait too), and the waves wash away up to 3 Common materials. Gear, pets, raft parts, tools, potions and rarer items are never lost; the next fight starts at full HP. No game over. (Phase 8 may add a monster eating a raft part.)
+- **Looks of a loss (Ed's ask):** the hunter lies knocked out ("z Z") while resting; the pets scurry into the storage box, which shivers and squeaks ("eep!") with the lid peeking, and they pop back out when the rest is over.
 - **⚠ Danger!** shows over a drift whose monster would likely beat the hunter and the battle pet (hits needed on each side, average damage with elements).
 - Resource for actions: *TBD* (stamina only, or weapon charge/durability — no mana, since hunters have no magic).
 
@@ -225,6 +226,10 @@ Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status ca
 - **Book:** tab labels show found/total; a progress bar.
 - **Settings:** Game · Save · Controls · **FAQ**.
 - **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
+
+### Hunter on the raft (Ed's ask)
+
+Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces.
 
 ### Away pause (Ed's call)
 
