@@ -114,6 +114,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Crew repairs modules at a % set per module kind (Build); Mystic restocks potions/oils and heals the hunter or Familiar each battle round
 - [x] Upload a save file from anywhere (Settings)
 - [x] Raft tier upgrade needs kills + monster materials; widening/upgrading needs modules on half the left edge; module catches of live aggressive monsters start an Auto battle (owner's asks)
+- [x] Menu settings in the save; module live catches always start an Auto battle
+- [x] Rocking raft on moving waves, katig and sail (owner idea U-24, looks only)
 - [ ] Habitats on the raft (each adds roster room)
 - [ ] Evolution and old age (U-23)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)

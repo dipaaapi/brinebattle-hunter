@@ -69,15 +69,23 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
-            if (Hooked || WorldPause.Active) return;
+            if (Hooked) return;
+            Ride(transform.position);
+            if (WorldPause.Active) return;
             lifetime += Time.deltaTime;
             var p = transform.position + velocity * Time.deltaTime;
             if (raft == null) raft = FindFirstObjectByType<Raft>();
             if (raft != null) p = BumpOffParts(p);
-            p.y = 0.1f + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.08f;
-            transform.position = p;
+            Ride(p);
             if (velocity.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(velocity);
             if (lifetime > 60f) Destroy(gameObject);
+        }
+
+        /// <summary>Floats on the swell, with a little bob of its own.</summary>
+        void Ride(Vector3 p)
+        {
+            p.y = 0.1f + Waves.Height(p.x, p.z) + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.04f;
+            transform.position = p;
         }
 
         /// <summary>Drifts slide along the raft's actual parts (not a circle around it) instead of passing through.</summary>

@@ -131,3 +131,6 @@ Companions come in three roles:
 3. **Familiar** — fights beside you against other monsters.
 Each role has varieties that only change the look and outfit. Companions can **evolve** to serve better, and they **die of old age**.
 - Claude's note: "Crew" is used in code and UI as a neutral name for role 1 until Ed picks the final word. Open: how a companion's role is set, what makes it evolve, how lifespan is counted before a day/night cycle exists (U-10), what happens when one dies.
+
+### U-24 Rocking raft, moving waves, katig — 2026-10-29 · ✅ (first pass) · GDD §6, Phase 9 art later
+The raft should rock with the sea and the sea should have real waves, not only lines. A raft has katig (outriggers) and something to catch the wind; here they are looks only. Pulled forward by the owner during Phase 7: `Waves` swell shared by the ocean mesh, raft and drifts; `RaftDecor` adds katig and a sail. Real models come with U-18.

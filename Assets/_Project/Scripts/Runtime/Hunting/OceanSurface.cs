@@ -5,7 +5,8 @@ namespace BrineBattle.Hunting
 {
     /// <summary>
     /// Placeholder ocean: a generated wave texture that scrolls with the current, plus white
-    /// streaks riding the current so you can see which way drifts will float.
+    /// streaks riding the current so you can see which way drifts will float. The surface itself
+    /// rises and falls with <see cref="BrineBattle.Hunting.Waves"/> (owner's ask), on a finer mesh made at start.
     /// </summary>
     public class OceanSurface : MonoBehaviour
     {
@@ -19,6 +20,9 @@ namespace BrineBattle.Hunting
         readonly List<Transform> streaks = new List<Transform>();
         readonly List<float> streakSpeed = new List<float>();
         Material streakMat;
+        Mesh mesh;
+        Vector3[] baseVerts, verts;
+        public int meshCells = 150;
 
         Vector3 Dir => spawner != null ? spawner.currentDirection.normalized : Vector3.right;
         float Speed => spawner != null ? spawner.driftSpeed : 1.5f;
@@ -27,6 +31,7 @@ namespace BrineBattle.Hunting
         {
             var r = GetComponent<Renderer>();
             mat = r.material;
+            BuildMesh();
             var tex = WaveTexture(256);
             const float tiling = 10f;
             mat.SetTexture("_BaseMap", tex);
@@ -61,8 +66,58 @@ namespace BrineBattle.Hunting
             s.localScale = new Vector3(0.06f, Random.Range(1.2f, 2.6f), 1f);
         }
 
+        /// <summary>Swaps the 10×10 Unity plane for a finer grid over the same area so the waves look smooth.</summary>
+        void BuildMesh()
+        {
+            var mf = GetComponent<MeshFilter>();
+            var old = mf.sharedMesh;
+            var b = old.bounds;
+            int n = Mathf.Max(2, meshCells);
+            baseVerts = new Vector3[(n + 1) * (n + 1)];
+            var uv = new Vector2[baseVerts.Length];
+            for (int z = 0; z <= n; z++)
+                for (int x = 0; x <= n; x++)
+                {
+                    float u = x / (float)n, v = z / (float)n;
+                    baseVerts[z * (n + 1) + x] = new Vector3(Mathf.Lerp(b.min.x, b.max.x, u), 0f, Mathf.Lerp(b.min.z, b.max.z, v));
+                    uv[z * (n + 1) + x] = new Vector2(u, v);
+                }
+            var tris = new int[n * n * 6];
+            for (int z = 0, t = 0; z < n; z++)
+                for (int x = 0; x < n; x++)
+                {
+                    int i = z * (n + 1) + x;
+                    tris[t++] = i; tris[t++] = i + n + 1; tris[t++] = i + 1;
+                    tris[t++] = i + 1; tris[t++] = i + n + 1; tris[t++] = i + n + 2;
+                }
+            mesh = new Mesh { name = "Ocean waves", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            mesh.MarkDynamic();
+            mesh.vertices = baseVerts;
+            mesh.uv = uv;
+            mesh.triangles = tris;
+            mesh.RecalculateNormals();
+            mesh.bounds = new Bounds(b.center, b.size + Vector3.up * 2f);
+            mf.sharedMesh = mesh;
+            verts = (Vector3[])baseVerts.Clone();
+        }
+
+        void Swell()
+        {
+            if (mesh == null) return;
+            var tf = transform;
+            float sy = Mathf.Max(0.0001f, tf.lossyScale.y);
+            for (int i = 0; i < baseVerts.Length; i++)
+            {
+                var w = tf.TransformPoint(baseVerts[i]);
+                verts[i] = new Vector3(baseVerts[i].x, (BrineBattle.Hunting.Waves.Height(w.x, w.z) - tf.position.y) / sy, baseVerts[i].z);
+            }
+            mesh.vertices = verts;
+            mesh.RecalculateNormals();
+        }
+
         void Update()
         {
+            Swell();   // the sea keeps moving even while menus pause the world
             if (WorldPause.Active) return;
             var dir = Dir;
             offset -= new Vector2(dir.x * uvPerWorld.x, dir.z * uvPerWorld.y) * Speed * 0.6f * Time.deltaTime;
@@ -75,6 +130,9 @@ namespace BrineBattle.Hunting
                 var s = streaks[i];
                 s.position += dir * Speed * streakSpeed[i] * Time.deltaTime;
                 if (Vector3.Dot(s.position, dir) > streakArea) Place(s, -streakArea);
+                var p = s.position;
+                p.y = BrineBattle.Hunting.Waves.Height(p.x, p.z) + 0.03f;
+                s.position = p;
             }
         }
 
