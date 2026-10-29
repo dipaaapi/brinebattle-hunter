@@ -46,6 +46,11 @@ namespace BrineBattle.Hunting
             state.FirstRound = firstRound;
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
+            if (hook != null)
+            {
+                foreach (var p in hook.Gear.Passives) state.Passives.Add(p);
+                state.Actives.AddRange(hook.Gear.Actives);
+            }
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
             state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.{first}");
             timer = 0f;
@@ -82,11 +87,15 @@ namespace BrineBattle.Hunting
                 return;
             }
             var autoItem = AutoItem();
-            var pick = autoItem != null ? BattleAction.Item : BattleAI.Choose(state, BattleSettings.Mode);
+            var autoSkill = autoItem == null ? BattleAI.ChooseSkill(state, BattleSettings.Mode) : GearActive.None;
+            var pick = autoItem != null ? BattleAction.Item
+                : autoSkill != GearActive.None ? BattleAction.Skill
+                : BattleAI.Choose(state, BattleSettings.Mode);
             if (pick == null) { timer = 0f; return; }
             timer += Time.deltaTime;
             if (timer < autoDelay) return;
             if (autoItem != null) UseItem(autoItem);
+            else if (autoSkill != GearActive.None) UseSkill(autoSkill);
             else Play(pick.Value);
         }
 
@@ -104,6 +113,17 @@ namespace BrineBattle.Hunting
         {
             int before = state.Monster.Hp;
             state.PlayRound(action);
+            if (state.Monster.Hp < before) shake = 1f;
+            timer = 0f;
+        }
+
+        bool Waiting() => AutoItem() == null && BattleAI.ChooseSkill(state, BattleSettings.Mode) == GearActive.None
+            && BattleAI.Choose(state, BattleSettings.Mode) == null;
+
+        void UseSkill(GearActive skill)
+        {
+            int before = state.Monster.Hp;
+            state.PlaySkill(skill);
             if (state.Monster.Hp < before) shake = 1f;
             timer = 0f;
         }
@@ -129,7 +149,7 @@ namespace BrineBattle.Hunting
         {
             if (!Active) return;
             GUI.depth = -5;
-            float w = 520, h = 330;
+            float w = 520, h = state.Actives.Count > 0 ? 360 : 330;
             GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}", HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
@@ -153,7 +173,7 @@ namespace BrineBattle.Hunting
             }
             else
             {
-                bool waiting = AutoItem() == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
+                bool waiting = Waiting();
                 GUI.enabled = waiting;
                 if (GUILayout.Button("Attack")) Play(BattleAction.Attack);
                 GUI.enabled = waiting && state.CanUse(BattleAction.Harpoon);
@@ -164,13 +184,27 @@ namespace BrineBattle.Hunting
             }
             GUILayout.EndHorizontal();
 
+            if (state.Outcome == BattleOutcome.Ongoing && state.Actives.Count > 0)
+            {
+                // Gear actives (GDD §9): cost stamina, take the turn.
+                GUILayout.BeginHorizontal();
+                bool waiting = Waiting();
+                foreach (var skill in state.Actives)
+                {
+                    GUI.enabled = waiting && state.CanUseSkill(skill);
+                    if (GUILayout.Button($"{GearSkillRules.Label(skill)} ({GearSkillRules.Describe(skill)})")) UseSkill(skill);
+                }
+                GUI.enabled = true;
+                GUILayout.EndHorizontal();
+            }
+
             if (state.Outcome == BattleOutcome.Ongoing && state.Bag != null)
             {
                 // Consumables (Phase 6): using one takes the hunter's turn. Semi-auto and Auto use them when low (BattleAI.ChooseItem).
                 var items = state.Bag.Items.Where(kv => kv.Key.effect != ConsumableEffect.None).ToList();
                 GUILayout.BeginHorizontal();
                 if (items.Count == 0) GUILayout.Label("<size=11>No consumables — craft them at the Workbench.</size>", new GUIStyle(GUI.skin.label) { richText = true });
-                bool waiting = AutoItem() == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
+                bool waiting = Waiting();
                 foreach (var kv in items)
                 {
                     var item = kv.Key;

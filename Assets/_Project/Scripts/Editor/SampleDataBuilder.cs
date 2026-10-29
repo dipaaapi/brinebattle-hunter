@@ -159,6 +159,34 @@ namespace BrineBattle.Editor
             Recipe("craft_brine_tonic", "Brine Tonic", RecipeKind.Craft, new[] { (scale, 2), (feather, 1) }, new[] { (tonic, 1) });
             Recipe("craft_tar_patch", "Tar Patch", RecipeKind.Craft, new[] { (patch, 1), (plank, 1) }, new[] { (tarPatch, 1) });
             EnsureEntry(loot, tonic, 0.2f, 1, 1);
+
+            // Phase 6: gear skills by rarity (GDD §9). Rare = 1 passive, Epic = 1 passive + 1 active.
+            var maul = LoadOrCreate<ItemDefinition>($"{Root}/Items/ShellMaul.asset", i =>
+            {
+                i.id = "shell_maul"; i.displayName = "Shell Maul"; i.type = ItemType.Weapon;
+                i.rarity = Rarity.Rare; i.element = Element.Earth; i.maxStack = 1; i.gearPower = 7;
+                i.passives = new[] { GearPassive.Thorns };
+                i.description = "A crab claw on a club. Whatever bites you gets spikes for its trouble.";
+            });
+            var lance = LoadOrCreate<ItemDefinition>($"{Root}/Items/TidecallerLance.asset", i =>
+            {
+                i.id = "tidecaller_lance"; i.displayName = "Tidecaller Lance"; i.type = ItemType.Weapon;
+                i.rarity = Rarity.Epic; i.element = Element.Water; i.maxStack = 1; i.gearPower = 9;
+                i.passives = new[] { GearPassive.Leech };
+                i.actives = new[] { GearActive.TidalStrike };
+                i.description = "An eel-fang spear bound in shell. It drinks what it cuts and calls the tide behind a thrust.";
+            });
+            var carapace = LoadOrCreate<ItemDefinition>($"{Root}/Items/ShellbackCarapace.asset", i =>
+            {
+                i.id = "shellback_carapace"; i.displayName = "Shellback Carapace"; i.type = ItemType.Armor;
+                i.rarity = Rarity.Epic; i.element = Element.Earth; i.maxStack = 1; i.gearPower = 6;
+                i.passives = new[] { GearPassive.Bulwark };
+                i.actives = new[] { GearActive.ShellGuard };
+                i.description = "A whole crab back, worn. Its bulk shields the raft as much as you.";
+            });
+            Recipe("craft_shell_maul", "Shell Maul", RecipeKind.Craft, new[] { (shell, 3), (fang, 2) }, new[] { (maul, 1) });
+            Recipe("craft_tidecaller_lance", "Tidecaller Lance", RecipeKind.Craft, new[] { (spear, 1), (fang, 4), (shell, 3) }, new[] { (lance, 1) });
+            Recipe("craft_shellback_carapace", "Shellback Carapace", RecipeKind.Craft, new[] { (shell, 5), (scale, 4) }, new[] { (carapace, 1) });
             EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);

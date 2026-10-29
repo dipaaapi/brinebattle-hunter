@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 6 (slice 3: gear skills)
+- PR #2 (consumables + Settings) merged. Owner ideas U-19 battle effects, U-20 audio, U-21 fog/time of day logged.
+- Branch `phase/6-gear-skills`: `GearPassive` / `GearActive` on items, `GearSkillRules` (slots: Rare 1 passive, Epic 1+1, Legendary 2+2, Mythic 3+2; Common/Uncommon element only), `Equipment.Passives/Actives`, `BattleAction.Skill` + `BattleState.PlaySkill`.
+- Passives: Leech (heal 20% of damage dealt), Thorns (25% back), Second Wind (+1 stamina/round), Bulwark (raft −20%). Actives: Tidal Strike (×2.2, 6 st), Shell Guard (raft safe this round, 4 st). Auto uses them; Semi-auto waits for the player when one is ready.
+- New gear via Create Sample Data: Shell Maul (Rare, Thorns), Tidecaller Lance (Epic, Leech + Tidal Strike), Shellback Carapace (Epic, Bulwark + Shell Guard), all from Shellback Plates.
+- Rules tests outside Unity: 76/76 (14 new). Unity run pending.
+
 ## 2026-10-29 — Phase 6 (slice 2: consumables)
 - Gear slice: Ed ran the Test Runner (103/103) and played it; PR #1 merged. Bag gear row narrowed so Refine/Take off fit.
 - Branch `phase/6-consumables`: `ConsumableEffect` (HealHunter, RepairRaft) + `effectAmount` on items; `BattleAction.Item` and `BattleState.PlayItem` (takes the hunter's turn, no use at full HP); battle panel shows a button per consumable.

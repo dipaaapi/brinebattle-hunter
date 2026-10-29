@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — Alchemy & gear (gear merged; slice 2: consumables) |
-| **Next step** | Ed: Create Sample Data + Build Hook Scene, then playtest consumables on `phase/6-consumables` |
+| **Current phase** | Phase 6 — Alchemy & gear (gear, consumables, Settings merged; gear skills in review) |
+| **Next step** | Ed: Create Sample Data + Build Hook Scene, Run All, playtest gear skills on `phase/6-gear-skills`; then decide if Phase 6 is done (elemental oils left) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -95,7 +95,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Gear slots (weapon, armor) in the bag: equip / take off, tier check; gear power feeds hunter ATK/DEF, weapon element = hunter element
 - [x] Craft gear at the workbench (Eel-Fang Spear, Gull-Bone Buckler)
 - [x] Refine (+1…+10) with essence of the item's rarity or higher
-- [ ] Gear rarity skills (GDD §9 table)
+- [x] Gear rarity skills: passives (Leech, Thorns, Second Wind, Bulwark) and actives (Tidal Strike, Shell Guard), slots by rarity; Shell Maul (Rare), Tidecaller Lance and Shellback Carapace (Epic)
 - [x] Consumables: Brine Tonic (HP) and Tar Patch (raft) from the workbench, used in battle (takes the turn); Semi-auto/Auto use them at ≤35% HP
 - [ ] Elemental oils and companion consumables
 - [x] Real **Settings menu** (Esc / HUD button): battle mode, auto-use consumables toggle, controls

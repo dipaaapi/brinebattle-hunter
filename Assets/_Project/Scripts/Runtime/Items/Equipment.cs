@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using BrineBattle.Elements;
 
 namespace BrineBattle.Items
@@ -105,6 +106,13 @@ namespace BrineBattle.Items
             Changed?.Invoke();
             return true;
         }
+
+        /// <summary>Passives from both slots, no repeats (the same passive twice doesn't stack).</summary>
+        public IEnumerable<GearPassive> Passives =>
+            slots.Values.SelectMany(GearSkillRules.Passives).Distinct();
+
+        public IEnumerable<GearActive> Actives =>
+            slots.Values.SelectMany(GearSkillRules.Actives).Distinct();
 
         /// <summary>"Eel-Fang Spear +2" or "(none)".</summary>
         public string Label(GearSlot slot)

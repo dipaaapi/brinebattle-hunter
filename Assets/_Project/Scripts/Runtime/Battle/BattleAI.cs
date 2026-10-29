@@ -30,6 +30,18 @@ namespace BrineBattle.Battle
             return null;
         }
 
+        /// <summary>
+        /// Auto uses gear actives: Shell Guard when the raft is low, otherwise Tidal Strike when affordable.
+        /// None = no skill this round. Semi-auto leaves skills to the player (see <see cref="Choose"/>).
+        /// </summary>
+        public static GearActive ChooseSkill(BattleState s, BattleMode mode)
+        {
+            if (mode != BattleMode.Auto) return GearActive.None;
+            if (s.RaftHp <= s.RaftMaxHp * LowHp && s.CanUseSkill(GearActive.ShellGuard)) return GearActive.ShellGuard;
+            if (s.CanUseSkill(GearActive.TidalStrike)) return GearActive.TidalStrike;
+            return GearActive.None;
+        }
+
         public static BattleAction? Choose(BattleState s, BattleMode mode)
         {
             if (mode == BattleMode.Manual) return null;
@@ -37,8 +49,8 @@ namespace BrineBattle.Battle
             bool harpoonReady = s.CanUse(BattleAction.Harpoon);
 
             if (mode == BattleMode.SemiAuto)
-                // Auto basic attacks; the player decides the important turns.
-                return low || harpoonReady ? (BattleAction?)null : BattleAction.Attack;
+                // Auto basic attacks; the player decides the important turns (low HP, harpoon or a gear skill ready).
+                return low || harpoonReady || s.Actives.Any(s.CanUseSkill) ? (BattleAction?)null : BattleAction.Attack;
 
             if (low && !harpoonReady) return BattleAction.Brace;
             if (harpoonReady) return BattleAction.Harpoon;

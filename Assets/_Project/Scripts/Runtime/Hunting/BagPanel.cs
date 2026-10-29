@@ -95,7 +95,8 @@ namespace BrineBattle.Hunting
                 var item = kv.Key;
                 bool fits = SalvageRules.IsCompatible(item.type, item.rarity, TierOf(item.type));
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}</size>", Rich, GUILayout.Width(320));
+                string skillTip = GearRules.IsGear(item.type) ? SkillText(item) : "";
+                GUILayout.Label(new GUIContent($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}{(skillTip.Length > 0 ? " · skills" : "")}</size>", skillTip), Rich, GUILayout.Width(320));
                 GUILayout.Label(fits ? "<color=#7f7>fits</color>" : "<color=#f77>misfit</color>", Rich, GUILayout.Width(50));
                 if (GearRules.IsGear(item.type))
                 {
@@ -149,6 +150,16 @@ namespace BrineBattle.Hunting
                 if (GUILayout.Button("Take off", GUILayout.Width(70))) gear.Unequip(slot, inv);
             }
             GUILayout.EndHorizontal();
+            string skills = SkillText(item);
+            if (skills.Length > 0) GUILayout.Label($"<size=10>      {skills}</size>", Rich);
+        }
+
+        /// <summary>"Passive: Thorns (...) · Active: Shell Guard" for gear with skills (GDD §9), else "".</summary>
+        static string SkillText(ItemDefinition item)
+        {
+            var parts = GearSkillRules.Passives(item).Select(p => $"Passive: {GearSkillRules.Label(p)}")
+                .Concat(GearSkillRules.Actives(item).Select(a => $"Active: {GearSkillRules.Label(a)} ({GearSkillRules.Describe(a)})"));
+            return string.Join(" · ", parts);
         }
 
         void Salvage(ItemDefinition item, int qty)

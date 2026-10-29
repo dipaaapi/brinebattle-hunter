@@ -9,6 +9,8 @@ namespace BrineBattle.Battle
         Brace = 2,
         /// <summary>Use a consumable from the bag; takes the hunter's turn.</summary>
         Item = 3,
+        /// <summary>Use an active gear skill; costs stamina and takes the turn.</summary>
+        Skill = 4,
     }
 
     /// <summary>GDD §5: set in Settings, applied at battle start, switchable mid-battle.</summary>
