@@ -187,6 +187,15 @@ namespace BrineBattle.Editor
                 i.effect = ConsumableEffect.RepairRaft; i.effectAmount = 30;
                 i.description = "An eel-skin patch with a plank backing, slapped on mid-fight. Restores 30 raft HP.";
             });
+            // Phase 7: companion treat (heals or wakes the battle companion).
+            var biscuit = LoadOrCreate<ItemDefinition>($"{Root}/Items/KelpBiscuit.asset", i =>
+            {
+                i.id = "kelp_biscuit"; i.displayName = "Kelp Biscuit"; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Common; i.element = Element.Water;
+                i.effect = ConsumableEffect.HealCompanion; i.effectAmount = 20;
+                i.description = "A crunchy treat for companions. Heals your battle companion 20 HP, or wakes it up if it was knocked out.";
+            });
+            Recipe("craft_kelp_biscuit", "Kelp Biscuit", RecipeKind.Craft, new[] { (scale, 1), (fang, 1) }, new[] { (biscuit, 1) });
             Recipe("craft_brine_tonic", "Brine Tonic", RecipeKind.Craft, new[] { (scale, 2), (feather, 1) }, new[] { (tonic, 1) });
             Recipe("craft_tar_patch", "Tar Patch", RecipeKind.Craft, new[] { (patch, 1), (plank, 1) }, new[] { (tarPatch, 1) });
             EnsureEntry(loot, tonic, 0.2f, 1, 1);

@@ -115,6 +115,14 @@ namespace BrineBattle.Companions
         /// <summary>Battles won since it was tamed.</summary>
         public int Age;
         public GrowthStage Stage;
+        /// <summary>Feeding points toward the next evolution (<see cref="CompanionGrowth.GrowthToEvolve"/>).</summary>
+        public int Growth;
+        /// <summary>Potions infused so far (each gives a small permanent stat; capped by stage).</summary>
+        public int Infusions;
+        /// <summary>The passive kept from the last companion fused into this one ("Echo of …"), or null.</summary>
+        public string Echo;
+        /// <summary>Looks only (U-23 varieties): 0 Plain, 1 Scarf, 2 Bandana, 3 Crown.</summary>
+        public int Look;
 
         public int Lifespan => CompanionRules.Lifespan(Rarity);
         public int AgeLeft => Math.Max(0, Lifespan - Age);

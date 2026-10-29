@@ -10,5 +10,7 @@ namespace BrineBattle.Items
         RepairRaft = 2,
         /// <summary>Elemental oil: the hunter's attacks take the item's element for effectAmount rounds.</summary>
         CoatWeapon = 3,
+        /// <summary>Companion treat: heals the battle companion, or wakes it up if it was knocked out.</summary>
+        HealCompanion = 4,
     }
 }

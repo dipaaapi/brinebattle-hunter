@@ -16,7 +16,7 @@ Storm = bigger/Alive drifts, calm = more Dead loot, fog = hints unreliable. One 
 ### C-4 Action resource = weapon durability + stamina (answer to U-7) — 2026-10-28 · ✅ Idea Round 2 · §5 · S · Phase 3
 Stamina per turn for basic actions, weapon durability for skills. Both are fed by alchemy (potions refill stamina, oils repair weapons), which ties battle back to the core pillar.
 
-### C-5 Fusion keeps one "echo" (answer to U-8) — 2026-10-28 · 💡 · §10 · M · Phase 7
+### C-5 Fusion keeps one "echo" (answer to U-8) — 2026-10-28 · ✅ Phase 7 · §10 · M · Phase 7
 Sources are consumed, but the result inherits one passive from the consumed one. Makes fusion a real trade-off without feeling like pure loss.
 
 ### C-6 Bestiary / Hunter's Journal — 2026-10-28 · 🔀 merged into U-11 · §4, §11 · S · Phase 4

@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 7 — Companions, part 2 (`phase/7-growth`). Part 1 merged (PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
-| **Next step** | Evolution + old age done (awaiting Ed's playtest). Next: feeding, fusion with echo (U-8 + C-5), companion consumables. Combined idea plan in `ideas/COMPARISON.md` |
+| **Next step** | All Phase 7 items are in `phase/7-growth` (PR #5). Ed tests the whole phase in Unity, then decides on merging to main. After that: Idea Round 3, then Phase 8 |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
@@ -119,9 +119,11 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Quick UI cleanup (owner idea U-25): screen size setting, simpler HUD, fewer Build sliders
 - [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
 - [x] Evolution and old age (U-23): age in battles won, Young → Adult → Elder, death leaves essence + Book memorial (numbers wait for Ed)
-- [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
-- [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)
-- [ ] Companion consumables (moved from Phase 6)
+- [x] Feeding / infusion with loot and potions (companion growth, no EXP): Bag → Feed
+- [x] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; essence catalyst; source used up, keeps an echo): Bag → Fuse
+- [x] Companion consumables (moved from Phase 6): Kelp Biscuit heals or wakes the battle companion; Semi-auto/Auto use it
+- [x] Looks (U-23 varieties): Plain, Scarf, Bandana, Crown; random at taming, changeable in the Bag
+- [x] Owner's asks during part 2: crafting materials kept after a raft level-up, Reinforce recipes per level, main menu scene, raft rocks with thicker planks per level, nothing overlaps
 
 **Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
 

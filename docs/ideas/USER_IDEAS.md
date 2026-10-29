@@ -26,7 +26,7 @@ Monsters eat raft parts when you lose or flee; beat them later to recover parts 
 
 ### U-7 Battle action resource: stamina vs weapon charge — 2026-10-28 · ✅ answered by C-4 (stamina + durability) · GDD §5, §14
 
-### U-8 Are fused companions consumed? — 2026-10-28 · 💡 · GDD §10, §14
+### U-8 Are fused companions consumed? — 2026-10-28 · ✅ yes, with an echo (C-5), Phase 7 · GDD §10, §14
 
 ## New ideas
 
@@ -124,7 +124,7 @@ No fog and no day/night look yet. Fog at night (and maybe in rough seas) that li
 When the game is finished, make a manual for players: viewable inside the game if possible, otherwise a downloadable PDF, whichever is better.
 - Claude's suggestion: both from one source. An in-game "How to Play" screen (works offline, always matches the build, can open on the relevant page) plus a PDF made from the same text for the store page / download. Write it at the end, once mechanics stop changing; the Settings menu's Controls list is the seed.
 
-### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · 🟡 roles + habitats done; looks, evolution, old age next · GDD §10
+### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · ✅ (first pass; numbers wait for Ed) · GDD §10
 Companions come in three roles:
 1. **Crew** (Ed's word: "slave") — looks after the raft: repairs and upkeep.
 2. **Mystic** — helps with alchemy and crafting, except the raft: gear, weapons, consumables.

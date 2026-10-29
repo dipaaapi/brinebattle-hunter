@@ -152,7 +152,8 @@ namespace BrineBattle.Hunting
                     yield return new WaitForSeconds(0.25f);
                     break;
                 case BattleEventKind.Heal:
-                    if (to != null) { to.Flash = 1f; to.FlashColor = new Color(0.4f, 1f, 0.5f); }
+                    // A treat can wake a knocked-out companion: it rises back up.
+                    if (to != null) { to.Flash = 1f; to.FlashColor = new Color(0.4f, 1f, 0.5f); to.Sink = 0f; }
                     Pop(to, $"+{e.Amount}", new Color(0.4f, 1f, 0.5f), 28);
                     yield return new WaitForSeconds(0.35f);
                     break;

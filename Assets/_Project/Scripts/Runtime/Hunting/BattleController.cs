@@ -237,6 +237,7 @@ namespace BrineBattle.Hunting
                     var item = kv.Key;
                     string what = item.effect == ConsumableEffect.HealHunter ? $"+{item.effectAmount} HP"
                         : item.effect == ConsumableEffect.RepairRaft ? $"+{item.effectAmount} raft"
+                        : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} pet"
                         : $"{item.element}, {item.effectAmount} rounds";
                     GUI.enabled = waiting && state.CanUseItem(item);
                     if (GUILayout.Button($"{item.displayName} ×{kv.Value} ({what})")) UseItem(item);

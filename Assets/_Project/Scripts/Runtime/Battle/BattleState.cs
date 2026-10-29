@@ -70,6 +70,7 @@ namespace BrineBattle.Battle
                 case ConsumableEffect.HealHunter: return Hunter.Hp < Hunter.MaxHp;
                 case ConsumableEffect.RepairRaft: return RaftHp < RaftMaxHp;
                 case ConsumableEffect.CoatWeapon: return item.element != Element.None && AttackElement != item.element;
+                case ConsumableEffect.HealCompanion: return Companion != null && Companion.Hp < Companion.MaxHp;
                 default: return false;
             }
         }
@@ -230,6 +231,14 @@ namespace BrineBattle.Battle
                 Hunter.Hp += gained;
                 Add($"{item.displayName}: you recover {gained} HP.");
                 Emit(BattleEventKind.Heal, BattleActor.Hunter, BattleActor.Hunter, gained, item.displayName);
+            }
+            else if (item.effect == ConsumableEffect.HealCompanion)
+            {
+                bool woke = !Companion.Alive;
+                int gained = Math.Min(item.effectAmount, Companion.MaxHp - Companion.Hp);
+                Companion.Hp += gained;
+                Add(woke ? $"{item.displayName}: {Companion.Name} wakes up with {Companion.Hp} HP!" : $"{item.displayName}: {Companion.Name} recovers {gained} HP.");
+                Emit(BattleEventKind.Heal, BattleActor.Hunter, BattleActor.Companion, gained, item.displayName);
             }
             else if (item.effect == ConsumableEffect.CoatWeapon)
             {

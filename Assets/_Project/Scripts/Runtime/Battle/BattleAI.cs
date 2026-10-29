@@ -29,6 +29,12 @@ namespace BrineBattle.Battle
                 var item = s.Bag.Items.Select(kv => kv.Key).FirstOrDefault(i => i.effect == effect && s.CanUseItem(i));
                 if (item != null) return item;
             }
+            // Companion treats: when the battle companion is low or knocked out (after the hunter and raft).
+            if (s.Companion != null && s.Companion.Hp <= s.Companion.MaxHp * LowHp)
+            {
+                var treat = s.Bag.Items.Select(kv => kv.Key).FirstOrDefault(i => i.effect == ConsumableEffect.HealCompanion && s.CanUseItem(i));
+                if (treat != null) return treat;
+            }
             return mode == BattleMode.Auto ? BestOil(s) : null;
         }
 

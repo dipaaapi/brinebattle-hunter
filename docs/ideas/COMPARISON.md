@@ -32,7 +32,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 
 | # | Next piece | Combines | Where |
 |---|---|---|---|
-| 1 | **Companion growth:** evolution, old age and death, feeding with loot/potions, fusion that consumes the source but keeps one "echo" passive | U-23 (rest), U-4, U-8 + C-5 | Phase 7 (rest) |
+| 1 | ✅ (Phase 7 part 2) **Companion growth:** evolution, old age and death, feeding with loot/potions, fusion that consumes the source but keeps one "echo" passive | U-23 (rest), U-4, U-8 + C-5 | Phase 7 (rest) |
 | 2 | **Alchemy knowledge:** a Mastery level that grows by harvesting and crafting; it reveals new "???" recipes in the Book, makes the Dead/Weakened/Alive hint more accurate, and unlocks combining essence into higher rarity | U-14, C-1, U-6 | Idea Round 3 |
 | 3 | **World conditions:** day/night with sun/moon affinity, rough seas, thunderstrikes, weather deciding what drifts, fog | U-10, U-15, C-3, U-21 | Idea Round / own phase |
 | 4 | **Gear slots and accessories:** skill slots as a hard limit by rarity, plus an accessory slot | U-12 (rest) | Idea Round |

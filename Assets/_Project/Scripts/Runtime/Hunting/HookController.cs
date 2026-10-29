@@ -468,6 +468,7 @@ namespace BrineBattle.Hunting
                 return;
             }
             pendingPet = Companion.FromMonster(m);
+            pendingPet.Look = rng.Next(CompanionGrowth.Looks.Length);   // a random variety (looks only)
             resultTitle = $"Tamed {m.displayName}! Pick its role";
             resultBody = $"{pendingPet.Stats}\n"
                 + $"Familiar: {CompanionRules.Describe(CompanionRole.Familiar)}.\n"

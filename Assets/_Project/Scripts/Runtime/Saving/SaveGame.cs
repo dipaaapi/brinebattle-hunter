@@ -68,6 +68,9 @@ namespace BrineBattle.Saving
             public int element, habitat, rarity, role, maxHp, attack, defense, speed;
             /// <summary>Battles won since taming and growth stage; 0 in older saves (a young companion).</summary>
             public int age, stage;
+            /// <summary>Feeding points, potions infused, the fusion echo and the look (0 / null in older saves).</summary>
+            public int growth, infusions, look;
+            public string echo;
         }
         [Serializable] public class Grave { public string id, name; public int rarity, role, age; }
     }
@@ -98,7 +101,8 @@ namespace BrineBattle.Saving
                 {
                     id = c.Id, name = c.Name, element = (int)c.Element, habitat = (int)c.Habitat, rarity = (int)c.Rarity,
                     role = (int)c.Role, maxHp = c.MaxHp, attack = c.Attack, defense = c.Defense, speed = c.Speed,
-                    age = c.Age, stage = (int)c.Stage,
+                    age = c.Age, stage = (int)c.Stage, growth = c.Growth, infusions = c.Infusions, look = c.Look,
+                    echo = string.IsNullOrEmpty(c.Echo) ? null : c.Echo,
                 });
             foreach (var m in pets.Memorials)
                 d.memorials.Add(new SaveData.Grave { id = m.Id, name = m.Name, rarity = (int)m.Rarity, role = (int)m.Role, age = m.Age });
@@ -138,7 +142,8 @@ namespace BrineBattle.Saving
             {
                 Id = p.id, Name = p.name, Element = (Element)p.element, Habitat = (Habitat)p.habitat, Rarity = (Rarity)p.rarity,
                 Role = (CompanionRole)p.role, MaxHp = p.maxHp, Attack = p.attack, Defense = p.defense, Speed = p.speed,
-                Age = p.age, Stage = (GrowthStage)p.stage,
+                Age = p.age, Stage = (GrowthStage)p.stage, Growth = p.growth, Infusions = p.infusions, Look = p.look,
+                Echo = string.IsNullOrEmpty(p.echo) ? null : p.echo,
             }), d.activeCompanion, d.habitats);
             pets.RestoreMemorials(d.memorials.Select(m => new Memorial
                 { Id = m.id, Name = m.name, Rarity = (Rarity)m.rarity, Role = (CompanionRole)m.role, Age = m.age }));

@@ -50,6 +50,8 @@ namespace BrineBattle.Hunting
             public float Busy;   // seconds of "working" hop left after a job
             public Vector3 Walk;   // Crew: local spot on the raft it is walking to
             public float NextWalk;
+            public int Look = -1;   // the look its attire was built for
+            public GameObject Attire;
         }
 
         readonly Dictionary<Companion, Body> bodies = new Dictionary<Companion, Body>();
@@ -106,6 +108,7 @@ namespace BrineBattle.Hunting
                 b.Busy = Mathf.Max(0f, b.Busy - Time.deltaTime);
                 // In battle the stage shows the fighting Familiar; hide the idle one.
                 b.Go.SetActive(!(BattleController.InBattle && b.Pet == hook.Companions.Active));
+                if (b.Look != b.Pet.Look) Dress(b);
                 float hop = Mathf.Abs(Mathf.Sin(b.Phase * (b.Busy > 0f ? 12f : 3f))) * (b.Busy > 0f ? 0.35f : 0.08f);
                 Vector3 p;
                 switch (b.Pet.Role)
@@ -128,6 +131,26 @@ namespace BrineBattle.Hunting
                 b.Go.transform.localPosition = p + Vector3.up * hop;
             }
             KeepApart(hunterLocal);
+        }
+
+        /// <summary>Looks only (U-23 varieties): a scarf, a bandana or a little crown on the pet.</summary>
+        static void Dress(Body b)
+        {
+            b.Look = b.Pet.Look;
+            if (b.Attire != null) Destroy(b.Attire);
+            b.Attire = null;
+            var look = CompanionGrowth.LookName(b.Pet.Look);
+            if (look == "Plain") return;
+            var go = GameObject.CreatePrimitive(look == "Scarf" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
+            go.name = look;
+            Destroy(go.GetComponent<Collider>());
+            go.transform.SetParent(b.Go.transform, false);
+            // Sizes are in the pet's own space (the pet sphere is 1 unit across).
+            if (look == "Scarf") { go.transform.localPosition = new Vector3(0f, -0.15f, 0f); go.transform.localScale = new Vector3(1.05f, 0.08f, 1.05f); }
+            else if (look == "Bandana") { go.transform.localPosition = new Vector3(0f, 0.32f, 0f); go.transform.localScale = new Vector3(0.95f, 0.14f, 0.95f); }
+            else { go.transform.localPosition = new Vector3(0f, 0.55f, 0f); go.transform.localScale = new Vector3(0.45f, 0.25f, 0.45f); }
+            Tint.Apply(go.GetComponent<Renderer>(), look == "Scarf" ? new Color(0.9f, 0.25f, 0.3f) : look == "Bandana" ? new Color(0.25f, 0.4f, 0.9f) : new Color(1f, 0.82f, 0.2f));
+            b.Attire = go;
         }
 
         const float PetRadius = 0.21f, HunterRadius = 0.3f, BoxRadius = 0.55f;
