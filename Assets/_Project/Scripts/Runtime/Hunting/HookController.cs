@@ -383,7 +383,7 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, Screen.height - LogHeight - 30));
             GUILayout.BeginVertical(HuntStyles.Box);
-            GUILayout.Label("<b>BrineBattle Hunter — Phase 5</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Phase 6</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.Label("Battle mode (Settings)");
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);

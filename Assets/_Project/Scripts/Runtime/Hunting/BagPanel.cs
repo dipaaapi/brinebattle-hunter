@@ -137,12 +137,13 @@ namespace BrineBattle.Hunting
             GUILayout.Label(slot.ToString(), GUILayout.Width(80));
             string stat = slot == GearSlot.Weapon ? "ATK" : "DEF";
             GUILayout.Label(item == null ? "(none — equip from the list below)"
-                : $"<color={RarityColor(item.rarity)}>{gear.Label(slot)}</color>  <size=10>{stat} +{gear.PowerOf(slot)}</size>", Rich, GUILayout.Width(260));
+                : $"<color={RarityColor(item.rarity)}>{gear.Label(slot)}</color>  <size=10>{stat} +{gear.PowerOf(slot)}</size>", Rich, GUILayout.Width(220));
             if (item != null)
             {
                 int cost = gear.RefineCost(slot);
                 GUI.enabled = gear.CanRefine(slot, inv);
-                if (GUILayout.Button(cost > 0 ? $"Refine +1 ({cost} {item.rarity}+ essence)" : $"Max +{GearRules.MaxRefine}") && gear.Refine(slot, inv))
+                string refine = cost > 0 ? $"Refine +1 ({cost} {item.rarity}+ ess.)" : $"Max +{GearRules.MaxRefine}";
+                if (GUILayout.Button(refine, GUILayout.Width(190)) && gear.Refine(slot, inv))
                     hook.Log($"Refined to {gear.Label(slot)} ({stat} +{gear.PowerOf(slot)}).");
                 GUI.enabled = true;
                 if (GUILayout.Button("Take off", GUILayout.Width(70))) gear.Unequip(slot, inv);
