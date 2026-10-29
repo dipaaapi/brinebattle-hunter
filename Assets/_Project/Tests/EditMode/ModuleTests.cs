@@ -50,12 +50,13 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void ModuleCanBePlacedOnRaftButRespectsTier()
+        public void ModuleCanBePlacedOnRaftAtAnyTier()
         {
             var g = new RaftGrid();
             g.FillSquare(Item(ItemType.Raft), 1);
             Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(2, 0), Item(ItemType.Module)));
             Assert.AreEqual(PlaceResult.NotARaftPart, g.CanPlace(new Cell(-2, 0), Item(ItemType.Material)));
+            Assert.IsTrue(SalvageRules.IsCompatible(ItemType.Module, Rarity.Common, Rarity.Rare), "a Common net still fits a Rare raft");
         }
 
         [Test]
