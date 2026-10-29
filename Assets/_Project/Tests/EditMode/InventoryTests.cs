@@ -88,6 +88,19 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void SalvageIncompatibleKeepsCraftingIngredients()
+        {
+            var inv = new Inventory();
+            var plank = Item(ItemType.Raft, Rarity.Common);
+            var junk = Item(ItemType.Raft, Rarity.Common);
+            inv.Add(plank, 4);
+            inv.Add(junk, 2);
+            inv.SalvageIncompatible(t => Rarity.Uncommon, i => i == plank);
+            Assert.AreEqual(4, inv.Count(plank), "still needed by a recipe");
+            Assert.AreEqual(0, inv.Count(junk));
+        }
+
+        [Test]
         public void ChangedFires()
         {
             var inv = new Inventory();

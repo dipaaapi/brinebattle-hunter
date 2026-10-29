@@ -59,10 +59,17 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>
+        /// Items a workbench recipe uses are never salvaged as misfits: a Common plank is below a Lv 2 raft
+        /// but still needed for modules, habitats, gear and potions (Ed's playtest).
+        /// </summary>
+        bool IsIngredient(ItemDefinition item) =>
+            hook.builder != null && hook.builder.recipes.Any(r => r != null && r.kind != RecipeKind.Dismantle && r.inputs.Any(x => x.item == item));
+
         void OnLoot()
         {
             if (!autoSalvage) return;
-            int gained = hook.Inventory.SalvageIncompatible(TierOf);
+            int gained = hook.Inventory.SalvageIncompatible(TierOf, IsIngredient);
             if (gained > 0) hook.Log($"Auto-salvaged misfits into {gained} essence.");
         }
 
@@ -100,7 +107,7 @@ namespace BrineBattle.Hunting
                 GUILayout.BeginHorizontal();
                 string skillTip = GearRules.IsGear(item.type) ? SkillText(item) : "";
                 GUILayout.Label(new GUIContent($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}{(skillTip.Length > 0 ? " · skills" : "")}</size>", skillTip), Rich, GUILayout.Width(320));
-                GUILayout.Label(fits ? "<color=#7f7>fits</color>" : "<color=#f77>misfit</color>", Rich, GUILayout.Width(50));
+                GUILayout.Label(fits ? "<color=#7f7>fits</color>" : IsIngredient(item) ? "<color=#ccf>crafting</color>" : "<color=#f77>misfit</color>", Rich, GUILayout.Width(50));
                 if (GearRules.IsGear(item.type))
                 {
                     GUI.enabled = hook.Gear.CanEquip(item, inv, TierOf(item.type));
@@ -124,7 +131,7 @@ namespace BrineBattle.Hunting
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Salvage all misfits"))
             {
-                int gained = inv.SalvageIncompatible(TierOf);
+                int gained = inv.SalvageIncompatible(TierOf, IsIngredient);
                 hook.Log(gained > 0 ? $"Salvaged misfits into {gained} essence." : "No misfits to salvage.");
             }
             if (GUILayout.Button("Close (B)")) WorldPause.Close(Menu.Bag);

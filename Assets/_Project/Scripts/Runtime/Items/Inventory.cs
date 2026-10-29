@@ -124,9 +124,10 @@ namespace BrineBattle.Items
         }
 
         /// <summary>Salvages every stack that doesn't fit its target tier. Returns essence gained.</summary>
-        public int SalvageIncompatible(Func<ItemType, Rarity> tierOf)
+        public int SalvageIncompatible(Func<ItemType, Rarity> tierOf, Func<ItemDefinition, bool> keep = null)
         {
-            var bad = items.Where(kv => !SalvageRules.IsCompatible(kv.Key.type, kv.Key.rarity, tierOf(kv.Key.type))).ToList();
+            var bad = items.Where(kv => !SalvageRules.IsCompatible(kv.Key.type, kv.Key.rarity, tierOf(kv.Key.type))
+                && (keep == null || !keep(kv.Key))).ToList();
             int total = 0;
             foreach (var kv in bad) total += Salvage(kv.Key, kv.Value);
             return total;
