@@ -5,7 +5,7 @@
 ## 2026-10-29 — Phase 7 (raft progression asks)
 - Settings: **Upload save file...** (Editor file picker; path field in a build) copies a save into the one slot, keeps the old one as `save.backup.json`, and loads it.
 - Raft tier upgrade now needs kills since the last upgrade (5, 10, 15 …) and monster materials (same numbers) on top of essence. `RaftGrid.Kills` (saved), `UpgradeBlocker` says what's missing; Build panel shows each requirement.
-- Widening and upgrading need auto-loot modules on half the left-edge rows (`RaftGrid.ModulesToGrow`, `PlaceResult.NeedsModules`). My reading of Ed's "50% of installed modules"; asked Ed to confirm.
+- Widening and upgrading need auto-loot modules on half the left-edge rows (`RaftGrid.ModulesToGrow`, `PlaceResult.NeedsModules`). Ed confirmed this reading of "50% of installed modules".
 - A module that hooks a live aggressive monster starts a forced Auto battle (`HookController.ModuleBattle`, `BattleController.ForceAuto`).
 - Rules tests outside Unity: 117/117 (RaftGridTests now included). Unity run pending.
 
