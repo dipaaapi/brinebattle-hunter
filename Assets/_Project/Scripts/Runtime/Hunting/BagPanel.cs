@@ -79,8 +79,9 @@ namespace BrineBattle.Hunting
             if (!open || hook == null) return;
             var inv = hook.Inventory;
             GUI.depth = -5;
-            float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 40);
+            float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Bag", HuntStyles.Window);
+            if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Bag); GUILayout.EndArea(); return; }
 
             GUILayout.Label("<b>Gear tiers</b> (an item fits if its rarity ≥ the tier)", Rich);
             if (hook.raft != null) raftTier = hook.raft.Tier;
@@ -88,7 +89,7 @@ namespace BrineBattle.Hunting
             weaponTier = TierRow("Weapon", weaponTier);
             armorTier = TierRow("Armor", armorTier);
             companionTier = TierRow("Companion", companionTier);
-            autoSalvage = GUILayout.Toggle(autoSalvage, " Auto-salvage misfits on pickup");
+            autoSalvage = GUILayout.Toggle(autoSalvage, " Auto-salvage weapons and armor below their tier on pickup (other loot is always kept)");
 
             var hunter = Battle.Combatant.Hunter(hook.Gear);
             string el = hunter.Element == Elements.Element.None ? "Neutral" : hunter.Element.ToString();
@@ -102,7 +103,7 @@ namespace BrineBattle.Hunting
             foreach (var kv in inv.Items.ToList())
             {
                 var item = kv.Key;
-                bool fits = SalvageRules.IsCompatible(item.type, item.rarity, TierOf(item.type));
+                bool fits = !SalvageRules.IsMisfit(item.type, item.rarity, TierOf(item.type));
                 GUILayout.BeginHorizontal();
                 string skillTip = GearRules.IsGear(item.type) ? SkillText(item) : "";
                 GUILayout.Label(new GUIContent($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}{(skillTip.Length > 0 ? " · skills" : "")}</size>", skillTip), Rich, GUILayout.Width(320));

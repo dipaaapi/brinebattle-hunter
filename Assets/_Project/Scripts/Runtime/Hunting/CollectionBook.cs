@@ -97,8 +97,9 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             if (!open) return;
             GUI.depth = -5;
-            float left = HookController.HudRight + 10, w = Mathf.Min(640, HuntStyles.W - left - 12), h = Mathf.Min(520, HuntStyles.H - 40);
+            float left = HookController.HudRight + 10, w = Mathf.Min(640, HuntStyles.W - left - 12), h = Mathf.Min(520, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
+            if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Book); GUILayout.EndArea(); return; }
 
             var newPage = (CollectionPage)GUILayout.Toolbar((int)page, Tabs);
             if (newPage != page) { page = newPage; selected = null; scroll = Vector2.zero; }

@@ -333,7 +333,7 @@ namespace BrineBattle.Hunting
 
             var m = target.Monster;
             GUI.depth = -5;
-            var rect = new Rect(HuntStyles.W / 2f - 200, HuntStyles.H / 2f - 120, 400, 240);
+            var rect = new Rect(HuntStyles.W / 2f - 220, HuntStyles.H / 2f - 130, 440, 260);
             GUILayout.BeginArea(rect, resultTitle, HuntStyles.Window);
             GUILayout.Space(6);
             GUILayout.Label(resultBody);
@@ -342,35 +342,35 @@ namespace BrineBattle.Hunting
             switch (target.Actual)
             {
                 case DriftState.Dead:
-                    if (GUILayout.Button("Harvest")) Finish($"Harvested {m.displayName}.", true, true);
+                    if (HuntStyles.ColorButton("Harvest", HuntStyles.Go)) Finish($"Harvested {m.displayName}.", true, true);
                     break;
                 case DriftState.Weakened when pendingPet != null:
                     foreach (CompanionRole role in System.Enum.GetValues(typeof(CompanionRole)))
-                        if (GUILayout.Button(role.ToString(), GUILayout.Height(28))) Adopt(role);
+                        if (HuntStyles.ColorButton(role.ToString(), HuntStyles.Other)) Adopt(role);
                     break;
                 case DriftState.Weakened:
-                    if (GUILayout.Button("Finish it"))
+                    if (HuntStyles.ColorButton("Finish it", HuntStyles.Risky))
                     {
                         pendingLoot = RollLoot(m);
                         CountKill();
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
                     GUI.enabled = !Companions.Full;
-                    if (GUILayout.Button(Companions.Full ? "Tame (no room: build a habitat)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})")) Tame();
+                    if (HuntStyles.ColorButton(Companions.Full ? "Tame (no room)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})", HuntStyles.Go)) Tame();
                     GUI.enabled = true;
                     break;
                 default:
                     if (EncounterRules.IsGated(target.Actual, raft.size, m.sizeClass))
                     {
-                        if (GUILayout.Button("Cut line")) Finish($"Cut the line. {m.displayName} drifts away.", false, false);
-                        if (GUILayout.Button("Flee")) Finish($"Fled from {m.displayName}. (It will eat raft parts in Phase 8.)", false, true);
-                        if (GUILayout.Button($"Sedate ({sedateChance:P0})"))
+                        if (HuntStyles.ColorButton("Cut line", HuntStyles.Other)) Finish($"Cut the line. {m.displayName} drifts away.", false, false);
+                        if (HuntStyles.ColorButton("Flee", HuntStyles.Other)) Finish($"Fled from {m.displayName}. (It will eat raft parts in Phase 8.)", false, true);
+                        if (HuntStyles.ColorButton($"Sedate ({sedateChance:P0})", HuntStyles.Go))
                         {
                             if (rng.NextDouble() < sedateChance) Sedated();
                             else Finish($"Sedative failed! {m.displayName} snapped the line.", false, true);
                         }
                     }
-                    else if (GUILayout.Button("Fight!")) StartBattle();
+                    else if (HuntStyles.ColorButton("Fight!", HuntStyles.Go)) StartBattle();
                     break;
             }
             GUILayout.EndHorizontal();
@@ -530,39 +530,54 @@ namespace BrineBattle.Hunting
         {
             DrawLog();
             if (BattleController.InBattle) return;
-            // Kept short and big (owner idea U-25): what to do, two bars, four buttons. Details live in the menus.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, HuntStyles.H - LogHeight - 30));
+            // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
+            // at the top, menus as big picture tiles along the bottom.
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 200));
             GUILayout.BeginVertical(HuntStyles.Box);
-            GUILayout.Label("<size=16><b>BrineBattle Hunter</b></size>", Rich);
-            GUILayout.Label(builder != null && builder.Active ? "<color=#ffd866>Building: use the panel on the right.</color>"
-                : "<color=#ffd866>Click a floating monster to hook it!</color>", Rich);
-            GUILayout.Space(4);
-            Meter($"Raft Lv {(int)raft.Tier + 1} ({raft.Tier}, size {raft.size})", 1f, $"{raft.MaxHp} HP", new Color(0.85f, 0.75f, 0.5f));
+            StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size}", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
-            Meter(Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon", Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));
+            StatusRow(HuntIcons.Harpoon, Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon",
+                Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));
             GUI.enabled = !Harpoon.Full && Inventory.MaterialCount() >= 1;
             if (GUILayout.Button(new GUIContent("Fix", "Repair the harpoon +10 for 1 material"), GUILayout.Width(44), GUILayout.Height(34)) && Inventory.SpendMaterials(1)) Harpoon.Repair(10);
             GUI.enabled = true;
             GUILayout.EndHorizontal();
-            if (Companions.All.Count > 0)
-                GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}: " + string.Join(", ", Companions.All.Select(c => $"{c.Name} ({c.Role})")) + "  (P)", Rich);
-            GUILayout.Space(4);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Bag\n<size=10>B</size>", BigButton)) BagToggleRequested?.Invoke();
-            if (GUILayout.Button("Book\n<size=10>C</size>", BigButton)) BookToggleRequested?.Invoke();
-            if (GUILayout.Button("Pets\n<size=10>P</size>", BigButton)) PetsPanel.Toggle();
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (builder != null && GUILayout.Button("Build\n<size=10>R</size>", BigButton)) builder.Toggle();
-            if (GUILayout.Button("Settings\n<size=10>Esc</size>", BigButton)) WorldPause.Toggle(Menu.Settings);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"<size=11>Battles: {BattleSettings.Labels[(int)BattleSettings.Mode]}</size>", Rich);
-            GUILayout.FlexibleSpace();
-            GUILayout.Label($"<size=11>{SettingsPanel.AutoSaveStatus}</size>", RichRight);
+            GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
+            GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}", Rich);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.EndArea();
+
+            // What to do now, big and centred.
+            string hint = builder != null && builder.Active ? "Building: pick a part, then click the raft."
+                : WorldPause.Open != Menu.None ? "" : "Click a floating monster to hook it!";
+            if (hint.Length > 0) GUI.Label(new Rect(HudRight, 10, HuntStyles.W - 2 * HudRight, 30), hint, HuntStyles.Banner);
+
+            // Battle mode and save, small, top-right.
+            GUI.Label(new Rect(HuntStyles.W - 330, 8, 320, 20), $"<size=11>Battles: {BattleSettings.Labels[(int)BattleSettings.Mode]} · {SettingsPanel.AutoSaveStatus}</size>", RichRight);
+
+            // Menu dock along the bottom.
+            const float tile = 78f, gap = 8f;
+            float x = (HuntStyles.W - (5 * tile + 4 * gap)) / 2f, y = HuntStyles.H - tile - 10f;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Bag, "Bag", "B", WorldPause.Open == Menu.Bag)) BagToggleRequested?.Invoke();
+            x += tile + gap;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Paw, "Pets", "P", WorldPause.Open == Menu.Pets)) PetsPanel.Toggle();
+            x += tile + gap;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Book", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
+            x += tile + gap;
+            if (builder != null && HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Hammer, "Build", "R", builder.Active)) builder.Toggle();
+            x += tile + gap;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Gear, "Settings", "Esc", WorldPause.Open == Menu.Settings)) WorldPause.Toggle(Menu.Settings);
+        }
+
+        /// <summary>Icon, name and a bar: one line of the status card.</summary>
+        void StatusRow(Texture2D icon, string label, float fill, string value, Color color)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(icon, GUILayout.Width(26), GUILayout.Height(26));
+            Meter(label, fill, value, color);
+            GUILayout.EndHorizontal();
         }
 
         /// <summary>A labelled bar: easier to read at a glance than numbers.</summary>
@@ -580,8 +595,6 @@ namespace BrineBattle.Hunting
         static GUIStyle richRight;
         static GUIStyle RichRight => richRight ??= new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleRight };
 
-        static GUIStyle bigButton;
-        static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 15, fontStyle = FontStyle.Bold, richText = true, fixedHeight = 46 };
 
         const int LogRows = 3;
         /// <summary>Oldest entries are deleted past this.</summary>

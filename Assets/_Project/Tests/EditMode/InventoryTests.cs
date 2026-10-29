@@ -74,16 +74,19 @@ namespace BrineBattle.Tests
         public void SalvageIncompatibleOnlyTouchesMisfits()
         {
             var inv = new Inventory();
+            var lowGear = Item(ItemType.Weapon, Rarity.Common);
+            var goodGear = Item(ItemType.Weapon, Rarity.Epic);
             var lowRaft = Item(ItemType.Raft, Rarity.Common);
-            var goodRaft = Item(ItemType.Raft, Rarity.Epic);
             var mat = Item(ItemType.Material, Rarity.Common);
-            inv.Add(lowRaft, 3);
-            inv.Add(goodRaft, 1);
+            inv.Add(lowGear, 3);
+            inv.Add(goodGear, 1);
+            inv.Add(lowRaft, 4);
             inv.Add(mat, 5);
             int gained = inv.SalvageIncompatible(t => Rarity.Rare);
             Assert.AreEqual(3, gained);
-            Assert.AreEqual(0, inv.Count(lowRaft));
-            Assert.AreEqual(1, inv.Count(goodRaft));
+            Assert.AreEqual(0, inv.Count(lowGear));
+            Assert.AreEqual(1, inv.Count(goodGear));
+            Assert.AreEqual(4, inv.Count(lowRaft), "raft parts below the raft level are kept for reinforcing and recipes");
             Assert.AreEqual(5, inv.Count(mat));
         }
 
@@ -91,8 +94,8 @@ namespace BrineBattle.Tests
         public void SalvageIncompatibleKeepsCraftingIngredients()
         {
             var inv = new Inventory();
-            var plank = Item(ItemType.Raft, Rarity.Common);
-            var junk = Item(ItemType.Raft, Rarity.Common);
+            var plank = Item(ItemType.Weapon, Rarity.Common);
+            var junk = Item(ItemType.Weapon, Rarity.Common);
             inv.Add(plank, 4);
             inv.Add(junk, 2);
             inv.SalvageIncompatible(t => Rarity.Uncommon, i => i == plank);

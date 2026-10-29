@@ -245,12 +245,12 @@ namespace BrineBattle.Hunting
         {
             HuntStyles.Begin();
             if (!Active || raft == null) return;
-            float w = 380, h = HuntStyles.H - 40;
+            float w = 380, h = HuntStyles.H - 120;
             panelRect = new Rect(HuntStyles.W - w - 12, 20, w, h);
             GUI.depth = -5;
             GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
-            if (GUI.Button(new Rect(w - 34, 4, 26, 20), "X")) { Toggle(); GUILayout.EndArea(); return; }
+            if (HuntStyles.CloseX(w)) { Toggle(); GUILayout.EndArea(); return; }
             panelScroll = GUILayout.BeginScrollView(panelScroll);
             var g = raft.Grid;
             GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 1}</b> (<color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>) · size {g.Size} · {g.Count} parts · {g.MaxHp} HP", Rich);

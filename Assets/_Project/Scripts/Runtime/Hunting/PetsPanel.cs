@@ -30,8 +30,9 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             if (!open || hook == null) return;
             GUI.depth = -5;
-            float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 40);
+            float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Pets", HuntStyles.Window);
+            if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Pets); GUILayout.EndArea(); return; }
             scroll = GUILayout.BeginScrollView(scroll);
             CompanionRows();
             GUILayout.EndScrollView();

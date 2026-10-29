@@ -45,8 +45,9 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             if (!open) return;
             GUI.depth = -5;
-            float w = Mathf.Min(420, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(520, HuntStyles.H - 40);
+            float w = Mathf.Min(420, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(520, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Settings", HuntStyles.Window);
+            if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Settings); GUILayout.EndArea(); return; }
 
             GUILayout.Label("<b>Screen size</b> (text and buttons)", Rich);
             int size = Mathf.Clamp(Mathf.RoundToInt((HuntStyles.Scale - 1f) / 0.25f), 0, 2);

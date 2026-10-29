@@ -74,6 +74,61 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>
+        /// A big picture button for the HUD dock (owner idea U-25): icon, word and key. Lit when its menu is open.
+        /// </summary>
+        public static bool Tile(Rect r, Texture2D icon, string caption, string key, bool lit)
+        {
+            var bg = lit ? new Color(0.98f, 0.82f, 0.3f) : new Color(0.12f, 0.16f, 0.22f, 0.95f);
+            bool hover = r.Contains(Event.current.mousePosition);
+            if (hover && !lit) bg = new Color(0.2f, 0.27f, 0.36f, 0.98f);
+            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, bg, 0, 10);
+            float s = r.height * 0.5f;
+            GUI.DrawTexture(new Rect(r.center.x - s / 2f, r.y + 6, s, s), icon, ScaleMode.ScaleToFit);
+            var text = lit ? DarkCaption : Caption;
+            GUI.Label(new Rect(r.x, r.y + s + 6, r.width, 18), caption, text);
+            GUI.Label(new Rect(r.x, r.y + s + 21, r.width, 14), key, lit ? DarkKey : Key);
+            return GUI.Button(r, GUIContent.none, GUIStyle.none);
+        }
+
+        /// <summary>A round × in a panel's top-right corner (inside its area). True when clicked.</summary>
+        public static bool CloseX(float areaWidth)
+        {
+            var r = new Rect(areaWidth - 34, 4, 28, 24);
+            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.8f, 0.3f, 0.3f), 0, 8);
+            GUI.Label(r, "×", DarkCaptionBig);
+            return GUI.Button(r, GUIContent.none, GUIStyle.none);
+        }
+
+        /// <summary>A coloured button so the main choice stands out (green go, red risky, blue other).</summary>
+        public static bool ColorButton(string text, Color color, params GUILayoutOption[] options)
+        {
+            var old = GUI.backgroundColor;
+            GUI.backgroundColor = color;
+            bool hit = GUILayout.Button(text, BigButton, options);
+            GUI.backgroundColor = old;
+            return hit;
+        }
+
+        public static readonly Color Go = new Color(0.35f, 0.85f, 0.45f), Risky = new Color(1f, 0.45f, 0.4f), Other = new Color(0.45f, 0.65f, 1f);
+
+        static GUIStyle caption, darkCaption, key, darkKey, darkCaptionBig, bigButton, banner;
+        static GUIStyle Caption => caption ??= Make(14, FontStyle.Bold, Color.white);
+        static GUIStyle DarkCaption => darkCaption ??= Make(14, FontStyle.Bold, new Color(0.1f, 0.1f, 0.12f));
+        static GUIStyle Key => key ??= Make(10, FontStyle.Normal, new Color(0.7f, 0.75f, 0.8f));
+        static GUIStyle DarkKey => darkKey ??= Make(10, FontStyle.Normal, new Color(0.25f, 0.25f, 0.28f));
+        static GUIStyle DarkCaptionBig => darkCaptionBig ??= Make(18, FontStyle.Bold, Color.white);
+        public static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 16, fontStyle = FontStyle.Bold, richText = true, fixedHeight = 42 };
+        /// <summary>The one-line "what to do now" at the top of the screen.</summary>
+        public static GUIStyle Banner => banner ??= Make(18, FontStyle.Bold, new Color(1f, 0.85f, 0.35f));
+
+        static GUIStyle Make(int size, FontStyle style, Color color)
+        {
+            var g = new GUIStyle(GUI.skin.label) { fontSize = size, fontStyle = style, alignment = TextAnchor.MiddleCenter, richText = true, wordWrap = false };
+            g.normal.textColor = color;
+            return g;
+        }
+
         static Texture2D Solid(Color c)
         {
             var t = new Texture2D(1, 1) { hideFlags = HideFlags.HideAndDontSave };

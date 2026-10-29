@@ -18,6 +18,14 @@ namespace BrineBattle.Items
         public static bool IsCompatible(ItemType type, Rarity itemRarity, Rarity targetTier) =>
             !IsEquippable(type) || itemRarity >= targetTier;
 
+        /// <summary>
+        /// What auto-salvage and "Salvage all misfits" may break down: only gear (weapon, armor) below its tier.
+        /// Raft parts below the raft's level are kept (Ed's playtest): they still reinforce into higher parts
+        /// and go into recipes, so leveling the raft never strands the player without materials.
+        /// </summary>
+        public static bool IsMisfit(ItemType type, Rarity itemRarity, Rarity targetTier) =>
+            (type == ItemType.Weapon || type == ItemType.Armor) && !IsCompatible(type, itemRarity, targetTier);
+
         /// <summary>Essence per salvaged item: Common 1, Uncommon 2 ... Mythic 6. Essence itself can't be salvaged.</summary>
         public static int EssenceYield(ItemType type, Rarity rarity) =>
             type == ItemType.Essence ? 0 : (int)rarity + 1;
