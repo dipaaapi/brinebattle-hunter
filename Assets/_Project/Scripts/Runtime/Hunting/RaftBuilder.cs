@@ -54,7 +54,7 @@ namespace BrineBattle.Hunting
             var mouse = Mouse.current;
             if (mouse == null || Camera.main == null) return;
             Vector2 mp = mouse.position.ReadValue();
-            var guiPoint = new Vector2(mp.x, Screen.height - mp.y);
+            var guiPoint = new Vector2(mp.x, Screen.height - mp.y) / HuntStyles.Scale;
             bool overPanel = panelRect.Contains(guiPoint);
 
             Cell? cell = overPanel ? null : CellUnderMouse(mp);
@@ -168,9 +168,10 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (!Active || raft == null) return;
-            float w = 380, h = Screen.height - 40;
-            panelRect = new Rect(Screen.width - w - 12, 20, w, h);
+            float w = 380, h = HuntStyles.H - 40;
+            panelRect = new Rect(HuntStyles.W - w - 12, 20, w, h);
             GUI.depth = -5;
             GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
@@ -247,14 +248,18 @@ namespace BrineBattle.Hunting
                     if (GUILayout.Button($"Repair ({RaftModules.CostText(s)})", GUILayout.Width(170))) message = modules.Repair(s);
                     GUI.enabled = true;
                     GUILayout.EndHorizontal();
-                    if (hook.Companions.Best(Companions.CompanionRole.Crew) != null)
+                }
+                if (hook.Companions.Best(Companions.CompanionRole.Crew) != null)
+                {
+                    // One slider per module kind, not per module (owner idea U-25: less clutter). The Crew repairs at or below it.
+                    GUILayout.Label("<b>Crew auto-repair</b> (fixes a module when it drops to this)", Rich);
+                    foreach (var kind in modules.Slots.Values.Select(x => x.Item).Distinct())
                     {
-                        // Per module kind: the Crew repairs it at or below this share (Phase 7, owner's call).
-                        float at = CompanionSettings.CrewRepairAt(s.Item.id);
+                        float at = CompanionSettings.CrewRepairAt(kind.id);
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label($"<size=11>  Crew repairs at ≤ {Mathf.RoundToInt(at * 100)}%</size>", Rich, GUILayout.Width(170));
+                        GUILayout.Label($"{kind.displayName}: {Mathf.RoundToInt(at * 100)}%", GUILayout.Width(170));
                         float picked = Mathf.Round(GUILayout.HorizontalSlider(at, 0f, 0.9f) * 10f) / 10f;
-                        if (!Mathf.Approximately(picked, at)) CompanionSettings.SetCrewRepairAt(s.Item.id, picked);
+                        if (!Mathf.Approximately(picked, at)) CompanionSettings.SetCrewRepairAt(kind.id, picked);
                         GUILayout.EndHorizontal();
                     }
                 }

@@ -122,10 +122,11 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (Hooked || WorldPause.Active || Camera.main == null) return;
-            Vector3 sp = Camera.main.WorldToScreenPoint(transform.position + Vector3.up);
+            Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(transform.position + Vector3.up));
             if (sp.z < 0) return;
-            var rect = new Rect(sp.x - 70, Screen.height - sp.y - 22, 140, 22);
+            var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
             GUI.Label(rect, $"{Monster.displayName}\n<i>{HintText(Hint)}</i>", HuntStyles.WorldLabel);
         }
     }

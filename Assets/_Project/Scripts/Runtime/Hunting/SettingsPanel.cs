@@ -38,11 +38,18 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (!open) return;
             GUI.depth = -5;
-            float w = Mathf.Min(420, Screen.width - HookController.HudRight - 22), h = Mathf.Min(520, Screen.height - 40);
-            GUILayout.BeginArea(new Rect(Screen.width - w - 12, 20, w, h), "Settings", HuntStyles.Window);
+            float w = Mathf.Min(420, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(520, HuntStyles.H - 40);
+            GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Settings", HuntStyles.Window);
 
+            GUILayout.Label("<b>Screen size</b> (text and buttons)", Rich);
+            int size = Mathf.Clamp(Mathf.RoundToInt((HuntStyles.Scale - 1f) / 0.25f), 0, 2);
+            int pickedSize = GUILayout.Toolbar(size, new[] { "Small", "Big", "Huge" }, GUILayout.Height(30));
+            if (pickedSize != size) HuntStyles.Scale = 1f + 0.25f * pickedSize;
+
+            GUILayout.Space(8);
             GUILayout.Label("<b>Battle mode</b> (also switchable during a battle)", Rich);
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "<size=11>Auto plays every turn and reels for you (50% clean).</size>"

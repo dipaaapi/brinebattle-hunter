@@ -270,6 +270,7 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (popups.Count == 0) return;
             var cam = Camera.main;
             if (cam == null) return;
@@ -277,11 +278,11 @@ namespace BrineBattle.Hunting
             GUI.depth = -6;
             foreach (var p in popups)
             {
-                var sp = cam.WorldToScreenPoint(p.World + Vector3.up * p.Age * 0.8f);
+                var sp = HuntStyles.Ui(cam.WorldToScreenPoint(p.World + Vector3.up * p.Age * 0.8f));
                 if (sp.z < 0f) continue;
                 float alpha = Mathf.Clamp01(1.4f - p.Age * 1.3f);
                 popupStyle.fontSize = Mathf.RoundToInt(p.Size * (p.Age < 0.12f ? 1f + (0.12f - p.Age) * 4f : 1f));
-                var r = new Rect(sp.x - 80, Screen.height - sp.y - 20, 160, 40);
+                var r = new Rect(sp.x - 80, HuntStyles.H - sp.y - 20, 160, 40);
                 popupStyle.normal.textColor = new Color(0f, 0f, 0f, alpha * 0.8f);
                 GUI.Label(new Rect(r.x + 2, r.y + 2, r.width, r.height), p.Text, popupStyle);
                 popupStyle.normal.textColor = new Color(p.Color.r, p.Color.g, p.Color.b, alpha);

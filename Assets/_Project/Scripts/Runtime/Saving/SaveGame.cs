@@ -48,6 +48,8 @@ namespace BrineBattle.Saving
             public bool crewBuilds = true;
             public bool mysticRefines = true;
             public int mysticKeep = 2;
+            /// <summary>UI size (Settings); 0 in older saves means "leave as is".</summary>
+            public float uiScale;
             /// <summary>Per module kind: the durability share at which the Crew repairs it.</summary>
             public List<Share> crewRepairAt = new List<Share>();
         }

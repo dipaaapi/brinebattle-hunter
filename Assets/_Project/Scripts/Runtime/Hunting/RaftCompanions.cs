@@ -233,16 +233,17 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (bodies.Count == 0 || BattleController.InBattle) return;
             var cam = Camera.main;
             if (cam == null) return;
             nameStyle ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 11, richText = true };
             foreach (var b in bodies.Values)
             {
-                var sp = cam.WorldToScreenPoint(b.Go.transform.position + Vector3.up * 0.45f);
+                var sp = HuntStyles.Ui(cam.WorldToScreenPoint(b.Go.transform.position + Vector3.up * 0.45f));
                 if (sp.z < 0f) continue;
                 string tag = b.Busy > 0f ? " <color=#ffd866>working!</color>" : "";
-                GUI.Label(new Rect(sp.x - 70, Screen.height - sp.y - 10, 140, 20), $"<b>{b.Pet.Role}</b>{tag}", nameStyle);
+                GUI.Label(new Rect(sp.x - 70, HuntStyles.H - sp.y - 10, 140, 20), $"<b>{b.Pet.Role}</b>{tag}", nameStyle);
             }
         }
     }

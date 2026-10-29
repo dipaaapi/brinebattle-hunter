@@ -170,11 +170,12 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (!Active) return;
             GUI.depth = -5;
             // Bottom-right, so the fight itself stays in view (the camera aims to the left of this).
-            float w = Mathf.Min(480, Screen.width * 0.42f), h = (state.Actives.Count > 0 ? 340 : 310) + (state.Companion != null ? 24 : 0);
-            GUILayout.BeginArea(new Rect(Screen.width - w - 12, Screen.height - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
+            float w = Mathf.Min(480, HuntStyles.W * 0.42f), h = (state.Actives.Count > 0 ? 340 : 310) + (state.Companion != null ? 24 : 0);
+            GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, HuntStyles.H - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
             Bar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.4f));

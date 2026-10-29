@@ -99,6 +99,7 @@ namespace BrineBattle.Hunting
             s.crewBuilds = CompanionSettings.CrewBuilds;
             s.mysticRefines = CompanionSettings.MysticRefines;
             s.mysticKeep = CompanionSettings.MysticKeep;
+            s.uiScale = HuntStyles.Scale;
             var modules = new HashSet<string>();
             if (book != null) foreach (var i in book.items) if (i != null && i.type == ItemType.Module) modules.Add(i.id);
             foreach (var kv in hook.raft.Grid.Parts) if (kv.Value.type == ItemType.Module) modules.Add(kv.Value.id);
@@ -121,6 +122,7 @@ namespace BrineBattle.Hunting
             CompanionSettings.CrewBuilds = s.crewBuilds;
             CompanionSettings.MysticRefines = s.mysticRefines;
             CompanionSettings.MysticKeep = s.mysticKeep;
+            if (s.uiScale > 0f) HuntStyles.Scale = s.uiScale;
             foreach (var r in s.crewRepairAt) if (!string.IsNullOrEmpty(r.id)) CompanionSettings.SetCrewRepairAt(r.id, r.share);
             PlayerPrefs.Save();
         }

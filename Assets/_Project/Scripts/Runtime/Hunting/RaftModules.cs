@@ -211,15 +211,16 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (Camera.main == null || WorldPause.Active) return;
             foreach (var kv in slots)
             {
-                Vector3 sp = Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f);
+                Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f));
                 if (sp.z < 0) continue;
                 var s = kv.Value;
                 string text = s.Durability.Broken ? "<color=#f77>BROKEN</color>"
                     : s.Timer > 0f ? $"{s.Durability} · {Mathf.CeilToInt(s.Timer)}s" : $"{s.Durability} · <color=#8f8>ready</color>";
-                GUI.Label(new Rect(sp.x - 40, Screen.height - sp.y - 18, 80, 18), text, HuntStyles.WorldLabel);
+                GUI.Label(new Rect(sp.x - 40, HuntStyles.H - sp.y - 18, 80, 18), text, HuntStyles.WorldLabel);
             }
         }
 
