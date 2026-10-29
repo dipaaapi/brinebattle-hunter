@@ -72,6 +72,8 @@ namespace BrineBattle.Hunting
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Companions on the raft (Phase 7), likewise added at runtime.
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
+            // Storage box = crafting table (owner's ask), likewise added at runtime.
+            if (StorageBox.Instance == null && !TryGetComponent<StorageBox>(out _)) gameObject.AddComponent<StorageBox>().raft = raft;
             // Habitats on the raft give companion room.
             raft.Grid.Changed += SyncHabitats;
             SyncHabitats();
@@ -249,6 +251,7 @@ namespace BrineBattle.Hunting
             foreach (var x in drops) Inventory.Add(x.Item, x.Quantity);
             string got = drops.Count == 0 ? "nothing" : string.Join(", ", drops.Select(x => $"{x.Quantity} {x.Item.displayName}"));
             Log($"{source} caught a {d.Monster.displayName}: {got}.");
+            if (drops.Count > 0) StorageBox.Instance?.Store(got, d.transform.position);
             LootAdded?.Invoke();
             Destroy(d.gameObject);
         }
@@ -260,6 +263,7 @@ namespace BrineBattle.Hunting
                 if (target != null) MonsterAcquired?.Invoke(target.Monster);
                 foreach (var d in pendingLoot) Inventory.Add(d.Item, d.Quantity);
                 Log(message);
+                if (pendingLoot.Count > 0) StorageBox.Instance?.Store(Brief(pendingLoot), target != null ? target.transform.position : raft.transform.position);
                 LootAdded?.Invoke();
             }
             else Log(message);

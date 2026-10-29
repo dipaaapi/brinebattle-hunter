@@ -274,6 +274,7 @@ namespace BrineBattle.Hunting
                     {
                         CraftRules.Craft(hook.Inventory, r);
                         message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
+                        StorageBox.Instance?.Crafted(CraftRules.Describe(r.outputs));
                         // A Mystic companion (Phase 7) sometimes makes one more of a gear, potion or oil.
                         var mystic = hook.Companions.Best(Companions.CompanionRole.Mystic);
                         var cat = CraftRules.CategoryOf(r);

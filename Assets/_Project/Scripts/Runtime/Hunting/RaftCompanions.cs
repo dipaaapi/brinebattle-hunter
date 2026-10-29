@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using BrineBattle.Companions;
 using BrineBattle.Items;
@@ -34,7 +35,7 @@ namespace BrineBattle.Hunting
 
     /// <summary>
     /// Shows companions on the raft and runs their chores (owner idea U-23): the Familiar waits
-    /// beside the hunter, the Mystic works at a workbench and refines gear, the Crew walks the raft
+    /// beside the hunter, the Mystic works at the storage box (crafting table) and refines gear, the Crew walks the raft
     /// edge and builds raft parts from the bag. Placeholder spheres; added at runtime by HookController.
     /// </summary>
     public class RaftCompanions : MonoBehaviour
@@ -52,7 +53,6 @@ namespace BrineBattle.Hunting
         }
 
         readonly Dictionary<Companion, Body> bodies = new Dictionary<Companion, Body>();
-        GameObject bench;
         float crewTimer, mysticTimer, repairTimer;
         GUIStyle nameStyle;
 
@@ -86,17 +86,6 @@ namespace BrineBattle.Hunting
                 Tint.Apply(go.GetComponent<Renderer>(), Tint.Of(c.Element));
                 bodies[c] = new Body { Pet = c, Go = go, Phase = Random.value * 10f };
             }
-            bool needBench = hook.Companions.Best(CompanionRole.Mystic) != null;
-            if (needBench && bench == null)
-            {
-                bench = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                bench.name = "Workbench";
-                Destroy(bench.GetComponent<Collider>());
-                bench.transform.SetParent(Raft.transform, false);
-                bench.transform.localScale = new Vector3(0.7f, 0.35f, 0.45f);
-                Tint.Apply(bench.GetComponent<Renderer>(), new Color(0.45f, 0.3f, 0.18f));
-            }
-            else if (!needBench && bench != null) { Destroy(bench); bench = null; }
         }
 
         void Update()
@@ -111,7 +100,6 @@ namespace BrineBattle.Hunting
         {
             var hunter = HunterTf;
             var hunterLocal = hunter != null ? hunter.localPosition : Vector3.up * 0.8f;
-            if (bench != null) bench.transform.localPosition = new Vector3(-0.75f, 0.45f, 0.75f);
             foreach (var b in bodies.Values)
             {
                 b.Phase += Time.deltaTime;
@@ -123,13 +111,14 @@ namespace BrineBattle.Hunting
                 switch (b.Pet.Role)
                 {
                     case CompanionRole.Mystic:
-                        p = new Vector3(-0.75f, 0.55f, 0.25f);
+                        // Works beside the storage box (the crafting table), never inside it.
+                        p = Box + new Vector3(0.6f, 0.2f, 0f);
                         break;
                     case CompanionRole.Crew:
                         // Walks from tile to tile, always on the raft.
-                        if (b.Phase >= b.NextWalk || !OnRaft(b.Walk)) { b.Walk = RandomTile(); b.NextWalk = b.Phase + Random.Range(2f, 4f); }
                         var from = b.Go.transform.localPosition;
                         from.y = 0.5f;
+                        if (b.Phase >= b.NextWalk || !OnRaft(b.Walk)) { b.Walk = RandomTile(from, hunterLocal); b.NextWalk = b.Phase + Random.Range(2f, 4f); }
                         p = OnRaft(from) ? Vector3.MoveTowards(from, b.Walk, Time.deltaTime * 1.2f) : b.Walk;
                         break;
                     default:
@@ -142,13 +131,32 @@ namespace BrineBattle.Hunting
 
         static Vector3 Local(Rafts.Cell c) => new Vector3(c.X * Raft.CellSize, 0.5f, c.Z * Raft.CellSize);
 
-        Vector3 RandomTile()
+        /// <summary>The storage box's spot on the raft (local), or the old workbench spot before it exists.</summary>
+        Vector3 Box => StorageBox.Instance != null ? StorageBox.Instance.LocalPosition : new Vector3(-1.05f, 0.3f, 1.05f);
+
+        /// <summary>
+        /// A tile to walk to whose straight path keeps clear of the storage box and the hunter
+        /// (owner's ask: nothing goes through the box). Falls back to staying put.
+        /// </summary>
+        Vector3 RandomTile(Vector3 from, Vector3 hunter)
         {
-            int n = Raft.Grid.Count;
-            if (n == 0) return Vector3.up * 0.5f;
-            int i = Random.Range(0, n);
-            foreach (var kv in Raft.Grid.Parts) if (i-- == 0) return Local(kv.Key);
-            return Vector3.up * 0.5f;
+            var tiles = Raft.Grid.Parts.Keys.Select(Local).ToList();
+            if (tiles.Count == 0) return Vector3.up * 0.5f;
+            for (int tries = 0; tries < 8; tries++)
+            {
+                var to = tiles[Random.Range(0, tiles.Count)];
+                if (Clear(from, to, Box, 0.75f) && Clear(from, to, hunter, 0.55f)) return to;
+            }
+            return from;
+        }
+
+        /// <summary>True when the flat segment a→b stays at least <paramref name="gap"/> from <paramref name="obstacle"/>.</summary>
+        static bool Clear(Vector3 a, Vector3 b, Vector3 obstacle, float gap)
+        {
+            Vector2 p = new Vector2(a.x, a.z), q = new Vector2(b.x, b.z), o = new Vector2(obstacle.x, obstacle.z);
+            var d = q - p;
+            float t = d.sqrMagnitude < 1e-6f ? 0f : Mathf.Clamp01(Vector2.Dot(o - p, d) / d.sqrMagnitude);
+            return (p + d * t - o).magnitude >= gap;
         }
 
         /// <summary>True when a local point sits over a raft tile.</summary>
@@ -216,11 +224,13 @@ namespace BrineBattle.Hunting
                     {
                         Work(mystic);
                         hook.Log($"{mystic.Name} (Mystic) crafted {CraftRules.Describe(recipe.outputs)}.");
+                        StorageBox.Instance?.Crafted($"{CraftRules.Describe(recipe.outputs)} ({mystic.Name})");
                     }
                     else if (slot != null && hook.Gear.Refine(slot.Value, hook.Inventory))
                     {
                         Work(mystic);
                         hook.Log($"{mystic.Name} (Mystic) refined your {hook.Gear.Label(slot.Value)}.");
+                        StorageBox.Instance?.Crafted($"refined {hook.Gear.Label(slot.Value)} ({mystic.Name})");
                     }
                 }
             }

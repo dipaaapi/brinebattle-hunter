@@ -141,6 +141,8 @@ Applies to gear, companions, and monsters (type chart).
 
 **On the raft (Ed's ask):** companions are visible on the raft. The Familiar waits beside the hunter; the Mystic works at a workbench and, every 20 s, refines the equipped piece with the lower + if the bag has the essence; the Crew walks from tile to tile (never off the raft) and, every 20 s, installs an auto-loot module from the bag on the upstream side (left, where drifts come from), or else builds the rarest fitting raft part on the downstream side (right) (owner's call). Both chores can be switched off in the Bag.
 
+**Storage box (Ed's ask):** one object on the raft is both the loot storage and the crafting/alchemy table (no separate workbench). It has its own tile next to the raft's centre and nothing overlaps it: the hunter, pets and modules keep clear, and it rides the raft on the calm water. Whenever loot is stored or something is crafted or refined (by the hunter or a pet) it animates (lid opens, box bounces, an item flies in or pops out, a short label says what).
+
 **More chores (Ed's ask):** the Crew also **repairs auto-loot modules** once one drops to a share set **per module kind** in Build (R) (slider, default 50%), paying the module's normal repair cost; between fights it mends the harpoon +1 every 15 s. The Mystic **restocks consumables first**: when a potion or oil the workbench can make is below the "keep at least" amount (Bag slider, default 2) it crafts one (potions before oils), otherwise it refines gear. In battle the Mystic **supports**: at the end of each round it heals whichever of the hunter or the Familiar is lower on HP (Common 3, +2 per rarity step).
 
 ### Saving
