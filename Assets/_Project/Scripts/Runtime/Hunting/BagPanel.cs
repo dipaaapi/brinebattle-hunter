@@ -1,4 +1,5 @@
 using System.Linq;
+using BrineBattle.Companions;
 using BrineBattle.Items;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -88,6 +89,7 @@ namespace BrineBattle.Hunting
             GearRow(GearSlot.Armor);
 
             scroll = GUILayout.BeginScrollView(scroll);
+            CompanionRows();
             GUILayout.Label("<b>Items</b>", Rich);
             if (!inv.Items.Any()) GUILayout.Label("  (empty)");
             foreach (var kv in inv.Items.ToList())
@@ -127,6 +129,32 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Close (B)")) WorldPause.Close(Menu.Bag);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        Companion releasing;
+
+        /// <summary>Phase 7: tamed companions; the active one joins battles. Release asks twice.</summary>
+        void CompanionRows()
+        {
+            var roster = hook.Companions;
+            GUILayout.Label($"<b>Companions</b>  ({roster.All.Count}/{roster.Capacity}; habitats on the raft add room later)", Rich);
+            if (roster.All.Count == 0) GUILayout.Label("  (none — tame a weakened, calm drift)");
+            foreach (var c in roster.All.ToList())
+            {
+                bool active = roster.Active == c;
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"<color={RarityColor(c.Rarity)}>{c.Name}</color>{(active ? " <b>(active)</b>" : "")}  <size=10>{c.Element} · {c.Stats}</size>", Rich, GUILayout.Width(360));
+                GUI.enabled = !active;
+                if (GUILayout.Button("Set active", GUILayout.Width(80))) roster.SetActive(c);
+                GUI.enabled = true;
+                if (releasing == c)
+                {
+                    if (GUILayout.Button("Sure?", GUILayout.Width(55))) { roster.Release(c); releasing = null; hook.Log($"Released {c.Name} back to the sea."); }
+                }
+                else if (GUILayout.Button("Release", GUILayout.Width(65))) releasing = c;
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.Space(4);
         }
 
         void GearRow(GearSlot slot)

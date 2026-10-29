@@ -37,6 +37,7 @@ namespace BrineBattle.Hunting
             if (hook == null) return;
             hook.BookToggleRequested += Toggle;
             hook.MonsterAcquired += OnMonster;
+            hook.MonsterTamed += OnTamed;
             hook.Inventory.Changed += OnInventory;
             Log.Unlocked += OnUnlocked;
         }
@@ -46,6 +47,7 @@ namespace BrineBattle.Hunting
             if (hook == null) return;
             hook.BookToggleRequested -= Toggle;
             hook.MonsterAcquired -= OnMonster;
+            hook.MonsterTamed -= OnTamed;
             hook.Inventory.Changed -= OnInventory;
             Log.Unlocked -= OnUnlocked;
         }
@@ -59,6 +61,8 @@ namespace BrineBattle.Hunting
         }
 
         void OnMonster(MonsterDefinition m) => Log.Record(CollectionPage.Monsters, m.id);
+
+        void OnTamed(MonsterDefinition m) => Log.Record(CollectionPage.Pets, m.id);
 
         void OnInventory()
         {
@@ -90,7 +94,6 @@ namespace BrineBattle.Hunting
 
             var ids = IdsOf(page);
             GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% complete  ({ids.Count(i => Log.Has(page, i))}/{ids.Count})");
-            if (page == CollectionPage.Pets) GUILayout.Label("<i>Pets unlock when taming arrives (Phase 7).</i>", Rich);
 
             GUILayout.BeginHorizontal();
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.Width(250));

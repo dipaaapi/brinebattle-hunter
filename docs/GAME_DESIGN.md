@@ -127,6 +127,8 @@ Applies to gear, companions, and monsters (type chart).
 - Need habitats on the raft; can power Beast-Driven / Sky rafts.
 - *Open question:* are fused companions consumed?
 
+**Implemented (Phase 7 slice 1, tunable):** Tame appears on a weakened, calm drift. Chance by rarity: Common 90%, Uncommon 75%, Rare 55%, Epic 40%, Legendary 25%, Mythic 15%; a failed tame lets it slip away. A companion has 60% of the monster's HP/ATK/DEF (speed kept). The raft keeps 1 companion, +1 per habitat (habitats next). One is active: it attacks after the hunter every round, the monster goes for it 25% of the time, and a knocked-out companion sits out the rest of the battle. It rests to full HP between battles. Release from the Bag (asks twice).
+
 ## 11. Loot & Salvage
 
 - Every loot item has a **Type** (Raft, Weapon, Armor, Companion, Consumable) and a **Rarity**.

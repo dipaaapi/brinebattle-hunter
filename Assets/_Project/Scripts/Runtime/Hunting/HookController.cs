@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Battle;
+using BrineBattle.Companions;
 using BrineBattle.Encounters;
 using BrineBattle.Items;
 using BrineBattle.Loot;
@@ -30,6 +31,10 @@ namespace BrineBattle.Hunting
         public Durability Harpoon { get; } = new Durability(Battle.BattleRules.HarpoonDurability);
         /// <summary>Weapon and armor slots (Phase 6); their power feeds the hunter in battle.</summary>
         public Equipment Gear { get; } = new Equipment();
+        /// <summary>Tamed monsters (Phase 7); the active one joins battles.</summary>
+        public CompanionRoster Companions { get; } = new CompanionRoster();
+        /// <summary>Raised when a monster is tamed (collection book Pets page).</summary>
+        public event System.Action<Monsters.MonsterDefinition> MonsterTamed;
         [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
         public ItemDefinition starterModule;
         /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
@@ -312,7 +317,9 @@ namespace BrineBattle.Hunting
                         pendingLoot = RollLoot(m);
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
-                    if (GUILayout.Button("Tame (Phase 7)")) Finish($"Taming {m.displayName} isn't possible yet (Phase 7). Let it go.", false, true);
+                    GUI.enabled = !Companions.Full;
+                    if (GUILayout.Button(Companions.Full ? "Tame (no room)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})")) Tame();
+                    GUI.enabled = true;
                     break;
                 default:
                     if (EncounterRules.IsGated(target.Actual, raft.size, m.sizeClass))
@@ -364,6 +371,20 @@ namespace BrineBattle.Hunting
             Finish($"{m.displayName} was weakened but {why}, so you finished it: {Brief(pendingLoot)}", true, true);
         }
 
+        void Tame()
+        {
+            var m = target.Monster;
+            if (rng.NextDouble() >= CompanionRules.TameChance(m.rarity))
+            {
+                Finish($"{m.displayName} shied away from your hand and slipped back into the sea.", false, true);
+                return;
+            }
+            var c = Companion.FromMonster(m);
+            Companions.Add(c);
+            MonsterTamed?.Invoke(m);
+            Finish($"Tamed {m.displayName}! It will fight beside you ({c.Stats}).", false, true);
+        }
+
         void Sedated()
         {
             var m = target.Monster;
@@ -385,7 +406,7 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, Screen.height - LogHeight - 30));
             GUILayout.BeginVertical(HuntStyles.Box);
-            GUILayout.Label("<b>BrineBattle Hunter — Phase 6</b>", Rich);
+            GUILayout.Label("<b>BrineBattle Hunter — Phase 7</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Battle mode: <b>{BattleSettings.Labels[(int)BattleSettings.Mode]}</b>", Rich);
@@ -394,6 +415,9 @@ namespace BrineBattle.Hunting
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Raft: size {raft.size} · {raft.Grid.Count} parts · {raft.Tier} tier · {raft.MaxHp} HP");
             GUILayout.EndHorizontal();
+            var pet = Companions.Active;
+            GUILayout.Label(pet == null ? $"Companion: none ({Companions.All.Count}/{Companions.Capacity}) — tame a weakened, calm drift"
+                : $"Companion: <b>{pet.Name}</b> ({Companions.All.Count}/{Companions.Capacity})", Rich);
             int stacks = Inventory.Items.Count(), essence = Inventory.Essence.Sum(kv => kv.Value);
             GUILayout.Label($"<b>Bag</b>: {stacks} stacks, {essence} essence", Rich);
             GUILayout.BeginHorizontal();

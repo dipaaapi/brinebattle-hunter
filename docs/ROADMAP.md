@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — Alchemy & gear ✅ done (PRs #1-#3 merged) |
-| **Next step** | Ed picks: Idea Round 3 (backlog U-18..U-22 and others) or Phase 7 — Companions |
+| **Current phase** | Phase 7 — Companions (slice 1: taming + companion in battle, branch `phase/7-companions`) |
+| **Next step** | Ed: click Unity, Run All, tame a calm weakened drift and fight with it; then habitats on the raft |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -104,8 +104,15 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 
-### ⬜ Phase 7 — Companions
-Taming Weakened monsters, habitats, feeding/infusion, fusion in the Transmutation Circle. Companion consumables (moved from Phase 6).
+### 🟨 Phase 7 — Companions
+- [x] Tame a weakened, calm drift (chance by rarity) → companion with 60% of its wild stats; roster with one active companion (Bag: set active / release); Collection book Pets page fills in
+- [x] Active companion fights beside the hunter: attacks after the hunter each round, can be targeted (25%) and knocked out; rests to full HP between battles
+- [ ] Habitats on the raft (each adds roster room)
+- [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
+- [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)
+- [ ] Companion consumables (moved from Phase 6)
+
+**Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
 
 ### ⬜ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.

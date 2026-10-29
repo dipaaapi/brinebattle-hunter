@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BrineBattle.Companions;
 using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Monsters;
@@ -25,6 +26,9 @@ namespace BrineBattle.Battle
         public HashSet<GearPassive> Passives { get; } = new HashSet<GearPassive>();
         public List<GearActive> Actives { get; } = new List<GearActive>();
         public readonly List<string> Log = new List<string>();
+
+        /// <summary>The active companion (Phase 7). Null = fighting alone. It attacks after the hunter each round.</summary>
+        public Combatant Companion { get; set; }
 
         /// <summary>Element of an elemental oil on the weapon (None = no coating) and the rounds it has left.</summary>
         public Element Coating { get; private set; }
@@ -101,12 +105,14 @@ namespace BrineBattle.Battle
             if (hunterFirst)
             {
                 HunterTurn(hunterAction);
+                if (Outcome == BattleOutcome.Ongoing) CompanionTurn();
                 if (Outcome == BattleOutcome.Ongoing) MonsterTurn();
             }
             else
             {
                 MonsterTurn();
                 if (Outcome == BattleOutcome.Ongoing) HunterTurn(hunterAction);
+                if (Outcome == BattleOutcome.Ongoing) CompanionTurn();
             }
 
             Hunter.Bracing = false;
@@ -141,6 +147,19 @@ namespace BrineBattle.Battle
                 default:
                     Hit(1f, "Attack");
                     return;
+            }
+        }
+
+        void CompanionTurn()
+        {
+            if (Companion == null || !Companion.Alive) return;
+            int dmg = BattleRules.Damage(Companion.Attack, Monster.Defense, 1f, Companion.Element, Monster.Element, false, rng);
+            Monster.Hp = Math.Max(0, Monster.Hp - dmg);
+            Add($"{Companion.Name} attacks: {dmg} damage to {Monster.Name}.");
+            if (!Monster.Alive)
+            {
+                Outcome = BattleOutcome.Won;
+                Add($"{Monster.Name} is defeated!");
             }
         }
 
@@ -189,6 +208,14 @@ namespace BrineBattle.Battle
 
         void MonsterTurn()
         {
+            if (Companion != null && Companion.Alive && rng.NextDouble() < CompanionRules.TargetedChance)
+            {
+                int hurt = BattleRules.Damage(Monster.Attack, Companion.Defense, 1f, Monster.Element, Companion.Element, false, rng);
+                Companion.Hp = Math.Max(0, Companion.Hp - hurt);
+                Add($"{Monster.Name} attacks {Companion.Name}: {hurt} damage.");
+                if (!Companion.Alive) Add($"{Companion.Name} is knocked out and swims back to the raft.");
+                return;
+            }
             float raftChance = Monster.Habitat == Habitat.Sea ? BattleRules.SeaHitsRaftChance : 1f - BattleRules.SeaHitsRaftChance;
             bool hitsRaft = rng.NextDouble() < raftChance;
             int dmg = BattleRules.Damage(Monster.Attack, hitsRaft ? 0 : Hunter.Defense, 1f, Monster.Element, Hunter.Element, Hunter.Bracing, rng);

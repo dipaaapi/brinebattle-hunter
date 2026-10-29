@@ -46,6 +46,7 @@ namespace BrineBattle.Hunting
             state.FirstRound = firstRound;
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
+            if (hook?.Companions.Active != null) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
             if (hook != null)
             {
                 foreach (var p in hook.Gear.Passives) state.Passives.Add(p);
@@ -149,12 +150,13 @@ namespace BrineBattle.Hunting
         {
             if (!Active) return;
             GUI.depth = -5;
-            float w = 520, h = state.Actives.Count > 0 ? 360 : 330;
+            float w = 520, h = (state.Actives.Count > 0 ? 360 : 330) + (state.Companion != null ? 24 : 0);
             GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
             Bar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.4f));
             Bar("Raft", state.RaftHp, state.RaftMaxHp, new Color(0.85f, 0.75f, 0.5f));
+            if (state.Companion != null) Bar(state.Companion.Name, state.Companion.Hp, state.Companion.MaxHp, new Color(0.75f, 0.5f, 0.95f));
             Bar("Stamina", state.Stamina, BattleRules.MaxStamina, new Color(0.4f, 0.65f, 1f));
 
             GUILayout.BeginHorizontal();

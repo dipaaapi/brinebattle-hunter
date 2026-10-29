@@ -2,6 +2,12 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 7 (slice 1: taming + companion in battle)
+- PR #3 merged → Phase 6 done. Ed picked Phase 7 next. Branch `phase/7-companions`.
+- `BrineBattle.Companions`: `CompanionRules` (tame chance by rarity, 60% stat share, capacity 1 + habitats, 25% targeted), `Companion.FromMonster`, `CompanionRoster` (add, active, release). `Combatant.FromCompanion`; `BattleState.Companion` attacks after the hunter, can be hit and knocked out.
+- Hook result: "Tame (xx%)" on weakened calm drifts (disabled when the roster is full). HUD shows the companion; Bag has a Companions section (Set active / Release); battle panel has a companion HP bar; Collection book Pets page records tames.
+- No sample data change. Rules tests outside Unity: 87/87 (5 new). Unity run pending.
+
 ## 2026-10-29 — Phase 6 (slice 4: elemental oils)
 - Same branch/PR as gear skills (#3). `ConsumableEffect.CoatWeapon`: the item's element becomes the hunter's attack element for `effectAmount` rounds (`BattleState.Coating`, `AttackElement`); defense keeps the weapon element. Battle title shows the oil while it lasts.
 - `BattleAI.BestOil`: Auto coats with the oil that beats the current attack element against the monster (after heals). Semi-auto/Manual = player.
