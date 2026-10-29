@@ -117,6 +117,8 @@ Applies to gear, companions, and monsters (type chart).
 ## 10. Companions
 
 - Tamed from **weakened** monsters.
+- **Three roles (owner idea U-23):** **Crew** looks after the raft (repairs, upkeep); **Mystic** helps craft and do alchemy for everything but the raft (gear, weapons, consumables); **Familiar** fights beside the hunter. Varieties within a role change only looks and outfit.
+- **Evolve** to serve their role better, and **die of old age** (lifespan).
 - **Rarity:** Common → Uncommon → Rare → Epic → Legendary → Mythic.
 - **No EXP.** Grown by:
   - **Feeding / Infusion** with loot and potions.
@@ -179,6 +181,7 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 - Action resource in battle (stamina vs weapon charge).
 - Fusion: are source companions consumed?
+- Companion roles: how a role is set (at taming, by species, or by element); what triggers evolution; how lifespan is counted before a day/night cycle; what happens on death.
 - Level-range limits on item share?
 - Target platform(s): PC, mobile, or both.
 - Title trademark check.
