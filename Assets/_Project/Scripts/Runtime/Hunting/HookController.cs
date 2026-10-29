@@ -351,8 +351,8 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
-        /// <summary>True when the raft is big enough to fight this drift if it is alive.</summary>
-        public bool CanFight(Drift d) => d != null && battle != null && !EncounterRules.IsGated(DriftState.Alive, raft.size, d.Monster.sizeClass);
+        /// <summary>A module catch is always fought, whatever its size (owner's call); only a scene without a BattleController can't.</summary>
+        public bool CanFight(Drift d) => d != null && battle != null;
 
         /// <summary>
         /// An auto-loot module hooked a live monster: it can't swim off, so the battle starts at once and
