@@ -153,6 +153,20 @@ namespace BrineBattle.Editor
             Recipe("craft_sky_perch", "Sky Perch", RecipeKind.Craft, new[] { (plank, 3), (feather, 3) }, new[] { (skyPerch, 1) });
             Recipe("dismantle_tide_pool", "Tide Pool", RecipeKind.Dismantle, new[] { (tidePool, 1) }, new[] { (plank, 2), (scale, 1) });
             Recipe("dismantle_sky_perch", "Sky Perch", RecipeKind.Dismantle, new[] { (skyPerch, 1) }, new[] { (plank, 2), (feather, 1) });
+            // Ed's playtest: a leveled-up raft needs parts of its own level. Reinforce recipes turn lower parts into the next level.
+            var tarred = RaftPart("TarredPlank", "tarred_plank", "Tarred Plank", Rarity.Uncommon, Element.Water,
+                "Two planks bound with eel-skin and tar. Fits a Lv 2 raft.");
+            var coral = RaftPart("CoralboundPlank", "coralbound_plank", "Coralbound Plank", Rarity.Epic, Element.Earth,
+                "Shell plates grown together with living coral. Fits a Lv 4 raft.");
+            var leviathan = RaftPart("LeviathanBeam", "leviathan_beam", "Leviathan Beam", Rarity.Legendary, Element.Water,
+                "A beam studded with great fangs. Fits a Lv 5 raft.");
+            var abyssal = RaftPart("AbyssalKeel", "abyssal_keel", "Abyssal Keel", Rarity.Mythic, Element.None,
+                "Black wood from the deep that never rots. Fits a Lv 6 raft.");
+            Recipe("reinforce_tarred_plank", "Tarred Plank", RecipeKind.Upgrade, new[] { (plank, 2), (patch, 1) }, new[] { (tarred, 1) });
+            Recipe("reinforce_shellback_plate", "Shellback Plate", RecipeKind.Upgrade, new[] { (tarred, 2), (fang, 2) }, new[] { (shell, 1) });
+            Recipe("reinforce_coralbound_plank", "Coralbound Plank", RecipeKind.Upgrade, new[] { (shell, 2), (scale, 2) }, new[] { (coral, 1) });
+            Recipe("reinforce_leviathan_beam", "Leviathan Beam", RecipeKind.Upgrade, new[] { (coral, 2), (fang, 3) }, new[] { (leviathan, 1) });
+            Recipe("reinforce_abyssal_keel", "Abyssal Keel", RecipeKind.Upgrade, new[] { (leviathan, 2), (shell, 3) }, new[] { (abyssal, 1) });
             // Phase 6: gear power (set every build so older assets get it too) and gear recipes.
             SetGearPower(spear, 4);
             SetGearPower(buckler, 3);
@@ -224,6 +238,14 @@ namespace BrineBattle.Editor
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }
+
+        static ItemDefinition RaftPart(string file, string id, string name, Rarity rarity, Element element, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Raft;
+                i.rarity = rarity; i.element = element;
+                i.description = description;
+            });
 
         static ItemDefinition Oil(string file, string id, string name, Element element, string description) =>
             LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>

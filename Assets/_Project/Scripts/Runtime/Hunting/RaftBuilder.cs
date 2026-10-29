@@ -158,7 +158,7 @@ namespace BrineBattle.Hunting
                 case PlaceResult.Occupied: return "There's already a part there.";
                 case PlaceResult.NotAdjacent: return "Parts must touch the raft.";
                 case PlaceResult.OutOfBounds: return "Too far out (max 9x9).";
-                case PlaceResult.BelowTier: return "That part's rarity is below the raft tier.";
+                case PlaceResult.BelowTier: return "That part is below the raft level. Reinforce it in the Workbench (Raft tab) into a part of this level.";
                 case PlaceResult.NeedsModules: return "Install more auto-loot modules on the left edge first (half of its rows need one).";
                 default: return "That isn't a raft part.";
             }
@@ -251,7 +251,7 @@ namespace BrineBattle.Hunting
             {
                 var p = kv.Key;
                 bool fits = SalvageRules.IsCompatible(p.type, p.rarity, g.Tier);
-                string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color> {(fits ? "" : "<color=#f77>(below tier)</color>")}";
+                string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color> {(fits ? "" : "<color=#f77>(below tier: Reinforce it in the Raft tab)</color>")}";
                 GUI.enabled = fits;
                 if (GUILayout.Toggle(selected == p, label, ToggleStyle) && selected != p) { selected = p; mode = Mode.Place; }
                 GUI.enabled = true;

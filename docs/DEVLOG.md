@@ -6,6 +6,7 @@
 - Branch `phase/7-growth` from main after PR #4. Ideas merged into one plan in `ideas/COMPARISON.md` (U-25 and C-9 kept on their own).
 - `Companion.Age`/`Stage`/`GrowOlder()`/`Evolve()`, `CompanionRules.Lifespan`/`AgeFor`/`EvolveBoost`/`EssenceLeft`, `CompanionRoster.GrowOlder()` and `Memorials`. `HookController.CountKill()` (every beaten monster): raft kill count + every companion ages; evolutions and deaths go to the log, the dead leave essence. Bag shows stage and battles left; Book Pets page shows memorials. Save keeps age, stage and memorials (older saves load as Young, age 0).
 - Numbers are Claude's proposal (GDD §10), waiting for Ed. 122/122 rules tests; Runtime compiles. Next: feeding/infusion.
+- Ed's playtest: after leveling the raft, most workbench recipes became uncraftable. Cause: Driftwood Plank and Eel-Skin Patch are Common raft parts, so at Lv 2 they turned into misfits and auto-salvage ate them; and no Uncommon+ raft parts existed. Fix: `Inventory.SalvageIncompatible(tierOf, keep)` keeps recipe ingredients (Bag shows "crafting"). Ed chose Reinforce recipes per level: Tarred Plank (U), Shellback Plate (R, existing), Coralbound Plank (E), Leviathan Beam (L), Abyssal Keel (M) in the Raft tab (`SampleDataBuilder`, DataVersion 6). 123/123 rules tests.
 
 ## 2026-10-29 — Phase 7 (raft progression asks)
 - Settings: **Upload save file...** (Editor file picker; path field in a build) copies a save into the one slot, keeps the old one as `save.backup.json`, and loads it.
