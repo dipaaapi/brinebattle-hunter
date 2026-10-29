@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — Alchemy & gear (gear, consumables, Settings merged; gear skills + elemental oils in review, PR #3) |
-| **Next step** | Ed: on `phase/6-gear-skills` click Unity (AutoRebuild rebuilds data + Hook scene), Run All, playtest gear skills and oils; merge PR #3 → Phase 6 done; then Idea Round 3 or Phase 7 |
+| **Current phase** | Phase 6 — Alchemy & gear ✅ done (PRs #1-#3 merged) |
+| **Next step** | Ed picks: Idea Round 3 (backlog U-18..U-22 and others) or Phase 7 — Companions |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -91,7 +91,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a module can be built on the raft edge and loots passing drifts until its durability runs out; Harpoon uses weapon durability.
 
-### 🟨 Phase 6 — Alchemy & gear
+### ✅ Phase 6 — Alchemy & gear
 - [x] Gear slots (weapon, armor) in the bag: equip / take off, tier check; gear power feeds hunter ATK/DEF, weapon element = hunter element
 - [x] Craft gear at the workbench (Eel-Fang Spear, Gull-Bone Buckler)
 - [x] Refine (+1…+10) with essence of the item's rarity or higher

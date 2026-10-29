@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba14ad3ca32a55e44a5c155db19158a4, type: 3}
+  m_Name: TarPatch
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.ItemDefinition
+  id: tar_patch
+  displayName: Tar Patch
+  type: 5
+  rarity: 0
+  element: 0
+  maxStack: 99
+  moduleLevel: 1
+  gearPower: 0
+  passives: 
+  actives: 
+  effect: 2
+  effectAmount: 30
+  icon: {fileID: 0}
+  description: An eel-skin patch with a plank backing, slapped on mid-fight. Restores
+    30 raft HP.

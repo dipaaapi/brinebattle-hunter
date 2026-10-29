@@ -200,7 +200,8 @@ namespace BrineBattle.Hunting
             if (recipes.Count > 0)
             {
                 GUILayout.Label("<b>Workbench</b> (uses the bag)", Rich);
-                tab = (RecipeCategory)GUILayout.Toolbar((int)tab, CraftRules.CategoryLabels);
+                // Two rows of tabs so all five fit the panel width.
+                tab = (RecipeCategory)GUILayout.SelectionGrid((int)tab, CraftRules.CategoryLabels, 3, GUILayout.Width(w - 50));
                 GUILayout.Label($"<size=11>{CraftRules.CategoryHints[(int)tab]}</size>", Rich);
                 var shown = recipes.Where(r => r != null && CraftRules.CategoryOf(r) == tab).ToList();
                 if (shown.Count == 0) GUILayout.Label("  (no recipes here yet)");
