@@ -12,6 +12,21 @@ namespace BrineBattle.Hunting
     public class IdleWatch : MonoBehaviour
     {
         readonly IdleClock clock = new IdleClock();
+        static IdleWatch instance;
+        bool knockedOut;
+
+        void Awake() => instance = this;
+
+        /// <summary>
+        /// Ed: a stronger monster can beat the hunter before the idle timer runs out. A loss while nobody
+        /// has touched anything for <see cref="IdleRules.AwayAfterLossSeconds"/> pauses the game right away.
+        /// </summary>
+        public static void Lost()
+        {
+            if (instance == null || IdleRules.Minutes <= 0 || instance.clock.Idle < IdleRules.AwayAfterLossSeconds) return;
+            instance.knockedOut = true;
+            instance.Sleep();
+        }
         bool due;
         float asleepFor;
         string saved;
@@ -42,6 +57,7 @@ namespace BrineBattle.Hunting
         void Wake()
         {
             WorldPause.Asleep = false;
+            knockedOut = false;
             clock.Reset();
             saved = null;
         }
@@ -65,7 +81,7 @@ namespace BrineBattle.Hunting
             GUI.DrawTexture(all, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.02f, 0.03f, 0.08f, 0.85f), 0, 0);
             float cy = HuntStyles.H / 2f;
             GUI.Label(new Rect(0, cy - 80, HuntStyles.W, 50), "<size=40>Zzz…</size>", Center);
-            GUI.Label(new Rect(0, cy - 25, HuntStyles.W, 30), "<size=22><b>You fell asleep</b></size>", Center);
+            GUI.Label(new Rect(0, cy - 25, HuntStyles.W, 30), knockedOut ? "<size=22><b>You were knocked out while away</b></size>" : "<size=22><b>You fell asleep</b></size>", Center);
             int min = Mathf.FloorToInt(asleepFor / 60f);
             string line = $"The raft waits quietly. Nothing fights or gets lost while you're away{(min > 0 ? $" ({min} min)" : "")}.";
             GUI.Label(new Rect(0, cy + 10, HuntStyles.W, 24), line, Center);

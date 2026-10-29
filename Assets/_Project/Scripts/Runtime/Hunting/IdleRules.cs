@@ -11,6 +11,8 @@ namespace BrineBattle.Hunting
         public static readonly int[] Choices = { 0, 5, 10, 20 };
         public static readonly string[] Labels = { "Off", "5 min", "10 min", "20 min" };
         public const int DefaultMinutes = 10;
+        /// <summary>A battle lost after this long with no input pauses the game at once.</summary>
+        public const float AwayAfterLossSeconds = 60f;
 
         /// <summary>0 = never pause.</summary>
         public static int Minutes

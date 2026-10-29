@@ -435,6 +435,7 @@ namespace BrineBattle.Hunting
                 {
                     string why = outcome == BattleOutcome.LostRaft ? "broke your raft" : "knocked you out";
                     Finish($"Defeat. {m.displayName} {why} and swam off. (It will eat raft parts in Phase 8.)", false, true);
+                    IdleWatch.Lost();
                 }
             });
         }
