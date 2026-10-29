@@ -504,7 +504,11 @@ namespace BrineBattle.Hunting
             if (builder != null && GUILayout.Button("Build\n<size=10>R</size>", BigButton)) builder.Toggle();
             if (GUILayout.Button("Settings\n<size=10>Esc</size>", BigButton)) WorldPause.Toggle(Menu.Settings);
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             GUILayout.Label($"<size=11>Battles: {BattleSettings.Labels[(int)BattleSettings.Mode]}</size>", Rich);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label($"<size=11>{SettingsPanel.AutoSaveStatus}</size>", RichRight);
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
@@ -520,6 +524,9 @@ namespace BrineBattle.Hunting
             GUI.DrawTexture(f, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, color, 0, 3);
             GUILayout.EndVertical();
         }
+
+        static GUIStyle richRight;
+        static GUIStyle RichRight => richRight ??= new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleRight };
 
         static GUIStyle bigButton;
         static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 15, fontStyle = FontStyle.Bold, richText = true, fixedHeight = 46 };

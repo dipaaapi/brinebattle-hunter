@@ -126,6 +126,19 @@ namespace BrineBattle.Hunting
         string saveMessage;
         static float autoTimer;
 
+        /// <summary>For the HUD: the save file's name and when the next auto-save happens.</summary>
+        public static string AutoSaveStatus
+        {
+            get
+            {
+                if (!SaveSystem.Exists) return "No save yet";
+                string name = System.IO.Path.GetFileName(SaveSystem.FilePath);
+                if (BattleSettings.Mode == BattleMode.Manual) return $"{name} · auto-save off";
+                int left = Mathf.Max(0, Mathf.CeilToInt(SaveSystem.AutoSaveSeconds - autoTimer));
+                return $"{name} · auto-save in {left / 60}:{left % 60:00}";
+            }
+        }
+
         static GUIStyle rich;
         static GUIStyle Rich => rich ??= new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true };
     }

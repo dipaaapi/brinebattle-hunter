@@ -120,6 +120,23 @@ namespace BrineBattle.Rafts
             return (ends.Count(c => parts[c].type == ItemType.Module), ends.Count);
         }
 
+        /// <summary>
+        /// Where a module would guard a row that has none yet: the open cell just upstream of each such
+        /// row's end (the build guide highlights these). Rows already at the grid's edge have no spot.
+        /// </summary>
+        public List<Cell> UpstreamGaps()
+        {
+            var gaps = new List<Cell>();
+            foreach (var row in parts.Keys.GroupBy(c => c.Z).OrderBy(r => Math.Abs(r.Key)).ThenBy(r => r.Key))
+            {
+                var end = UpstreamX < 0 ? row.OrderBy(c => c.X).First() : row.OrderByDescending(c => c.X).First();
+                if (parts[end].type == ItemType.Module) continue;
+                var spot = new Cell(end.X + UpstreamX, end.Z);
+                if (Math.Abs(spot.X) <= RaftRules.MaxRadius) gaps.Add(spot);
+            }
+            return gaps;
+        }
+
         /// <summary>Modules needed on the upstream edge (rounded up), given the current rows.</summary>
         public int ModulesNeeded => (int)Math.Ceiling(UpstreamModules().rows * ModulesToGrow - 1e-4);
 

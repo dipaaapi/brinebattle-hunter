@@ -30,6 +30,7 @@ namespace BrineBattle.Hunting
         Vector2 panelScroll;
         RecipeCategory tab;
         string message = "";
+        bool guide;
 
         public void Toggle()
         {
@@ -101,6 +102,52 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>
+        /// Step-by-step help for the next raft tier (owner idea U-25): each requirement, done or not,
+        /// what to do about it, and a button that takes the player there where it can.
+        /// </summary>
+        void DrawGuide()
+        {
+            var g = raft.Grid;
+            var inv = hook.Inventory;
+            int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier), cost = RaftRules.UpgradeCost(g.Tier);
+            GUILayout.BeginVertical(HuntStyles.Box);
+            GUILayout.Label($"<b>Upgrade guide → {g.Tier + 1}</b>", Rich);
+
+            if (Step(g.Kills >= kills, $"Defeat monsters: {Mathf.Min(g.Kills, kills)}/{kills}",
+                "Hook monsters marked \"Something moves!\" and win the battle, or finish weakened ones (\"Twitching...\"). Module catches count too."))
+                if (GUILayout.Button("Go hunting (close Build)")) Toggle();
+
+            if (Step(inv.MaterialCount() >= mats, $"Collect monster materials: {Mathf.Min(inv.MaterialCount(), mats)}/{mats}",
+                "Harvest monsters that \"Look dead\", win battles, or let your modules catch drifts. Scales, fangs and feathers count."))
+                if (GUILayout.Button("Go hunting (close Build)")) Toggle();
+
+            if (Step(inv.EssenceAtLeast(g.Tier) >= cost, $"Get {g.Tier}+ essence: {Mathf.Min(inv.EssenceAtLeast(g.Tier), cost)}/{cost}",
+                $"Break down {g.Tier} or rarer items you don't need: Workbench → Dismantle here, or Salvage in the Bag."))
+                if (GUILayout.Button("Open Dismantle")) tab = RecipeCategory.Dismantle;
+
+            var (guarded, _) = g.UpstreamModules();
+            if (Step(guarded >= g.ModulesNeeded, $"Modules on the left edge: {guarded}/{g.ModulesNeeded}",
+                "Put an auto-loot module at the left end of a row. The <color=#ffd866>yellow</color> tiles show where."))
+            {
+                var module = inv.Items.Select(kv => kv.Key).FirstOrDefault(i => i.type == ItemType.Module && SalvageRules.IsCompatible(i.type, i.rarity, g.Tier));
+                if (module != null)
+                {
+                    if (GUILayout.Button($"Pick a {module.displayName} to place")) { selected = module; mode = Mode.Place; }
+                }
+                else if (GUILayout.Button("No module in the bag: craft a Drift Net (Workbench → Raft)")) tab = RecipeCategory.Raft;
+            }
+            GUILayout.EndVertical();
+        }
+
+        /// <summary>One guide line. True when it still needs doing (so the caller can add its button).</summary>
+        static bool Step(bool done, string title, string how)
+        {
+            GUILayout.Label(done ? $"<color=#7CFC9A>DONE</color>  {title}" : $"<color=#ff8a80>TO DO</color>  <b>{title}</b>", Rich);
+            if (!done) GUILayout.Label($"<size=11>{how}</size>", Rich);
+            return !done;
+        }
+
         static string Have(int have, int need) =>
             $"<color={(have >= need ? "#7CFC9A" : "#ff8a80")}>{Mathf.Min(have, need)}/{need}</color>";
 
@@ -130,13 +177,16 @@ namespace BrineBattle.Hunting
             }
             bool fits = selected != null && SalvageRules.IsCompatible(selected.type, selected.rarity, raft.Tier);
             var color = fits ? new Color(0.4f, 0.95f, 0.5f) : new Color(0.9f, 0.9f, 0.9f);
+            // Upgrade guide: the left-edge spots that still need a module glow yellow.
+            var gaps = guide && !raft.Grid.ModulesReady ? new HashSet<Cell>(raft.Grid.UpstreamGaps()) : new HashSet<Cell>();
+            var gapColor = new Color(1f, 0.85f, 0.2f) * (0.8f + 0.2f * Mathf.Sin(Time.unscaledTime * 6f));
             for (int i = 0; i < ghosts.Count; i++)
             {
                 bool on = i < open.Count;
                 ghosts[i].SetActive(on);
                 if (!on) continue;
                 ghosts[i].transform.position = raft.CellToWorld(open[i]) + Vector3.up * 0.02f;
-                Tint.Apply(ghosts[i].GetComponent<Renderer>(), color);
+                Tint.Apply(ghosts[i].GetComponent<Renderer>(), gaps.Contains(open[i]) ? gapColor : color);
             }
         }
 
@@ -186,6 +236,9 @@ namespace BrineBattle.Hunting
             var (guarded, rows) = g.UpstreamModules();
             GUILayout.Label($"Left edge modules: {guarded}/{rows} rows (need {g.ModulesNeeded} to widen or upgrade) "
                 + (g.ModulesReady ? "<color=#7CFC9A>ready</color>" : "<color=#ff8a80>install modules on the left first</color>"), Rich);
+            if (RaftRules.UpgradeCost(g.Tier) > 0 && GUILayout.Button(guide ? "Hide the upgrade guide" : $"Guide: how to upgrade to {g.Tier + 1}", GUILayout.Height(30)))
+                guide = !guide;
+            if (guide) DrawGuide();
 
             GUILayout.Label("1. Pick a part  2. Click a green tile next to the raft.\nYellow cursor = OK, red = not allowed.", Rich);
             mode = (Mode)GUILayout.Toolbar((int)mode, new[] { "Place", "Remove" });
@@ -280,7 +333,11 @@ namespace BrineBattle.Hunting
                     if (g.TryUpgrade(inv)) hook.Log($"Raft upgraded to {g.Tier} tier. Max HP {g.MaxHp}.");
                 }
                 GUI.enabled = true;
-                if (blocker != null) GUILayout.Label($"<size=11>{blocker}</size>", Rich);
+                if (blocker != null)
+                {
+                    GUILayout.Label($"<size=11>{blocker}</size>", Rich);
+                    if (!guide && GUILayout.Button("Guide me", GUILayout.Height(28))) { guide = true; panelScroll = Vector2.zero; }
+                }
             }
             else GUILayout.Label("Raft is at the highest tier.");
 

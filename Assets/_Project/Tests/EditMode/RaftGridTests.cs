@@ -158,6 +158,16 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void GuideShowsWhereLeftEdgeModulesGo()
+        {
+            var g = Starter();
+            var net = Part(Rarity.Common, ItemType.Module);
+            CollectionAssert.AreEqual(new[] { new Cell(-2, 0), new Cell(-2, -1), new Cell(-2, 1) }, g.UpstreamGaps(), "middle row first");
+            g.Place(new Cell(-2, 0), net);
+            CollectionAssert.AreEqual(new[] { new Cell(-2, -1), new Cell(-2, 1) }, g.UpstreamGaps());
+        }
+
+        [Test]
         public void PartHpScalesWithRarityAndTier()
         {
             Assert.AreEqual(10, RaftRules.PartHp(Rarity.Common, Rarity.Common));
