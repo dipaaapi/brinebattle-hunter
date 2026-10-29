@@ -84,10 +84,14 @@ namespace BrineBattle.Hunting
                     Destroy(tile.GetComponent<Collider>());
                     tiles[kv.Key] = tile;
                 }
-                bool module = kv.Value.type == ItemType.Module;
-                tile.transform.localScale = new Vector3(module ? 0.8f : 1f, module ? 0.7f : 0.3f, module ? 0.8f : 1f);
-                tile.transform.localPosition = Local(kv.Key) + (module ? Vector3.up * 0.2f : Vector3.zero);
-                Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f) : PartColor(kv.Value.rarity));
+                var type = kv.Value.type;
+                bool module = type == ItemType.Module, habitat = type == ItemType.Habitat;
+                // Habitats: a sky perch stands tall, a tide pool sits low and watery.
+                bool perch = habitat && kv.Value.element == Elements.Element.Wind;
+                tile.transform.localScale = module ? new Vector3(0.8f, 0.7f, 0.8f) : perch ? new Vector3(0.35f, 1.3f, 0.35f) : habitat ? new Vector3(0.95f, 0.45f, 0.95f) : new Vector3(1f, 0.3f, 1f);
+                tile.transform.localPosition = Local(kv.Key) + Vector3.up * (module ? 0.2f : perch ? 0.5f : habitat ? 0.08f : 0f);
+                Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f)
+                    : perch ? new Color(0.8f, 0.65f, 0.4f) : habitat ? new Color(0.3f, 0.75f, 0.9f) : PartColor(kv.Value.rarity));
             }
         }
 

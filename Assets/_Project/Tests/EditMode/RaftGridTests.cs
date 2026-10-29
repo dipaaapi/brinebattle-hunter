@@ -168,6 +168,19 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void HabitatsGoOnTheRaftAndCount()
+        {
+            var g = Starter();
+            g.ModulesToGrow = RaftRules.ModuleShareToGrow;
+            var pool = Part(Rarity.Common, ItemType.Habitat);
+            Assert.AreEqual(0, g.HabitatCount);
+            Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(2, 0), pool), "habitats don't wait for modules");
+            g.Place(new Cell(2, 1), pool);
+            Assert.AreEqual(2, g.HabitatCount);
+            Assert.AreEqual(5, BrineBattle.Companions.CompanionRules.Capacity(g.HabitatCount));
+        }
+
+        [Test]
         public void PartHpScalesWithRarityAndTier()
         {
             Assert.AreEqual(10, RaftRules.PartHp(Rarity.Common, Rarity.Common));

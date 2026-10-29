@@ -40,7 +40,7 @@ namespace BrineBattle.Companions
         }
 
         /// <summary>Companions the raft can keep: 3 without habitats (room for one of each role), +1 per habitat (later in Phase 7).</summary>
-        public static int Capacity(int habitats) => 3 + Math.Max(0, habitats);
+        public static int Capacity(int habitats) => 3 + Math.Max(0, habitats);   // 3 without habitats, +1 per habitat on the raft
 
         /// <summary>Raft HP a Crew companion patches at the end of each battle round: Common 2, +2 per rarity step.</summary>
         public static int CrewRaftRepair(Rarity r) => 2 + 2 * (int)r;

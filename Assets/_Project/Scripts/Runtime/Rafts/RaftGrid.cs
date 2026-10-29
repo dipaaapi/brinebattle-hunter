@@ -100,6 +100,8 @@ namespace BrineBattle.Rafts
         public int Count => parts.Count;
         public int Size => RaftRules.SizeFor(parts.Count);
         public int MaxHp => parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier));
+        /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
+        public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));
 
         /// <summary>Square of starter parts around the centre, ignoring tier and adjacency.</summary>
@@ -154,7 +156,7 @@ namespace BrineBattle.Rafts
 
         public PlaceResult CanPlace(Cell c, ItemDefinition part)
         {
-            if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module)) return PlaceResult.NotARaftPart;
+            if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module && part.type != ItemType.Habitat)) return PlaceResult.NotARaftPart;
             if (Math.Abs(c.X) > RaftRules.MaxRadius || Math.Abs(c.Z) > RaftRules.MaxRadius) return PlaceResult.OutOfBounds;
             if (parts.ContainsKey(c)) return PlaceResult.Occupied;
             if (parts.Count > 0 && !c.Neighbours().Any(parts.ContainsKey)) return PlaceResult.NotAdjacent;

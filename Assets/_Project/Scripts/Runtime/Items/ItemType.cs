@@ -12,5 +12,7 @@ namespace BrineBattle.Items
         Essence = 6,
         /// <summary>Raft module (idea U-13): placed on the raft grid like a part.</summary>
         Module = 7,
+        /// <summary>Companion habitat (Phase 7): placed on the raft grid; each one gives room for one more companion.</summary>
+        Habitat = 8,
     }
 }

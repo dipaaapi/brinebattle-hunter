@@ -245,7 +245,7 @@ namespace BrineBattle.Hunting
 
             GUILayout.Label("<b>Raft parts in your bag</b>", Rich);
             GUILayout.BeginVertical();
-            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module).ToList();
+            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module || kv.Key.type == ItemType.Habitat).ToList();
             if (parts.Count == 0) GUILayout.Label("  (none — harvest some)");
             foreach (var kv in parts)
             {

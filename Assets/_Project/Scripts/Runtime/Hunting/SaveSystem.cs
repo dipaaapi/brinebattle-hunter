@@ -158,6 +158,7 @@ namespace BrineBattle.Hunting
                     if (durability.TryGetValue(kv.Key, out var cur)) kv.Value.Durability.Set(cur);
             if (book != null && data.collection != null) book.Restore(data.collection);
             if (data.hasSettings) ApplySettings(data.settings);
+            hook.SyncHabitats();
             hook.ApplyCompanionBonuses();
             string note = missing.Count > 0 ? $" Unknown items skipped: {string.Join(", ", missing)}." : "";
             hook.Log($"Loaded the save from {data.savedAt}.{note}");

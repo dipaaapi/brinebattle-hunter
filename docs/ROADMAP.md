@@ -117,7 +117,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Menu settings in the save; module live catches always start an Auto battle
 - [x] Rocking raft on moving waves, katig and sail (owner idea U-24, looks only)
 - [x] Quick UI cleanup (owner idea U-25): screen size setting, simpler HUD, fewer Build sliders
-- [ ] Habitats on the raft (each adds roster room)
+- [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
 - [ ] Evolution and old age (U-23)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
 - [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)

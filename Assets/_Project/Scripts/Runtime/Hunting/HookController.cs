@@ -72,6 +72,9 @@ namespace BrineBattle.Hunting
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Companions on the raft (Phase 7), likewise added at runtime.
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
+            // Habitats on the raft give companion room.
+            raft.Grid.Changed += SyncHabitats;
+            SyncHabitats();
         }
 
         void Update()
@@ -337,7 +340,7 @@ namespace BrineBattle.Hunting
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
                     GUI.enabled = !Companions.Full;
-                    if (GUILayout.Button(Companions.Full ? "Tame (no room)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})")) Tame();
+                    if (GUILayout.Button(Companions.Full ? "Tame (no room: build a habitat)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})")) Tame();
                     GUI.enabled = true;
                     break;
                 default:
@@ -386,6 +389,12 @@ namespace BrineBattle.Hunting
             battle.ForceAuto = true;
             StartBattle();
             return true;
+        }
+
+        /// <summary>Room for companions follows the habitats on the raft.</summary>
+        public void SyncHabitats()
+        {
+            if (raft != null) Companions.Habitats = raft.Grid.HabitatCount;
         }
 
         void StartBattle()
@@ -500,7 +509,7 @@ namespace BrineBattle.Hunting
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             if (Companions.All.Count > 0)
-                GUILayout.Label("Pets: " + string.Join(", ", Companions.All.Select(c => $"{c.Name} ({c.Role})")), Rich);
+                GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}: " + string.Join(", ", Companions.All.Select(c => $"{c.Name} ({c.Role})")), Rich);
             GUILayout.Space(4);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Bag\n<size=10>B</size>", BigButton)) BagToggleRequested?.Invoke();
