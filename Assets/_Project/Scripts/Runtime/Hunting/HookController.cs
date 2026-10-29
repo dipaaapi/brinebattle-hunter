@@ -356,12 +356,21 @@ namespace BrineBattle.Hunting
 
         /// <summary>
         /// An auto-loot module hooked a live monster: it can't swim off, so the battle starts at once and
-        /// plays in Auto (owner's call). False while the hunter is busy (hooking, a prompt, a battle);
-        /// the module then holds it and tries again.
+        /// plays in Auto (owner's call), cancelling the hunter's own cast or reel. False only during another
+        /// battle or a prompt (the world is paused then); the module holds it and starts right after.
         /// </summary>
         public bool ModuleBattle(Drift d, object module)
         {
-            if (phase != Phase.Idle || BattleController.InBattle || WorldPause.Active || !CanFight(d)) return false;
+            if (!CanFight(d) || BattleController.InBattle || WorldPause.Active) return false;
+            // The module's catch comes first (owner's call): drop the hunter's own cast or reel.
+            if (phase == Phase.Casting || phase == Phase.Reeling)
+            {
+                line.enabled = false;
+                if (target != null && target != d) { target.Release(this); Log($"You let go of the {target.Monster.displayName}: a module caught a live one!"); }
+                target = null;
+                phase = Phase.Idle;
+            }
+            if (phase != Phase.Idle) return false;
             d.Release(module);
             if (!d.TryClaim(this)) return false;
             target = d;
