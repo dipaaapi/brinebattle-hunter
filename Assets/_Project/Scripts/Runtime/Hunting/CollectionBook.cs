@@ -101,11 +101,18 @@ namespace BrineBattle.Hunting
             GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Book); GUILayout.EndArea(); return; }
 
-            var newPage = (CollectionPage)GUILayout.Toolbar((int)page, Tabs);
+            var labels = new string[Tabs.Length];
+            for (int i = 0; i < Tabs.Length; i++)
+            {
+                var all = IdsOf((CollectionPage)i);
+                labels[i] = $"{Tabs[i]} {all.Count(x => Log.Has((CollectionPage)i, x))}/{all.Count}";
+            }
+            var newPage = (CollectionPage)HuntStyles.Tabs((int)page, labels);
             if (newPage != page) { page = newPage; selected = null; scroll = Vector2.zero; }
 
             var ids = IdsOf(page);
-            GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% complete  ({ids.Count(i => Log.Has(page, i))}/{ids.Count})");
+            GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% found. Pick an entry on the left; ??? = not found yet.", HuntStyles.Hint);
+            HuntStyles.Bar(Log.Completion(page, ids), new Color(0.98f, 0.82f, 0.3f));
 
             GUILayout.BeginHorizontal();
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.Width(250));
@@ -117,7 +124,7 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Reset book (testing)", GUILayout.Width(170)))
+            if (GUILayout.Button("<size=10>Reset book (testing)</size>", HuntStyles.RichButton, GUILayout.Width(140)))
             {
                 Log.Unlocked -= OnUnlocked;
                 Log = new CollectionLog();
@@ -126,7 +133,6 @@ namespace BrineBattle.Hunting
                 selected = null;
             }
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Close (C)", GUILayout.Width(120))) WorldPause.Close(Menu.Book);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }
@@ -152,15 +158,18 @@ namespace BrineBattle.Hunting
         {
             bool known = Log.Has(page, id);
             GUILayout.BeginHorizontal();
-            var swatch = GUILayoutUtility.GetRect(22, 22, GUILayout.Width(22));
+            var swatch = GUILayoutUtility.GetRect(26, 26, GUILayout.Width(26));
             GUI.DrawTexture(swatch, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, known ? color : new Color(0.05f, 0.05f, 0.08f), 0, 6);
-            if (GUILayout.Button(known ? name : "???", GUILayout.Height(22))) selected = id;
+            var old = GUI.backgroundColor;
+            if (selected == id) GUI.backgroundColor = HuntStyles.Go;
+            if (GUILayout.Button(known ? name : "???", GUILayout.Height(26))) selected = id;
+            GUI.backgroundColor = old;
             GUILayout.EndHorizontal();
         }
 
         void DrawDetail()
         {
-            if (selected == null) { GUILayout.Label("Select an entry."); return; }
+            if (selected == null) { GUILayout.Label("Pick an entry on the left to read about it.", HuntStyles.Text); return; }
             bool known = Log.Has(page, selected);
             var big = GUILayoutUtility.GetRect(120, 90, GUILayout.ExpandWidth(true));
 

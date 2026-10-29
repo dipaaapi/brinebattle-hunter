@@ -49,14 +49,22 @@ namespace BrineBattle.Hunting
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Settings", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Settings); GUILayout.EndArea(); return; }
 
-            GUILayout.Label("<b>Screen size</b> (text and buttons)", Rich);
+            // Owner idea U-25: three short pages.
+            var labels = inGame ? new[] { "Game", "Save", "Controls" } : new[] { "Game", "Controls" };
+            page = Mathf.Min(page, labels.Length - 1);
+            page = HuntStyles.Tabs(page, labels);
+            string current = labels[page];
+            if (current == "Controls") { Controls(); GUILayout.EndArea(); return; }
+            if (current == "Save") { SavePage(); GUILayout.EndArea(); return; }
+
+            GUILayout.Label("Screen size (text and buttons)", HuntStyles.Heading);
             int size = Mathf.Clamp(Mathf.RoundToInt((HuntStyles.Scale - 1f) / 0.25f), 0, 2);
             int pickedSize = GUILayout.Toolbar(size, new[] { "Small", "Big", "Huge" }, GUILayout.Height(30));
             if (pickedSize != size) HuntStyles.Scale = 1f + 0.25f * pickedSize;
 
             GUILayout.Space(8);
-            GUILayout.Label("<b>Battle mode</b> (also switchable during a battle)", Rich);
-            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
+            GUILayout.Label("Battle mode", HuntStyles.Heading);
+            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels, GUILayout.Height(30));
             GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "<size=11>Auto plays every turn and reels for you (50% clean).</size>"
                 : BattleSettings.Mode == BattleMode.SemiAuto ? "<size=11>Basic attacks are automatic; you decide the important turns. Reel: press first, or it auto-presses.</size>"
                 : "<size=11>You pick every action. Reel: press Space in the green zone.</size>", Rich);
@@ -65,26 +73,42 @@ namespace BrineBattle.Hunting
             BattleSettings.AutoItems = GUILayout.Toggle(BattleSettings.AutoItems,
                 $" Auto-use consumables at {Mathf.RoundToInt(BattleAI.LowHp * 100)}% HP or below (Semi-auto and Auto)");
 
-            GUILayout.Space(8);
-            GUILayout.Label("<b>Controls</b>", Rich);
-            GUILayout.Label("<size=11>Click a drift: cast · Space: reel · B: Bag · C: Book · R: Build · Esc: Settings</size>", Rich);
+            GUILayout.EndArea();
+        }
 
-            if (!inGame)
+        int page;
+
+        static readonly (string key, string what)[] Keys =
+        {
+            ("Click a drift", "Cast the harpoon at it"),
+            ("Space", "Reel in (press in the green zone)"),
+            ("B", "Bag"),
+            ("P", "Pets"),
+            ("C", "Collection Book"),
+            ("R", "Build the raft and the Workbench"),
+            ("Esc", "Settings, or close a menu"),
+        };
+
+        void Controls()
+        {
+            foreach (var (key, what) in Keys)
             {
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Close (Esc)")) WorldPause.Close(Menu.Settings);
-                GUILayout.EndArea();
-                return;
+                GUILayout.BeginHorizontal(HuntStyles.Card);
+                GUILayout.Label($"<b>{key}</b>", HuntStyles.Text, GUILayout.Width(120));
+                GUILayout.Label(what, HuntStyles.Text);
+                GUILayout.EndHorizontal();
             }
+        }
 
-            GUILayout.Space(8);
-            GUILayout.Label("<b>Save game</b> (one save file: bag, gear, raft, modules, companions, book)", Rich);
+        void SavePage()
+        {
+            GUILayout.Label("One save file holds everything: bag, gear, raft, pets and the book.", HuntStyles.Hint);
             saveInfo ??= SaveSystem.Describe() ?? "no save yet";
+            GUILayout.Label($"Last save: <b>{saveInfo}</b>", HuntStyles.Text);
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Last save: {saveInfo}", GUILayout.Width(190));
-            if (GUILayout.Button("Save")) { saveMessage = SaveSystem.Save(); saveInfo = null; autoTimer = 0f; }
+            if (HuntStyles.ColorButton("Save now", HuntStyles.Go)) { saveMessage = SaveSystem.Save(); saveInfo = null; autoTimer = 0f; }
             GUI.enabled = SaveSystem.Exists;
-            if (GUILayout.Button("Load")) { saveMessage = SaveSystem.Load(); autoTimer = 0f; }
+            if (HuntStyles.ColorButton("Load", HuntStyles.Other)) { saveMessage = SaveSystem.Load(); autoTimer = 0f; }
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             UploadRow();
@@ -102,12 +126,9 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
 
             GUILayout.FlexibleSpace();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Save and go to main menu")) { SaveSystem.Save(); GameStart.ToMenu(); }
-            if (GUILayout.Button("Close (Esc)")) WorldPause.Close(Menu.Settings);
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
+            if (GUILayout.Button("Save and go to the main menu", GUILayout.Height(32))) { SaveSystem.Save(); GameStart.ToMenu(); }
         }
+
 
         /// <summary>
         /// "Upload save file": in the Editor a file picker; in a build, paste the file's path

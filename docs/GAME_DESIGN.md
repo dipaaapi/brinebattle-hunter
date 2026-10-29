@@ -208,6 +208,16 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 - **Collision** meshes authored in Blender (simplified, `_col` naming) for easy iteration.
 - **Modular, grid-based** raft parts.
 
+### HUD and menus (owner idea U-25)
+
+Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status card top-left (raft level and HP, harpoon wear with Fix, pets), one hint banner at the top, and a bottom **dock of picture buttons**: Bag (B), Pets (P), Book (C), Build (R), Settings (Esc). A button lights up while its menu is open. Every menu has a red **×** and is split into **tabs**, so each page is short:
+- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Level up (✔/✘ steps and the button).
+- **Workbench:** each recipe is a card listing every ingredient as have/need, green ✔ or red ✘ with "need N more". Ready recipes come first, each tab shows how many are ready, and a box hides what can't be made yet (Ed's ask).
+- **Bag:** Items (filter by kind; one line on what each item is for) · Equipment · Essence · Auto-salvage.
+- **Pets:** the list of pets on the left, the picked pet on the right (life and growth bars, Feed, Fuse, Look, battle, Release) · Chores.
+- **Book:** tab labels show found/total; a progress bar.
+- **Settings:** Game · Save · Controls.
+
 ### Main menu (Ed's ask)
 
 The game opens on its own **MainMenu scene** before the game (Hook) scene: **Continue** (shows the save's date; loads the save), **New game** (asks first if a save exists; the old save is kept as `save.backup.json`, so auto-save can't overwrite it, and Upload save file brings it back), **Settings** (screen size, battle mode, auto-use; saving needs a game) and **Quit**. In the game, Settings has **Save and go to main menu**. In the Editor, Play always starts at the main menu. Both scenes are built from code (`MainMenuSceneBuilder`, `HookSceneBuilder`).

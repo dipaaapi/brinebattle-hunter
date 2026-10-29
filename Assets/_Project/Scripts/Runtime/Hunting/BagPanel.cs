@@ -73,70 +73,151 @@ namespace BrineBattle.Hunting
             if (gained > 0) hook.Log($"Auto-salvaged misfits into {gained} essence.");
         }
 
+        enum Page { Items, Gear, Essence, Salvage }
+        static readonly string[] PageLabels = { "Items", "Equipment", "Essence", "Auto-salvage" };
+        static readonly string[] Filters = { "All", "Materials", "Raft", "Gear", "Potions", "Tools" };
+        Page page;
+        int filter;
+
+        static bool InFilter(ItemType t, int f)
+        {
+            switch (f)
+            {
+                case 1: return t == ItemType.Material || t == ItemType.Essence;
+                case 2: return t == ItemType.Raft || t == ItemType.Module || t == ItemType.Habitat;
+                case 3: return t == ItemType.Weapon || t == ItemType.Armor;
+                case 4: return t == ItemType.Consumable;
+                case 5: return t == ItemType.Tool;
+                default: return true;
+            }
+        }
+
         void OnGUI()
         {
             HuntStyles.Begin();
             if (!open || hook == null) return;
-            var inv = hook.Inventory;
             GUI.depth = -5;
             float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Bag", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Bag); GUILayout.EndArea(); return; }
 
-            GUILayout.Label("<b>Gear tiers</b> (an item fits if its rarity ≥ the tier)", Rich);
-            if (hook.raft != null) raftTier = hook.raft.Tier;
-            GUILayout.Label($"Raft        <color={RarityColor(raftTier)}>{raftTier}</color>  (upgrade it in Build mode)", Rich);
-            weaponTier = TierRow("Weapon", weaponTier);
-            armorTier = TierRow("Armor", armorTier);
-            companionTier = TierRow("Companion", companionTier);
-            autoSalvage = GUILayout.Toggle(autoSalvage, " Auto-salvage weapons and armor below their tier on pickup (other loot is always kept)");
-
-            var hunter = Battle.Combatant.Hunter(hook.Gear);
-            string el = hunter.Element == Elements.Element.None ? "Neutral" : hunter.Element.ToString();
-            GUILayout.Label($"<b>Equipment</b>  (hunter: ATK {hunter.Attack} · DEF {hunter.Defense} · {el})", Rich);
-            GearRow(GearSlot.Weapon);
-            GearRow(GearSlot.Armor);
-
+            // Owner idea U-25: one short page at a time.
+            var picked = (Page)HuntStyles.Tabs((int)page, PageLabels);
+            if (picked != page) { page = picked; scroll = Vector2.zero; }
             scroll = GUILayout.BeginScrollView(scroll);
-            GUILayout.Label("<b>Items</b>", Rich);
-            if (!inv.Items.Any()) GUILayout.Label("  (empty)");
-            foreach (var kv in inv.Items.ToList())
+            switch (page)
+            {
+                case Page.Items: DrawItems(); break;
+                case Page.Gear: DrawGear(); break;
+                case Page.Essence: DrawEssence(); break;
+                default: DrawSalvage(); break;
+            }
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        void DrawItems()
+        {
+            var inv = hook.Inventory;
+            filter = GUILayout.Toolbar(filter, Filters, GUILayout.Height(26));
+            var list = inv.Items.Where(kv => InFilter(kv.Key.type, filter)).OrderBy(kv => kv.Key.type).ThenBy(kv => kv.Key.rarity).ToList();
+            if (list.Count == 0) { GUILayout.Label(filter == 0 ? "The bag is empty. Hook some drifts!" : "Nothing of this kind yet.", HuntStyles.Text); return; }
+            foreach (var kv in list)
             {
                 var item = kv.Key;
                 bool fits = !SalvageRules.IsMisfit(item.type, item.rarity, TierOf(item.type));
+                GUILayout.BeginVertical(HuntStyles.Card);
                 GUILayout.BeginHorizontal();
-                string skillTip = GearRules.IsGear(item.type) ? SkillText(item) : "";
-                GUILayout.Label(new GUIContent($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}{(skillTip.Length > 0 ? " · skills" : "")}</size>", skillTip), Rich, GUILayout.Width(320));
-                GUILayout.Label(fits ? "<color=#7f7>fits</color>" : IsIngredient(item) ? "<color=#ccf>crafting</color>" : "<color=#f77>misfit</color>", Rich, GUILayout.Width(50));
+                GUILayout.Label($"<b>{kv.Value} ×</b> <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=11>{TypeName(item.type)} · {item.rarity}</size>"
+                    + (fits ? "" : $"  <size=11><color={HuntStyles.BadHex}>below your {item.type} tier</color></size>"), HuntStyles.Text);
+                GUILayout.FlexibleSpace();
                 if (GearRules.IsGear(item.type))
                 {
                     GUI.enabled = hook.Gear.CanEquip(item, inv, TierOf(item.type));
-                    if (GUILayout.Button("Equip", GUILayout.Width(55)) && hook.Gear.Equip(item, inv, TierOf(item.type)))
+                    if (GUILayout.Button("Equip", GUILayout.Width(60), GUILayout.Height(26)) && hook.Gear.Equip(item, inv, TierOf(item.type)))
                         hook.Log($"Equipped {hook.Gear.Label(GearRules.SlotOf(item.type))}.");
                     GUI.enabled = true;
                 }
                 int yield = SalvageRules.EssenceYield(item.type, item.rarity);
-                if (GUILayout.Button($"Salvage 1 (+{yield})")) Salvage(item, 1);
-                if (GUILayout.Button("All")) Salvage(item, kv.Value);
+                if (yield > 0)
+                {
+                    if (GUILayout.Button(new GUIContent($"Salvage (+{yield})", "Break one into Monster Essence"), GUILayout.Width(110), GUILayout.Height(26))) Salvage(item, 1);
+                    if (kv.Value > 1 && GUILayout.Button("All", GUILayout.Width(40), GUILayout.Height(26))) Salvage(item, kv.Value);
+                }
+                GUILayout.EndHorizontal();
+                string what = UseText(item);
+                if (what.Length > 0) GUILayout.Label(what, HuntStyles.Hint);
+                GUILayout.EndVertical();
+            }
+        }
+
+        /// <summary>One line on what an item is for, so the player doesn't have to guess.</summary>
+        string UseText(ItemDefinition item)
+        {
+            if (GearRules.IsGear(item.type)) { string sk = SkillText(item); return sk.Length > 0 ? sk : "Equip it in the Equipment tab."; }
+            switch (item.type)
+            {
+                case ItemType.Raft: case ItemType.Module: case ItemType.Habitat: return "Build it onto the raft (R).";
+                case ItemType.Tool: return "A hammer for building the raft (kept in the bag).";
+                case ItemType.Consumable: return string.IsNullOrEmpty(item.description) ? "Use it in battle." : item.description;
+            }
+            return IsIngredient(item) ? "Used in Workbench recipes (R → Workbench) and pet food (P → Feed)." : "Pet food (P → Feed), or salvage it for essence.";
+        }
+
+        static string TypeName(ItemType t) => t == ItemType.Consumable ? "Potion/Oil" : t == ItemType.Raft ? "Raft part" : t.ToString();
+
+        void DrawGear()
+        {
+            var hunter = Battle.Combatant.Hunter(hook.Gear);
+            string el = hunter.Element == Elements.Element.None ? "Neutral" : hunter.Element.ToString();
+            GUILayout.Label($"Hunter: <b>ATK {hunter.Attack} · DEF {hunter.Defense}</b> · {el}", HuntStyles.Heading);
+            GearRow(GearSlot.Weapon);
+            GearRow(GearSlot.Armor);
+            GUILayout.Space(6);
+            GUILayout.Label("<b>Gear in the bag</b>", HuntStyles.Text);
+            var gear = hook.Inventory.Items.Where(kv => GearRules.IsGear(kv.Key.type)).ToList();
+            if (gear.Count == 0) GUILayout.Label("No spare gear. Make some in Build (R) → Workbench → Gear.", HuntStyles.Hint);
+            foreach (var kv in gear)
+            {
+                var item = kv.Key;
+                GUILayout.BeginHorizontal(HuntStyles.Card);
+                GUILayout.Label($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=11>{item.type}</size>", HuntStyles.Text);
+                GUI.enabled = hook.Gear.CanEquip(item, hook.Inventory, TierOf(item.type));
+                if (GUILayout.Button("Equip", GUILayout.Width(70), GUILayout.Height(26)) && hook.Gear.Equip(item, hook.Inventory, TierOf(item.type)))
+                    hook.Log($"Equipped {hook.Gear.Label(GearRules.SlotOf(item.type))}.");
+                GUI.enabled = true;
                 GUILayout.EndHorizontal();
             }
+        }
 
-            GUILayout.Space(6);
-            GUILayout.Label("<b>Monster Essence</b>", Rich);
-            if (!inv.Essence.Any()) GUILayout.Label("  (none)");
+        void DrawEssence()
+        {
+            var inv = hook.Inventory;
+            GUILayout.Label("Monster Essence pays for raft level-ups, gear refining and pet fusing. Get it by salvaging items.", HuntStyles.Hint);
+            if (!inv.Essence.Any()) { GUILayout.Label("No essence yet.", HuntStyles.Text); return; }
             foreach (var kv in inv.Essence)
-                GUILayout.Label($"  {kv.Value} × <color={RarityColor(kv.Key.Rarity)}>{kv.Key}</color>", Rich);
-            GUILayout.EndScrollView();
+                GUILayout.Label($"<b>{kv.Value}</b> × <color={RarityColor(kv.Key.Rarity)}>{kv.Key}</color>", HuntStyles.Text);
+        }
 
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Salvage all misfits"))
+        void DrawSalvage()
+        {
+            var inv = hook.Inventory;
+            GUILayout.Label("Weapons and armor below these tiers are \"misfits\". Everything else is always kept.", HuntStyles.Hint);
+            if (hook.raft != null) raftTier = hook.raft.Tier;
+            weaponTier = TierRow("Weapon", weaponTier);
+            armorTier = TierRow("Armor", armorTier);
+            companionTier = TierRow("Companion", companionTier);
+            GUILayout.Space(6);
+            autoSalvage = GUILayout.Toggle(autoSalvage, " Auto-salvage misfit weapons and armor when I pick them up");
+            GUILayout.Space(6);
+            int misfits = inv.Items.Where(kv => SalvageRules.IsMisfit(kv.Key.type, kv.Key.rarity, TierOf(kv.Key.type)) && !IsIngredient(kv.Key)).Sum(kv => kv.Value);
+            GUI.enabled = misfits > 0;
+            if (GUILayout.Button(misfits > 0 ? $"Salvage {misfits} misfit(s) now" : "No misfits to salvage", GUILayout.Height(30)))
             {
                 int gained = inv.SalvageIncompatible(TierOf, IsIngredient);
                 hook.Log(gained > 0 ? $"Salvaged misfits into {gained} essence." : "No misfits to salvage.");
             }
-            if (GUILayout.Button("Close (B)")) WorldPause.Close(Menu.Bag);
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
+            GUI.enabled = true;
         }
 
         void GearRow(GearSlot slot)
@@ -144,10 +225,11 @@ namespace BrineBattle.Hunting
             var gear = hook.Gear;
             var inv = hook.Inventory;
             var item = gear.Get(slot);
+            GUILayout.BeginVertical(HuntStyles.Card);
             GUILayout.BeginHorizontal();
-            GUILayout.Label(slot.ToString(), GUILayout.Width(80));
+            GUILayout.Label($"<b>{slot}</b>", HuntStyles.Text, GUILayout.Width(70));
             string stat = slot == GearSlot.Weapon ? "ATK" : "DEF";
-            GUILayout.Label(item == null ? "(none — equip from the list below)"
+            GUILayout.Label(item == null ? "(nothing: equip from the list below)"
                 : $"<color={RarityColor(item.rarity)}>{gear.Label(slot)}</color>  <size=10>{stat} +{gear.PowerOf(slot)}</size>", Rich, GUILayout.Width(220));
             if (item != null)
             {
@@ -161,7 +243,8 @@ namespace BrineBattle.Hunting
             }
             GUILayout.EndHorizontal();
             string skills = SkillText(item);
-            if (skills.Length > 0) GUILayout.Label($"<size=10>      {skills}</size>", Rich);
+            if (skills.Length > 0) GUILayout.Label(skills, HuntStyles.Hint);
+            GUILayout.EndVertical();
         }
 
         /// <summary>"Passive: Thorns (...) · Active: Shell Guard" for gear with skills (GDD §9), else "".</summary>
