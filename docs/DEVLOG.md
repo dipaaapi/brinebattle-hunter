@@ -2,6 +2,22 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 6 (slice 4: elemental oils)
+- Same branch/PR as gear skills (#3). `ConsumableEffect.CoatWeapon`: the item's element becomes the hunter's attack element for `effectAmount` rounds (`BattleState.Coating`, `AttackElement`); defense keeps the weapon element. Battle title shows the oil while it lasts.
+- `BattleAI.BestOil`: Auto coats with the oil that beats the current attack element against the monster (after heals). Semi-auto/Manual = player.
+- New via sample data (`DataVersion` 4): Gale Oil (Wind, vs eel), Grit Oil (Earth, vs gull), Burning Pitch (Fire, vs crab), crafted at the workbench.
+- Companion consumables moved to Phase 7. Rules tests outside Unity: 80/80 (4 new). Unity run pending.
+- Ed's playtest: the workbench list got long. Workbench now has tabs (Gear, Potions, Oils, Raft, Dismantle) with a one-line hint each; `CraftRules.CategoryOf` sorts recipes by output type. 82/82 outside Unity.
+- Ed played gear skills, oils and tabs: OK. Tabs now in two rows so Dismantle isn't cut off. Generated data assets + Hook scene from Ed's PC committed. PR #3 merged → **Phase 6 done**. Next: Ed picks Idea Round 3 or Phase 7.
+
+## 2026-10-29 — Phase 6 (slice 3: gear skills)
+- PR #2 (consumables + Settings) merged. Owner ideas U-19 battle effects, U-20 audio, U-21 fog/time of day logged.
+- Branch `phase/6-gear-skills`: `GearPassive` / `GearActive` on items, `GearSkillRules` (slots: Rare 1 passive, Epic 1+1, Legendary 2+2, Mythic 3+2; Common/Uncommon element only), `Equipment.Passives/Actives`, `BattleAction.Skill` + `BattleState.PlaySkill`.
+- Passives: Leech (heal 20% of damage dealt), Thorns (25% back), Second Wind (+1 stamina/round), Bulwark (raft −20%). Actives: Tidal Strike (×2.2, 6 st), Shell Guard (raft safe this round, 4 st). Auto uses them; Semi-auto waits for the player when one is ready.
+- New gear via Create Sample Data: Shell Maul (Rare, Thorns), Tidecaller Lance (Epic, Leech + Tidal Strike), Shellback Carapace (Epic, Bulwark + Shell Guard), all from Shellback Plates.
+- Rules tests outside Unity: 76/76 (14 new). Unity run pending.
+- Ed's playtest: refine (+8 spear, +6 buckler) and Settings work. But Build Hook Scene had never been re-run, so no new items/recipes/gear power on his PC. New `AutoRebuild` (editor): after a recompile it runs Build Hook Scene once per `DataVersion` bump (not in play mode or batch mode). Bump `AutoRebuild.DataVersion` when sample data or the scene builder changes.
+
 ## 2026-10-29 — Phase 6 (slice 2: consumables)
 - Gear slice: Ed ran the Test Runner (103/103) and played it; PR #1 merged. Bag gear row narrowed so Refine/Take off fit.
 - Branch `phase/6-consumables`: `ConsumableEffect` (HealHunter, RepairRaft) + `effectAmount` on items; `BattleAction.Item` and `BattleState.PlayItem` (takes the hunter's turn, no use at full HP); battle panel shows a button per consumable.

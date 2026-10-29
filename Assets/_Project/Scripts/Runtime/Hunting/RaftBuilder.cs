@@ -28,6 +28,7 @@ namespace BrineBattle.Hunting
         GameObject hover;
         Rect panelRect;
         Vector2 panelScroll;
+        RecipeCategory tab;
         string message = "";
 
         public void Toggle()
@@ -198,10 +199,14 @@ namespace BrineBattle.Hunting
 
             if (recipes.Count > 0)
             {
-                GUILayout.Label("<b>Workbench</b> (uses the bag; craft gear and modules; take a module off the raft to upgrade or dismantle it)", Rich);
-                foreach (var r in recipes)
+                GUILayout.Label("<b>Workbench</b> (uses the bag)", Rich);
+                // Two rows of tabs so all five fit the panel width.
+                tab = (RecipeCategory)GUILayout.SelectionGrid((int)tab, CraftRules.CategoryLabels, 3, GUILayout.Width(w - 50));
+                GUILayout.Label($"<size=11>{CraftRules.CategoryHints[(int)tab]}</size>", Rich);
+                var shown = recipes.Where(r => r != null && CraftRules.CategoryOf(r) == tab).ToList();
+                if (shown.Count == 0) GUILayout.Label("  (no recipes here yet)");
+                foreach (var r in shown)
                 {
-                    if (r == null) continue;
                     string verb = r.kind == RecipeKind.Upgrade ? "Upgrade" : r.kind == RecipeKind.Dismantle ? "Dismantle" : "Craft";
                     GUI.enabled = CraftRules.CanCraft(hook.Inventory, r);
                     if (GUILayout.Button($"{verb}: {CraftRules.Describe(r.inputs)} → {CraftRules.Describe(r.outputs)}", ButtonWrap))

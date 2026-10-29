@@ -1,4 +1,5 @@
 using System.Linq;
+using BrineBattle.Elements;
 using BrineBattle.Items;
 
 namespace BrineBattle.Battle
@@ -11,7 +12,8 @@ namespace BrineBattle.Battle
         /// <summary>
         /// Semi-auto and Auto use consumables on their own: a raft repair when the raft is at
         /// <see cref="LowHp"/> or below, a heal when the hunter is. The lower side goes first.
-        /// Null = no item this round. Manual never uses items by itself.
+        /// Auto also coats the weapon with an elemental oil that hits the monster harder than
+        /// the current element. Null = no item this round. Manual never uses items by itself.
         /// </summary>
         public static ItemDefinition ChooseItem(BattleState s, BattleMode mode)
         {
@@ -27,7 +29,30 @@ namespace BrineBattle.Battle
                 var item = s.Bag.Items.Select(kv => kv.Key).FirstOrDefault(i => i.effect == effect && s.CanUseItem(i));
                 if (item != null) return item;
             }
-            return null;
+            return mode == BattleMode.Auto ? BestOil(s) : null;
+        }
+
+        /// <summary>The usable oil with the best damage multiplier against the monster, if it beats the current one.</summary>
+        public static ItemDefinition BestOil(BattleState s)
+        {
+            float now = ElementRules.Multiplier(s.AttackElement, s.Monster.Element);
+            return s.Bag?.Items.Select(kv => kv.Key)
+                .Where(i => i.effect == ConsumableEffect.CoatWeapon && s.CanUseItem(i))
+                .Where(i => ElementRules.Multiplier(i.element, s.Monster.Element) > now)
+                .OrderByDescending(i => ElementRules.Multiplier(i.element, s.Monster.Element))
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Auto uses gear actives: Shell Guard when the raft is low, otherwise Tidal Strike when affordable.
+        /// None = no skill this round. Semi-auto leaves skills to the player (see <see cref="Choose"/>).
+        /// </summary>
+        public static GearActive ChooseSkill(BattleState s, BattleMode mode)
+        {
+            if (mode != BattleMode.Auto) return GearActive.None;
+            if (s.RaftHp <= s.RaftMaxHp * LowHp && s.CanUseSkill(GearActive.ShellGuard)) return GearActive.ShellGuard;
+            if (s.CanUseSkill(GearActive.TidalStrike)) return GearActive.TidalStrike;
+            return GearActive.None;
         }
 
         public static BattleAction? Choose(BattleState s, BattleMode mode)
@@ -37,8 +62,8 @@ namespace BrineBattle.Battle
             bool harpoonReady = s.CanUse(BattleAction.Harpoon);
 
             if (mode == BattleMode.SemiAuto)
-                // Auto basic attacks; the player decides the important turns.
-                return low || harpoonReady ? (BattleAction?)null : BattleAction.Attack;
+                // Auto basic attacks; the player decides the important turns (low HP, harpoon or a gear skill ready).
+                return low || harpoonReady || s.Actives.Any(s.CanUseSkill) ? (BattleAction?)null : BattleAction.Attack;
 
             if (low && !harpoonReady) return BattleAction.Brace;
             if (harpoonReady) return BattleAction.Harpoon;

@@ -16,6 +16,7 @@ BrineBattle Hunter: top-down, turn-based survival-builder × alchemy monster-hun
 - The Unity Editor can't be driven from here. After any C# change run `/unity-verify` (headless compile + EditMode tests). If Unity is open on the project, ask the user to close it or to run the tests in the Test Runner.
 - Never hand-write files Unity generates (`ProjectSettings/*`, `Packages/packages-lock.json`, `*.meta` for existing assets, `Library/`). New `.cs` files are fine; Unity creates their `.meta` on next import — commit those after.
 - Game data lives in ScriptableObjects under `Assets/_Project/Data`, not hardcoded in scripts.
+- After changing `SampleDataBuilder` or `HookSceneBuilder`, bump `AutoRebuild.DataVersion` so the editor rebuilds data and the Hook scene by itself on the next recompile.
 - Gameplay rules (element chart, state roll, damage, loot, salvage) are plain C# classes with no `MonoBehaviour`, so EditMode tests can cover them.
 - When a design decision is made, update `docs/GAME_DESIGN.md` in the same commit and remove it from Open Questions.
 
