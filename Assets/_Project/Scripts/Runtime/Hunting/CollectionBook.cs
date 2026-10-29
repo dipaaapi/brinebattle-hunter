@@ -101,14 +101,18 @@ namespace BrineBattle.Hunting
             GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Book); GUILayout.EndArea(); return; }
 
-            var labels = new string[Tabs.Length];
+            var labels = new string[Tabs.Length + 1];
             for (int i = 0; i < Tabs.Length; i++)
             {
                 var all = IdsOf((CollectionPage)i);
                 labels[i] = $"{Tabs[i]} {all.Count(x => Log.Has((CollectionPage)i, x))}/{all.Count}";
             }
-            var newPage = (CollectionPage)HuntStyles.Tabs((int)page, labels);
-            if (newPage != page) { page = newPage; selected = null; scroll = Vector2.zero; }
+            var recipes = hook != null && hook.builder != null ? hook.builder.recipes.Where(r => r != null).ToList() : new List<RecipeDefinition>();
+            labels[Tabs.Length] = $"Recipes {recipes.Count(r => hook.Mastery.Knows(r))}/{recipes.Count}";
+            int newTab = HuntStyles.Tabs(recipesTab ? Tabs.Length : (int)page, labels);
+            if (newTab == Tabs.Length) { if (!recipesTab) scroll = Vector2.zero; recipesTab = true; }
+            else if (recipesTab || (CollectionPage)newTab != page) { recipesTab = false; page = (CollectionPage)newTab; selected = null; scroll = Vector2.zero; }
+            if (recipesTab) { DrawRecipes(recipes); GUILayout.EndArea(); return; }
 
             var ids = IdsOf(page);
             GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% found", HuntStyles.Hint);
@@ -135,6 +139,35 @@ namespace BrineBattle.Hunting
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        bool recipesTab;
+
+        /// <summary>
+        /// Idea Round 3 (U-14): every recipe the hunter's Alchemy Mastery knows, with its ingredients;
+        /// the rest are "???" with the mastery level that reveals them.
+        /// </summary>
+        void DrawRecipes(List<RecipeDefinition> recipes)
+        {
+            var m = hook.Mastery;
+            GUILayout.Label($"Alchemy Mastery Lv {m.Level}", HuntStyles.Heading);
+            HuntStyles.Bar(m.Progress, new Color(0.75f, 0.5f, 1f));
+            scroll = GUILayout.BeginScrollView(scroll);
+            foreach (var r in recipes.OrderBy(AlchemyMastery.Needed).ThenBy(r => (int)CraftRules.CategoryOf(r)))
+            {
+                GUILayout.BeginVertical(HuntStyles.Card);
+                if (m.Knows(r))
+                {
+                    var main = r.outputs.FirstOrDefault(o => o.item != null);
+                    string name = r.kind == RecipeKind.Dismantle ? $"Take apart: {CraftRules.Describe(r.inputs)}"
+                        : main != null ? $"<color={BagPanel.RarityColor(main.item.rarity)}>{main.item.displayName}</color>" : r.displayName;
+                    GUILayout.Label($"<b>{name}</b>  <size=11>{CraftRules.CategoryLabels[(int)CraftRules.CategoryOf(r)]}</size>", HuntStyles.Text);
+                    GUILayout.Label(r.kind == RecipeKind.Dismantle ? $"Gives {CraftRules.Describe(r.outputs)}" : CraftRules.Describe(r.inputs), HuntStyles.Hint);
+                }
+                else GUILayout.Label($"<b>???</b>  <color={HuntStyles.BadHex}>Alchemy Mastery Lv {AlchemyMastery.Needed(r)}</color>", HuntStyles.Text);
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndScrollView();
         }
 
         List<string> IdsOf(CollectionPage p) =>

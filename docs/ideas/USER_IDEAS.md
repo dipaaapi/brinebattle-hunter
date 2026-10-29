@@ -22,7 +22,7 @@ Monsters eat raft parts when you lose or flee; beat them later to recover parts 
 
 ## Open (proposed in the GDD, not yet decided)
 
-### U-6 Combine low-rarity essence into higher-rarity essence — 2026-10-28 · 💡 · GDD §11
+### U-6 Combine low-rarity essence into higher-rarity essence — 2026-10-28 · ✅ Idea Round 3 (Mastery Lv 3, 5 → 1) · GDD §11
 
 ### U-7 Battle action resource: stamina vs weapon charge — 2026-10-28 · ✅ answered by C-4 (stamina + durability) · GDD §5, §14
 
@@ -82,7 +82,7 @@ A raft part built on the **edge of the raft** that automatically loots monsters 
 - **Repair** (per 10 durability): Lv 1–2 = materials only; Lv 3 = materials + essence of the module's rarity; Lv 4–5 = essence only. Cost = level × (rarity + 1). Same-element essence repairs 25% more.
 - Fits Phase 5 (raft builder) as a buildable part; durability shares a system with C-4 weapon durability.
 
-### U-14 Crafting knowledge unlocks the book — 2026-10-28 · 💡 · GDD §7, §9, §11, U-11
+### U-14 Crafting knowledge unlocks the book — 2026-10-28 · ✅ Idea Round 3 (Alchemy Mastery, Book → Recipes) · GDD §7, §9, §11, U-11
 The book should also show **how to craft** things, but you only know a recipe once you have the **skill/knowledge** for it. That is the point of harvesting: harvesting builds your skills, skills let you craft, and crafting unlocks more.
 - Right now the book only lists what you've looted.
 - As skills grow, **new "???" entries appear** (craftable items, gear, potions, raft parts) that you can now learn to make.

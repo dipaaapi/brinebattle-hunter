@@ -229,7 +229,7 @@ namespace BrineBattle.Hunting
 
             // Owner idea U-25 (Ed: "hindi user friendly"): four short pages instead of one long scroll.
             var labels = (string[])PageLabels.Clone();
-            int ready = recipes.Count(r => r != null && CraftRules.CanCraft(hook.Inventory, r));
+            int ready = recipes.Count(r => r != null && hook.Mastery.Knows(r) && CraftRules.CanCraft(hook.Inventory, r));
             if (ready > 0) labels[1] = $"Workbench ({ready})";
             if (RaftRules.UpgradeCost(g.Tier) > 0 && g.UpgradeBlocker(hook.Inventory) == null) labels[3] = "Level up ✔";
             var picked = (Page)HuntStyles.Tabs((int)page, labels);
@@ -303,16 +303,25 @@ namespace BrineBattle.Hunting
             var labels = new string[CraftRules.CategoryLabels.Length];
             for (int i = 0; i < labels.Length; i++)
             {
-                int n = recipes.Count(r => r != null && (int)CraftRules.CategoryOf(r) == i && CraftRules.CanCraft(inv, r));
+                int n = recipes.Count(r => r != null && (int)CraftRules.CategoryOf(r) == i && hook.Mastery.Knows(r) && CraftRules.CanCraft(inv, r));
                 labels[i] = n > 0 ? $"{CraftRules.CategoryLabels[i]} ({n})" : CraftRules.CategoryLabels[i];
             }
             tab = (RecipeCategory)GUILayout.SelectionGrid((int)tab, labels, 3, HuntStyles.TabStyle, GUILayout.Height(60));
             readyOnly = GUILayout.Toggle(readyOnly, " Show only what I can make now");
 
-            var shown = CraftRules.ByReadiness(inv, recipes.Where(r => r != null && CraftRules.CategoryOf(r) == tab));
+            // Recipes above the hunter's Alchemy Mastery stay "???" at the end (Idea Round 3, U-14).
+            var inTab = recipes.Where(r => r != null && CraftRules.CategoryOf(r) == tab).ToList();
+            var shown = CraftRules.ByReadiness(inv, inTab.Where(r => hook.Mastery.Knows(r)));
             if (readyOnly) shown = shown.Where(r => CraftRules.CanCraft(inv, r)).ToList();
             if (shown.Count == 0) GUILayout.Label(readyOnly ? "Nothing ready here yet." : "No recipes here yet.", HuntStyles.Text);
             foreach (var r in shown) RecipeCard(r);
+            if (!readyOnly)
+                foreach (var r in inTab.Where(r => !hook.Mastery.Knows(r)).OrderBy(AlchemyMastery.Needed))
+                {
+                    GUILayout.BeginVertical(HuntStyles.Card);
+                    GUILayout.Label($"<b>???</b>  <color={HuntStyles.BadHex}>Alchemy Mastery Lv {AlchemyMastery.Needed(r)}</color>", HuntStyles.Text);
+                    GUILayout.EndVertical();
+                }
         }
 
         void RecipeCard(RecipeDefinition r)
@@ -355,6 +364,7 @@ namespace BrineBattle.Hunting
         void Craft(RecipeDefinition r, string verb)
         {
             CraftRules.Craft(hook.Inventory, r);
+            if (r.kind != RecipeKind.Dismantle) hook.Mastery.Add(AlchemyMastery.CraftPoints);
             message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
             StorageBox.Instance?.Crafted(CraftRules.Describe(r.outputs));
             // A Mystic companion (Phase 7) sometimes makes one more of a gear, potion or oil.

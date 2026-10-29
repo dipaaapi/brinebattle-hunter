@@ -33,7 +33,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | # | Next piece | Combines | Where |
 |---|---|---|---|
 | 1 | ✅ (Phase 7 part 2) **Companion growth:** evolution, old age and death, feeding with loot/potions, fusion that consumes the source but keeps one "echo" passive | U-23 (rest), U-4, U-8 + C-5 | Phase 7 (rest) |
-| 2 | **Alchemy knowledge:** a Mastery level that grows by harvesting and crafting; it reveals new "???" recipes in the Book, makes the Dead/Weakened/Alive hint more accurate, and unlocks combining essence into higher rarity | U-14, C-1, U-6 | Idea Round 3 |
+| 2 | ✅ (Idea Round 3) **Alchemy knowledge:** a Mastery level that grows by harvesting and crafting; it reveals new "???" recipes in the Book, makes the Dead/Weakened/Alive hint more accurate, and unlocks combining essence into higher rarity | U-14, C-1, U-6 | Idea Round 3 |
 | 3 | **World conditions:** day/night with sun/moon affinity, rough seas, thunderstrikes, weather deciding what drifts, fog | U-10, U-15, C-3, U-21 | Idea Round / own phase |
 | 4 | **Gear slots and accessories:** skill slots as a hard limit by rarity, plus an accessory slot | U-12 (rest) | Idea Round |
 | 5 | **Manual harvest:** a timing input with a 30% miss, next to Auto | U-9 (rest) | Idea Round |
@@ -48,6 +48,8 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 
 ## Decision log
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`
+
+- (2026-10-29) Idea Round 3 → **U-14** Crafting knowledge + **C-1** Drift reading, with **U-6** essence combining, as one Alchemy Mastery system (row 2 of the combined plan). Ed asked to do the next step together with Phase 7. Picked because it is next in the combined plan, builds on the Phase 6 workbench and the Book, and is cheap (no new data assets). Not picked: world conditions (larger, own phase), gear slots, manual harvest.
 
 - (2026-10-28) Rule set by owner: every core phase is followed by an Idea Round of two ideas, one owner (top priority) + one Claude (top priority), picked by Claude.
 - (2026-10-28) Idea Round 2 → **U-13** Auto-loot module (it is a raft part, so it builds directly on Phase 5) and **C-4** Stamina + durability (U-13's hooks need a durability system; sharing it with the Harpoon also answers U-7). Not picked yet: U-14 needs crafting (Phase 6); U-10/U-15/C-3 are one larger World-conditions system; U-12 belongs with Phase 6 gear.

@@ -33,6 +33,8 @@ namespace BrineBattle.Hunting
         public Equipment Gear { get; } = new Equipment();
         /// <summary>Tamed monsters (Phase 7); the active one joins battles.</summary>
         public CompanionRoster Companions { get; } = new CompanionRoster();
+        /// <summary>Alchemy Mastery (Idea Round 3): better hints, more recipes, essence combining.</summary>
+        public AlchemyMastery Mastery { get; } = new AlchemyMastery();
         /// <summary>Raised when a monster is tamed (collection book Pets page).</summary>
         public event System.Action<Monsters.MonsterDefinition> MonsterTamed;
         [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
@@ -85,6 +87,7 @@ namespace BrineBattle.Hunting
             // Habitats on the raft give companion room.
             raft.Grid.Changed += SyncHabitats;
             SyncHabitats();
+            Mastery.LeveledUp += OnMasteryLevel;
         }
 
         // Main menu: Continue loads the save here (New game starts fresh).
@@ -211,6 +214,7 @@ namespace BrineBattle.Hunting
                 case DriftState.Dead:
                     resultTitle = $"{m.displayName} — Dead";
                     pendingLoot = RollLoot(m, tensionHit);
+                    Mastery.Add(AlchemyMastery.HarvestPoints);
                     Finish($"Harvested {m.displayName}{(tensionHit ? " (clean reel)" : "")}: {Brief(pendingLoot)}", true, true);
                     return;
                 case DriftState.Weakened:
@@ -350,7 +354,7 @@ namespace BrineBattle.Hunting
             switch (target.Actual)
             {
                 case DriftState.Dead:
-                    if (HuntStyles.ColorButton("Harvest", HuntStyles.Go)) Finish($"Harvested {m.displayName}.", true, true);
+                    if (HuntStyles.ColorButton("Harvest", HuntStyles.Go)) { Mastery.Add(AlchemyMastery.HarvestPoints); Finish($"Harvested {m.displayName}.", true, true); }
                     break;
                 case DriftState.Weakened when pendingPet != null:
                     foreach (CompanionRole role in System.Enum.GetValues(typeof(CompanionRole)))
@@ -448,6 +452,15 @@ namespace BrineBattle.Hunting
             });
         }
 
+        void OnMasteryLevel(int level)
+        {
+            string unlocked = builder != null ? string.Join(", ", AlchemyMastery.NewAt(builder.recipes, level)
+                .Select(r => r.outputs.Count > 0 && r.outputs[0].item != null ? r.outputs[0].item.displayName : r.displayName)) : "";
+            Log($"Alchemy Mastery Lv {level}! Hints are right {AlchemyMastery.HintAccuracy(level):P0} of the time."
+                + (unlocked.Length > 0 ? $" New recipes: {unlocked}." : "")
+                + (level == AlchemyMastery.CombineLevel ? " You can now combine essence (Bag → Essence)." : ""));
+        }
+
         /// <summary>A lost battle (Ed's call): rest a while, and the waves take a few Common materials.</summary>
         void Defeated()
         {
@@ -471,6 +484,7 @@ namespace BrineBattle.Hunting
         void CountKill()
         {
             raft.Grid.Kills++;
+            Mastery.Add(AlchemyMastery.HarvestPoints);
             foreach (var kv in Companions.GrowOlder())
             {
                 var c = kv.Key;
@@ -508,6 +522,7 @@ namespace BrineBattle.Hunting
             var m = target.Monster;
             pendingPet.Role = role;
             Companions.Add(pendingPet);
+            Mastery.Add(AlchemyMastery.TamePoints);
             pendingPet = null;
             MonsterTamed?.Invoke(m);
             ApplyCompanionBonuses();
@@ -552,7 +567,7 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
             // at the top, menus as big picture tiles along the bottom.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 200));
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 250));
             GUILayout.BeginVertical(HuntStyles.Box);
             StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size}", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
@@ -562,6 +577,8 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button(new GUIContent("Fix", "Repair the harpoon +10 for 1 material"), GUILayout.Width(44), GUILayout.Height(34)) && Inventory.SpendMaterials(1)) Harpoon.Repair(10);
             GUI.enabled = true;
             GUILayout.EndHorizontal();
+            StatusRow(HuntIcons.Book, $"Mastery Lv {Mastery.Level}", Mastery.Progress,
+                Mastery.Level >= AlchemyMastery.MaxLevel ? "max" : $"{Mastery.Points - AlchemyMastery.PointsFor(Mastery.Level)}/{AlchemyMastery.PointsToNext(Mastery.Level)}", new Color(0.75f, 0.5f, 1f));
             GUILayout.BeginHorizontal();
             GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
             GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}", Rich);

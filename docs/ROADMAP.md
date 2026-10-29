@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 7 — Companions, part 2 (`phase/7-growth`). Part 1 merged (PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
-| **Next step** | All Phase 7 items are in `phase/7-growth` (PR #5). Ed tests the whole phase in Unity, then decides on merging to main. After that: Idea Round 3, then Phase 8 |
+| **Next step** | Phase 7 and Idea Round 3 (Alchemy Mastery) are both in `phase/7-growth` (PR #5, Ed asked to do them together). Ed tests in Unity, then decides on merging to main. Then Phase 8 (raft types & absorption) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
@@ -128,6 +128,13 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Owner's asks during part 2: crafting materials kept after a raft level-up, Reinforce recipes per level, main menu scene, raft rocks with thicker planks per level, nothing overlaps
 
 **Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
+
+### 🟨 Idea Round 3 (after Phase 7) — Alchemy knowledge
+- [x] **U-14 Crafting knowledge** — recipes unlock by Alchemy Mastery; "???" in the Workbench and Book → Recipes
+- [x] **C-1 Drift reading** — mastery raises the hint accuracy (60% → 96%)
+- [x] (merged in) **U-6** essence combining from Mastery Lv 3
+
+**Done when:** mastery grows from hunting and crafting, reveals recipes, makes hints more accurate, and essence can be combined. (Built on `phase/7-growth` at Ed's ask, waiting for his test.)
 
 ### ⬜ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.

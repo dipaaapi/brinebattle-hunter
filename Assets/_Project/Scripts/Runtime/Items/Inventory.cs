@@ -50,6 +50,17 @@ namespace BrineBattle.Items
             Changed?.Invoke();
         }
 
+        /// <summary>Takes essence of exactly this rarity and element. False (and nothing taken) if there isn't enough.</summary>
+        public bool RemoveEssence(EssenceKey key, int amount)
+        {
+            int have = EssenceCount(key);
+            if (amount <= 0 || have < amount) return false;
+            if (have == amount) essence.Remove(key);
+            else essence[key] = have - amount;
+            Changed?.Invoke();
+            return true;
+        }
+
         public void Add(ItemDefinition item, int quantity)
         {
             if (item == null || quantity <= 0) return;

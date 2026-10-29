@@ -47,6 +47,8 @@ namespace BrineBattle.Hunting
                 modules?.Slots.Select(kv => new KeyValuePair<Cell, int>(kv.Key, kv.Value.Durability.Current)),
                 hook.Companions, book != null ? book.Log.Serialize() : null, DateTime.Now);
             CaptureSettings(data, hook, book);
+            data.hasMastery = true;
+            data.mastery = hook.Mastery.Points;
             try
             {
                 Directory.CreateDirectory(Folder);
@@ -174,6 +176,7 @@ namespace BrineBattle.Hunting
                     if (durability.TryGetValue(kv.Key, out var cur)) kv.Value.Durability.Set(cur);
             if (book != null && data.collection != null) book.Restore(data.collection);
             if (data.hasSettings) ApplySettings(data.settings);
+            hook.Mastery.Restore(data.hasMastery ? data.mastery : AlchemyMastery.StartingPoints(hook.raft.Tier));
             // Saves from before hammers existed get the starter hammer, so building isn't locked out.
             if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))
                 hook.Inventory.Add(hook.starterHammer, 1);

@@ -4,7 +4,7 @@
 
 Format: `### C-<n> Title` · date · status (💡 open / ✅ accepted / ❌ dropped / 🔀 merged) · related GDD section · cost (S/M/L) · earliest phase.
 
-### C-1 Drift "reading" as a skill check — 2026-10-28 · 💡 · §4 · S · Phase 2
+### C-1 Drift "reading" as a skill check — 2026-10-28 · ✅ Idea Round 3 · §4 · S · Phase 2
 Alchemy Mastery raises the accuracy of the Dead/Weakened/Alive hint (e.g. 50% → 90%). Gives Mastery a use from the very first loop, and makes "hook the unknown" a choice instead of pure luck.
 
 ### C-2 Line tension mini-step on reel-in — 2026-10-28 · ✅ Idea Round 1 · §4 · S · Phase 2

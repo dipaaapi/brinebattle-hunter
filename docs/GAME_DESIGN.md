@@ -83,6 +83,11 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **No job/class. No magic.**
 - **Level (EXP):** base stats and free stat points.
 - **Alchemy Mastery:** recipe unlocks, fusion success rate, taming rarity, potion and gear quality.
+- **Implemented (Idea Round 3: U-14 + C-1, with U-6):** mastery points from harvesting or beating a monster (2), taming (3) and crafting (1, not dismantling). Lv 1–10; each level needs 10 × level more points. Effects so far:
+  - **Hint accuracy (C-1):** 60% at Lv 1, +4% per level (96% at Lv 10).
+  - **Recipe knowledge (U-14):** a recipe needs mastery by its output's rarity (Common 1 … Mythic 6, one per raft level; dismantling always known). Unknown recipes show as "???" with the level that reveals them, in the Workbench and in a new **Book → Recipes** tab; a level-up names the new recipes. The Mystic only crafts known recipes.
+  - **Essence combining (U-6):** from Lv 3, 5 essence of one rarity and element → 1 of the next rarity (Bag → Essence).
+  - Older saves start at the mastery level of their raft, so nothing they already used is hidden. Fusion, taming and quality effects are still open.
 - **Power comes from gear.**
 
 ## 8. Elements
@@ -173,7 +178,7 @@ Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the p
   - Refining (+) weapons and armor
   - Secondary material for raft/gear upgrades
   - Companion growth
-- Proposed: combine low-rarity essence into higher-rarity essence.
+- **Combining (U-6, Idea Round 3):** from Alchemy Mastery Lv 3, 5 essence → 1 of the next rarity, same element.
 - **Implemented (Phase 4):** an equippable item fits when its rarity ≥ the target's tier. Salvage gives essence of the item's rarity and element, Common 1 … Mythic 6 per item.
 
 ### Collection book (U-11)

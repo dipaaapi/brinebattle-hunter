@@ -29,10 +29,16 @@ namespace BrineBattle.Hunting
         System.Random rng;
         float timer;
 
+        HookController hook;
+
         void Awake() => rng = new System.Random();
+
+        /// <summary>Idea Round 3 (C-1): Alchemy Mastery makes the hints more accurate.</summary>
+        float Accuracy => hook != null ? Items.AlchemyMastery.HintAccuracy(hook.Mastery.Level) : hintAccuracy;
 
         void Start()
         {
+            hook = FindFirstObjectByType<HookController>();
             // A few drifts already in reach so there is something to hook right away.
             for (int i = 0; i < 3; i++) Spawn(Random.Range(-8f, 4f));
         }
@@ -61,7 +67,7 @@ namespace BrineBattle.Hunting
             pos.y = 0.1f;
 
             var state = EncounterRules.RollState(deadWeight, weakenedWeight, aliveWeight, rng);
-            var hint = EncounterRules.Hint(state, hintAccuracy, rng);
+            var hint = EncounterRules.Hint(state, Accuracy, rng);
 
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.transform.SetParent(transform, true);

@@ -61,6 +61,14 @@ namespace BrineBattle.Hunting
                 new Entry("How do I equip gear?",
                     "Bag → Equipment. Press Equip on a weapon or armor. Refine it with essence to make it stronger. Rarer gear has skills.")),
 
+            new Topic("Mastery",
+                new Entry("What is Alchemy Mastery?",
+                    "Your skill as a monster alchemist, shown at the top-left. Harvesting or beating a monster gives 2 points, taming 3, crafting 1. Each level needs more points (10, 20, 30 …)."),
+                new Entry("What does Mastery do?",
+                    "• Hints over drifts (\"Looks dead\" etc.) are right more often: 60% at Lv 1, up to 96%.\n• New recipes appear: Uncommon things at Lv 2, Rare at Lv 3, Epic at Lv 4, Legendary at Lv 5, Mythic at Lv 6. Until then they show as ??? in the Workbench and the Book.\n• From Lv 3 you can combine 5 essence into 1 of the next rarity (Bag → Essence)."),
+                new Entry("Why is a recipe \"???\"?",
+                    "Your Alchemy Mastery isn't high enough yet. The card says which level reveals it. Hunt, harvest and craft to level up. Book → Recipes lists every recipe you know.")),
+
             new Topic("Workbench",
                 new Entry("Where do I craft?",
                     "Build (R) → Workbench. Pick a tab: Gear, Potions, Oils, Raft or Dismantle."),

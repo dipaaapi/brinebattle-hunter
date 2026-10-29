@@ -179,8 +179,23 @@ namespace BrineBattle.Hunting
         {
             var inv = hook.Inventory;
             if (!inv.Essence.Any()) { GUILayout.Label("No essence yet.", HuntStyles.Text); return; }
-            foreach (var kv in inv.Essence)
+            var mastery = hook.Mastery;
+            bool canCombine = mastery.Level >= AlchemyMastery.CombineLevel;
+            foreach (var kv in inv.Essence.ToList())
+            {
+                GUILayout.BeginHorizontal(HuntStyles.Card);
                 GUILayout.Label($"<b>{kv.Value}</b> × <color={RarityColor(kv.Key.Rarity)}>{kv.Key}</color>", HuntStyles.Text);
+                // Idea Round 3 (U-6): 5 essence → 1 of the next rarity, from Alchemy Mastery Lv 3.
+                if (kv.Key.Rarity < Rarity.Mythic)
+                {
+                    GUI.enabled = canCombine && kv.Value >= AlchemyMastery.CombineCost;
+                    string label = canCombine ? $"Combine {AlchemyMastery.CombineCost} → 1 {kv.Key.Rarity + 1}" : $"Combine (Mastery Lv {AlchemyMastery.CombineLevel})";
+                    if (GUILayout.Button(label, GUILayout.Width(190), GUILayout.Height(26)) && mastery.Combine(inv, kv.Key))
+                        hook.Log($"Combined {AlchemyMastery.CombineCost} {kv.Key} into 1 {new EssenceKey(kv.Key.Rarity + 1, kv.Key.Element)}.");
+                    GUI.enabled = true;
+                }
+                GUILayout.EndHorizontal();
+            }
         }
 
         void DrawSalvage()

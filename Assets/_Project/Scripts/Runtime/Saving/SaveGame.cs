@@ -27,6 +27,9 @@ namespace BrineBattle.Saving
         public int raftTier;
         /// <summary>Monsters killed since the last raft tier upgrade.</summary>
         public int raftKills;
+        /// <summary>Alchemy Mastery points (Idea Round 3). Older saves have none and start at their raft level.</summary>
+        public bool hasMastery;
+        public int mastery;
         public List<Part> parts = new List<Part>();
         public List<Part> modules = new List<Part>();
         public List<Pet> companions = new List<Pet>();

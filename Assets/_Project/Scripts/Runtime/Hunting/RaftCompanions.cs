@@ -269,9 +269,11 @@ namespace BrineBattle.Hunting
                 {
                     mysticTimer = 0f;
                     // The hammer comes first when the raft has outgrown it (Ed's ask), then potions and oils.
-                    var recipe = hook.builder != null
-                        ? CompanionWork.MysticHammerPick(hook.builder.recipes, hook.Inventory, Raft.Tier)
-                          ?? CompanionWork.MysticCraftPick(hook.builder.recipes, hook.Inventory, CompanionSettings.MysticKeep)
+                    // Only recipes the hunter's Alchemy Mastery knows (Idea Round 3).
+                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Mastery.Knows(r)).ToList() : null;
+                    var recipe = known != null
+                        ? CompanionWork.MysticHammerPick(known, hook.Inventory, Raft.Tier)
+                          ?? CompanionWork.MysticCraftPick(known, hook.Inventory, CompanionSettings.MysticKeep)
                         : null;
                     var slot = recipe == null && CompanionSettings.MysticRefines ? CompanionWork.MysticPick(hook.Gear, hook.Inventory) : null;
                     if (recipe != null && CraftRules.Craft(hook.Inventory, recipe))
