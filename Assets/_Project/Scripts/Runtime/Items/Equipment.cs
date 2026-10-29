@@ -38,6 +38,8 @@ namespace BrineBattle.Items
         readonly Dictionary<ItemDefinition, int> refines = new Dictionary<ItemDefinition, int>();
 
         public event Action Changed;
+        /// <summary>Essence saved per refine (a Mystic companion, Phase 7). Cost never drops below 1.</summary>
+        public int RefineDiscount { get; set; }
 
         public ItemDefinition Get(GearSlot slot) => slots.TryGetValue(slot, out var item) ? item : null;
 
@@ -86,7 +88,9 @@ namespace BrineBattle.Items
         public int RefineCost(GearSlot slot)
         {
             var item = Get(slot);
-            return item == null ? 0 : GearRules.RefineCost(RefineOf(item));
+            if (item == null) return 0;
+            int cost = GearRules.RefineCost(RefineOf(item));
+            return cost == 0 ? 0 : Math.Max(1, cost - RefineDiscount);
         }
 
         public bool CanRefine(GearSlot slot, Inventory inv)

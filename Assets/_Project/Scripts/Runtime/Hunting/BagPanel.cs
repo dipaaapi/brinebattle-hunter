@@ -138,18 +138,24 @@ namespace BrineBattle.Hunting
         {
             var roster = hook.Companions;
             GUILayout.Label($"<b>Companions</b>  ({roster.All.Count}/{roster.Capacity}; habitats on the raft add room later)", Rich);
+            GUILayout.Label("<size=10>Familiar fights with you · Crew repairs the raft, harpoon and modules · Mystic helps craft gear, potions and oils</size>", Rich);
             if (roster.All.Count == 0) GUILayout.Label("  (none — tame a weakened, calm drift)");
             foreach (var c in roster.All.ToList())
             {
                 bool active = roster.Active == c;
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"<color={RarityColor(c.Rarity)}>{c.Name}</color>{(active ? " <b>(active)</b>" : "")}  <size=10>{c.Element} · {c.Stats}</size>", Rich, GUILayout.Width(360));
-                GUI.enabled = !active;
-                if (GUILayout.Button("Set active", GUILayout.Width(80))) roster.SetActive(c);
-                GUI.enabled = true;
+                string tip = $"{c.Role}: {CompanionRules.Describe(c.Role)}";
+                GUILayout.Label(new GUIContent($"<color={RarityColor(c.Rarity)}>{c.Name}</color> <b>{c.Role}</b>{(active ? " (in battle)" : "")}  <size=10>{c.Element} · {c.Stats}</size>", tip), Rich, GUILayout.Width(360));
+                if (c.Role == CompanionRole.Familiar)
+                {
+                    GUI.enabled = !active;
+                    if (GUILayout.Button("Set active", GUILayout.Width(80))) roster.SetActive(c);
+                    GUI.enabled = true;
+                }
+                else GUILayout.Label("", GUILayout.Width(80));
                 if (releasing == c)
                 {
-                    if (GUILayout.Button("Sure?", GUILayout.Width(55))) { roster.Release(c); releasing = null; hook.Log($"Released {c.Name} back to the sea."); }
+                    if (GUILayout.Button("Sure?", GUILayout.Width(55))) { roster.Release(c); releasing = null; hook.ApplyCompanionBonuses(); hook.Log($"Released {c.Name} back to the sea."); }
                 }
                 else if (GUILayout.Button("Release", GUILayout.Width(65))) releasing = c;
                 GUILayout.EndHorizontal();

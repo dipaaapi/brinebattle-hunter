@@ -48,6 +48,8 @@ namespace BrineBattle.Hunting
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
             if (hook?.Companions.Active != null) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
+            var crew = hook?.Companions.Best(Companions.CompanionRole.Crew);
+            if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rarity);
             // Battle visuals (idea U-19): created here so older Hook scenes get them without a rebuild.
             if (stage == null && !TryGetComponent(out stage)) stage = gameObject.AddComponent<BattleStage>();
             stage.Begin(raft, target, state.Companion);

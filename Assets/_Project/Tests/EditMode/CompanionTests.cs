@@ -41,22 +41,70 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void RosterHasRoomForOnePlusHabitats()
+        public void RosterHasRoomForThreePlusHabitats()
         {
             var roster = new CompanionRoster();
-            var a = Companion.FromMonster(Monster("a"));
-            var b = Companion.FromMonster(Monster("b"));
-            Assert.IsTrue(roster.Add(a));
-            Assert.AreEqual(a, roster.Active, "first one is active");
+            for (int i = 0; i < 3; i++) Assert.IsTrue(roster.Add(Companion.FromMonster(Monster($"m{i}"))));
             Assert.IsTrue(roster.Full);
-            Assert.IsFalse(roster.Add(b), "no habitat yet");
+            Assert.IsFalse(roster.Add(Companion.FromMonster(Monster("extra"))), "no habitat yet");
             roster.Habitats = 1;
-            Assert.IsTrue(roster.Add(b));
-            Assert.IsTrue(roster.SetActive(b));
-            Assert.IsTrue(roster.Release(b));
-            Assert.AreEqual(a, roster.Active, "falls back to the one left");
-            Assert.IsTrue(roster.Release(a));
-            Assert.IsNull(roster.Active);
+            Assert.IsTrue(roster.Add(Companion.FromMonster(Monster("extra"))));
+        }
+
+        [Test]
+        public void OnlyAFamiliarCanBeTheBattleCompanion()
+        {
+            var roster = new CompanionRoster();
+            var crew = Companion.FromMonster(Monster("crab"), CompanionRole.Crew);
+            var fam = Companion.FromMonster(Monster("gull"), CompanionRole.Familiar);
+            roster.Add(crew);
+            Assert.IsNull(roster.Active, "crew doesn't fight");
+            Assert.IsFalse(roster.SetActive(crew));
+            roster.Add(fam);
+            Assert.AreEqual(fam, roster.Active);
+            Assert.IsTrue(roster.Release(fam));
+            Assert.IsNull(roster.Active, "no Familiar left");
+            Assert.AreEqual(crew, roster.Best(CompanionRole.Crew));
+            Assert.IsNull(roster.Best(CompanionRole.Mystic));
+        }
+
+        [Test]
+        public void BestPicksTheRarestInARole()
+        {
+            var roster = new CompanionRoster();
+            var common = Companion.FromMonster(Monster("a"), CompanionRole.Mystic);
+            var rare = Companion.FromMonster(Monster("b", Rarity.Rare), CompanionRole.Mystic);
+            roster.Add(common);
+            roster.Add(rare);
+            Assert.AreEqual(rare, roster.Best(CompanionRole.Mystic));
+            Assert.Greater(CompanionRules.MysticExtraChance(Rarity.Rare), CompanionRules.MysticExtraChance(Rarity.Common));
+        }
+
+        [Test]
+        public void CrewPatchesTheRaftEachRound()
+        {
+            var s = new BattleState(Combatant.Hunter(), Target(atk: 20), 100, new System.Random(1));
+            s.CrewRepair = CompanionRules.CrewRaftRepair(Rarity.Common);
+            for (int i = 0; i < 10 && s.Outcome == BattleOutcome.Ongoing; i++) s.PlayRound(BattleAction.Brace);
+            Assert.IsTrue(s.Log.Any(l => l.StartsWith("Your crew patches the raft")));
+            Assert.IsTrue(s.Events.Any(e => e.Kind == BattleEventKind.Heal && e.To == BattleActor.Raft));
+        }
+
+        [Test]
+        public void MysticMakesRefinesCheaperButNeverFree()
+        {
+            var gear = new Equipment();
+            var inv = new Inventory();
+            var spear = ScriptableObject.CreateInstance<ItemDefinition>();
+            spear.type = ItemType.Weapon;
+            spear.gearPower = 4;
+            inv.Add(spear, 1);
+            gear.Equip(spear, inv, Rarity.Common);
+            Assert.AreEqual(2, gear.RefineCost(GearSlot.Weapon));
+            gear.RefineDiscount = CompanionRules.MysticRefineDiscount;
+            Assert.AreEqual(1, gear.RefineCost(GearSlot.Weapon));
+            gear.RefineDiscount = 5;
+            Assert.AreEqual(1, gear.RefineCost(GearSlot.Weapon), "never below 1");
         }
 
         [Test]

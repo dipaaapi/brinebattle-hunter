@@ -31,6 +31,8 @@ namespace BrineBattle.Battle
 
         /// <summary>The active companion (Phase 7). Null = fighting alone. It attacks after the hunter each round.</summary>
         public Combatant Companion { get; set; }
+        /// <summary>Raft HP a Crew companion patches at the end of each round (Phase 7). 0 = no crew.</summary>
+        public int CrewRepair { get; set; }
 
         /// <summary>Element of an elemental oil on the weapon (None = no coating) and the rounds it has left.</summary>
         public Element Coating { get; private set; }
@@ -119,6 +121,13 @@ namespace BrineBattle.Battle
 
             Hunter.Bracing = false;
             shellGuard = false;
+            if (CrewRepair > 0 && Outcome == BattleOutcome.Ongoing && RaftHp < RaftMaxHp)
+            {
+                int fixedHp = Math.Min(CrewRepair, RaftMaxHp - RaftHp);
+                RaftHp += fixedHp;
+                Add($"Your crew patches the raft: +{fixedHp} HP.");
+                Emit(BattleEventKind.Heal, BattleActor.Raft, BattleActor.Raft, fixedHp, "Crew");
+            }
             if (CoatingRounds > 0 && --CoatingRounds == 0) Add($"The {Coating} oil wears off.");
             int regen = BattleRules.StaminaPerRound + (Passives.Contains(GearPassive.SecondWind) ? GearSkillRules.SecondWindStamina : 0);
             Stamina = Math.Min(BattleRules.MaxStamina, Stamina + regen);

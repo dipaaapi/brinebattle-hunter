@@ -48,6 +48,9 @@ namespace BrineBattle.Hunting
 
         LineRenderer line;
         Phase phase;
+        /// <summary>A tame that worked, waiting for the player to pick its role (U-23).</summary>
+        Companion pendingPet;
+        float crewTimer;
         Drift target;
         float t;
         Vector3 reelFrom;
@@ -72,6 +75,7 @@ namespace BrineBattle.Hunting
         void Update()
         {
             WorldPause.Prompt = phase == Phase.Result;
+            CrewMend();
             switch (phase)
             {
                 case Phase.Idle: UpdateIdle(); break;
@@ -255,6 +259,7 @@ namespace BrineBattle.Hunting
             }
             target = null;
             pendingLoot = null;
+            pendingPet = null;
             phase = Phase.Idle;
         }
 
@@ -310,6 +315,10 @@ namespace BrineBattle.Hunting
             {
                 case DriftState.Dead:
                     if (GUILayout.Button("Harvest")) Finish($"Harvested {m.displayName}.", true, true);
+                    break;
+                case DriftState.Weakened when pendingPet != null:
+                    foreach (CompanionRole role in System.Enum.GetValues(typeof(CompanionRole)))
+                        if (GUILayout.Button(role.ToString(), GUILayout.Height(28))) Adopt(role);
                     break;
                 case DriftState.Weakened:
                     if (GUILayout.Button("Finish it"))
@@ -379,10 +388,44 @@ namespace BrineBattle.Hunting
                 Finish($"{m.displayName} shied away from your hand and slipped back into the sea.", false, true);
                 return;
             }
-            var c = Companion.FromMonster(m);
-            Companions.Add(c);
+            pendingPet = Companion.FromMonster(m);
+            resultTitle = $"Tamed {m.displayName}! Pick its role";
+            resultBody = $"{pendingPet.Stats}\n"
+                + $"Familiar: {CompanionRules.Describe(CompanionRole.Familiar)}.\n"
+                + $"Crew: {CompanionRules.Describe(CompanionRole.Crew)}.\n"
+                + $"Mystic: {CompanionRules.Describe(CompanionRole.Mystic)}.";
+        }
+
+        void Adopt(CompanionRole role)
+        {
+            var m = target.Monster;
+            pendingPet.Role = role;
+            Companions.Add(pendingPet);
+            pendingPet = null;
             MonsterTamed?.Invoke(m);
-            Finish($"Tamed {m.displayName}! It will fight beside you ({c.Stats}).", false, true);
+            ApplyCompanionBonuses();
+            Finish($"Tamed {m.displayName} as your {role}: it {CompanionRules.Describe(role)}.", false, true);
+        }
+
+        /// <summary>Mystic: cheaper refines. Called when the roster changes.</summary>
+        public void ApplyCompanionBonuses() =>
+            Gear.RefineDiscount = Companions.Best(CompanionRole.Mystic) != null ? CompanionRules.MysticRefineDiscount : 0;
+
+        /// <summary>Crew: between fights, +1 durability to the harpoon and every module now and then.</summary>
+        void CrewMend()
+        {
+            var crew = Companions.Best(CompanionRole.Crew);
+            if (crew == null || WorldPause.Open != Menu.None || BattleController.InBattle) return;
+            crewTimer += Time.deltaTime;
+            if (crewTimer < CompanionRules.CrewMendSeconds) return;
+            crewTimer = 0f;
+            bool mended = !Harpoon.Full;
+            Harpoon.Repair(1);
+            var modules = builder != null ? builder.modules : null;
+            if (modules != null)
+                foreach (var slot in modules.Slots.Values)
+                    if (!slot.Durability.Full) { slot.Durability.Repair(1); mended = true; }
+            if (mended) Log($"{crew.Name} (Crew) mended the harpoon and modules.");
         }
 
         void Sedated()
@@ -415,9 +458,9 @@ namespace BrineBattle.Hunting
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Raft: size {raft.size} · {raft.Grid.Count} parts · {raft.Tier} tier · {raft.MaxHp} HP");
             GUILayout.EndHorizontal();
-            var pet = Companions.Active;
-            GUILayout.Label(pet == null ? $"Companion: none ({Companions.All.Count}/{Companions.Capacity}) — tame a weakened, calm drift"
-                : $"Companion: <b>{pet.Name}</b> ({Companions.All.Count}/{Companions.Capacity})", Rich);
+            GUILayout.Label(Companions.All.Count == 0 ? $"Companions: none (0/{Companions.Capacity}) — tame a weakened, calm drift"
+                : $"Companions ({Companions.All.Count}/{Companions.Capacity}): " + string.Join(" · ",
+                    Companions.All.Select(c => $"{c.Name} <i>{c.Role}</i>{(c == Companions.Active ? "*" : "")}")), Rich);
             int stacks = Inventory.Items.Count(), essence = Inventory.Essence.Sum(kv => kv.Value);
             GUILayout.Label($"<b>Bag</b>: {stacks} stacks, {essence} essence", Rich);
             GUILayout.BeginHorizontal();

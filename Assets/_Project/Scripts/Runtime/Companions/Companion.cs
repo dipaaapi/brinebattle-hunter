@@ -6,6 +6,17 @@ using BrineBattle.Monsters;
 
 namespace BrineBattle.Companions
 {
+    /// <summary>What a companion does (owner idea U-23, GDD §10). Picked by the player when taming.</summary>
+    public enum CompanionRole
+    {
+        /// <summary>Fights beside the hunter.</summary>
+        Familiar = 0,
+        /// <summary>Looks after the raft: repairs it in battle, mends the harpoon and modules between fights.</summary>
+        Crew = 1,
+        /// <summary>Helps with alchemy and crafting (not the raft): extra crafts, cheaper refines.</summary>
+        Mystic = 2,
+    }
+
     /// <summary>Taming and companion numbers (GDD §10). Plain C# for EditMode tests.</summary>
     public static class CompanionRules
     {
@@ -28,8 +39,28 @@ namespace BrineBattle.Companions
             }
         }
 
-        /// <summary>Companions the raft can keep: 1 without habitats, +1 per habitat (habitats come later in Phase 7).</summary>
-        public static int Capacity(int habitats) => 1 + Math.Max(0, habitats);
+        /// <summary>Companions the raft can keep: 3 without habitats (room for one of each role), +1 per habitat (later in Phase 7).</summary>
+        public static int Capacity(int habitats) => 3 + Math.Max(0, habitats);
+
+        /// <summary>Raft HP a Crew companion patches at the end of each battle round: Common 2, +2 per rarity step.</summary>
+        public static int CrewRaftRepair(Rarity r) => 2 + 2 * (int)r;
+        /// <summary>Seconds between a Crew companion's mending rounds outside battle (+1 durability to the harpoon and each module).</summary>
+        public const float CrewMendSeconds = 15f;
+
+        /// <summary>Chance a Mystic makes one extra of a gear, potion or oil craft: Common 20%, +5% per rarity step.</summary>
+        public static float MysticExtraChance(Rarity r) => 0.2f + 0.05f * (int)r;
+        /// <summary>Essence a Mystic saves on each refine (never below 1).</summary>
+        public const int MysticRefineDiscount = 1;
+
+        public static string Describe(CompanionRole role)
+        {
+            switch (role)
+            {
+                case CompanionRole.Crew: return "repairs the raft each battle round and mends the harpoon and modules";
+                case CompanionRole.Mystic: return "may craft an extra gear, potion or oil, and refines cost less";
+                default: return "fights beside you";
+            }
+        }
 
         public static int Share(int wild) => Math.Max(1, (int)Math.Round(wild * StatShare));
     }
@@ -42,10 +73,12 @@ namespace BrineBattle.Companions
         public Element Element;
         public Habitat Habitat;
         public Rarity Rarity;
+        public CompanionRole Role;
         public int MaxHp, Attack, Defense, Speed;
 
-        public static Companion FromMonster(MonsterDefinition m) => new Companion
+        public static Companion FromMonster(MonsterDefinition m, CompanionRole role = CompanionRole.Familiar) => new Companion
         {
+            Role = role,
             Id = m.id,
             Name = m.displayName,
             Element = m.element,
@@ -60,7 +93,7 @@ namespace BrineBattle.Companions
         public string Stats => $"HP {MaxHp}  ATK {Attack}  DEF {Defense}  SPD {Speed}";
     }
 
-    /// <summary>The hunter's companions. One is active and joins battles.</summary>
+    /// <summary>The hunter's companions. One Familiar is active and joins battles; Crew and Mystics always work.</summary>
     public class CompanionRoster
     {
         readonly List<Companion> all = new List<Companion>();
@@ -72,19 +105,20 @@ namespace BrineBattle.Companions
         public Companion Active { get; private set; }
         public bool Full => all.Count >= Capacity;
 
-        /// <summary>Adds a companion if there is room; the first one becomes active.</summary>
+        /// <summary>Adds a companion if there is room; the first Familiar becomes active.</summary>
         public bool Add(Companion c)
         {
             if (c == null || Full) return false;
             all.Add(c);
-            if (Active == null) Active = c;
+            if (Active == null && c.Role == CompanionRole.Familiar) Active = c;
             Changed?.Invoke();
             return true;
         }
 
+        /// <summary>Only a Familiar can be the battle companion.</summary>
         public bool SetActive(Companion c)
         {
-            if (c != null && !all.Contains(c)) return false;
+            if (c != null && (!all.Contains(c) || c.Role != CompanionRole.Familiar)) return false;
             Active = c;
             Changed?.Invoke();
             return true;
@@ -94,9 +128,18 @@ namespace BrineBattle.Companions
         public bool Release(Companion c)
         {
             if (!all.Remove(c)) return false;
-            if (Active == c) Active = all.Count > 0 ? all[0] : null;
+            if (Active == c) Active = all.Find(x => x.Role == CompanionRole.Familiar);
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>The highest-rarity companion in a role (the one whose bonus counts), or null.</summary>
+        public Companion Best(CompanionRole role)
+        {
+            Companion best = null;
+            foreach (var c in all)
+                if (c.Role == role && (best == null || c.Rarity > best.Rarity)) best = c;
+            return best;
         }
     }
 }

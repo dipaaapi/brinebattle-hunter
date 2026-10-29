@@ -131,6 +131,8 @@ Applies to gear, companions, and monsters (type chart).
 
 **Implemented (Phase 7 slice 1, tunable):** Tame appears on a weakened, calm drift. Chance by rarity: Common 90%, Uncommon 75%, Rare 55%, Epic 40%, Legendary 25%, Mythic 15%; a failed tame lets it slip away. A companion has 60% of the monster's HP/ATK/DEF (speed kept). The raft keeps 1 companion, +1 per habitat (habitats next). One is active: it attacks after the hunter every round, the monster goes for it 25% of the time, and a knocked-out companion sits out the rest of the battle. It rests to full HP between battles. Release from the Bag (asks twice).
 
+**Roles (Phase 7 slice 2, tunable):** the player picks the role right after a successful tame (any monster can take any role). Room for 3 companions before habitats. **Familiar:** only Familiars can be the battle companion (one active). **Crew:** patches the raft at the end of each battle round (Common 2 HP, +2 per rarity step) and, between fights, mends +1 durability on the harpoon and every module every 15 s. **Mystic:** gear, potion and oil crafts have a chance to make one extra (Common 20%, +5% per rarity step), and refines cost 1 less essence (min 1). With several of a role, the rarest one's bonus counts.
+
 ## 11. Loot & Salvage
 
 - Every loot item has a **Type** (Raft, Weapon, Armor, Companion, Consumable) and a **Rarity**.
@@ -181,7 +183,7 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 - Action resource in battle (stamina vs weapon charge).
 - Fusion: are source companions consumed?
-- Companion roles: how a role is set (at taming, by species, or by element); what triggers evolution; how lifespan is counted before a day/night cycle; what happens on death.
+- Companion roles: what triggers evolution; how lifespan is counted before a day/night cycle; what happens on death.
 - Level-range limits on item share?
 - Target platform(s): PC, mobile, or both.
 - Title trademark check.
