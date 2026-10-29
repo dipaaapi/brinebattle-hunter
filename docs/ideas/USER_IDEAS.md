@@ -105,3 +105,7 @@ Some patches and planks can be turned into a net or a hook, upgraded, and taken 
 Each monster has an aggression (temperament). A weakened monster that is aggressive is killed outright, with no prompt and no menu, because there's no point taming it. Only a calm weakened monster asks Finish or Tame. A strong (alive) monster still goes straight to battle.
 - Built: `MonsterDefinition.aggression` (Eel 0.8, Crab 0.45, Gull 0.3), each drift ±0.15; aggressive = 0.5 or more. Also applies after a successful sedate.
 
+
+### U-18 Readable hunter, monsters and loot — 2026-10-29 · ⬜ open · Phase 9
+The hunter, monsters and loot are hard to tell apart because they're all sample shapes. Make them readable, maybe with Blender models.
+- Options put to Ed: clearer code placeholders now (distinct shape per monster, hunter figure, loot labels) and keep Blender for Phase 9, or pull the Blender art pass forward.
