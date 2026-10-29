@@ -1,0 +1,112 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using BrineBattle.Companions;
+using BrineBattle.Elements;
+using BrineBattle.Items;
+using BrineBattle.Monsters;
+using BrineBattle.Rafts;
+
+namespace BrineBattle.Saving
+{
+    /// <summary>
+    /// Everything a save file holds. Plain serializable fields (ids and ints) so Unity's JsonUtility
+    /// can write it and saves survive asset renames as long as item ids stay the same.
+    /// </summary>
+    [Serializable]
+    public class SaveData
+    {
+        public int version = SaveGame.Version;
+        public string savedAt;
+        public List<Stack> items = new List<Stack>();
+        public List<EssenceStack> essence = new List<EssenceStack>();
+        public string weapon;
+        public string armor;
+        public List<Stack> refines = new List<Stack>();
+        public int harpoon = -1;
+        public int raftTier;
+        public List<Part> parts = new List<Part>();
+        public List<Part> modules = new List<Part>();
+        public List<Pet> companions = new List<Pet>();
+        public int activeCompanion = -1;
+        public int habitats;
+        public string collection;
+
+        [Serializable] public class Stack { public string id; public int count; }
+        [Serializable] public class EssenceStack { public int rarity; public int element; public int count; }
+        /// <summary>A raft cell. For modules, count is the durability left.</summary>
+        [Serializable] public class Part { public int x; public int z; public string id; public int count; }
+        [Serializable]
+        public class Pet
+        {
+            public string id, name;
+            public int element, habitat, rarity, role, maxHp, attack, defense, speed;
+        }
+    }
+
+    /// <summary>Turns game state into <see cref="SaveData"/> and back (GDD: save points). Plain C# for EditMode tests.</summary>
+    public static class SaveGame
+    {
+        public const int Version = 1;
+
+        public static SaveData Capture(Inventory bag, Equipment gear, Durability harpoon, RaftGrid raft,
+            IEnumerable<KeyValuePair<Cell, int>> moduleDurability, CompanionRoster pets, string collection, DateTime now)
+        {
+            var d = new SaveData { savedAt = now.ToString("yyyy-MM-dd HH:mm"), collection = collection };
+            foreach (var kv in bag.Items) d.items.Add(new SaveData.Stack { id = kv.Key.id, count = kv.Value });
+            foreach (var kv in bag.Essence)
+                d.essence.Add(new SaveData.EssenceStack { rarity = (int)kv.Key.Rarity, element = (int)kv.Key.Element, count = kv.Value });
+            d.weapon = gear.Get(GearSlot.Weapon)?.id;
+            d.armor = gear.Get(GearSlot.Armor)?.id;
+            foreach (var kv in gear.Refines) d.refines.Add(new SaveData.Stack { id = kv.Key.id, count = kv.Value });
+            d.harpoon = harpoon?.Current ?? -1;
+            d.raftTier = (int)raft.Tier;
+            foreach (var kv in raft.Parts) d.parts.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, id = kv.Value.id });
+            if (moduleDurability != null)
+                foreach (var kv in moduleDurability) d.modules.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, count = kv.Value });
+            foreach (var c in pets.All)
+                d.companions.Add(new SaveData.Pet
+                {
+                    id = c.Id, name = c.Name, element = (int)c.Element, habitat = (int)c.Habitat, rarity = (int)c.Rarity,
+                    role = (int)c.Role, maxHp = c.MaxHp, attack = c.Attack, defense = c.Defense, speed = c.Speed,
+                });
+            d.activeCompanion = pets.Active == null ? -1 : pets.All.ToList().IndexOf(pets.Active);
+            d.habitats = pets.Habitats;
+            return d;
+        }
+
+        /// <summary>
+        /// Loads <paramref name="d"/> into the given objects. Items are found by id through <paramref name="find"/>;
+        /// unknown ids are skipped and listed in the returned warnings. Module durability is returned per
+        /// cell for the caller to apply once the modules exist.
+        /// </summary>
+        public static List<string> Apply(SaveData d, Func<string, ItemDefinition> find, Inventory bag, Equipment gear,
+            Durability harpoon, RaftGrid raft, CompanionRoster pets, out Dictionary<Cell, int> moduleDurability)
+        {
+            var missing = new List<string>();
+            ItemDefinition Find(string id)
+            {
+                if (string.IsNullOrEmpty(id)) return null;
+                var item = find(id);
+                if (item == null && !missing.Contains(id)) missing.Add(id);
+                return item;
+            }
+
+            bag.Clear();
+            foreach (var s in d.items) bag.Add(Find(s.id), s.count);
+            foreach (var e in d.essence) bag.AddEssence(new EssenceKey((Rarity)e.rarity, (Element)e.element), e.count);
+            gear.Restore(Find(d.weapon), Find(d.armor),
+                d.refines.Select(r => new KeyValuePair<ItemDefinition, int>(Find(r.id), r.count)));
+            if (harpoon != null && d.harpoon >= 0) harpoon.Set(d.harpoon);
+            if (d.parts.Count > 0)
+                raft.Restore(d.parts.Select(p => new KeyValuePair<Cell, ItemDefinition>(new Cell(p.x, p.z), Find(p.id))), (Rarity)d.raftTier);
+            moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
+            pets.Restore(d.companions.Select(p => new Companion
+            {
+                Id = p.id, Name = p.name, Element = (Element)p.element, Habitat = (Habitat)p.habitat, Rarity = (Rarity)p.rarity,
+                Role = (CompanionRole)p.role, MaxHp = p.maxHp, Attack = p.attack, Defense = p.defense, Speed = p.speed,
+            }), d.activeCompanion, d.habitats);
+            return missing;
+        }
+    }
+}

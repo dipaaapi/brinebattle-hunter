@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 7 — Companions (taming, battle visuals, roles on `phase/7-companions`, PR #4) |
-| **Next step** | Ed: click Unity, Run All, tame and pick roles, fight; then habitats, evolution and old age |
+| **Next step** | Ed: click Unity, Run All, try Save/Load and the Crew/Mystic on the raft; then habitats, evolution and old age |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -109,6 +109,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Active companion fights beside the hunter: attacks after the hunter each round, can be targeted (25%) and knocked out; rests to full HP between battles
 - [x] Battle visuals first pass (owner idea U-19, asked for now): fighters lunge, harpoon and skills fly, hits flash and shake, damage numbers pop, KO sinks; battle panel moved bottom-right
 - [x] Roles (owner idea U-23), picked after taming: Familiar (battle), Crew (raft repair in battle, mends harpoon/modules), Mystic (extra crafts, cheaper refines)
+- [x] Companions visible on the raft: Mystic at a workbench auto-refines gear, Crew walks the edge and auto-builds raft parts from the bag (switchable in the Bag)
+- [x] Save / Load (Settings, 3 slots, JSON save files)
 - [ ] Habitats on the raft (each adds roster room)
 - [ ] Evolution and old age (U-23)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)

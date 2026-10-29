@@ -35,6 +35,21 @@ namespace BrineBattle.Items
         public int EssenceCount(EssenceKey key) => essence.TryGetValue(key, out var n) ? n : 0;
         public bool IsEmpty => items.Count == 0 && essence.Count == 0;
 
+        /// <summary>Empties the bag (loading a save).</summary>
+        public void Clear()
+        {
+            items.Clear();
+            essence.Clear();
+            Changed?.Invoke();
+        }
+
+        public void AddEssence(EssenceKey key, int amount)
+        {
+            if (amount <= 0) return;
+            essence[key] = EssenceCount(key) + amount;
+            Changed?.Invoke();
+        }
+
         public void Add(ItemDefinition item, int quantity)
         {
             if (item == null || quantity <= 0) return;

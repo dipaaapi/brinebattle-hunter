@@ -90,6 +90,15 @@ namespace BrineBattle.Rafts
 
         public bool Has(Cell c) => parts.ContainsKey(c);
 
+        /// <summary>Replaces every part and the tier at once (loading a save); skips placement rules.</summary>
+        public void Restore(IEnumerable<KeyValuePair<Cell, ItemDefinition>> saved, Rarity tier)
+        {
+            parts.Clear();
+            foreach (var kv in saved) if (kv.Value != null) parts[kv.Key] = kv.Value;
+            Tier = tier;
+            Changed?.Invoke();
+        }
+
         public PlaceResult CanPlace(Cell c, ItemDefinition part)
         {
             if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module)) return PlaceResult.NotARaftPart;

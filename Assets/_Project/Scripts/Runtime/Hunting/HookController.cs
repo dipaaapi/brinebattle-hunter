@@ -70,6 +70,8 @@ namespace BrineBattle.Hunting
             if (starterModule != null) Inventory.Add(starterModule, 1);
             // Settings menu (Phase 6) needs no scene wiring, so older Hook scenes get it too.
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
+            // Companions on the raft (Phase 7), likewise added at runtime.
+            if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
         }
 
         void Update()

@@ -133,6 +133,12 @@ Applies to gear, companions, and monsters (type chart).
 
 **Roles (Phase 7 slice 2, tunable):** the player picks the role right after a successful tame (any monster can take any role). Room for 3 companions before habitats. **Familiar:** only Familiars can be the battle companion (one active). **Crew:** patches the raft at the end of each battle round (Common 2 HP, +2 per rarity step) and, between fights, mends +1 durability on the harpoon and every module every 15 s. **Mystic:** gear, potion and oil crafts have a chance to make one extra (Common 20%, +5% per rarity step), and refines cost 1 less essence (min 1). With several of a role, the rarest one's bonus counts.
 
+**On the raft (Ed's ask):** companions are visible on the raft. The Familiar waits beside the hunter; the Mystic works at a workbench and, every 20 s, refines the equipped piece with the lower + if the bag has the essence; the Crew walks the raft edge and, every 20 s, builds the rarest fitting raft part from the bag onto the open cell nearest the centre (modules are left to the player). Both chores can be switched off in the Bag.
+
+### Saving
+
+Save/Load in the Settings menu, 3 slots, each a JSON file in the game's save folder (`Saves/saveN.json` under the persistent data path; "Open folder" button). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts and tier, module wear, companions and the collection book. Items are stored by id, so renaming an asset is safe but changing an id is not.
+
 ## 11. Loot & Salvage
 
 - Every loot item has a **Type** (Raft, Weapon, Armor, Companion, Consumable) and a **Rarity**.

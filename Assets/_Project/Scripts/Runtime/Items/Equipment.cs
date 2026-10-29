@@ -111,6 +111,21 @@ namespace BrineBattle.Items
             return true;
         }
 
+        /// <summary>Refine level per item kind that has one (for saving).</summary>
+        public IEnumerable<KeyValuePair<ItemDefinition, int>> Refines => refines;
+
+        /// <summary>Puts gear and refine levels back as saved, without touching the bag.</summary>
+        public void Restore(ItemDefinition weapon, ItemDefinition armor, IEnumerable<KeyValuePair<ItemDefinition, int>> refineLevels)
+        {
+            slots.Clear();
+            refines.Clear();
+            if (weapon != null) slots[GearSlot.Weapon] = weapon;
+            if (armor != null) slots[GearSlot.Armor] = armor;
+            foreach (var kv in refineLevels)
+                if (kv.Key != null) refines[kv.Key] = Math.Max(0, Math.Min(GearRules.MaxRefine, kv.Value));
+            Changed?.Invoke();
+        }
+
         /// <summary>Passives from both slots, no repeats (the same passive twice doesn't stack).</summary>
         public IEnumerable<GearPassive> Passives =>
             slots.Values.SelectMany(GearSkillRules.Passives).Distinct();

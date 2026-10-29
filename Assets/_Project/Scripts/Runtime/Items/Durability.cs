@@ -28,6 +28,9 @@ namespace BrineBattle.Items
             return true;
         }
 
+        /// <summary>Sets the current value directly (loading a save), clamped to 0..Max.</summary>
+        public void Set(int current) => Current = Math.Max(0, Math.Min(Max, current));
+
         public void Repair(int amount) => Current = Math.Min(Max, Current + Math.Max(0, amount));
 
         public override string ToString() => $"{Current}/{Max}";

@@ -139,6 +139,10 @@ namespace BrineBattle.Hunting
             var roster = hook.Companions;
             GUILayout.Label($"<b>Companions</b>  ({roster.All.Count}/{roster.Capacity}; habitats on the raft add room later)", Rich);
             GUILayout.Label("<size=10>Familiar fights with you · Crew repairs the raft, harpoon and modules · Mystic helps craft gear, potions and oils</size>", Rich);
+            if (roster.Best(CompanionRole.Crew) != null)
+                CompanionSettings.CrewBuilds = GUILayout.Toggle(CompanionSettings.CrewBuilds, " Crew builds raft parts from the bag onto the raft");
+            if (roster.Best(CompanionRole.Mystic) != null)
+                CompanionSettings.MysticRefines = GUILayout.Toggle(CompanionSettings.MysticRefines, " Mystic refines your equipped gear with essence");
             if (roster.All.Count == 0) GUILayout.Label("  (none — tame a weakened, calm drift)");
             foreach (var c in roster.All.ToList())
             {

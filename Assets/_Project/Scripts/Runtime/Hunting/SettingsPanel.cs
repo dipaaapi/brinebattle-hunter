@@ -24,7 +24,7 @@ namespace BrineBattle.Hunting
         {
             if (!open) return;
             GUI.depth = -5;
-            float w = Mathf.Min(420, Screen.width - HookController.HudRight - 22), h = 330;
+            float w = Mathf.Min(420, Screen.width - HookController.HudRight - 22), h = Mathf.Min(520, Screen.height - 40);
             GUILayout.BeginArea(new Rect(Screen.width - w - 12, 20, w, h), "Settings", HuntStyles.Window);
 
             GUILayout.Label("<b>Battle mode</b> (also switchable during a battle)", Rich);
@@ -41,10 +41,36 @@ namespace BrineBattle.Hunting
             GUILayout.Label("<b>Controls</b>", Rich);
             GUILayout.Label("<size=11>Click a drift: cast · Space: reel · B: Bag · C: Book · R: Build · Esc: Settings</size>", Rich);
 
+            GUILayout.Space(8);
+            GUILayout.Label("<b>Save game</b> (bag, gear, raft, modules, companions, book)", Rich);
+            for (int slot = 1; slot <= SaveSystem.Slots; slot++)
+            {
+                slotInfo[slot] ??= SaveSystem.Describe(slot) ?? "empty";
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Slot {slot}: {slotInfo[slot]}", GUILayout.Width(170));
+                if (GUILayout.Button("Save")) { saveMessage = SaveSystem.Save(slot); slotInfo[slot] = null; }
+                GUI.enabled = slotInfo[slot] != "empty";
+                if (GUILayout.Button("Load")) saveMessage = SaveSystem.Load(slot);
+                GUI.enabled = true;
+                GUILayout.EndHorizontal();
+            }
+            if (!string.IsNullOrEmpty(saveMessage)) GUILayout.Label($"<size=11>{saveMessage}</size>", Rich);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"<size=10>{SaveSystem.Folder}</size>", Rich);
+            if (GUILayout.Button("Open folder", GUILayout.Width(90)))
+            {
+                System.IO.Directory.CreateDirectory(SaveSystem.Folder);
+                Application.OpenURL("file:///" + SaveSystem.Folder.Replace('\\', '/'));
+            }
+            GUILayout.EndHorizontal();
+
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Close (Esc)")) WorldPause.Close(Menu.Settings);
             GUILayout.EndArea();
         }
+
+        readonly string[] slotInfo = new string[SaveSystem.Slots + 1];
+        string saveMessage;
 
         static GUIStyle rich;
         static GUIStyle Rich => rich ??= new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true };

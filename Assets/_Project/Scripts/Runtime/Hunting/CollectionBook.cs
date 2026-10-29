@@ -54,6 +54,16 @@ namespace BrineBattle.Hunting
 
         void Toggle() => WorldPause.Toggle(Menu.Book);
 
+        /// <summary>Replaces the book with a saved one (loading a save file).</summary>
+        public void Restore(string data)
+        {
+            Log.Unlocked -= OnUnlocked;
+            Log = CollectionLog.Deserialize(data);
+            Log.Unlocked += OnUnlocked;
+            PlayerPrefs.SetString(SaveKey, Log.Serialize());
+            selected = null;
+        }
+
         void Update()
         {
             var kb = Keyboard.current;

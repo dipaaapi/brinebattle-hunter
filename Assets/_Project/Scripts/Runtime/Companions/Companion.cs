@@ -56,8 +56,8 @@ namespace BrineBattle.Companions
         {
             switch (role)
             {
-                case CompanionRole.Crew: return "repairs the raft each battle round and mends the harpoon and modules";
-                case CompanionRole.Mystic: return "may craft an extra gear, potion or oil, and refines cost less";
+                case CompanionRole.Crew: return "walks the raft: patches it in battle, mends the harpoon and modules, and builds raft parts from your bag onto it";
+                case CompanionRole.Mystic: return "works the workbench: refines your gear with essence, may craft an extra gear, potion or oil, and refines cost less";
                 default: return "fights beside you";
             }
         }
@@ -131,6 +131,16 @@ namespace BrineBattle.Companions
             if (Active == c) Active = all.Find(x => x.Role == CompanionRole.Familiar);
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>Replaces the roster (loading a save). <paramref name="active"/> is an index into the list, -1 for none.</summary>
+        public void Restore(IEnumerable<Companion> companions, int active, int habitats)
+        {
+            all.Clear();
+            all.AddRange(companions);
+            Habitats = habitats;
+            Active = active >= 0 && active < all.Count && all[active].Role == CompanionRole.Familiar ? all[active] : null;
+            Changed?.Invoke();
         }
 
         /// <summary>The highest-rarity companion in a role (the one whose bonus counts), or null.</summary>
