@@ -112,7 +112,7 @@ namespace BrineBattle.Hunting
                 {
                     case CompanionRole.Mystic:
                         // Works beside the storage box (the crafting table), never inside it.
-                        p = Box + new Vector3(0.6f, 0.2f, 0f);
+                        p = Box + new Vector3(0.8f, 0.2f, 0f);
                         break;
                     case CompanionRole.Crew:
                         // Walks from tile to tile, always on the raft.
@@ -127,6 +127,33 @@ namespace BrineBattle.Hunting
                 }
                 b.Go.transform.localPosition = p + Vector3.up * hop;
             }
+            KeepApart(hunterLocal);
+        }
+
+        const float PetRadius = 0.21f, HunterRadius = 0.3f, BoxRadius = 0.55f;
+
+        /// <summary>Pets never stand inside the hunter, the storage box or each other (owner's ask).</summary>
+        void KeepApart(Vector3 hunter)
+        {
+            var shown = bodies.Values.Where(b => b.Go.activeSelf).ToList();
+            foreach (var b in shown)
+            {
+                var p = b.Go.transform.localPosition;
+                p = PushOut(p, hunter, PetRadius + HunterRadius, 1f);
+                p = PushOut(p, Box, PetRadius + BoxRadius, 1f);
+                foreach (var other in shown)
+                    if (other != b) p = PushOut(p, other.Go.transform.localPosition, PetRadius * 2f, 0.5f);
+                b.Go.transform.localPosition = p;
+            }
+        }
+
+        static Vector3 PushOut(Vector3 p, Vector3 from, float gap, float share)
+        {
+            var d = new Vector3(p.x - from.x, 0f, p.z - from.z);
+            float dist = d.magnitude;
+            if (dist >= gap) return p;
+            var away = dist > 0.001f ? d / dist : Vector3.right;
+            return p + away * (gap - dist) * share;
         }
 
         static Vector3 Local(Rafts.Cell c) => new Vector3(c.X * Raft.CellSize, 0.5f, c.Z * Raft.CellSize);

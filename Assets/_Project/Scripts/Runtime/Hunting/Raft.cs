@@ -41,22 +41,28 @@ namespace BrineBattle.Hunting
 
         void OnDestroy() => Grid.Changed -= Rebuild;
 
-        [Tooltip("How much of the water's lean the raft follows (0 = stays level).")]
-        public float rock = 0.6f;
+        /// <summary>How much of the water's lean the raft follows (owner's ask: it should rock with the waves).</summary>
+        const float Rock = 1f;
+        /// <summary>Deck top in raft space; everything stands on it.</summary>
+        const float DeckTop = 0.3f;
         float restY = float.NaN;
+
+        /// <summary>Where the water meets the raft, in raft space: thicker planks at higher levels lift the deck.</summary>
+        public float WaterLine => DeckTop - RaftRules.Freeboard(Tier);
 
         /// <summary>Rides the swell: rises and falls with the water under its centre and leans with the slope (owner's ask).</summary>
         void LateUpdate()
         {
             if (float.IsNaN(restY)) restY = transform.position.y;
             var p = transform.position;
-            // Calm the sea under the raft and its katig so no corner dips under a passing wave.
+            // A low-level raft rides gentler water; each level up gives thicker planks and the open sea.
             Waves.CalmCenter = p;
             Waves.CalmRadius = (Grid.Radius + 2f) * CellSize;
+            Waves.CalmShare = RaftRules.SeaShare(Tier);
             float span = Mathf.Max(1.5f, Grid.Radius * CellSize);
-            p.y = restY + Waves.Height(p.x, p.z) + 0.08f;   // always on the water, never under it
+            p.y = restY + Waves.Height(p.x, p.z) - WaterLine;   // the planks' water line sits on the water
             transform.position = p;
-            var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), rock);
+            var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), Rock);
             transform.rotation = Quaternion.FromToRotation(Vector3.up, up);
         }
 
@@ -83,7 +89,6 @@ namespace BrineBattle.Hunting
                     tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     tile.name = $"Part {kv.Key.X},{kv.Key.Z}";
                     tile.transform.SetParent(transform, false);
-                    tile.transform.localScale = new Vector3(1f, 0.3f, 1f);
                     Destroy(tile.GetComponent<Collider>());
                     tiles[kv.Key] = tile;
                 }
@@ -91,8 +96,13 @@ namespace BrineBattle.Hunting
                 bool module = type == ItemType.Module, habitat = type == ItemType.Habitat;
                 // Habitats: a sky perch stands tall, a tide pool sits low and watery.
                 bool perch = habitat && kv.Value.element == Elements.Element.Wind;
-                tile.transform.localScale = module ? new Vector3(0.8f, 0.7f, 0.8f) : perch ? new Vector3(0.35f, 1.3f, 0.35f) : habitat ? new Vector3(0.95f, 0.45f, 0.95f) : new Vector3(1f, 0.3f, 1f);
-                tile.transform.localPosition = Local(kv.Key) + Vector3.up * (module ? 0.2f : perch ? 0.5f : habitat ? 0.08f : 0f);
+                // Every piece reaches from its top down past the water line, so higher raft levels
+                // (thicker planks) never leave a gap under a module or habitat (owner's ask).
+                float width = module ? 0.8f : perch ? 0.35f : habitat ? 0.95f : 1f;
+                float top = module ? 0.7f : perch ? 1.3f : habitat ? 0.455f : DeckTop;
+                float bottom = WaterLine - 0.12f;
+                tile.transform.localScale = new Vector3(width, top - bottom, width);
+                tile.transform.localPosition = new Vector3(kv.Key.X * CellSize, (top + bottom) / 2f, kv.Key.Z * CellSize);
                 Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f)
                     : perch ? new Color(0.8f, 0.65f, 0.4f) : habitat ? new Color(0.3f, 0.75f, 0.9f) : PartColor(kv.Value.rarity));
             }

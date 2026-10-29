@@ -34,6 +34,14 @@ namespace BrineBattle.Hunting
         /// <summary>This drift's temperament, 0 calm – 1 aggressive (idea U-17).</summary>
         public float Aggression { get; set; } = 0.5f;
 
+        /// <summary>Every drift on the sea, so they keep apart (owner's ask: nothing overlaps).</summary>
+        static readonly System.Collections.Generic.List<Drift> all = new System.Collections.Generic.List<Drift>();
+        /// <summary>Half the drift's footprint on the water.</summary>
+        public float BodyRadius => 0.45f * Mathf.Max(transform.localScale.x, transform.localScale.z);
+
+        void OnEnable() => all.Add(this);
+        void OnDisable() => all.Remove(this);
+
         Vector3 velocity;
         float bobPhase;
         float lifetime;
@@ -76,6 +84,7 @@ namespace BrineBattle.Hunting
             var p = transform.position + velocity * Time.deltaTime;
             if (raft == null) raft = FindFirstObjectByType<Raft>();
             if (raft != null) p = BumpOffParts(p);
+            p = KeepApart(p);
             Ride(p);
             if (velocity.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(velocity);
             if (lifetime > 60f) Destroy(gameObject);
@@ -86,6 +95,23 @@ namespace BrineBattle.Hunting
         {
             p.y = 0.1f + Waves.Height(p.x, p.z) + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.04f;
             transform.position = p;
+        }
+
+        /// <summary>Pushes this drift out of any other drift it overlaps (hooked ones don't budge).</summary>
+        Vector3 KeepApart(Vector3 p)
+        {
+            foreach (var other in all)
+            {
+                if (other == this) continue;
+                var d = p - other.transform.position;
+                d.y = 0f;
+                float gap = BodyRadius + other.BodyRadius, dist = d.magnitude;
+                if (dist >= gap) continue;
+                var away = dist > 0.001f ? d / dist : Vector3.forward;
+                // Both move half the overlap; next to a hooked drift this one moves all of it.
+                p += away * (gap - dist) * (other.Hooked ? 1f : 0.5f);
+            }
+            return p;
         }
 
         /// <summary>Drifts slide along the raft's actual parts (not a circle around it) instead of passing through.</summary>

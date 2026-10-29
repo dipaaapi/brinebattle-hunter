@@ -203,5 +203,17 @@ namespace BrineBattle.Tests
             Assert.AreEqual(4, inv.EssenceAtLeast(Rarity.Common));
             Assert.AreEqual(4, inv.EssenceAtLeast(Rarity.Rare));
         }
+    
+        [Test]
+        public void HigherRaftLevelsStandHigherAndRideBiggerWaves()
+        {
+            for (var t = Rarity.Common; t < Rarity.Mythic; t++)
+            {
+                Assert.Less(RaftRules.Freeboard(t), RaftRules.Freeboard(t + 1));
+                Assert.LessOrEqual(RaftRules.SeaShare(t), RaftRules.SeaShare(t + 1));
+            }
+            Assert.AreEqual(1f, RaftRules.SeaShare(Rarity.Mythic), 1e-5f, "the top level rides the open sea");
+            Assert.Greater(RaftRules.Freeboard(Rarity.Mythic), 0.77f, "the top level stays above the tallest wave");
+        }
     }
 }

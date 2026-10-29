@@ -29,6 +29,7 @@ namespace BrineBattle.Hunting
             public Color FlashColor;
             public float Sink;       // 0..1 when knocked out
             public bool Bob;         // sky monsters hover
+            public float Radius;     // body size on the water, so a lunge stops at the target's edge
         }
 
         class Popup
@@ -54,9 +55,9 @@ namespace BrineBattle.Hunting
         {
             Clear();
             var hunterTf = raft.transform.Find("Hunter");
-            if (hunterTf != null) Add(BattleActor.Hunter, hunterTf, false);
-            Add(BattleActor.Raft, raft.transform, false);
-            Add(BattleActor.Monster, drift.transform, drift.Monster.habitat == Monsters.Habitat.Sky);
+            if (hunterTf != null) Add(BattleActor.Hunter, hunterTf, false, radius: 0.3f);
+            Add(BattleActor.Raft, raft.transform, false, radius: (raft.Grid.Radius + 0.5f) * Raft.CellSize);
+            Add(BattleActor.Monster, drift.transform, drift.Monster.habitat == Monsters.Habitat.Sky, radius: drift.BodyRadius);
             if (drift.Monster.habitat == Monsters.Habitat.Sky) actors[BattleActor.Monster].Home += Vector3.up * 2f;
 
             if (companion != null && hunterTf != null)
@@ -68,11 +69,12 @@ namespace BrineBattle.Hunting
                 var toMonster = drift.transform.position - hunterTf.position;
                 toMonster.y = 0f;
                 var side = Vector3.Cross(Vector3.up, toMonster.normalized);
-                go.transform.position = hunterTf.position + side * 0.9f + toMonster.normalized * 0.4f - Vector3.up * 0.3f;
+                // Beside the hunter with room between them (owner's ask: nobody overlaps).
+                go.transform.position = hunterTf.position + side * 0.85f - Vector3.up * 0.3f;
                 go.transform.localScale = Vector3.one * 0.45f;
                 Tint.Apply(go.GetComponent<Renderer>(), Tint.Of(companion.Element));
                 spawned.Add(go);
-                Add(BattleActor.Companion, go.transform, false, Tint.Of(companion.Element));
+                Add(BattleActor.Companion, go.transform, false, Tint.Of(companion.Element), 0.23f);
             }
         }
 
@@ -101,7 +103,7 @@ namespace BrineBattle.Hunting
             spawned.Clear();
         }
 
-        void Add(BattleActor id, Transform tf, bool bob, Color? color = null)
+        void Add(BattleActor id, Transform tf, bool bob, Color? color = null, float radius = 0.3f)
         {
             var r = tf.GetComponent<Renderer>();
             actors[id] = new Actor
@@ -111,6 +113,7 @@ namespace BrineBattle.Hunting
                 Color = color ?? (r != null && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseColor") ? r.sharedMaterial.GetColor("_BaseColor") : Color.white),
                 Home = tf.position,
                 Bob = bob,
+                Radius = radius,
             };
             // Drifts already carry an element tint in a property block; keep that colour.
             if (id == BattleActor.Monster && tf.TryGetComponent<Drift>(out var d)) actors[id].Color = Tint.Of(d.Monster.element);
@@ -185,7 +188,9 @@ namespace BrineBattle.Hunting
         {
             bool hit = false;
             var dir = to.Home - from.Home;
-            float reach = Mathf.Min(dir.magnitude * 0.6f, Mathf.Max(0f, dir.magnitude - 0.8f));
+            dir.y = 0f;
+            // Stop where the two bodies touch, never inside the target (owner's ask: no overlap).
+            float reach = Mathf.Clamp(dir.magnitude - from.Radius - to.Radius - 0.05f, 0.1f, dir.magnitude * 0.6f);
             dir = dir.normalized * reach;
             for (float t = 0; t < LungeTime; t += Time.deltaTime)
             {

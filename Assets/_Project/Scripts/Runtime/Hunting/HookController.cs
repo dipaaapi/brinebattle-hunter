@@ -158,7 +158,9 @@ namespace BrineBattle.Hunting
             }
             // Semi-auto: the player may press first; otherwise the reel presses itself late.
             if (!tensionPressed && tensionSemi && t >= TensionRules.SemiAutoPressAt) AutoPress();
-            var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * raft.EdgeDistance;
+            // Reeled in until its body touches the raft's edge, not over the planks (owner's ask: no overlap).
+            float stop = Mathf.Max(raft.EdgeDistance, (raft.Grid.Radius + 0.5f) * Raft.CellSize + target.BodyRadius + 0.1f);
+            var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * stop;
             edge.y = reelFrom.y;
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
             line.SetPosition(0, HookOrigin());

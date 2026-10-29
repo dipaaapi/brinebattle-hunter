@@ -71,6 +71,14 @@ namespace BrineBattle.Rafts
 
         /// <summary>Share of the upstream edge rows that must end in an auto-loot module before the raft can grow or upgrade (owner's call).</summary>
         public const float ModuleShareToGrow = 0.5f;
+
+        /// <summary>
+        /// How high the deck stands above the water, in metres (owner's call: a higher raft level means
+        /// thicker planks, so waves stop washing over it). Lv 1 0.30 … Lv 6 0.90, above the tallest wave.
+        /// </summary>
+        public static float Freeboard(Rarity tier) => 0.3f + 0.12f * (int)tier;
+        /// <summary>Share of the full swell around the raft: Lv 1 rides half-height waves, Lv 6 the open sea.</summary>
+        public static float SeaShare(Rarity tier) => Math.Min(1f, 0.5f + 0.1f * (int)tier);
     }
 
     /// <summary>

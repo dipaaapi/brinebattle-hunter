@@ -43,7 +43,7 @@ namespace BrineBattle.Hunting
             foreach (int side in new[] { -1, 1 })
             {
                 float z = (side < 0 ? minZ - 1.4f : maxZ + 1.4f) * s;
-                var log = Piece(PrimitiveType.Capsule, new Vector3(midX, 0.12f, z), new Vector3(0.28f, length / 2f, 0.28f), Bamboo);
+                var log = Piece(PrimitiveType.Capsule, new Vector3(midX, raft.WaterLine + 0.12f, z), new Vector3(0.28f, length / 2f, 0.28f), Bamboo);
                 log.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             }
             float armZ = (maxZ - minZ + 2.8f) * s, armMid = (minZ + maxZ) / 2f * s;
