@@ -28,7 +28,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 *Ed asked to check which ideas the office work already covered, then merge what is left from both lists into one set of next pieces. Proposed by Claude; Ed decides the order.*
 
 **Already done (no further work):** U-1…U-5 (in the design), U-11 + C-6 (Collection book), U-13 (auto-loot modules), U-16 (planks/patches ↔ modules), U-17 (temperament), C-2 (line tension), C-4 (stamina + durability, which also answers U-7), U-23 roles (Familiar/Crew/Mystic), habitats.
-**First pass done, finished later:** U-9 (Auto reel only; Manual harvest open), U-12 (gear skills by rarity; accessories open), U-19 (battle effects), U-24 (waves, rocking raft, katig), U-25 (quick UI cleanup; full redesign in Phase 9), C-9 (type chart, still a tunable default).
+**First pass done, finished later:** U-9 (Auto reel only; Manual harvest open), U-12 (gear skills by rarity; accessories open), U-19 (battle effects), U-24 (waves, rocking raft, katig).
 
 | # | Next piece | Combines | Where |
 |---|---|---|---|
@@ -38,9 +38,13 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | 4 | **Gear slots and accessories:** skill slots as a hard limit by rarity, plus an accessory slot | U-12 (rest) | Idea Round |
 | 5 | **Manual harvest:** a timing input with a 30% miss, next to Auto | U-9 (rest) | Idea Round |
 | 6 | **Raft types and absorption:** absorbed parts show on the monster | U-2, U-3, C-7 | Phase 8 |
-| 7 | **Art, sound and UI pass:** models, music/SFX, full kid-friendly UI | U-18, U-20, U-24, U-25 | Phase 9 |
+| 7 | **Art and sound pass:** models, music/SFX | U-18, U-20, U-24 | Phase 9 |
 | 8 | **Other hunters:** NPC/ghost rafts before real party play | U-5, C-8 | Phase 10 |
 | 9 | **Player manual:** in-game How to Play + PDF | U-22 | after the game is done |
+
+**Kept on their own, not merged (owner's call):** the latest suggestion from each list stays separate.
+- Owner: **U-25 Kid-friendly, simpler UI** (quick cleanup done; the full redesign is still open).
+- Claude: **C-9 Type chart** (RO-style cycle, secondaries multiply; built as a tunable default, waiting for the owner's yes or an alternative).
 
 ## Decision log
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`
