@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 6 (slice 2: consumables)
+- Gear slice: Ed ran the Test Runner (103/103) and played it; PR #1 merged. Bag gear row narrowed so Refine/Take off fit.
+- Branch `phase/6-consumables`: `ConsumableEffect` (HealHunter, RepairRaft) + `effectAmount` on items; `BattleAction.Item` and `BattleState.PlayItem` (takes the hunter's turn, no use at full HP); battle panel shows a button per consumable.
+- Ed's call: consumables are used automatically. Semi-auto and Auto use a Tar Patch at raft ≤35% HP and a Brine Tonic at hunter ≤35% (lower side first, `BattleAI.ChooseItem`); Manual = player presses.
+- New items via Create Sample Data: Brine Tonic (+25 HP; 2 Eel Scale + 1 Gale Feather; 20% eel drop), Tar Patch (+30 raft; 1 Eel-Skin Patch + 1 Plank).
+- Rules tests compiled and passed outside Unity (62 incl. 4 new); Unity run pending.
+
 ## 2026-10-29 — Phase 6 (slice 1: gear)
 - Ed picked gear first. Branch `phase/6-alchemy`: `ItemDefinition.gearPower`, `GearRules` (power + refine step = ¼ base, min 1; refine cost 2 × next level; max +10), `Equipment` (weapon/armor slots, equip/swap/take off, refine kept per item kind), `Combatant.Hunter(gear)`.
 - Bag: Equipment rows (refine, take off) and Equip buttons on gear. Workbench: craft Eel-Fang Spear (2 Eel Fang + 1 Plank) and Gull-Bone Buckler (3 Gale Feather + 1 Plank). Spear power 4, Buckler 3 (set by Create Sample Data).

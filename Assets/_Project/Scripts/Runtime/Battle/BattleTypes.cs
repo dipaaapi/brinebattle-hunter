@@ -7,6 +7,8 @@ namespace BrineBattle.Battle
         Harpoon = 1,
         /// <summary>Halve incoming damage this round and recover extra stamina.</summary>
         Brace = 2,
+        /// <summary>Use a consumable from the bag; takes the hunter's turn.</summary>
+        Item = 3,
     }
 
     /// <summary>GDD §5: set in Settings, applied at battle start, switchable mid-battle.</summary>

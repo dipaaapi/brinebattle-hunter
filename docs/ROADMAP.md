@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — Alchemy & gear (slice 1: gear) |
-| **Next step** | Ed: run `unity-verify`, then BrineBattle → Create Sample Data and Build Hook Scene, and playtest gear (equip, craft, refine) on `phase/6-alchemy` |
+| **Current phase** | Phase 6 — Alchemy & gear (gear merged; slice 2: consumables) |
+| **Next step** | Ed: Create Sample Data + Build Hook Scene, then playtest consumables on `phase/6-consumables` |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -96,7 +96,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Craft gear at the workbench (Eel-Fang Spear, Gull-Bone Buckler)
 - [x] Refine (+1…+10) with essence of the item's rarity or higher
 - [ ] Gear rarity skills (GDD §9 table)
-- [ ] Consumables (HP, raft repair, elemental oils)
+- [x] Consumables: Brine Tonic (HP) and Tar Patch (raft) from the workbench, used in battle (takes the turn); Semi-auto/Auto use them at ≤35% HP
+- [ ] Elemental oils and companion consumables
 - [ ] Real **Settings menu** (battle mode lives on the HUD until then)
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.

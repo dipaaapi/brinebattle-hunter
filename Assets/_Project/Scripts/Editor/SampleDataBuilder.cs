@@ -141,6 +141,24 @@ namespace BrineBattle.Editor
             SetGearPower(buckler, 3);
             Recipe("craft_eel_fang_spear", "Eel-Fang Spear", RecipeKind.Craft, new[] { (fang, 2), (plank, 1) }, new[] { (spear, 1) });
             Recipe("craft_gull_bone_buckler", "Gull-Bone Buckler", RecipeKind.Craft, new[] { (feather, 3), (plank, 1) }, new[] { (buckler, 1) });
+            // Phase 6: consumables, used in battle (Bag holds them; the battle panel shows a button each).
+            var tonic = LoadOrCreate<ItemDefinition>($"{Root}/Items/BrineTonic.asset", i =>
+            {
+                i.id = "brine_tonic"; i.displayName = "Brine Tonic"; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Common; i.element = Element.Water;
+                i.effect = ConsumableEffect.HealHunter; i.effectAmount = 25;
+                i.description = "Salty, bitter, and it closes cuts. Restores 25 HP.";
+            });
+            var tarPatch = LoadOrCreate<ItemDefinition>($"{Root}/Items/TarPatch.asset", i =>
+            {
+                i.id = "tar_patch"; i.displayName = "Tar Patch"; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Common; i.element = Element.None;
+                i.effect = ConsumableEffect.RepairRaft; i.effectAmount = 30;
+                i.description = "An eel-skin patch with a plank backing, slapped on mid-fight. Restores 30 raft HP.";
+            });
+            Recipe("craft_brine_tonic", "Brine Tonic", RecipeKind.Craft, new[] { (scale, 2), (feather, 1) }, new[] { (tonic, 1) });
+            Recipe("craft_tar_patch", "Tar Patch", RecipeKind.Craft, new[] { (patch, 1), (plank, 1) }, new[] { (tarPatch, 1) });
+            EnsureEntry(loot, tonic, 0.2f, 1, 1);
             EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);

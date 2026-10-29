@@ -1,6 +1,6 @@
 # BrineBattle Hunter — Game Design Document
 
-*Living document · v0.4*
+*Living document · v0.5*
 
 ## 1. Overview
 
@@ -145,6 +145,8 @@ Pages for **Monsters**, **Items** and **Pets**. Unacquired entries are silhouett
 ### Consumables
 
 Potions and items for health, companions, raft (repair, coatings), and weapons (elemental oils).
+
+**Implemented (Phase 6, tunable):** Brine Tonic (+25 hunter HP) and Tar Patch (+30 raft HP), crafted at the workbench. Battle-only for now; using one takes the hunter's turn and can't be done at full HP. Semi-auto and Auto use them by themselves at ≤35% HP (the lower of hunter/raft first); Manual leaves it to the player.
 
 ## 12. Other Hunters & Party
 
