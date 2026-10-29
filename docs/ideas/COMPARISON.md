@@ -23,6 +23,25 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | Type chart | C-9 RO cycle, secondaries multiply (current default) | | | | | |
 | | *(owner alternative)* | | | | | |
 
+## Combined plan (2026-10-29, after the office session)
+
+*Ed asked to check which ideas the office work already covered, then merge what is left from both lists into one set of next pieces. Proposed by Claude; Ed decides the order.*
+
+**Already done (no further work):** U-1…U-5 (in the design), U-11 + C-6 (Collection book), U-13 (auto-loot modules), U-16 (planks/patches ↔ modules), U-17 (temperament), C-2 (line tension), C-4 (stamina + durability, which also answers U-7), U-23 roles (Familiar/Crew/Mystic), habitats.
+**First pass done, finished later:** U-9 (Auto reel only; Manual harvest open), U-12 (gear skills by rarity; accessories open), U-19 (battle effects), U-24 (waves, rocking raft, katig), U-25 (quick UI cleanup; full redesign in Phase 9), C-9 (type chart, still a tunable default).
+
+| # | Next piece | Combines | Where |
+|---|---|---|---|
+| 1 | **Companion growth:** evolution, old age and death, feeding with loot/potions, fusion that consumes the source but keeps one "echo" passive | U-23 (rest), U-4, U-8 + C-5 | Phase 7 (rest) |
+| 2 | **Alchemy knowledge:** a Mastery level that grows by harvesting and crafting; it reveals new "???" recipes in the Book, makes the Dead/Weakened/Alive hint more accurate, and unlocks combining essence into higher rarity | U-14, C-1, U-6 | Idea Round 3 |
+| 3 | **World conditions:** day/night with sun/moon affinity, rough seas, thunderstrikes, weather deciding what drifts, fog | U-10, U-15, C-3, U-21 | Idea Round / own phase |
+| 4 | **Gear slots and accessories:** skill slots as a hard limit by rarity, plus an accessory slot | U-12 (rest) | Idea Round |
+| 5 | **Manual harvest:** a timing input with a 30% miss, next to Auto | U-9 (rest) | Idea Round |
+| 6 | **Raft types and absorption:** absorbed parts show on the monster | U-2, U-3, C-7 | Phase 8 |
+| 7 | **Art, sound and UI pass:** models, music/SFX, full kid-friendly UI | U-18, U-20, U-24, U-25 | Phase 9 |
+| 8 | **Other hunters:** NPC/ghost rafts before real party play | U-5, C-8 | Phase 10 |
+| 9 | **Player manual:** in-game How to Play + PDF | U-22 | after the game is done |
+
 ## Decision log
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`
 

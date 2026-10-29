@@ -24,7 +24,7 @@ Monsters eat raft parts when you lose or flee; beat them later to recover parts 
 
 ### U-6 Combine low-rarity essence into higher-rarity essence — 2026-10-28 · 💡 · GDD §11
 
-### U-7 Battle action resource: stamina vs weapon charge — 2026-10-28 · 💡 · GDD §5, §14
+### U-7 Battle action resource: stamina vs weapon charge — 2026-10-28 · ✅ answered by C-4 (stamina + durability) · GDD §5, §14
 
 ### U-8 Are fused companions consumed? — 2026-10-28 · 💡 · GDD §10, §14
 
@@ -47,7 +47,7 @@ A collection book with pages for **monsters, items, and pets/companions**. Entri
 
 Related: C-6 (Hunter's Journal) is similar but only for monsters; U-11 covers all three and adds the silhouette reveal.
 
-### U-12 Skill slots limited by rarity (weapons, gear, accessories) — 2026-10-28 · 💡 · GDD §9
+### U-12 Skill slots limited by rarity (weapons, gear, accessories) — 2026-10-28 · 🟡 gear skills by rarity done (Phase 6); accessories open · GDD §9
 The number of skill slots (passive and active) on weapons, gear **and accessories** depends on rarity. Example: a **Common** weapon literally can't hold any passive or active skill; rarer items get more slots.
 
 Builds on the GDD §9 rarity table (Common = element only, Rare = 1 passive, Epic = 1 active + 1 passive, Legendary/Mythic = multiple slots). New here: **accessories** as a gear type, and slots as a hard limit.
@@ -124,7 +124,7 @@ No fog and no day/night look yet. Fog at night (and maybe in rough seas) that li
 When the game is finished, make a manual for players: viewable inside the game if possible, otherwise a downloadable PDF, whichever is better.
 - Claude's suggestion: both from one source. An in-game "How to Play" screen (works offline, always matches the build, can open on the relevant page) plus a PDF made from the same text for the store page / download. Write it at the end, once mechanics stop changing; the Settings menu's Controls list is the seed.
 
-### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · ✅ · GDD §10
+### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · 🟡 roles + habitats done; looks, evolution, old age next · GDD §10
 Companions come in three roles:
 1. **Crew** (Ed's word: "slave") — looks after the raft: repairs and upkeep.
 2. **Mystic** — helps with alchemy and crafting, except the raft: gear, weapons, consumables.
