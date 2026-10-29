@@ -107,6 +107,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 ### 🟨 Phase 7 — Companions
 - [x] Tame a weakened, calm drift (chance by rarity) → companion with 60% of its wild stats; roster with one active companion (Bag: set active / release); Collection book Pets page fills in
 - [x] Active companion fights beside the hunter: attacks after the hunter each round, can be targeted (25%) and knocked out; rests to full HP between battles
+- [x] Battle visuals first pass (owner idea U-19, asked for now): fighters lunge, harpoon and skills fly, hits flash and shake, damage numbers pop, KO sinks; battle panel moved bottom-right
 - [ ] Habitats on the raft (each adds roster room)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
 - [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)

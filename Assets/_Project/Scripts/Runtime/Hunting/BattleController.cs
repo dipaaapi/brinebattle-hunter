@@ -22,11 +22,12 @@ namespace BrineBattle.Hunting
         public static bool InBattle { get; private set; }
 
         BattleState state;
+        BattleStage stage;
+        int shownEvents;
         Drift drift;
         Action<BattleOutcome> onEnd;
         float endTimer;
         float timer;
-        float shake;
         Vector3 driftHome;
 
         Camera cam;
@@ -47,6 +48,10 @@ namespace BrineBattle.Hunting
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
             if (hook?.Companions.Active != null) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
+            // Battle visuals (idea U-19): created here so older Hook scenes get them without a rebuild.
+            if (stage == null && !TryGetComponent(out stage)) stage = gameObject.AddComponent<BattleStage>();
+            stage.Begin(raft, target, state.Companion);
+            shownEvents = 0;
             if (hook != null)
             {
                 foreach (var p in hook.Gear.Passives) state.Passives.Add(p);
@@ -63,8 +68,10 @@ namespace BrineBattle.Hunting
                 camPos = cam.transform.position;
                 camRot = cam.transform.rotation;
                 var mid = Vector3.Lerp(raft.transform.position, driftHome, 0.5f);
-                battleCamPos = mid + new Vector3(0f, 7f, -7f);
-                battleCamRot = Quaternion.LookRotation(mid - battleCamPos);
+                // Aim a little right of the fight so it sits left of the battle panel.
+                var aim = mid + Vector3.right * 2.2f;
+                battleCamPos = aim + new Vector3(0f, 7f, -7f);
+                battleCamRot = Quaternion.LookRotation(aim - battleCamPos);
             }
         }
 
@@ -73,13 +80,8 @@ namespace BrineBattle.Hunting
             UpdateCamera();
             if (!Active) return;
 
-            if (drift != null)
-            {
-                shake = Mathf.Max(0f, shake - Time.deltaTime * 3f);
-                var p = driftHome + UnityEngine.Random.insideUnitSphere * shake * 0.3f;
-                if (drift.Monster.habitat == Monsters.Habitat.Sky) p.y += 2f + Mathf.Sin(Time.time * 3f) * 0.3f;
-                drift.transform.position = p;
-            }
+            Feed();
+            if (stage.Busy) { timer = 0f; return; }
 
             if (state.Outcome != BattleOutcome.Ongoing)
             {
@@ -112,20 +114,26 @@ namespace BrineBattle.Hunting
 
         void Play(BattleAction action)
         {
-            int before = state.Monster.Hp;
             state.PlayRound(action);
-            if (state.Monster.Hp < before) shake = 1f;
+            Feed();
             timer = 0f;
         }
 
-        bool Waiting() => AutoItem() == null && BattleAI.ChooseSkill(state, BattleSettings.Mode) == GearActive.None
+        /// <summary>Hands the stage what happened since it last looked, so it animates in order.</summary>
+        void Feed()
+        {
+            if (state.Events.Count <= shownEvents) return;
+            stage.Play(state.Events.GetRange(shownEvents, state.Events.Count - shownEvents));
+            shownEvents = state.Events.Count;
+        }
+
+        bool Waiting() => !stage.Busy && AutoItem() == null && BattleAI.ChooseSkill(state, BattleSettings.Mode) == GearActive.None
             && BattleAI.Choose(state, BattleSettings.Mode) == null;
 
         void UseSkill(GearActive skill)
         {
-            int before = state.Monster.Hp;
             state.PlaySkill(skill);
-            if (state.Monster.Hp < before) shake = 1f;
+            Feed();
             timer = 0f;
         }
 
@@ -134,12 +142,14 @@ namespace BrineBattle.Hunting
         void UseItem(ItemDefinition item)
         {
             state.PlayItem(item);
+            Feed();
             timer = 0f;
         }
 
         void End()
         {
             var outcome = state.Outcome;
+            stage.Clear();
             state = null;
             InBattle = false;
             drift = null;
@@ -150,8 +160,9 @@ namespace BrineBattle.Hunting
         {
             if (!Active) return;
             GUI.depth = -5;
-            float w = 520, h = (state.Actives.Count > 0 ? 360 : 330) + (state.Companion != null ? 24 : 0);
-            GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
+            // Bottom-right, so the fight itself stays in view (the camera aims to the left of this).
+            float w = Mathf.Min(480, Screen.width * 0.42f), h = (state.Actives.Count > 0 ? 340 : 310) + (state.Companion != null ? 24 : 0);
+            GUILayout.BeginArea(new Rect(Screen.width - w - 12, Screen.height - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
             Bar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.4f));
@@ -164,7 +175,7 @@ namespace BrineBattle.Hunting
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.EndHorizontal();
 
-            int from = Mathf.Max(0, state.Log.Count - 4);
+            int from = Mathf.Max(0, state.Log.Count - 3);
             for (int i = from; i < state.Log.Count; i++) GUILayout.Label(state.Log[i]);
             GUILayout.FlexibleSpace();
 
