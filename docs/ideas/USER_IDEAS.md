@@ -110,8 +110,9 @@ Each monster has an aggression (temperament). A weakened monster that is aggress
 The hunter, monsters and loot are hard to tell apart because they're all sample shapes. Make them readable, maybe with Blender models.
 - Options put to Ed: clearer code placeholders now (distinct shape per monster, hunter figure, loot labels) and keep Blender for Phase 9, or pull the Blender art pass forward.
 
-### U-19 Battle effects and projectiles — 2026-10-29 · 💡 · GDD §5, Phase 9
+### U-19 Battle effects and projectiles — 2026-10-29 · ✅ · GDD §5, Phase 9
 Battles have no visual effects yet: no projectiles (thrown harpoon, spit, dive), hit flashes or splashes. Add them so attacks read on screen.
+- 2026-10-29: Ed asked again during Phase 7 ("text and UI only, not fun"). First pass with placeholder shapes done on `phase/7-companions`: lunges, harpoon/Tidal Strike projectiles, hit flash + shake, damage/heal numbers, KO sink, companion stand-in beside the hunter. Splashes, particles and real models stay for Phase 9.
 
 ### U-20 Music and sound effects — 2026-10-29 · 💡 · new system
 No music or sound effects yet. Add ocean ambience, battle music and SFX (cast, reel, hit, loot, craft).
@@ -122,3 +123,17 @@ No fog and no day/night look yet. Fog at night (and maybe in rough seas) that li
 ### U-22 Player manual — 2026-10-29 · 💡 · after the game is finalized
 When the game is finished, make a manual for players: viewable inside the game if possible, otherwise a downloadable PDF, whichever is better.
 - Claude's suggestion: both from one source. An in-game "How to Play" screen (works offline, always matches the build, can open on the relevant page) plus a PDF made from the same text for the store page / download. Write it at the end, once mechanics stop changing; the Settings menu's Controls list is the seed.
+
+### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · ✅ · GDD §10
+Companions come in three roles:
+1. **Crew** (Ed's word: "slave") — looks after the raft: repairs and upkeep.
+2. **Mystic** — helps with alchemy and crafting, except the raft: gear, weapons, consumables.
+3. **Familiar** — fights beside you against other monsters.
+Each role has varieties that only change the look and outfit. Companions can **evolve** to serve better, and they **die of old age**.
+- Claude's note: "Crew" is used in code and UI as a neutral name for role 1 until Ed picks the final word. Open: how a companion's role is set, what makes it evolve, how lifespan is counted before a day/night cycle exists (U-10), what happens when one dies.
+
+### U-24 Rocking raft, moving waves, katig — 2026-10-29 · ✅ (first pass) · GDD §6, Phase 9 art later
+The raft should rock with the sea and the sea should have real waves, not only lines. A raft has katig (outriggers) and something to catch the wind; here they are looks only. Pulled forward by the owner during Phase 7: `Waves` swell shared by the ocean mesh, raft and drifts; `RaftDecor` adds katig and a sail. Real models come with U-18.
+
+### U-25 Kid-friendly, simpler UI — 2026-10-29 · 🟡 quick cleanup done, full redesign in Phase 9
+The menus are too complicated; a child should be able to use them. Fewer words, bigger buttons, icons, one thing per screen. Ed chose both: a quick cleanup now (done in Phase 7: Screen size setting Small/Big/Huge, default Big; shorter HUD with bars and big buttons; one Crew repair slider per module kind) and a full UI redesign with icons in Phase 9.

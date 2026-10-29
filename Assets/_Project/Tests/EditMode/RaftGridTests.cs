@@ -105,12 +105,79 @@ namespace BrineBattle.Tests
             crab.element = Element.Earth;
             inv.Add(crab, 10);
             inv.Salvage(crab, 10); // 30 Rare essence
+            inv.Add(Part(Rarity.Common, ItemType.Material), 6);
+            Assert.IsFalse(g.TryUpgrade(inv), "no kills yet");
+            g.Kills = RaftRules.KillsToUpgrade(Rarity.Common);
             Assert.IsTrue(g.TryUpgrade(inv));
             Assert.AreEqual(Rarity.Uncommon, g.Tier);
             Assert.AreEqual(20, inv.EssenceAtLeast(Rarity.Common));
+            Assert.AreEqual(1, inv.MaterialCount(), "5 materials spent");
+            Assert.AreEqual(0, g.Kills, "kills count again from the upgrade");
             Assert.AreEqual(PlaceResult.BelowTier, g.Place(new Cell(2, 0), Part(Rarity.Common)));
             Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(2, 0), Part(Rarity.Uncommon)));
             Assert.Greater(g.MaxHp, 90);
+        }
+
+        [Test]
+        public void UpgradeSaysWhatIsMissing()
+        {
+            var g = Starter();
+            var inv = new Inventory();
+            g.Kills = 2;
+            string why = g.UpgradeBlocker(inv);
+            StringAssert.Contains("kill 3 more monsters", why);
+            StringAssert.Contains("5 more monster materials", why);
+            StringAssert.Contains("10 more Common+ essence", why);
+            Assert.AreEqual(10, RaftRules.KillsToUpgrade(Rarity.Uncommon));
+            Assert.AreEqual(10, RaftRules.MaterialsToUpgrade(Rarity.Uncommon));
+        }
+
+        [Test]
+        public void HalfTheLeftEdgeNeedsModulesBeforeTheRaftGrows()
+        {
+            var g = Starter();
+            g.ModulesToGrow = RaftRules.ModuleShareToGrow;
+            var plank = Part(Rarity.Common);
+            var net = Part(Rarity.Common, ItemType.Module);
+            Assert.AreEqual(2, g.ModulesNeeded, "3 rows: half rounds up to 2");
+            Assert.AreEqual(PlaceResult.NeedsModules, g.Place(new Cell(2, 0), plank));
+
+            Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(-2, 0), net), "modules can always go on");
+            Assert.AreEqual(PlaceResult.NeedsModules, g.CanPlace(new Cell(2, 0), plank), "1 of 3 rows");
+            Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(-2, 1), net));
+            Assert.AreEqual((2, 3), g.UpstreamModules());
+            Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(2, 0), plank));
+
+            // A module on the right doesn't guard the left edge.
+            var h = Starter();
+            h.ModulesToGrow = RaftRules.ModuleShareToGrow;
+            h.Place(new Cell(2, 0), net);
+            h.Place(new Cell(2, 1), net);
+            Assert.IsFalse(h.ModulesReady);
+            StringAssert.Contains("2 more auto-loot modules on the left edge", h.UpgradeBlocker(new Inventory()));
+        }
+
+        [Test]
+        public void GuideShowsWhereLeftEdgeModulesGo()
+        {
+            var g = Starter();
+            var net = Part(Rarity.Common, ItemType.Module);
+            CollectionAssert.AreEqual(new[] { new Cell(-2, 0), new Cell(-2, -1), new Cell(-2, 1) }, g.UpstreamGaps(), "middle row first");
+            g.Place(new Cell(-2, 0), net);
+            CollectionAssert.AreEqual(new[] { new Cell(-2, -1), new Cell(-2, 1) }, g.UpstreamGaps());
+        }
+
+        [Test]
+        public void HabitatsGoOnTheRaftAndCount()
+        {
+            var g = Starter();
+            g.ModulesToGrow = RaftRules.ModuleShareToGrow;
+            var pool = Part(Rarity.Common, ItemType.Habitat);
+            Assert.AreEqual(0, g.HabitatCount);
+            Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(2, 0), pool), "habitats don't wait for modules");
+            g.Place(new Cell(2, 1), pool);
+            Assert.AreEqual(2, g.HabitatCount);
+            Assert.AreEqual(5, BrineBattle.Companions.CompanionRules.Capacity(g.HabitatCount));
         }
 
         [Test]

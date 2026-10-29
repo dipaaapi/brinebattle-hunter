@@ -44,7 +44,8 @@ namespace BrineBattle.Hunting
 
         void Sync()
         {
-            foreach (var c in slots.Keys.Where(c => !raft.Grid.Has(c) || raft.Grid.Parts[c].type != ItemType.Module).ToList())
+            // A cell whose module was taken off or swapped (e.g. by loading a save) drops its old slot.
+            foreach (var c in slots.Keys.Where(c => !raft.Grid.Has(c) || raft.Grid.Parts[c] != slots[c].Item).ToList())
             {
                 var s = slots[c];
                 if (!stored.TryGetValue(s.Item, out var list)) stored[s.Item] = list = new List<int>();
@@ -66,9 +67,26 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>Live catches waiting on a module's line for the hunter to finish what they're doing.</summary>
+        readonly Dictionary<Drift, Slot> held = new Dictionary<Drift, Slot>();
+
+        void StartHeldBattle()
+        {
+            foreach (var kv in held.ToList())
+            {
+                if (kv.Key == null) { held.Remove(kv.Key); continue; }
+                if (!hook.ModuleBattle(kv.Key, kv.Value)) return;
+                held.Remove(kv.Key);
+                hook.Log($"The {kv.Value.Item.displayName}'s {kv.Key.Monster.displayName} attacks: auto battle!");
+                return;
+            }
+        }
+
         void Update()
         {
-            if (hook == null || slots.Count == 0 || WorldPause.Active) return;
+            if (hook == null || WorldPause.Active) return;
+            if (held.Count > 0) StartHeldBattle();
+            if (slots.Count == 0) return;
             Drift[] drifts = null;
             foreach (var kv in slots)
             {
@@ -143,6 +161,17 @@ namespace BrineBattle.Hunting
         {
             if (s.Level < 2) Flash(at, d.transform.position, false);
             string name = s.Item.displayName;
+            // A live catch can't escape (owner's call): auto battle now, or held on the line until the hunter is free.
+            if (d.Actual == DriftState.Alive && hook.CanFight(d))
+            {
+                if (hook.ModuleBattle(d, s)) hook.Log($"The {name} hooked a live {d.Monster.displayName}! It can't escape: auto battle!");
+                else
+                {
+                    held[d] = s;
+                    hook.Log($"The {name} hooked a live {d.Monster.displayName} and holds it. Auto battle as soon as you're free.");
+                }
+                return;
+            }
             if (d.Actual == DriftState.Alive)
             {
                 s.Durability.Use(ModuleRules.AliveBite);
@@ -182,15 +211,16 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (Camera.main == null || WorldPause.Active) return;
             foreach (var kv in slots)
             {
-                Vector3 sp = Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f);
+                Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f));
                 if (sp.z < 0) continue;
                 var s = kv.Value;
                 string text = s.Durability.Broken ? "<color=#f77>BROKEN</color>"
                     : s.Timer > 0f ? $"{s.Durability} · {Mathf.CeilToInt(s.Timer)}s" : $"{s.Durability} · <color=#8f8>ready</color>";
-                GUI.Label(new Rect(sp.x - 40, Screen.height - sp.y - 18, 80, 18), text, HuntStyles.WorldLabel);
+                GUI.Label(new Rect(sp.x - 40, HuntStyles.H - sp.y - 18, 80, 18), text, HuntStyles.WorldLabel);
             }
         }
 

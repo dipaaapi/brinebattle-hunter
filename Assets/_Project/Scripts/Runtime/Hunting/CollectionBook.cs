@@ -37,6 +37,7 @@ namespace BrineBattle.Hunting
             if (hook == null) return;
             hook.BookToggleRequested += Toggle;
             hook.MonsterAcquired += OnMonster;
+            hook.MonsterTamed += OnTamed;
             hook.Inventory.Changed += OnInventory;
             Log.Unlocked += OnUnlocked;
         }
@@ -46,11 +47,22 @@ namespace BrineBattle.Hunting
             if (hook == null) return;
             hook.BookToggleRequested -= Toggle;
             hook.MonsterAcquired -= OnMonster;
+            hook.MonsterTamed -= OnTamed;
             hook.Inventory.Changed -= OnInventory;
             Log.Unlocked -= OnUnlocked;
         }
 
         void Toggle() => WorldPause.Toggle(Menu.Book);
+
+        /// <summary>Replaces the book with a saved one (loading a save file).</summary>
+        public void Restore(string data)
+        {
+            Log.Unlocked -= OnUnlocked;
+            Log = CollectionLog.Deserialize(data);
+            Log.Unlocked += OnUnlocked;
+            PlayerPrefs.SetString(SaveKey, Log.Serialize());
+            selected = null;
+        }
 
         void Update()
         {
@@ -59,6 +71,8 @@ namespace BrineBattle.Hunting
         }
 
         void OnMonster(MonsterDefinition m) => Log.Record(CollectionPage.Monsters, m.id);
+
+        void OnTamed(MonsterDefinition m) => Log.Record(CollectionPage.Pets, m.id);
 
         void OnInventory()
         {
@@ -80,9 +94,10 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (!open) return;
             GUI.depth = -5;
-            float left = HookController.HudRight + 10, w = Mathf.Min(640, Screen.width - left - 12), h = Mathf.Min(520, Screen.height - 40);
+            float left = HookController.HudRight + 10, w = Mathf.Min(640, HuntStyles.W - left - 12), h = Mathf.Min(520, HuntStyles.H - 40);
             GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
 
             var newPage = (CollectionPage)GUILayout.Toolbar((int)page, Tabs);
@@ -90,7 +105,6 @@ namespace BrineBattle.Hunting
 
             var ids = IdsOf(page);
             GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% complete  ({ids.Count(i => Log.Has(page, i))}/{ids.Count})");
-            if (page == CollectionPage.Pets) GUILayout.Label("<i>Pets unlock when taming arrives (Phase 7).</i>", Rich);
 
             GUILayout.BeginHorizontal();
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.Width(250));

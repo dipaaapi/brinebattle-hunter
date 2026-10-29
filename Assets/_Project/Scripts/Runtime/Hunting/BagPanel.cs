@@ -1,4 +1,5 @@
 using System.Linq;
+using BrineBattle.Companions;
 using BrineBattle.Items;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -67,11 +68,12 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (!open || hook == null) return;
             var inv = hook.Inventory;
             GUI.depth = -5;
-            float w = Mathf.Min(600, Screen.width - HookController.HudRight - 22), h = Mathf.Min(560, Screen.height - 40);
-            GUILayout.BeginArea(new Rect(Screen.width - w - 12, 20, w, h), "Bag", HuntStyles.Window);
+            float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 40);
+            GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Bag", HuntStyles.Window);
 
             GUILayout.Label("<b>Gear tiers</b> (an item fits if its rarity ≥ the tier)", Rich);
             if (hook.raft != null) raftTier = hook.raft.Tier;
@@ -88,6 +90,7 @@ namespace BrineBattle.Hunting
             GearRow(GearSlot.Armor);
 
             scroll = GUILayout.BeginScrollView(scroll);
+            CompanionRows();
             GUILayout.Label("<b>Items</b>", Rich);
             if (!inv.Items.Any()) GUILayout.Label("  (empty)");
             foreach (var kv in inv.Items.ToList())
@@ -127,6 +130,48 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Close (B)")) WorldPause.Close(Menu.Bag);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        Companion releasing;
+
+        /// <summary>Phase 7: tamed companions; the active one joins battles. Release asks twice.</summary>
+        void CompanionRows()
+        {
+            var roster = hook.Companions;
+            GUILayout.Label($"<b>Companions</b>  ({roster.All.Count}/{roster.Capacity}; habitats on the raft add room later)", Rich);
+            GUILayout.Label("<size=10>Familiar fights with you · Crew repairs the raft, harpoon and modules · Mystic helps craft gear, potions and oils</size>", Rich);
+            if (roster.Best(CompanionRole.Crew) != null)
+                CompanionSettings.CrewBuilds = GUILayout.Toggle(CompanionSettings.CrewBuilds, " Crew builds raft parts from the bag onto the raft");
+            if (roster.Best(CompanionRole.Mystic) != null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Mystic keeps at least {CompanionSettings.MysticKeep} of each potion and oil", GUILayout.Width(300));
+                CompanionSettings.MysticKeep = Mathf.RoundToInt(GUILayout.HorizontalSlider(CompanionSettings.MysticKeep, 0, 5));
+                GUILayout.EndHorizontal();
+                CompanionSettings.MysticRefines = GUILayout.Toggle(CompanionSettings.MysticRefines, " Mystic refines your equipped gear with essence when stocked");
+            }
+            if (roster.All.Count == 0) GUILayout.Label("  (none — tame a weakened, calm drift)");
+            foreach (var c in roster.All.ToList())
+            {
+                bool active = roster.Active == c;
+                GUILayout.BeginHorizontal();
+                string tip = $"{c.Role}: {CompanionRules.Describe(c.Role)}";
+                GUILayout.Label(new GUIContent($"<color={RarityColor(c.Rarity)}>{c.Name}</color> <b>{c.Role}</b>{(active ? " (in battle)" : "")}  <size=10>{c.Element} · {c.Stats}</size>", tip), Rich, GUILayout.Width(360));
+                if (c.Role == CompanionRole.Familiar)
+                {
+                    GUI.enabled = !active;
+                    if (GUILayout.Button("Set active", GUILayout.Width(80))) roster.SetActive(c);
+                    GUI.enabled = true;
+                }
+                else GUILayout.Label("", GUILayout.Width(80));
+                if (releasing == c)
+                {
+                    if (GUILayout.Button("Sure?", GUILayout.Width(55))) { roster.Release(c); releasing = null; hook.ApplyCompanionBonuses(); hook.Log($"Released {c.Name} back to the sea."); }
+                }
+                else if (GUILayout.Button("Release", GUILayout.Width(65))) releasing = c;
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.Space(4);
         }
 
         void GearRow(GearSlot slot)

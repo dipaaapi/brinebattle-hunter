@@ -136,6 +136,23 @@ namespace BrineBattle.Editor
             Recipe("upgrade_hook_arm", "Hook Arm", RecipeKind.Upgrade, new[] { (net, 1), (fang, 2), (plank, 2) }, new[] { (hookArm, 1) });
             Recipe("dismantle_drift_net", "Drift Net", RecipeKind.Dismantle, new[] { (net, 1) }, new[] { (plank, 2), (patch, 1) });
             Recipe("dismantle_hook_arm", "Hook Arm", RecipeKind.Dismantle, new[] { (hookArm, 1) }, new[] { (net, 1), (fang, 1) });
+            // Phase 7: companion habitats. Each on the raft gives room for one more companion.
+            var tidePool = LoadOrCreate<ItemDefinition>($"{Root}/Items/TidePool.asset", i =>
+            {
+                i.id = "tide_pool"; i.displayName = "Tide Pool"; i.type = ItemType.Habitat;
+                i.rarity = Rarity.Common; i.element = Element.Water;
+                i.description = "A plank tub of seawater. A sea companion can rest here: room for one more companion.";
+            });
+            var skyPerch = LoadOrCreate<ItemDefinition>($"{Root}/Items/SkyPerch.asset", i =>
+            {
+                i.id = "sky_perch"; i.displayName = "Sky Perch"; i.type = ItemType.Habitat;
+                i.rarity = Rarity.Common; i.element = Element.Wind;
+                i.description = "A tall pole with a feather-lined nest. A sky companion can rest here: room for one more companion.";
+            });
+            Recipe("craft_tide_pool", "Tide Pool", RecipeKind.Craft, new[] { (plank, 4), (scale, 3) }, new[] { (tidePool, 1) });
+            Recipe("craft_sky_perch", "Sky Perch", RecipeKind.Craft, new[] { (plank, 3), (feather, 3) }, new[] { (skyPerch, 1) });
+            Recipe("dismantle_tide_pool", "Tide Pool", RecipeKind.Dismantle, new[] { (tidePool, 1) }, new[] { (plank, 2), (scale, 1) });
+            Recipe("dismantle_sky_perch", "Sky Perch", RecipeKind.Dismantle, new[] { (skyPerch, 1) }, new[] { (plank, 2), (feather, 1) });
             // Phase 6: gear power (set every build so older assets get it too) and gear recipes.
             SetGearPower(spear, 4);
             SetGearPower(buckler, 3);

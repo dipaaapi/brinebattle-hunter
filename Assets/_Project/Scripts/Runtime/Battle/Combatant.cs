@@ -1,3 +1,4 @@
+using BrineBattle.Companions;
 using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Monsters;
@@ -29,6 +30,19 @@ namespace BrineBattle.Battle
             Attack = m.stats.attack,
             Defense = m.stats.defense,
             Speed = m.stats.speed,
+        };
+
+        /// <summary>A companion at full HP (it rests between battles).</summary>
+        public static Combatant FromCompanion(Companion c) => new Combatant
+        {
+            Name = c.Name,
+            Element = c.Element,
+            Habitat = c.Habitat,
+            MaxHp = c.MaxHp,
+            Hp = c.MaxHp,
+            Attack = c.Attack,
+            Defense = c.Defense,
+            Speed = c.Speed,
         };
 
         /// <summary>No class, no magic: power comes from gear (GDD §7, §9). Levels come later.</summary>

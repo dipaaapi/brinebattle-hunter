@@ -69,15 +69,23 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
-            if (Hooked || WorldPause.Active) return;
+            if (Hooked) return;
+            Ride(transform.position);
+            if (WorldPause.Active) return;
             lifetime += Time.deltaTime;
             var p = transform.position + velocity * Time.deltaTime;
             if (raft == null) raft = FindFirstObjectByType<Raft>();
             if (raft != null) p = BumpOffParts(p);
-            p.y = 0.1f + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.08f;
-            transform.position = p;
+            Ride(p);
             if (velocity.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(velocity);
             if (lifetime > 60f) Destroy(gameObject);
+        }
+
+        /// <summary>Floats on the swell, with a little bob of its own.</summary>
+        void Ride(Vector3 p)
+        {
+            p.y = 0.1f + Waves.Height(p.x, p.z) + Mathf.Sin((Time.time + bobPhase) * 2f) * 0.04f;
+            transform.position = p;
         }
 
         /// <summary>Drifts slide along the raft's actual parts (not a circle around it) instead of passing through.</summary>
@@ -114,10 +122,11 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (Hooked || WorldPause.Active || Camera.main == null) return;
-            Vector3 sp = Camera.main.WorldToScreenPoint(transform.position + Vector3.up);
+            Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(transform.position + Vector3.up));
             if (sp.z < 0) return;
-            var rect = new Rect(sp.x - 70, Screen.height - sp.y - 22, 140, 22);
+            var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
             GUI.Label(rect, $"{Monster.displayName}\n<i>{HintText(Hint)}</i>", HuntStyles.WorldLabel);
         }
     }

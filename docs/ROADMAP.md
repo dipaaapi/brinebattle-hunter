@@ -6,10 +6,10 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 6 — Alchemy & gear ✅ done (PRs #1-#3 merged) |
-| **Next step** | Ed picks: Idea Round 3 (backlog U-18..U-22 and others) or Phase 7 — Companions |
+| **Current phase** | Phase 7 — Companions (`phase/7-companions`, PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
+| **Next step** | Ed picks: merge PR #4 now or keep going on the branch (card open). Then evolution and old age (U-23), feeding, fusion, companion consumables |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
-| **Project folder** | `C:\Users\USER\brinebattle-hunter` |
+| **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
 
 > Start every session by reading this box. Finish every session by updating it.
@@ -104,8 +104,26 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 
-### ⬜ Phase 7 — Companions
-Taming Weakened monsters, habitats, feeding/infusion, fusion in the Transmutation Circle. Companion consumables (moved from Phase 6).
+### 🟨 Phase 7 — Companions
+- [x] Tame a weakened, calm drift (chance by rarity) → companion with 60% of its wild stats; roster with one active companion (Bag: set active / release); Collection book Pets page fills in
+- [x] Active companion fights beside the hunter: attacks after the hunter each round, can be targeted (25%) and knocked out; rests to full HP between battles
+- [x] Battle visuals first pass (owner idea U-19, asked for now): fighters lunge, harpoon and skills fly, hits flash and shake, damage numbers pop, KO sinks; battle panel moved bottom-right
+- [x] Roles (owner idea U-23), picked after taming: Familiar (battle), Crew (raft repair in battle, mends harpoon/modules), Mystic (extra crafts, cheaper refines)
+- [x] Companions visible on the raft: Mystic at a workbench auto-refines gear, Crew walks the raft, installs modules upstream (left) and builds parts downstream (right) (switchable in the Bag)
+- [x] Save / Load (Settings, one JSON save file, auto-save every 5 min in Semi-auto/Auto)
+- [x] Crew repairs modules at a % set per module kind (Build); Mystic restocks potions/oils and heals the hunter or Familiar each battle round
+- [x] Upload a save file from anywhere (Settings)
+- [x] Raft tier upgrade needs kills + monster materials; widening/upgrading needs modules on half the left edge; module catches of live aggressive monsters start an Auto battle (owner's asks)
+- [x] Menu settings in the save; module live catches always start an Auto battle
+- [x] Rocking raft on moving waves, katig and sail (owner idea U-24, looks only)
+- [x] Quick UI cleanup (owner idea U-25): screen size setting, simpler HUD, fewer Build sliders
+- [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
+- [ ] Evolution and old age (U-23)
+- [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
+- [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)
+- [ ] Companion consumables (moved from Phase 6)
+
+**Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
 
 ### ⬜ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.

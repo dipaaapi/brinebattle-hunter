@@ -38,6 +38,8 @@ namespace BrineBattle.Items
         readonly Dictionary<ItemDefinition, int> refines = new Dictionary<ItemDefinition, int>();
 
         public event Action Changed;
+        /// <summary>Essence saved per refine (a Mystic companion, Phase 7). Cost never drops below 1.</summary>
+        public int RefineDiscount { get; set; }
 
         public ItemDefinition Get(GearSlot slot) => slots.TryGetValue(slot, out var item) ? item : null;
 
@@ -86,7 +88,9 @@ namespace BrineBattle.Items
         public int RefineCost(GearSlot slot)
         {
             var item = Get(slot);
-            return item == null ? 0 : GearRules.RefineCost(RefineOf(item));
+            if (item == null) return 0;
+            int cost = GearRules.RefineCost(RefineOf(item));
+            return cost == 0 ? 0 : Math.Max(1, cost - RefineDiscount);
         }
 
         public bool CanRefine(GearSlot slot, Inventory inv)
@@ -105,6 +109,21 @@ namespace BrineBattle.Items
             refines[item] = RefineOf(item) + 1;
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>Refine level per item kind that has one (for saving).</summary>
+        public IEnumerable<KeyValuePair<ItemDefinition, int>> Refines => refines;
+
+        /// <summary>Puts gear and refine levels back as saved, without touching the bag.</summary>
+        public void Restore(ItemDefinition weapon, ItemDefinition armor, IEnumerable<KeyValuePair<ItemDefinition, int>> refineLevels)
+        {
+            slots.Clear();
+            refines.Clear();
+            if (weapon != null) slots[GearSlot.Weapon] = weapon;
+            if (armor != null) slots[GearSlot.Armor] = armor;
+            foreach (var kv in refineLevels)
+                if (kv.Key != null) refines[kv.Key] = Math.Max(0, Math.Min(GearRules.MaxRefine, kv.Value));
+            Changed?.Invoke();
         }
 
         /// <summary>Passives from both slots, no repeats (the same passive twice doesn't stack).</summary>

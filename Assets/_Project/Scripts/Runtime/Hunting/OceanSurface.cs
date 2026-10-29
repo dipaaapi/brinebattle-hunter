@@ -1,24 +1,21 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace BrineBattle.Hunting
 {
     /// <summary>
-    /// Placeholder ocean: a generated wave texture that scrolls with the current, plus white
-    /// streaks riding the current so you can see which way drifts will float.
+    /// Placeholder ocean: a generated wave texture that scrolls with the current. The surface itself
+    /// rises and falls with <see cref="BrineBattle.Hunting.Waves"/> (owner's ask), on a finer mesh made at start.
     /// </summary>
     public class OceanSurface : MonoBehaviour
     {
         public DriftSpawner spawner;
-        public int streakCount = 40;
-        public float streakArea = 26f;
 
         Material mat;
         Vector2 uvPerWorld;     // texture offset change per metre along world x / z
         Vector2 offset;
-        readonly List<Transform> streaks = new List<Transform>();
-        readonly List<float> streakSpeed = new List<float>();
-        Material streakMat;
+        Mesh mesh;
+        Vector3[] baseVerts, verts;
+        public int meshCells = 200;
 
         Vector3 Dir => spawner != null ? spawner.currentDirection.normalized : Vector3.right;
         float Speed => spawner != null ? spawner.driftSpeed : 1.5f;
@@ -27,55 +24,77 @@ namespace BrineBattle.Hunting
         {
             var r = GetComponent<Renderer>();
             mat = r.material;
+            BuildMesh();
             var tex = WaveTexture(256);
             const float tiling = 10f;
             mat.SetTexture("_BaseMap", tex);
             mat.mainTexture = tex;
             mat.SetColor("_BaseColor", Color.white);
             mat.mainTextureScale = new Vector2(tiling, tiling);
-            mat.SetFloat("_Smoothness", 0.6f);
+            mat.SetFloat("_Smoothness", 0.85f);   // sun glints on the wave slopes make the swell readable from above
             uvPerWorld = UvGradient(GetComponent<MeshFilter>().sharedMesh) * tiling;
 
-            streakMat = new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color"));
-            streakMat.SetColor("_BaseColor", new Color(0.85f, 0.95f, 1f));
-            streakMat.color = new Color(0.85f, 0.95f, 1f);
-            for (int i = 0; i < streakCount; i++)
-            {
-                var s = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                s.name = "Current streak";
-                Destroy(s.GetComponent<Collider>());
-                s.GetComponent<Renderer>().sharedMaterial = streakMat;
-                s.transform.SetParent(transform.parent, false);
-                streaks.Add(s.transform);
-                streakSpeed.Add(Random.Range(0.8f, 1.4f));
-                Place(s.transform, Random.Range(-streakArea, streakArea));
-            }
+            // No current streaks any more (owner's call): the moving swell and the scrolling texture show the sea.
         }
 
-        void Place(Transform s, float along)
+        /// <summary>Swaps the 10×10 Unity plane for a finer grid over the same area so the waves look smooth.</summary>
+        void BuildMesh()
         {
-            var dir = Dir;
-            var side = Vector3.Cross(Vector3.up, dir);
-            s.position = new Vector3(0f, 0.03f, 0f) + dir * along + side * Random.Range(-streakArea, streakArea);
-            s.rotation = Quaternion.LookRotation(Vector3.down, dir);
-            s.localScale = new Vector3(0.06f, Random.Range(1.2f, 2.6f), 1f);
+            var mf = GetComponent<MeshFilter>();
+            var old = mf.sharedMesh;
+            var b = old.bounds;
+            int n = Mathf.Max(2, meshCells);
+            baseVerts = new Vector3[(n + 1) * (n + 1)];
+            var uv = new Vector2[baseVerts.Length];
+            for (int z = 0; z <= n; z++)
+                for (int x = 0; x <= n; x++)
+                {
+                    float u = x / (float)n, v = z / (float)n;
+                    baseVerts[z * (n + 1) + x] = new Vector3(Mathf.Lerp(b.min.x, b.max.x, u), 0f, Mathf.Lerp(b.min.z, b.max.z, v));
+                    uv[z * (n + 1) + x] = new Vector2(u, v);
+                }
+            var tris = new int[n * n * 6];
+            for (int z = 0, t = 0; z < n; z++)
+                for (int x = 0; x < n; x++)
+                {
+                    int i = z * (n + 1) + x;
+                    tris[t++] = i; tris[t++] = i + n + 1; tris[t++] = i + 1;
+                    tris[t++] = i + 1; tris[t++] = i + n + 1; tris[t++] = i + n + 2;
+                }
+            mesh = new Mesh { name = "Ocean waves", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            mesh.MarkDynamic();
+            mesh.vertices = baseVerts;
+            mesh.uv = uv;
+            mesh.triangles = tris;
+            mesh.RecalculateNormals();
+            mesh.bounds = new Bounds(b.center, b.size + Vector3.up * 2f);
+            mf.sharedMesh = mesh;
+            verts = (Vector3[])baseVerts.Clone();
+        }
+
+        void Swell()
+        {
+            if (mesh == null) return;
+            var tf = transform;
+            float sy = Mathf.Max(0.0001f, tf.lossyScale.y);
+            for (int i = 0; i < baseVerts.Length; i++)
+            {
+                var w = tf.TransformPoint(baseVerts[i]);
+                verts[i] = new Vector3(baseVerts[i].x, (BrineBattle.Hunting.Waves.Height(w.x, w.z) - tf.position.y) / sy, baseVerts[i].z);
+            }
+            mesh.vertices = verts;
+            mesh.RecalculateNormals();
         }
 
         void Update()
         {
+            Swell();   // the sea keeps moving even while menus pause the world
             if (WorldPause.Active) return;
             var dir = Dir;
             offset -= new Vector2(dir.x * uvPerWorld.x, dir.z * uvPerWorld.y) * Speed * 0.6f * Time.deltaTime;
             offset.x %= 1f; offset.y %= 1f;
             mat.mainTextureOffset = offset;
             mat.SetTextureOffset("_BaseMap", offset);
-
-            for (int i = 0; i < streaks.Count; i++)
-            {
-                var s = streaks[i];
-                s.position += dir * Speed * streakSpeed[i] * Time.deltaTime;
-                if (Vector3.Dot(s.position, dir) > streakArea) Place(s, -streakArea);
-            }
         }
 
         /// <summary>How much u and v change per world metre along x and z, read from the mesh itself.</summary>

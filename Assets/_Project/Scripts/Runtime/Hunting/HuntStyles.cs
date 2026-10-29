@@ -6,6 +6,23 @@ namespace BrineBattle.Hunting
     public static class HuntStyles
     {
         static GUIStyle worldLabel, window, box;
+
+        /// <summary>UI size (owner idea U-25: easy to read and tap). 1 = small, 1.25 = big (default), 1.5 = huge.</summary>
+        public static float Scale
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetFloat("brinebattle.uiScale", 1.25f), 1f, 1.75f);
+            set => PlayerPrefs.SetFloat("brinebattle.uiScale", Mathf.Clamp(value, 1f, 1.75f));
+        }
+
+        /// <summary>Screen size in UI units (what panels lay out in once <see cref="Begin"/> scales the UI).</summary>
+        public static float W => Screen.width / Scale;
+        public static float H => Screen.height / Scale;
+
+        /// <summary>Call first in every OnGUI: draws everything at the chosen UI size.</summary>
+        public static void Begin() => GUI.matrix = Matrix4x4.Scale(new Vector3(Scale, Scale, 1f));
+
+        /// <summary>A WorldToScreenPoint result in UI units; use with <see cref="H"/> - y as before.</summary>
+        public static Vector3 Ui(Vector3 screenPoint) => new Vector3(screenPoint.x / Scale, screenPoint.y / Scale, screenPoint.z);
         static Texture2D windowBg, boxBg;
 
         public static GUIStyle WorldLabel

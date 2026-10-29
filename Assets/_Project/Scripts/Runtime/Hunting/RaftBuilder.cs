@@ -30,6 +30,7 @@ namespace BrineBattle.Hunting
         Vector2 panelScroll;
         RecipeCategory tab;
         string message = "";
+        bool guide;
 
         public void Toggle()
         {
@@ -54,7 +55,7 @@ namespace BrineBattle.Hunting
             var mouse = Mouse.current;
             if (mouse == null || Camera.main == null) return;
             Vector2 mp = mouse.position.ReadValue();
-            var guiPoint = new Vector2(mp.x, Screen.height - mp.y);
+            var guiPoint = new Vector2(mp.x, Screen.height - mp.y) / HuntStyles.Scale;
             bool overPanel = panelRect.Contains(guiPoint);
 
             Cell? cell = overPanel ? null : CellUnderMouse(mp);
@@ -101,6 +102,55 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>
+        /// Step-by-step help for the next raft tier (owner idea U-25): each requirement, done or not,
+        /// what to do about it, and a button that takes the player there where it can.
+        /// </summary>
+        void DrawGuide()
+        {
+            var g = raft.Grid;
+            var inv = hook.Inventory;
+            int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier), cost = RaftRules.UpgradeCost(g.Tier);
+            GUILayout.BeginVertical(HuntStyles.Box);
+            GUILayout.Label($"<b>Guide to raft Lv {(int)g.Tier + 2} ({g.Tier + 1})</b>", Rich);
+
+            if (Step(g.Kills >= kills, $"Defeat monsters: {Mathf.Min(g.Kills, kills)}/{kills}",
+                "Hook monsters marked \"Something moves!\" and win the battle, or finish weakened ones (\"Twitching...\"). Module catches count too."))
+                if (GUILayout.Button("Go hunting (close Build)")) Toggle();
+
+            if (Step(inv.MaterialCount() >= mats, $"Collect monster materials: {Mathf.Min(inv.MaterialCount(), mats)}/{mats}",
+                "Harvest monsters that \"Look dead\", win battles, or let your modules catch drifts. Scales, fangs and feathers count."))
+                if (GUILayout.Button("Go hunting (close Build)")) Toggle();
+
+            if (Step(inv.EssenceAtLeast(g.Tier) >= cost, $"Get {g.Tier}+ essence: {Mathf.Min(inv.EssenceAtLeast(g.Tier), cost)}/{cost}",
+                $"Break down {g.Tier} or rarer items you don't need: Workbench → Dismantle here, or Salvage in the Bag."))
+                if (GUILayout.Button("Open Dismantle")) tab = RecipeCategory.Dismantle;
+
+            var (guarded, _) = g.UpstreamModules();
+            if (Step(guarded >= g.ModulesNeeded, $"Modules on the left edge: {guarded}/{g.ModulesNeeded}",
+                "Put an auto-loot module at the left end of a row. The <color=#ffd866>yellow</color> tiles show where."))
+            {
+                var module = inv.Items.Select(kv => kv.Key).FirstOrDefault(i => i.type == ItemType.Module && SalvageRules.IsCompatible(i.type, i.rarity, g.Tier));
+                if (module != null)
+                {
+                    if (GUILayout.Button($"Pick a {module.displayName} to place")) { selected = module; mode = Mode.Place; }
+                }
+                else if (GUILayout.Button("No module in the bag: craft a Drift Net (Workbench → Raft)")) tab = RecipeCategory.Raft;
+            }
+            GUILayout.EndVertical();
+        }
+
+        /// <summary>One guide line. True when it still needs doing (so the caller can add its button).</summary>
+        static bool Step(bool done, string title, string how)
+        {
+            GUILayout.Label(done ? $"<color=#7CFC9A>DONE</color>  {title}" : $"<color=#ff8a80>TO DO</color>  <b>{title}</b>", Rich);
+            if (!done) GUILayout.Label($"<size=11>{how}</size>", Rich);
+            return !done;
+        }
+
+        static string Have(int have, int need) =>
+            $"<color={(have >= need ? "#7CFC9A" : "#ff8a80")}>{Mathf.Min(have, need)}/{need}</color>";
+
         static string PlaceText(PlaceResult r)
         {
             switch (r)
@@ -109,6 +159,7 @@ namespace BrineBattle.Hunting
                 case PlaceResult.NotAdjacent: return "Parts must touch the raft.";
                 case PlaceResult.OutOfBounds: return "Too far out (max 9x9).";
                 case PlaceResult.BelowTier: return "That part's rarity is below the raft tier.";
+                case PlaceResult.NeedsModules: return "Install more auto-loot modules on the left edge first (half of its rows need one).";
                 default: return "That isn't a raft part.";
             }
         }
@@ -126,13 +177,16 @@ namespace BrineBattle.Hunting
             }
             bool fits = selected != null && SalvageRules.IsCompatible(selected.type, selected.rarity, raft.Tier);
             var color = fits ? new Color(0.4f, 0.95f, 0.5f) : new Color(0.9f, 0.9f, 0.9f);
+            // Upgrade guide: the left-edge spots that still need a module glow yellow.
+            var gaps = guide && !raft.Grid.ModulesReady ? new HashSet<Cell>(raft.Grid.UpstreamGaps()) : new HashSet<Cell>();
+            var gapColor = new Color(1f, 0.85f, 0.2f) * (0.8f + 0.2f * Mathf.Sin(Time.unscaledTime * 6f));
             for (int i = 0; i < ghosts.Count; i++)
             {
                 bool on = i < open.Count;
                 ghosts[i].SetActive(on);
                 if (!on) continue;
                 ghosts[i].transform.position = raft.CellToWorld(open[i]) + Vector3.up * 0.02f;
-                Tint.Apply(ghosts[i].GetComponent<Renderer>(), color);
+                Tint.Apply(ghosts[i].GetComponent<Renderer>(), gaps.Contains(open[i]) ? gapColor : color);
             }
         }
 
@@ -164,27 +218,34 @@ namespace BrineBattle.Hunting
 
         void OnGUI()
         {
+            HuntStyles.Begin();
             if (!Active || raft == null) return;
-            float w = 380, h = Screen.height - 40;
-            panelRect = new Rect(Screen.width - w - 12, 20, w, h);
+            float w = 380, h = HuntStyles.H - 40;
+            panelRect = new Rect(HuntStyles.W - w - 12, 20, w, h);
             GUI.depth = -5;
             GUILayout.BeginArea(panelRect, "Build raft (R / Esc to close)", HuntStyles.Window);
 
             if (GUI.Button(new Rect(w - 34, 4, 26, 20), "X")) { Toggle(); GUILayout.EndArea(); return; }
             panelScroll = GUILayout.BeginScrollView(panelScroll);
             var g = raft.Grid;
-            GUILayout.Label($"Size {g.Size} · {g.Count} parts · {g.MaxHp} HP · tier <color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>", Rich);
+            GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 1}</b> (<color={BagPanel.RarityColor(g.Tier)}>{g.Tier}</color>) · size {g.Size} · {g.Count} parts · {g.MaxHp} HP", Rich);
             int next = 0;
             for (int n = 1; n <= RaftRules.StarterParts + RaftRules.PartsPerSize; n++)
                 if (RaftRules.SizeFor(g.Count + n) > g.Size) { next = n; break; }
             if (next > 0 && g.Size < 10) GUILayout.Label($"{next} more part(s) to reach size {g.Size + 1}.");
+            var (guarded, rows) = g.UpstreamModules();
+            GUILayout.Label($"Left edge modules: {guarded}/{rows} rows (need {g.ModulesNeeded} to widen or upgrade) "
+                + (g.ModulesReady ? "<color=#7CFC9A>ready</color>" : "<color=#ff8a80>install modules on the left first</color>"), Rich);
+            if (RaftRules.UpgradeCost(g.Tier) > 0 && GUILayout.Button(guide ? "Hide the upgrade guide" : $"Guide: how to reach raft Lv {(int)g.Tier + 2}", GUILayout.Height(30)))
+                guide = !guide;
+            if (guide) DrawGuide();
 
             GUILayout.Label("1. Pick a part  2. Click a green tile next to the raft.\nYellow cursor = OK, red = not allowed.", Rich);
             mode = (Mode)GUILayout.Toolbar((int)mode, new[] { "Place", "Remove" });
 
             GUILayout.Label("<b>Raft parts in your bag</b>", Rich);
             GUILayout.BeginVertical();
-            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module).ToList();
+            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module || kv.Key.type == ItemType.Habitat).ToList();
             if (parts.Count == 0) GUILayout.Label("  (none — harvest some)");
             foreach (var kv in parts)
             {
@@ -213,6 +274,16 @@ namespace BrineBattle.Hunting
                     {
                         CraftRules.Craft(hook.Inventory, r);
                         message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
+                        StorageBox.Instance?.Crafted(CraftRules.Describe(r.outputs));
+                        // A Mystic companion (Phase 7) sometimes makes one more of a gear, potion or oil.
+                        var mystic = hook.Companions.Best(Companions.CompanionRole.Mystic);
+                        var cat = CraftRules.CategoryOf(r);
+                        if (mystic != null && r.kind == RecipeKind.Craft && cat != RecipeCategory.Raft && cat != RecipeCategory.Dismantle
+                            && Random.value < Companions.CompanionRules.MysticExtraChance(mystic.Rarity))
+                        {
+                            foreach (var o in r.outputs) hook.Inventory.Add(o.item, o.count);
+                            message += $" {mystic.Name} (Mystic) made an extra one!";
+                        }
                         hook.Log(message);
                     }
                     GUI.enabled = true;
@@ -232,19 +303,42 @@ namespace BrineBattle.Hunting
                     GUI.enabled = true;
                     GUILayout.EndHorizontal();
                 }
+                if (hook.Companions.Best(Companions.CompanionRole.Crew) != null)
+                {
+                    // One slider per module kind, not per module (owner idea U-25: less clutter). The Crew repairs at or below it.
+                    GUILayout.Label("<b>Crew auto-repair</b> (fixes a module when it drops to this)", Rich);
+                    foreach (var kind in modules.Slots.Values.Select(x => x.Item).Distinct())
+                    {
+                        float at = CompanionSettings.CrewRepairAt(kind.id);
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label($"{kind.displayName}: {Mathf.RoundToInt(at * 100)}%", GUILayout.Width(170));
+                        float picked = Mathf.Round(GUILayout.HorizontalSlider(at, 0f, 0.9f) * 10f) / 10f;
+                        if (!Mathf.Approximately(picked, at)) CompanionSettings.SetCrewRepairAt(kind.id, picked);
+                        GUILayout.EndHorizontal();
+                    }
+                }
             }
 
             int cost = RaftRules.UpgradeCost(g.Tier);
             if (cost > 0)
             {
-                int have = hook.Inventory.EssenceAtLeast(g.Tier);
-                GUILayout.Label($"Upgrade to {g.Tier + 1}: {cost} essence ({g.Tier}+), you have {have}. Parts below the new tier can't be added after.");
-                GUI.enabled = have >= cost;
-                if (GUILayout.Button($"Upgrade raft tier → {g.Tier + 1}"))
+                var inv = hook.Inventory;
+                int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier);
+                GUILayout.Label($"<b>Level up to Lv {(int)g.Tier + 2} ({g.Tier + 1})</b> (parts below the new tier can't be added after):\n"
+                    + $"  Kills since last upgrade {Have(g.Kills, kills)} · monster materials {Have(inv.MaterialCount(), mats)}\n"
+                    + $"  {g.Tier}+ essence {Have(inv.EssenceAtLeast(g.Tier), cost)} · left-edge modules {Have(guarded, g.ModulesNeeded)}", Rich);
+                string blocker = g.UpgradeBlocker(inv);
+                GUI.enabled = blocker == null;
+                if (GUILayout.Button($"Level up the raft → Lv {(int)g.Tier + 2} ({g.Tier + 1})"))
                 {
-                    if (g.TryUpgrade(hook.Inventory)) hook.Log($"Raft upgraded to {g.Tier} tier. Max HP {g.MaxHp}.");
+                    if (g.TryUpgrade(inv)) hook.Log($"Raft leveled up to Lv {(int)g.Tier + 1} ({g.Tier})! Max HP {g.MaxHp}.");
                 }
                 GUI.enabled = true;
+                if (blocker != null)
+                {
+                    GUILayout.Label($"<size=11>{blocker}</size>", Rich);
+                    if (!guide && GUILayout.Button("Guide me", GUILayout.Height(28))) { guide = true; panelScroll = Vector2.zero; }
+                }
             }
             else GUILayout.Label("Raft is at the highest tier.");
 

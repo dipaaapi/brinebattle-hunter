@@ -18,7 +18,7 @@ namespace BrineBattle.Hunting
         [Tooltip("How far the hook reaches beyond the raft's edge.")]
         public float hookRange = 12f;
 
-        public RaftGrid Grid { get; } = new RaftGrid();
+        public RaftGrid Grid { get; } = new RaftGrid { ModulesToGrow = RaftRules.ModuleShareToGrow };
         public int size => Grid.Size;
         public int MaxHp => Grid.MaxHp;
         public Rarity Tier => Grid.Tier;
@@ -35,16 +35,39 @@ namespace BrineBattle.Hunting
                 if (child.name.StartsWith("Part")) Destroy(child.gameObject);
             Grid.Changed += Rebuild;
             if (starterPart != null) Grid.FillSquare(starterPart, 1);
+            // Katig and sail, looks only (owner's ask); added here so older Hook scenes get them too.
+            if (!TryGetComponent<RaftDecor>(out _)) gameObject.AddComponent<RaftDecor>().raft = this;
         }
 
         void OnDestroy() => Grid.Changed -= Rebuild;
 
-        public Vector3 CellToWorld(Cell c) =>
-            transform.position + new Vector3(c.X * CellSize, 0.15f, c.Z * CellSize);
+        [Tooltip("How much of the water's lean the raft follows (0 = stays level).")]
+        public float rock = 0.6f;
+        float restY = float.NaN;
+
+        /// <summary>Rides the swell: rises and falls with the water under its centre and leans with the slope (owner's ask).</summary>
+        void LateUpdate()
+        {
+            if (float.IsNaN(restY)) restY = transform.position.y;
+            var p = transform.position;
+            // Calm the sea under the raft and its katig so no corner dips under a passing wave.
+            Waves.CalmCenter = p;
+            Waves.CalmRadius = (Grid.Radius + 2f) * CellSize;
+            float span = Mathf.Max(1.5f, Grid.Radius * CellSize);
+            p.y = restY + Waves.Height(p.x, p.z) + 0.08f;   // always on the water, never under it
+            transform.position = p;
+            var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), rock);
+            transform.rotation = Quaternion.FromToRotation(Vector3.up, up);
+        }
+
+        /// <summary>Where a cell's tile sits now, following the raft as it rocks.</summary>
+        public Vector3 CellToWorld(Cell c) => transform.TransformPoint(Local(c));
+
+        static Vector3 Local(Cell c) => new Vector3(c.X * CellSize, 0.15f, c.Z * CellSize);
 
         public Cell WorldToCell(Vector3 p)
         {
-            var local = p - transform.position;
+            var local = transform.InverseTransformPoint(p);
             return new Cell(Mathf.RoundToInt(local.x / CellSize), Mathf.RoundToInt(local.z / CellSize));
         }
 
@@ -64,10 +87,14 @@ namespace BrineBattle.Hunting
                     Destroy(tile.GetComponent<Collider>());
                     tiles[kv.Key] = tile;
                 }
-                bool module = kv.Value.type == ItemType.Module;
-                tile.transform.localScale = new Vector3(module ? 0.8f : 1f, module ? 0.7f : 0.3f, module ? 0.8f : 1f);
-                tile.transform.position = CellToWorld(kv.Key) + (module ? Vector3.up * 0.2f : Vector3.zero);
-                Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f) : PartColor(kv.Value.rarity));
+                var type = kv.Value.type;
+                bool module = type == ItemType.Module, habitat = type == ItemType.Habitat;
+                // Habitats: a sky perch stands tall, a tide pool sits low and watery.
+                bool perch = habitat && kv.Value.element == Elements.Element.Wind;
+                tile.transform.localScale = module ? new Vector3(0.8f, 0.7f, 0.8f) : perch ? new Vector3(0.35f, 1.3f, 0.35f) : habitat ? new Vector3(0.95f, 0.45f, 0.95f) : new Vector3(1f, 0.3f, 1f);
+                tile.transform.localPosition = Local(kv.Key) + Vector3.up * (module ? 0.2f : perch ? 0.5f : habitat ? 0.08f : 0f);
+                Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f)
+                    : perch ? new Color(0.8f, 0.65f, 0.4f) : habitat ? new Color(0.3f, 0.75f, 0.9f) : PartColor(kv.Value.rarity));
             }
         }
 

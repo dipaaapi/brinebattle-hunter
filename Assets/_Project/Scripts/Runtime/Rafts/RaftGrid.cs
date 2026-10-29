@@ -31,6 +31,8 @@ namespace BrineBattle.Rafts
         OutOfBounds = 3,
         NotARaftPart = 4,
         BelowTier = 5,
+        /// <summary>Raft parts wait until enough of the upstream edge holds auto-loot modules.</summary>
+        NeedsModules = 6,
     }
 
     public enum RemoveResult
@@ -60,6 +62,15 @@ namespace BrineBattle.Rafts
 
         /// <summary>Essence (rarity ≥ current tier) needed to raise the tier one step. 0 at max.</summary>
         public static int UpgradeCost(Rarity tier) => tier >= Rarity.Mythic ? 0 : 10 * ((int)tier + 1);
+
+        /// <summary>Monsters killed since the last tier upgrade needed for the next one (owner's call): 5, 10, 15 ...</summary>
+        public static int KillsToUpgrade(Rarity tier) => 5 * ((int)tier + 1);
+
+        /// <summary>Monster materials (loot, any rarity) spent on a tier upgrade: 5, 10, 15 ...</summary>
+        public static int MaterialsToUpgrade(Rarity tier) => 5 * ((int)tier + 1);
+
+        /// <summary>Share of the upstream edge rows that must end in an auto-loot module before the raft can grow or upgrade (owner's call).</summary>
+        public const float ModuleShareToGrow = 0.5f;
     }
 
     /// <summary>
@@ -71,12 +82,26 @@ namespace BrineBattle.Rafts
         readonly Dictionary<Cell, ItemDefinition> parts = new Dictionary<Cell, ItemDefinition>();
 
         public Rarity Tier { get; private set; } = Rarity.Common;
+
+        /// <summary>Monsters killed since the last tier upgrade; the scene counts them.</summary>
+        public int Kills { get; set; }
+
+        /// <summary>
+        /// Share of the upstream edge that must hold modules before raft parts go on or the tier goes up.
+        /// 0 (off) for a bare grid; the game sets <see cref="RaftRules.ModuleShareToGrow"/>.
+        /// </summary>
+        public float ModulesToGrow { get; set; }
+
+        /// <summary>Drifts come from −X (the left), so that is the upstream edge.</summary>
+        public const int UpstreamX = -1;
         public event Action Changed;
 
         public IReadOnlyDictionary<Cell, ItemDefinition> Parts => parts;
         public int Count => parts.Count;
         public int Size => RaftRules.SizeFor(parts.Count);
         public int MaxHp => parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier));
+        /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
+        public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));
 
         /// <summary>Square of starter parts around the centre, ignoring tier and adjacency.</summary>
@@ -90,13 +115,53 @@ namespace BrineBattle.Rafts
 
         public bool Has(Cell c) => parts.ContainsKey(c);
 
+        /// <summary>Rows of the raft, and how many of them end upstream in an auto-loot module.</summary>
+        public (int guarded, int rows) UpstreamModules()
+        {
+            var ends = parts.Keys.GroupBy(c => c.Z).Select(row => UpstreamX < 0 ? row.OrderBy(c => c.X).First() : row.OrderByDescending(c => c.X).First()).ToList();
+            return (ends.Count(c => parts[c].type == ItemType.Module), ends.Count);
+        }
+
+        /// <summary>
+        /// Where a module would guard a row that has none yet: the open cell just upstream of each such
+        /// row's end (the build guide highlights these). Rows already at the grid's edge have no spot.
+        /// </summary>
+        public List<Cell> UpstreamGaps()
+        {
+            var gaps = new List<Cell>();
+            foreach (var row in parts.Keys.GroupBy(c => c.Z).OrderBy(r => Math.Abs(r.Key)).ThenBy(r => r.Key))
+            {
+                var end = UpstreamX < 0 ? row.OrderBy(c => c.X).First() : row.OrderByDescending(c => c.X).First();
+                if (parts[end].type == ItemType.Module) continue;
+                var spot = new Cell(end.X + UpstreamX, end.Z);
+                if (Math.Abs(spot.X) <= RaftRules.MaxRadius) gaps.Add(spot);
+            }
+            return gaps;
+        }
+
+        /// <summary>Modules needed on the upstream edge (rounded up), given the current rows.</summary>
+        public int ModulesNeeded => (int)Math.Ceiling(UpstreamModules().rows * ModulesToGrow - 1e-4);
+
+        /// <summary>True when enough of the upstream edge holds modules to add raft parts or upgrade.</summary>
+        public bool ModulesReady => UpstreamModules().guarded >= ModulesNeeded;
+
+        /// <summary>Replaces every part and the tier at once (loading a save); skips placement rules.</summary>
+        public void Restore(IEnumerable<KeyValuePair<Cell, ItemDefinition>> saved, Rarity tier)
+        {
+            parts.Clear();
+            foreach (var kv in saved) if (kv.Value != null) parts[kv.Key] = kv.Value;
+            Tier = tier;
+            Changed?.Invoke();
+        }
+
         public PlaceResult CanPlace(Cell c, ItemDefinition part)
         {
-            if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module)) return PlaceResult.NotARaftPart;
+            if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module && part.type != ItemType.Habitat)) return PlaceResult.NotARaftPart;
             if (Math.Abs(c.X) > RaftRules.MaxRadius || Math.Abs(c.Z) > RaftRules.MaxRadius) return PlaceResult.OutOfBounds;
             if (parts.ContainsKey(c)) return PlaceResult.Occupied;
             if (parts.Count > 0 && !c.Neighbours().Any(parts.ContainsKey)) return PlaceResult.NotAdjacent;
             if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
+            if (part.type == ItemType.Raft && !ModulesReady) return PlaceResult.NeedsModules;
             return PlaceResult.Ok;
         }
 
@@ -133,11 +198,31 @@ namespace BrineBattle.Rafts
                 .Where(c => !parts.ContainsKey(c) && Math.Abs(c.X) <= RaftRules.MaxRadius && Math.Abs(c.Z) <= RaftRules.MaxRadius)
                 .Distinct();
 
-        /// <summary>Raise the tier one step if the inventory can pay. Lower-rarity parts already placed stay.</summary>
-        public bool TryUpgrade(Inventory inv)
+        /// <summary>Why the tier can't go up yet, or null when it can (kills, materials, essence, modules).</summary>
+        public string UpgradeBlocker(Inventory inv)
         {
             int cost = RaftRules.UpgradeCost(Tier);
-            if (cost == 0 || !inv.SpendEssence(Tier, cost)) return false;
+            if (cost == 0) return "The raft is already Mythic.";
+            var missing = new List<string>();
+            int kills = RaftRules.KillsToUpgrade(Tier), mats = RaftRules.MaterialsToUpgrade(Tier);
+            if (Kills < kills) missing.Add($"kill {kills - Kills} more monster{(kills - Kills == 1 ? "" : "s")}");
+            if (inv.MaterialCount() < mats) missing.Add($"{mats - inv.MaterialCount()} more monster materials");
+            if (inv.EssenceAtLeast(Tier) < cost) missing.Add($"{cost - inv.EssenceAtLeast(Tier)} more {Tier}+ essence");
+            var (guarded, _) = UpstreamModules();
+            if (guarded < ModulesNeeded) missing.Add($"{ModulesNeeded - guarded} more auto-loot module{(ModulesNeeded - guarded == 1 ? "" : "s")} on the left edge");
+            return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
+        }
+
+        /// <summary>
+        /// Raise the tier one step: needs <see cref="RaftRules.KillsToUpgrade"/> kills since the last upgrade,
+        /// and spends the materials and essence. Lower-rarity parts already placed stay.
+        /// </summary>
+        public bool TryUpgrade(Inventory inv)
+        {
+            if (UpgradeBlocker(inv) != null) return false;
+            inv.SpendMaterials(RaftRules.MaterialsToUpgrade(Tier));
+            inv.SpendEssence(Tier, RaftRules.UpgradeCost(Tier));
+            Kills = 0;
             Tier++;
             Changed?.Invoke();
             return true;
