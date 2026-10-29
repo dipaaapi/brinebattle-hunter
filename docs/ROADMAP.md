@@ -6,10 +6,10 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Companions (taming, battle visuals, roles on `phase/7-companions`, PR #4) |
-| **Next step** | Ed: click Unity, Run All, try Save/Load and the Crew/Mystic on the raft; then habitats, evolution and old age |
+| **Current phase** | Phase 7 — Companions (`phase/7-companions`, PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
+| **Next step** | Ed picks: merge PR #4 now or keep going on the branch (card open). Then evolution and old age (U-23), feeding, fusion, companion consumables |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
-| **Project folder** | `C:\Users\USER\brinebattle-hunter` |
+| **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
 
 > Start every session by reading this box. Finish every session by updating it.
