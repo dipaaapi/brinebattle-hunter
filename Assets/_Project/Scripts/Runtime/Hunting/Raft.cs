@@ -50,8 +50,11 @@ namespace BrineBattle.Hunting
         {
             if (float.IsNaN(restY)) restY = transform.position.y;
             var p = transform.position;
+            // Calm the sea under the raft and its katig so no corner dips under a passing wave.
+            Waves.CalmCenter = p;
+            Waves.CalmRadius = (Grid.Radius + 2f) * CellSize;
             float span = Mathf.Max(1.5f, Grid.Radius * CellSize);
-            p.y = restY + Waves.Height(p.x, p.z);   // always on the water, never under it
+            p.y = restY + Waves.Height(p.x, p.z) + 0.08f;   // always on the water, never under it
             transform.position = p;
             var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), rock);
             transform.rotation = Quaternion.FromToRotation(Vector3.up, up);

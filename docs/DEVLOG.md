@@ -16,6 +16,7 @@
 - Ed: in Auto, a weakened calm catch with no pet room is finished automatically (log only, no prompt). Current streak lines removed; the swell is taller (4 waves, up to ~0.8 m crest to trough), the ocean mesh finer and glossier so it reads from above; the raft always sits on the water and leans 60%. The raft tier is shown as a level (Common = Lv 1 … Mythic = Lv 6) in the HUD and Build.
 - Next Phase 7 step (Ed: go on): **habitats**. `ItemType.Habitat`; Tide Pool and Sky Perch (craft + dismantle recipes, `SampleDataBuilder`, DataVersion 5); placed in Build like parts (no tier or module gate); `RaftGrid.HabitatCount` sets roster room (3 + habitats) through `HookController.SyncHabitats`. Tame button says "no room: build a habitat". 119/119 rules tests; Editor scripts unchecked in the cloud.
 - Ed's playtest: at Lv 2 (Uncommon) the last left-edge module couldn't be placed: every module is Common, so the tier rule blocked them (and taking one off made it a misfit). Modules now fit any tier (`SalvageRules.IsEquippable` no longer lists Module), so they also stop being auto-salvaged as misfits.
+- Ed: a size-10 raft sank into the swell (flat raft, 10 m waves). The sea is now calm around the raft (`Waves.CalmCenter/CalmRadius`: 12% of the swell within the raft and katig, back to full over 5 m), and the raft sits 8 cm higher, so it still rocks gently but never goes under.
 
 ## 2026-10-29 — Phase 7 (slice 1: taming + companion in battle)
 - PR #3 merged → Phase 6 done. Ed picked Phase 7 next. Branch `phase/7-companions`.

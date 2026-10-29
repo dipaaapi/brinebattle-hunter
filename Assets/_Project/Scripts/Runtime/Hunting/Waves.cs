@@ -21,6 +21,23 @@ namespace BrineBattle.Hunting
         static readonly float[] amplitude = { 0.38f, 0.22f, 0.11f, 0.06f };
         static readonly float[] speed = { 1.1f, 0.9f, 1.4f, 1.2f };
 
+        /// <summary>
+        /// Calm water around the raft (owner's ask: a big raft was sinking into the swell). Inside
+        /// <see cref="CalmRadius"/> of <see cref="CalmCenter"/> the waves drop to <see cref="CalmShare"/>,
+        /// rising back to full over <see cref="CalmFade"/> metres. The raft sets these every frame.
+        /// </summary>
+        public static Vector3 CalmCenter;
+        public static float CalmRadius;
+        public const float CalmShare = 0.12f;
+        public const float CalmFade = 5f;
+
+        static float Calm(float x, float z)
+        {
+            if (CalmRadius <= 0f) return 1f;
+            float d = new Vector2(x - CalmCenter.x, z - CalmCenter.z).magnitude;
+            return Mathf.Lerp(CalmShare, 1f, Mathf.SmoothStep(0f, 1f, (d - CalmRadius) / CalmFade));
+        }
+
         /// <summary>Water height (metres above y = 0) at a world point now.</summary>
         public static float Height(float x, float z) => Height(x, z, Time.time);
 
@@ -34,7 +51,7 @@ namespace BrineBattle.Hunting
                 float k = 2f * Mathf.PI / w.w;
                 h += amplitude[i] * Mathf.Sin(k * (dir.x * x + dir.y * z) - speed[i] * t * k * 1.2f + i * 1.7f);
             }
-            return h;
+            return h * Calm(x, z);
         }
 
         /// <summary>How the water leans around a point, as the surface's up direction.</summary>
