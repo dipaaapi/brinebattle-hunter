@@ -66,9 +66,26 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>Live catches waiting on a module's line for the hunter to finish what they're doing.</summary>
+        readonly Dictionary<Drift, Slot> held = new Dictionary<Drift, Slot>();
+
+        void StartHeldBattle()
+        {
+            foreach (var kv in held.ToList())
+            {
+                if (kv.Key == null) { held.Remove(kv.Key); continue; }
+                if (!hook.ModuleBattle(kv.Key, kv.Value)) return;
+                held.Remove(kv.Key);
+                hook.Log($"The {kv.Value.Item.displayName}'s {kv.Key.Monster.displayName} attacks: auto battle!");
+                return;
+            }
+        }
+
         void Update()
         {
-            if (hook == null || slots.Count == 0 || WorldPause.Active) return;
+            if (hook == null || WorldPause.Active) return;
+            if (held.Count > 0) StartHeldBattle();
+            if (slots.Count == 0) return;
             Drift[] drifts = null;
             foreach (var kv in slots)
             {
@@ -143,9 +160,15 @@ namespace BrineBattle.Hunting
         {
             if (s.Level < 2) Flash(at, d.transform.position, false);
             string name = s.Item.displayName;
-            if (d.Actual == DriftState.Alive && EncounterRules.IsAggressive(d.Aggression) && hook.ModuleBattle(d, s))
+            // A live catch can't escape (owner's call): auto battle now, or held on the line until the hunter is free.
+            if (d.Actual == DriftState.Alive && hook.CanFight(d))
             {
-                hook.Log($"The {name} hooked a live {d.Monster.displayName}! It's aggressive and can't escape: auto battle!");
+                if (hook.ModuleBattle(d, s)) hook.Log($"The {name} hooked a live {d.Monster.displayName}! It can't escape: auto battle!");
+                else
+                {
+                    held[d] = s;
+                    hook.Log($"The {name} hooked a live {d.Monster.displayName} and holds it. Auto battle as soon as you're free.");
+                }
                 return;
             }
             if (d.Actual == DriftState.Alive)

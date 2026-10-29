@@ -351,15 +351,17 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
+        /// <summary>True when the raft is big enough to fight this drift if it is alive.</summary>
+        public bool CanFight(Drift d) => d != null && battle != null && !EncounterRules.IsGated(DriftState.Alive, raft.size, d.Monster.sizeClass);
+
         /// <summary>
-        /// An auto-loot module hooked a live, aggressive monster: it can't swim off, so the battle starts
-        /// at once and plays in Auto (owner's call). False when the hunter is busy or the raft is too
-        /// small for it; the module then takes the bite as before.
+        /// An auto-loot module hooked a live monster: it can't swim off, so the battle starts at once and
+        /// plays in Auto (owner's call). False while the hunter is busy (hooking, a prompt, a battle);
+        /// the module then holds it and tries again.
         /// </summary>
         public bool ModuleBattle(Drift d, object module)
         {
-            if (phase != Phase.Idle || battle == null || BattleController.InBattle || d == null) return false;
-            if (EncounterRules.IsGated(DriftState.Alive, raft.size, d.Monster.sizeClass)) return false;
+            if (phase != Phase.Idle || BattleController.InBattle || WorldPause.Active || !CanFight(d)) return false;
             d.Release(module);
             if (!d.TryClaim(this)) return false;
             target = d;
