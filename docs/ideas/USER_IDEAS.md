@@ -110,7 +110,7 @@ Each monster has an aggression (temperament). A weakened monster that is aggress
 The hunter, monsters and loot are hard to tell apart because they're all sample shapes. Make them readable, maybe with Blender models.
 - Options put to Ed: clearer code placeholders now (distinct shape per monster, hunter figure, loot labels) and keep Blender for Phase 9, or pull the Blender art pass forward.
 
-### U-19 Battle effects and projectiles — 2026-10-29 · 🟨 first pass · GDD §5, Phase 9
+### U-19 Battle effects and projectiles — 2026-10-29 · ✅ · GDD §5, Phase 9
 Battles have no visual effects yet: no projectiles (thrown harpoon, spit, dive), hit flashes or splashes. Add them so attacks read on screen.
 - 2026-10-29: Ed asked again during Phase 7 ("text and UI only, not fun"). First pass with placeholder shapes done on `phase/7-companions`: lunges, harpoon/Tidal Strike projectiles, hit flash + shake, damage/heal numbers, KO sink, companion stand-in beside the hunter. Splashes, particles and real models stay for Phase 9.
 
