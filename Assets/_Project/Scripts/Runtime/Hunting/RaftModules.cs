@@ -44,7 +44,8 @@ namespace BrineBattle.Hunting
 
         void Sync()
         {
-            foreach (var c in slots.Keys.Where(c => !raft.Grid.Has(c) || raft.Grid.Parts[c].type != ItemType.Module).ToList())
+            // A cell whose module was taken off or swapped (e.g. by loading a save) drops its old slot.
+            foreach (var c in slots.Keys.Where(c => !raft.Grid.Has(c) || raft.Grid.Parts[c] != slots[c].Item).ToList())
             {
                 var s = slots[c];
                 if (!stored.TryGetValue(s.Item, out var list)) stored[s.Item] = list = new List<int>();

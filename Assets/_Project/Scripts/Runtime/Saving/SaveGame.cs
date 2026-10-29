@@ -33,6 +33,25 @@ namespace BrineBattle.Saving
         public int activeCompanion = -1;
         public int habitats;
         public string collection;
+        /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>
+        public bool hasSettings;
+        public Settings settings = new Settings();
+
+        /// <summary>Choices made in the menus, so a loaded save plays the way it was left.</summary>
+        [Serializable]
+        public class Settings
+        {
+            public int battleMode;
+            public bool autoItems = true;
+            public bool autoSalvage;
+            public int weaponTier, armorTier, companionTier;
+            public bool crewBuilds = true;
+            public bool mysticRefines = true;
+            public int mysticKeep = 2;
+            /// <summary>Per module kind: the durability share at which the Crew repairs it.</summary>
+            public List<Share> crewRepairAt = new List<Share>();
+        }
+        [Serializable] public class Share { public string id; public float share; }
 
         [Serializable] public class Stack { public string id; public int count; }
         [Serializable] public class EssenceStack { public int rarity; public int element; public int count; }
@@ -49,7 +68,7 @@ namespace BrineBattle.Saving
     /// <summary>Turns game state into <see cref="SaveData"/> and back (GDD: save points). Plain C# for EditMode tests.</summary>
     public static class SaveGame
     {
-        public const int Version = 1;
+        public const int Version = 2;
 
         public static SaveData Capture(Inventory bag, Equipment gear, Durability harpoon, RaftGrid raft,
             IEnumerable<KeyValuePair<Cell, int>> moduleDurability, CompanionRoster pets, string collection, DateTime now)

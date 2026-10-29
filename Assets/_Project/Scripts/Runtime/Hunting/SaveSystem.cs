@@ -46,6 +46,7 @@ namespace BrineBattle.Hunting
             var data = SaveGame.Capture(hook.Inventory, hook.Gear, hook.Harpoon, hook.raft.Grid,
                 modules?.Slots.Select(kv => new KeyValuePair<Cell, int>(kv.Key, kv.Value.Durability.Current)),
                 hook.Companions, book != null ? book.Log.Serialize() : null, DateTime.Now);
+            CaptureSettings(data, hook, book);
             try
             {
                 Directory.CreateDirectory(Folder);
@@ -80,6 +81,50 @@ namespace BrineBattle.Hunting
             return "Uploaded. " + Load();
         }
 
+        /// <summary>Menu choices: battle mode and auto-items (Settings), auto-salvage, tiers and companion chores (Bag), Crew repair shares (Build).</summary>
+        static void CaptureSettings(SaveData data, HookController hook, CollectionBook book)
+        {
+            var bag = UnityEngine.Object.FindFirstObjectByType<BagPanel>();
+            var s = data.settings;
+            data.hasSettings = true;
+            s.battleMode = (int)Battle.BattleSettings.Mode;
+            s.autoItems = Battle.BattleSettings.AutoItems;
+            if (bag != null)
+            {
+                s.autoSalvage = bag.autoSalvage;
+                s.weaponTier = (int)bag.weaponTier;
+                s.armorTier = (int)bag.armorTier;
+                s.companionTier = (int)bag.companionTier;
+            }
+            s.crewBuilds = CompanionSettings.CrewBuilds;
+            s.mysticRefines = CompanionSettings.MysticRefines;
+            s.mysticKeep = CompanionSettings.MysticKeep;
+            var modules = new HashSet<string>();
+            if (book != null) foreach (var i in book.items) if (i != null && i.type == ItemType.Module) modules.Add(i.id);
+            foreach (var kv in hook.raft.Grid.Parts) if (kv.Value.type == ItemType.Module) modules.Add(kv.Value.id);
+            foreach (var id in modules.Where(id => !string.IsNullOrEmpty(id)))
+                s.crewRepairAt.Add(new SaveData.Share { id = id, share = CompanionSettings.CrewRepairAt(id) });
+        }
+
+        static void ApplySettings(SaveData.Settings s)
+        {
+            Battle.BattleSettings.Mode = (Battle.BattleMode)s.battleMode;
+            Battle.BattleSettings.AutoItems = s.autoItems;
+            var bag = UnityEngine.Object.FindFirstObjectByType<BagPanel>();
+            if (bag != null)
+            {
+                bag.autoSalvage = s.autoSalvage;
+                bag.weaponTier = (Rarity)s.weaponTier;
+                bag.armorTier = (Rarity)s.armorTier;
+                bag.companionTier = (Rarity)s.companionTier;
+            }
+            CompanionSettings.CrewBuilds = s.crewBuilds;
+            CompanionSettings.MysticRefines = s.mysticRefines;
+            CompanionSettings.MysticKeep = s.mysticKeep;
+            foreach (var r in s.crewRepairAt) if (!string.IsNullOrEmpty(r.id)) CompanionSettings.SetCrewRepairAt(r.id, r.share);
+            PlayerPrefs.Save();
+        }
+
         public static string Load()
         {
             var hook = UnityEngine.Object.FindFirstObjectByType<HookController>();
@@ -110,6 +155,7 @@ namespace BrineBattle.Hunting
                 foreach (var kv in modules.Slots)
                     if (durability.TryGetValue(kv.Key, out var cur)) kv.Value.Durability.Set(cur);
             if (book != null && data.collection != null) book.Restore(data.collection);
+            if (data.hasSettings) ApplySettings(data.settings);
             hook.ApplyCompanionBonuses();
             string note = missing.Count > 0 ? $" Unknown items skipped: {string.Join(", ", missing)}." : "";
             hook.Log($"Loaded the save from {data.savedAt}.{note}");

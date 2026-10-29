@@ -8,7 +8,8 @@
 - Widening and upgrading need auto-loot modules on half the left-edge rows (`RaftGrid.ModulesToGrow`, `PlaceResult.NeedsModules`). Ed confirmed this reading of "50% of installed modules".
 - A module that hooks a live aggressive monster starts a forced Auto battle (`HookController.ModuleBattle`, `BattleController.ForceAuto`).
 - Rules tests outside Unity: 117/117 (RaftGridTests now included).
-- Ed's playtest: a Hook Arm caught a live Shellback Crab and it still bit and swam off (crab aggression 0.45 often rolls calm, and only aggressive ones fought). Now every live catch the raft can fight starts the Auto battle; if the hunter is busy the module holds it until free. Ed: even monsters too big for the raft can't escape a module, so the size gate doesn't apply to module catches.
+- Ed's playtest: a Hook Arm caught a live Shellback Crab and it still bit and swam off (crab aggression 0.45 often rolls calm, and only aggressive ones fought). Now every live catch the raft can fight starts the Auto battle; if the hunter is busy the module holds it until free. Ed: even monsters too big for the raft can't escape a module, so the size gate doesn't apply to module catches. A module catch also cancels the hunter's own cast or reel.
+- Ed: menu settings must be in the save too. `SaveData.settings` (save version 2): battle mode, auto-use, auto-salvage, Bag target tiers, Crew/Mystic chore toggles, Mystic keep amount, Crew repair share per module kind. Fixed `RaftModules.Sync` keeping a stale slot when a load put a different module on the same cell.
 
 ## 2026-10-29 — Phase 7 (slice 1: taming + companion in battle)
 - PR #3 merged → Phase 6 done. Ed picked Phase 7 next. Branch `phase/7-companions`.
