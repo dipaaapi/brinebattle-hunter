@@ -81,7 +81,7 @@ namespace BrineBattle.Hunting
                 if (endTimer >= 1.2f) End();
                 return;
             }
-            var autoItem = BattleAI.ChooseItem(state, BattleSettings.Mode);
+            var autoItem = AutoItem();
             var pick = autoItem != null ? BattleAction.Item : BattleAI.Choose(state, BattleSettings.Mode);
             if (pick == null) { timer = 0f; return; }
             timer += Time.deltaTime;
@@ -107,6 +107,8 @@ namespace BrineBattle.Hunting
             if (state.Monster.Hp < before) shake = 1f;
             timer = 0f;
         }
+
+        ItemDefinition AutoItem() => BattleSettings.AutoItems ? BattleAI.ChooseItem(state, BattleSettings.Mode) : null;
 
         void UseItem(ItemDefinition item)
         {
@@ -151,7 +153,7 @@ namespace BrineBattle.Hunting
             }
             else
             {
-                bool waiting = BattleAI.ChooseItem(state, BattleSettings.Mode) == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
+                bool waiting = AutoItem() == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
                 GUI.enabled = waiting;
                 if (GUILayout.Button("Attack")) Play(BattleAction.Attack);
                 GUI.enabled = waiting && state.CanUse(BattleAction.Harpoon);
@@ -168,7 +170,7 @@ namespace BrineBattle.Hunting
                 var items = state.Bag.Items.Where(kv => kv.Key.effect != ConsumableEffect.None).ToList();
                 GUILayout.BeginHorizontal();
                 if (items.Count == 0) GUILayout.Label("<size=11>No consumables — craft them at the Workbench.</size>", new GUIStyle(GUI.skin.label) { richText = true });
-                bool waiting = BattleAI.ChooseItem(state, BattleSettings.Mode) == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
+                bool waiting = AutoItem() == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
                 foreach (var kv in items)
                 {
                     var item = kv.Key;

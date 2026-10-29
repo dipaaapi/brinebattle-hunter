@@ -98,7 +98,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [ ] Gear rarity skills (GDD §9 table)
 - [x] Consumables: Brine Tonic (HP) and Tar Patch (raft) from the workbench, used in battle (takes the turn); Semi-auto/Auto use them at ≤35% HP
 - [ ] Elemental oils and companion consumables
-- [ ] Real **Settings menu** (battle mode lives on the HUD until then)
+- [x] Real **Settings menu** (Esc / HUD button): battle mode, auto-use consumables toggle, controls
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 

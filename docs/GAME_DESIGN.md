@@ -50,7 +50,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - The player stays **on the raft**. Monsters attack from the **sea** (sea creatures) or **sky** (flying creatures).
 - Raft parts can be damaged during battle.
 - **Battle modes:** Manual, Semi-auto, Auto.
-  - Set in **Settings**; applied automatically when battle starts.
+  - Set in **Settings** (Esc); applied automatically when battle starts. Settings also has a toggle for auto-use of consumables in Semi-auto and Auto.
   - Can be changed anytime, including mid-battle.
 - Resource for actions: *TBD* (stamina only, or weapon charge/durability — no mana, since hunters have no magic).
 
