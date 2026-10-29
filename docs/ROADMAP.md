@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Companions (`phase/7-companions`, PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
-| **Next step** | Ed picks: merge PR #4 now or keep going on the branch (card open). Then evolution and old age (U-23), feeding, fusion, companion consumables |
+| **Current phase** | Phase 7 — Companions, part 2 (`phase/7-growth`). Part 1 merged (PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
+| **Next step** | Companion growth: evolution and old age (U-23), feeding, fusion with echo (U-8 + C-5), companion consumables. Combined idea plan in `ideas/COMPARISON.md` |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
