@@ -18,9 +18,12 @@ namespace BrineBattle.Battle
         public Initiative FirstRound { get; set; } = Initiative.Speed;
         /// <summary>Harpoon durability (idea C-4). Null = no wear.</summary>
         public Durability Weapon { get; set; }
+        /// <summary>The hunter's bag, for consumables. Null = no items in this battle.</summary>
+        public Inventory Bag { get; set; }
         public readonly List<string> Log = new List<string>();
 
         readonly Random rng;
+        ItemDefinition pendingItem;
 
         public BattleState(Combatant hunter, Combatant monster, int raftHp, Random rng)
         {
@@ -31,7 +34,30 @@ namespace BrineBattle.Battle
         }
 
         public bool CanUse(BattleAction a) =>
-            a != BattleAction.Harpoon || (Stamina >= BattleRules.HarpoonCost && (Weapon == null || !Weapon.Broken));
+            a == BattleAction.Item ? CanUseItem(pendingItem)
+            : a != BattleAction.Harpoon || (Stamina >= BattleRules.HarpoonCost && (Weapon == null || !Weapon.Broken));
+
+        /// <summary>A consumable in the bag whose effect would do something right now (no potions at full HP).</summary>
+        public bool CanUseItem(ItemDefinition item)
+        {
+            if (item == null || Bag == null || Bag.Count(item) <= 0 || item.effectAmount <= 0) return false;
+            switch (item.effect)
+            {
+                case ConsumableEffect.HealHunter: return Hunter.Hp < Hunter.MaxHp;
+                case ConsumableEffect.RepairRaft: return RaftHp < RaftMaxHp;
+                default: return false;
+            }
+        }
+
+        /// <summary>Plays one round where the hunter uses <paramref name="item"/>. Returns false (and plays nothing) if it can't be used.</summary>
+        public bool PlayItem(ItemDefinition item)
+        {
+            if (Outcome != BattleOutcome.Ongoing || !CanUseItem(item)) return false;
+            pendingItem = item;
+            PlayRound(BattleAction.Item);
+            pendingItem = null;
+            return true;
+        }
 
         /// <summary>Plays one round: both sides act in speed order. Returns false if the battle was already over.</summary>
         public bool PlayRound(BattleAction hunterAction)
@@ -68,6 +94,9 @@ namespace BrineBattle.Battle
                     Stamina = Math.Min(BattleRules.MaxStamina, Stamina + BattleRules.BraceStaminaBonus);
                     Add($"You brace yourself.");
                     return;
+                case BattleAction.Item:
+                    UseItem(pendingItem);
+                    return;
                 case BattleAction.Harpoon:
                     Stamina -= BattleRules.HarpoonCost;
                     Weapon?.Use(BattleRules.HarpoonWear);
@@ -88,6 +117,24 @@ namespace BrineBattle.Battle
             {
                 Outcome = BattleOutcome.Won;
                 Add($"{Monster.Name} is defeated!");
+            }
+        }
+
+        void UseItem(ItemDefinition item)
+        {
+            if (!CanUseItem(item)) { Add("Nothing happens."); return; }
+            Bag.Remove(item, 1);
+            if (item.effect == ConsumableEffect.HealHunter)
+            {
+                int gained = Math.Min(item.effectAmount, Hunter.MaxHp - Hunter.Hp);
+                Hunter.Hp += gained;
+                Add($"{item.displayName}: you recover {gained} HP.");
+            }
+            else
+            {
+                int gained = Math.Min(item.effectAmount, RaftMaxHp - RaftHp);
+                RaftHp += gained;
+                Add($"{item.displayName}: the raft recovers {gained} HP.");
             }
         }
 

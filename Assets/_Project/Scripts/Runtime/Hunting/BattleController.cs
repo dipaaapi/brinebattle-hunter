@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using BrineBattle.Battle;
+using BrineBattle.Items;
 using UnityEngine;
 
 namespace BrineBattle.Hunting
@@ -43,6 +45,7 @@ namespace BrineBattle.Hunting
             state = new BattleState(Combatant.Hunter(hook?.Gear), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
             state.Weapon = hook?.Harpoon;
+            state.Bag = hook?.Inventory;
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
             state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)BattleSettings.Mode]}.{first}");
             timer = 0f;
@@ -78,10 +81,13 @@ namespace BrineBattle.Hunting
                 if (endTimer >= 1.2f) End();
                 return;
             }
-            var pick = BattleAI.Choose(state, BattleSettings.Mode);
+            var autoItem = AutoItem();
+            var pick = autoItem != null ? BattleAction.Item : BattleAI.Choose(state, BattleSettings.Mode);
             if (pick == null) { timer = 0f; return; }
             timer += Time.deltaTime;
-            if (timer >= autoDelay) Play(pick.Value);
+            if (timer < autoDelay) return;
+            if (autoItem != null) UseItem(autoItem);
+            else Play(pick.Value);
         }
 
         void UpdateCamera()
@@ -102,6 +108,14 @@ namespace BrineBattle.Hunting
             timer = 0f;
         }
 
+        ItemDefinition AutoItem() => BattleSettings.AutoItems ? BattleAI.ChooseItem(state, BattleSettings.Mode) : null;
+
+        void UseItem(ItemDefinition item)
+        {
+            state.PlayItem(item);
+            timer = 0f;
+        }
+
         void End()
         {
             var outcome = state.Outcome;
@@ -115,7 +129,7 @@ namespace BrineBattle.Hunting
         {
             if (!Active) return;
             GUI.depth = -5;
-            float w = 520, h = 300;
+            float w = 520, h = 330;
             GUILayout.BeginArea(new Rect((Screen.width - w) / 2f, Screen.height - h - 12, w, h), $"Battle — round {state.Round}", HuntStyles.Window);
 
             Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
@@ -139,7 +153,7 @@ namespace BrineBattle.Hunting
             }
             else
             {
-                bool waiting = BattleAI.Choose(state, BattleSettings.Mode) == null;
+                bool waiting = AutoItem() == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
                 GUI.enabled = waiting;
                 if (GUILayout.Button("Attack")) Play(BattleAction.Attack);
                 GUI.enabled = waiting && state.CanUse(BattleAction.Harpoon);
@@ -149,6 +163,24 @@ namespace BrineBattle.Hunting
                 GUI.enabled = true;
             }
             GUILayout.EndHorizontal();
+
+            if (state.Outcome == BattleOutcome.Ongoing && state.Bag != null)
+            {
+                // Consumables (Phase 6): using one takes the hunter's turn. Semi-auto and Auto use them when low (BattleAI.ChooseItem).
+                var items = state.Bag.Items.Where(kv => kv.Key.effect != ConsumableEffect.None).ToList();
+                GUILayout.BeginHorizontal();
+                if (items.Count == 0) GUILayout.Label("<size=11>No consumables — craft them at the Workbench.</size>", new GUIStyle(GUI.skin.label) { richText = true });
+                bool waiting = AutoItem() == null && BattleAI.Choose(state, BattleSettings.Mode) == null;
+                foreach (var kv in items)
+                {
+                    var item = kv.Key;
+                    string what = item.effect == ConsumableEffect.HealHunter ? "HP" : "raft";
+                    GUI.enabled = waiting && state.CanUseItem(item);
+                    if (GUILayout.Button($"{item.displayName} ×{kv.Value} (+{item.effectAmount} {what})")) UseItem(item);
+                }
+                GUI.enabled = true;
+                GUILayout.EndHorizontal();
+            }
             GUILayout.EndArea();
         }
 

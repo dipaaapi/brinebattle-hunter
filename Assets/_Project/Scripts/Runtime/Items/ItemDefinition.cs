@@ -17,6 +17,10 @@ namespace BrineBattle.Items
         [Range(1, 5)] public int moduleLevel = 1;
         [Tooltip("Gear only: attack (weapon) or defense (armor) added to the hunter. Refine (+) raises it.")]
         [Min(0)] public int gearPower;
+        [Tooltip("Consumables only: what using it does (Phase 6).")]
+        public ConsumableEffect effect;
+        [Tooltip("Consumables only: HP restored to the hunter or the raft.")]
+        [Min(0)] public int effectAmount;
         public Sprite icon;
         [TextArea] public string description;
     }

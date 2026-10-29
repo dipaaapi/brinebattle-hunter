@@ -105,3 +105,16 @@ Some patches and planks can be turned into a net or a hook, upgraded, and taken 
 Each monster has an aggression (temperament). A weakened monster that is aggressive is killed outright, with no prompt and no menu, because there's no point taming it. Only a calm weakened monster asks Finish or Tame. A strong (alive) monster still goes straight to battle.
 - Built: `MonsterDefinition.aggression` (Eel 0.8, Crab 0.45, Gull 0.3), each drift ±0.15; aggressive = 0.5 or more. Also applies after a successful sedate.
 
+
+### U-18 Readable hunter, monsters and loot — 2026-10-29 · ⬜ open · Phase 9
+The hunter, monsters and loot are hard to tell apart because they're all sample shapes. Make them readable, maybe with Blender models.
+- Options put to Ed: clearer code placeholders now (distinct shape per monster, hunter figure, loot labels) and keep Blender for Phase 9, or pull the Blender art pass forward.
+
+### U-19 Battle effects and projectiles — 2026-10-29 · 💡 · GDD §5, Phase 9
+Battles have no visual effects yet: no projectiles (thrown harpoon, spit, dive), hit flashes or splashes. Add them so attacks read on screen.
+
+### U-20 Music and sound effects — 2026-10-29 · 💡 · new system
+No music or sound effects yet. Add ocean ambience, battle music and SFX (cast, reel, hit, loot, craft).
+
+### U-21 Fog and time-of-day look — 2026-10-29 · 💡 · GDD §2, Phase 9
+No fog and no day/night look yet. Fog at night (and maybe in rough seas) that limits how far you can see drifts. Pairs with U-10 (day/night cycle) and U-15 (rough seas).

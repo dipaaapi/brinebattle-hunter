@@ -1,6 +1,6 @@
 # BrineBattle Hunter — Game Design Document
 
-*Living document · v0.4*
+*Living document · v0.5*
 
 ## 1. Overview
 
@@ -50,7 +50,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - The player stays **on the raft**. Monsters attack from the **sea** (sea creatures) or **sky** (flying creatures).
 - Raft parts can be damaged during battle.
 - **Battle modes:** Manual, Semi-auto, Auto.
-  - Set in **Settings**; applied automatically when battle starts.
+  - Set in **Settings** (Esc); applied automatically when battle starts. Settings also has a toggle for auto-use of consumables in Semi-auto and Auto.
   - Can be changed anytime, including mid-battle.
 - Resource for actions: *TBD* (stamina only, or weapon charge/durability — no mana, since hunters have no magic).
 
@@ -145,6 +145,8 @@ Pages for **Monsters**, **Items** and **Pets**. Unacquired entries are silhouett
 ### Consumables
 
 Potions and items for health, companions, raft (repair, coatings), and weapons (elemental oils).
+
+**Implemented (Phase 6, tunable):** Brine Tonic (+25 hunter HP) and Tar Patch (+30 raft HP), crafted at the workbench. Battle-only for now; using one takes the hunter's turn and can't be done at full HP. Semi-auto and Auto use them by themselves at ≤35% HP (the lower of hunter/raft first); Manual leaves it to the player.
 
 ## 12. Other Hunters & Party
 

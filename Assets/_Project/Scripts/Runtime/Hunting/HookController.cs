@@ -60,6 +60,8 @@ namespace BrineBattle.Hunting
             line.startWidth = line.endWidth = 0.05f;
             line.enabled = false;
             if (starterModule != null) Inventory.Add(starterModule, 1);
+            // Settings menu (Phase 6) needs no scene wiring, so older Hook scenes get it too.
+            if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
         }
 
         void Update()
@@ -385,8 +387,10 @@ namespace BrineBattle.Hunting
             GUILayout.BeginVertical(HuntStyles.Box);
             GUILayout.Label("<b>BrineBattle Hunter — Phase 6</b>", Rich);
             GUILayout.Label("Click a drift in range to hook it.");
-            GUILayout.Label("Battle mode (Settings)");
-            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Battle mode: <b>{BattleSettings.Labels[(int)BattleSettings.Mode]}</b>", Rich);
+            if (GUILayout.Button("Settings (Esc)", GUILayout.Width(110))) WorldPause.Toggle(Menu.Settings);
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Raft: size {raft.size} · {raft.Grid.Count} parts · {raft.Tier} tier · {raft.MaxHp} HP");
             GUILayout.EndHorizontal();
