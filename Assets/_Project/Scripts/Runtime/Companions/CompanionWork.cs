@@ -57,6 +57,21 @@ namespace BrineBattle.Companions
             d != null && !d.Full && d.Current <= d.Max * threshold;
 
         /// <summary>
+        /// The hammer the Mystic would make next (Ed's ask: it keeps the hammer up with the raft level):
+        /// when the best hammer in the bag is below <paramref name="raftTier"/> (or there is none), the recipe
+        /// for the next hammer up, if the bag can pay for it. Null when the hammer already fits or nothing is affordable.
+        /// </summary>
+        public static RecipeDefinition MysticHammerPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, Rarity raftTier)
+        {
+            if (RaftRules.HasHammer(bag, raftTier)) return null;
+            var best = RaftRules.BestHammer(bag);
+            var next = best == null ? Rarity.Common : best.rarity + 1;
+            return recipes.FirstOrDefault(r => r != null && r.kind != RecipeKind.Dismantle && r.outputs.Count > 0
+                && r.outputs[0].item != null && r.outputs[0].item.type == ItemType.Tool && r.outputs[0].item.rarity == next
+                && CraftRules.CanCraft(bag, r));
+        }
+
+        /// <summary>
         /// The consumable the Mystic would craft to keep the bag stocked: a potion or oil recipe the bag
         /// can pay for whose output is below <paramref name="keep"/>. Potions before oils, emptiest first. Null if none.
         /// </summary>

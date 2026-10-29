@@ -33,6 +33,10 @@ namespace BrineBattle.Rafts
         BelowTier = 5,
         /// <summary>Raft parts wait until enough of the upstream edge holds auto-loot modules.</summary>
         NeedsModules = 6,
+        /// <summary>No hammer of the raft's level or better in the bag (Ed's ask).</summary>
+        NeedsHammer = 7,
+        /// <summary>Replace: the new part is the same as the one already there.</summary>
+        Same = 8,
     }
 
     public enum RemoveResult
@@ -41,6 +45,7 @@ namespace BrineBattle.Rafts
         Empty = 1,
         LastPart = 2,
         WouldSplit = 3,
+        NeedsHammer = 4,
     }
 
     /// <summary>Numbers for the raft builder (GDD §6). Tunable here.</summary>
@@ -73,6 +78,22 @@ namespace BrineBattle.Rafts
         public const float ModuleShareToGrow = 0.5f;
 
         /// <summary>
+        /// Building needs a hammer (Ed's ask: no building by hand in the middle of the ocean). A hammer
+        /// works on a raft whose level is at most its rarity, so after a raft level-up the hammer needs upgrading too.
+        /// </summary>
+        public static bool HammerFits(Rarity hammer, Rarity raftTier) => hammer >= raftTier;
+
+        /// <summary>The best hammer in the bag, or null.</summary>
+        public static ItemDefinition BestHammer(Inventory inv) =>
+            inv?.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.Tool).OrderByDescending(i => i.rarity).FirstOrDefault();
+
+        public static bool HasHammer(Inventory inv, Rarity raftTier)
+        {
+            var h = BestHammer(inv);
+            return h != null && HammerFits(h.rarity, raftTier);
+        }
+
+        /// <summary>
         /// How high the deck stands above the water, in metres (owner's call: a higher raft level means
         /// thicker planks, so waves stop washing over it). Lv 1 0.30 … Lv 6 0.90, above the tallest wave.
         /// </summary>
@@ -103,6 +124,13 @@ namespace BrineBattle.Rafts
         /// <summary>Drifts come from −X (the left), so that is the upstream edge.</summary>
         public const int UpstreamX = -1;
         public event Action Changed;
+
+        /// <summary>
+        /// The bag whose hammer allows building (Ed's ask). Null = no hammer needed (bare grids in tests);
+        /// the game sets the hunter's bag.
+        /// </summary>
+        public Inventory Tools { get; set; }
+        bool HammerReady => Tools == null || RaftRules.HasHammer(Tools, Tier);
 
         public IReadOnlyDictionary<Cell, ItemDefinition> Parts => parts;
         public int Count => parts.Count;
@@ -170,7 +198,33 @@ namespace BrineBattle.Rafts
             if (parts.Count > 0 && !c.Neighbours().Any(parts.ContainsKey)) return PlaceResult.NotAdjacent;
             if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
             if (part.type == ItemType.Raft && !ModulesReady) return PlaceResult.NeedsModules;
+            if (!HammerReady) return PlaceResult.NeedsHammer;
             return PlaceResult.Ok;
+        }
+
+        /// <summary>
+        /// Swaps the part on an occupied cell for another (Ed's ask: replace instead of remove, then place).
+        /// The raft keeps its shape, so only the type, tier and hammer rules apply.
+        /// </summary>
+        public PlaceResult CanReplace(Cell c, ItemDefinition part)
+        {
+            if (part == null || (part.type != ItemType.Raft && part.type != ItemType.Module && part.type != ItemType.Habitat)) return PlaceResult.NotARaftPart;
+            if (!parts.TryGetValue(c, out var old)) return PlaceResult.NotAdjacent;
+            if (old == part) return PlaceResult.Same;
+            if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
+            if (!HammerReady) return PlaceResult.NeedsHammer;
+            return PlaceResult.Ok;
+        }
+
+        public PlaceResult Replace(Cell c, ItemDefinition part, out ItemDefinition old)
+        {
+            old = null;
+            var r = CanReplace(c, part);
+            if (r != PlaceResult.Ok) return r;
+            old = parts[c];
+            parts[c] = part;
+            Changed?.Invoke();
+            return r;
         }
 
         public PlaceResult Place(Cell c, ItemDefinition part)
@@ -186,6 +240,7 @@ namespace BrineBattle.Rafts
         {
             if (!parts.ContainsKey(c)) return RemoveResult.Empty;
             if (parts.Count == 1) return RemoveResult.LastPart;
+            if (!HammerReady) return RemoveResult.NeedsHammer;
             return StaysConnectedWithout(c) ? RemoveResult.Ok : RemoveResult.WouldSplit;
         }
 
@@ -218,6 +273,7 @@ namespace BrineBattle.Rafts
             if (inv.EssenceAtLeast(Tier) < cost) missing.Add($"{cost - inv.EssenceAtLeast(Tier)} more {Tier}+ essence");
             var (guarded, _) = UpstreamModules();
             if (guarded < ModulesNeeded) missing.Add($"{ModulesNeeded - guarded} more auto-loot module{(ModulesNeeded - guarded == 1 ? "" : "s")} on the left edge");
+            if (!HammerReady) missing.Add($"a {Tier} hammer or better");
             return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
         }
 

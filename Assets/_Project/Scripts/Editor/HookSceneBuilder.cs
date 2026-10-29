@@ -89,6 +89,7 @@ namespace BrineBattle.Editor
             builder.hook = hook;
             hook.builder = builder;
             hook.starterModule = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/_Project/Data/Items/DriftNet.asset");
+            hook.starterHammer = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/_Project/Data/Items/DriftwoodHammer.asset");
             var modules = new GameObject("Raft Modules").AddComponent<RaftModules>();
             modules.raft = raft;
             modules.hook = hook;

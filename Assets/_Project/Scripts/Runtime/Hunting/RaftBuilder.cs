@@ -77,6 +77,20 @@ namespace BrineBattle.Hunting
         void TryPlace(Cell c)
         {
             if (selected == null) { message = "Pick a raft part from the list first."; return; }
+            // Clicking a built cell swaps its part for the selected one (Ed's ask: replace, not remove then place).
+            if (raft.Grid.Has(c))
+            {
+                var rr = raft.Grid.Replace(c, selected, out var old);
+                if (rr == PlaceResult.Ok)
+                {
+                    hook.Inventory.Remove(selected, 1);
+                    hook.Inventory.Add(old, 1);
+                    message = $"Replaced {old.displayName} with {selected.displayName}; the old one is back in the bag.";
+                    hook.Log($"Replaced {old.displayName} with {selected.displayName} at {c}.");
+                }
+                else message = rr == PlaceResult.Same ? "That part is already there." : PlaceText(rr);
+                return;
+            }
             var r = raft.Grid.Place(c, selected);
             if (r == PlaceResult.Ok)
             {
@@ -98,6 +112,7 @@ namespace BrineBattle.Hunting
                     break;
                 case RemoveResult.WouldSplit: message = "That part holds the raft together."; break;
                 case RemoveResult.LastPart: message = "You can't remove the last part."; break;
+                case RemoveResult.NeedsHammer: message = HammerText; break;
                 default: message = "No part there."; break;
             }
         }
@@ -137,6 +152,13 @@ namespace BrineBattle.Hunting
                 }
                 else if (GUILayout.Button("No module in the bag: craft a Drift Net (Workbench → Raft)")) tab = RecipeCategory.Raft;
             }
+
+            var hammer = RaftRules.BestHammer(inv);
+            if (Step(RaftRules.HasHammer(inv, g.Tier), $"A {g.Tier} hammer or better: {(hammer != null ? hammer.displayName : "none")}",
+                "Building and leveling up need a hammer of the raft's level. Craft or upgrade it in the Workbench (Raft tab); a Mystic pet does it for you too."))
+                if (GUILayout.Button("Open the Raft recipes")) tab = RecipeCategory.Raft;
+            if (!g.Tier.Equals(Rarity.Mythic))
+                GUILayout.Label($"<size=11>After the level-up, upgrade the hammer to {g.Tier + 1} to keep building.</size>", Rich);
             GUILayout.EndVertical();
         }
 
@@ -151,6 +173,8 @@ namespace BrineBattle.Hunting
         static string Have(int have, int need) =>
             $"<color={(have >= need ? "#7CFC9A" : "#ff8a80")}>{Mathf.Min(have, need)}/{need}</color>";
 
+        const string HammerText = "You need a hammer of the raft's level or better to build. Craft or upgrade one in the Workbench (Raft tab); a Mystic pet makes it for you too.";
+
         static string PlaceText(PlaceResult r)
         {
             switch (r)
@@ -160,6 +184,7 @@ namespace BrineBattle.Hunting
                 case PlaceResult.OutOfBounds: return "Too far out (max 9x9).";
                 case PlaceResult.BelowTier: return "That part is below the raft level. Reinforce it in the Workbench (Raft tab) into a part of this level.";
                 case PlaceResult.NeedsModules: return "Install more auto-loot modules on the left edge first (half of its rows need one).";
+                case PlaceResult.NeedsHammer: return HammerText;
                 default: return "That isn't a raft part.";
             }
         }
@@ -203,7 +228,7 @@ namespace BrineBattle.Hunting
             if (cell == null) return;
             hover.transform.position = raft.CellToWorld(cell.Value) + Vector3.up * 0.1f;
             bool ok = mode == Mode.Place
-                ? selected != null && raft.Grid.CanPlace(cell.Value, selected) == PlaceResult.Ok
+                ? selected != null && (raft.Grid.Has(cell.Value) ? raft.Grid.CanReplace(cell.Value, selected) : raft.Grid.CanPlace(cell.Value, selected)) == PlaceResult.Ok
                 : raft.Grid.CanRemove(cell.Value) == RemoveResult.Ok;
             Tint.Apply(hover.GetComponent<Renderer>(), ok ? new Color(1f, 1f, 0.4f) : new Color(1f, 0.35f, 0.3f));
         }
@@ -240,7 +265,11 @@ namespace BrineBattle.Hunting
                 guide = !guide;
             if (guide) DrawGuide();
 
-            GUILayout.Label("1. Pick a part  2. Click a green tile next to the raft.\nYellow cursor = OK, red = not allowed.", Rich);
+            var hammerNow = RaftRules.BestHammer(hook.Inventory);
+            GUILayout.Label(RaftRules.HasHammer(hook.Inventory, raft.Tier)
+                ? $"Hammer: {hammerNow.displayName}"
+                : $"<color=#ff8a80>Hammer: {(hammerNow != null ? hammerNow.displayName + " is too weak for this raft" : "none")} — craft or upgrade one (Raft tab)</color>", Rich);
+            GUILayout.Label("1. Pick a part  2. Click a green tile next to the raft, or a built tile to replace it.\nYellow cursor = OK, red = not allowed.", Rich);
             mode = (Mode)GUILayout.Toolbar((int)mode, new[] { "Place", "Remove" });
 
             GUILayout.Label("<b>Raft parts in your bag</b>", Rich);

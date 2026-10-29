@@ -14,5 +14,7 @@ namespace BrineBattle.Items
         Module = 7,
         /// <summary>Companion habitat (Phase 7): placed on the raft grid; each one gives room for one more companion.</summary>
         Habitat = 8,
+        /// <summary>Building tool (Ed's ask): a hammer of the raft's level or better is needed to build on it.</summary>
+        Tool = 9,
     }
 }

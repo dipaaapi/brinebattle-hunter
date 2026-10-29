@@ -74,6 +74,21 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void MysticUpgradesTheHammerWhenTheRaftOutgrowsIt()
+        {
+            var mat = Item(ItemType.Material);
+            var oldHammer = Item(ItemType.Tool, Rarity.Common);
+            var newHammer = Item(ItemType.Tool, Rarity.Uncommon);
+            var recipes = new[] { Recipe(mat, oldHammer), Recipe(oldHammer, newHammer) };
+            var bag = new Inventory();
+            bag.Add(mat, 1);
+            Assert.AreEqual(recipes[0], CompanionWork.MysticHammerPick(recipes, bag, Rarity.Common), "no hammer: make the first one");
+            bag.Add(oldHammer, 1);
+            Assert.IsNull(CompanionWork.MysticHammerPick(recipes, bag, Rarity.Common), "the hammer fits");
+            Assert.AreEqual(recipes[1], CompanionWork.MysticHammerPick(recipes, bag, Rarity.Uncommon), "raft leveled up: upgrade it");
+        }
+
+        [Test]
         public void MysticRestocksPotionsBeforeOils()
         {
             var mat = Item(ItemType.Material);

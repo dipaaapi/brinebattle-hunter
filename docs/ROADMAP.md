@@ -120,6 +120,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
 - [x] Evolution and old age (U-23): age in battles won, Young → Adult → Elder, death leaves essence + Book memorial (numbers wait for Ed)
 - [x] Pets menu (P), separate from the Bag (owner's ask)
+- [x] Hammer needed to build and level up (one per raft level, upgradable, crafted from loot, Mystic makes it); Replace a built tile (owner's asks)
 - [x] Feeding / infusion with loot and potions (companion growth, no EXP): Pets → Feed
 - [x] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; essence catalyst; source used up, keeps an echo): Pets → Fuse
 - [x] Companion consumables (moved from Phase 6): Kelp Biscuit heals or wakes the battle companion; Semi-auto/Auto use it

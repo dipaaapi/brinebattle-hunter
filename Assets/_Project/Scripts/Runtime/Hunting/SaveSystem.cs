@@ -174,6 +174,9 @@ namespace BrineBattle.Hunting
                     if (durability.TryGetValue(kv.Key, out var cur)) kv.Value.Durability.Set(cur);
             if (book != null && data.collection != null) book.Restore(data.collection);
             if (data.hasSettings) ApplySettings(data.settings);
+            // Saves from before hammers existed get the starter hammer, so building isn't locked out.
+            if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))
+                hook.Inventory.Add(hook.starterHammer, 1);
             hook.SyncHabitats();
             hook.ApplyCompanionBonuses();
             string note = missing.Count > 0 ? $" Unknown items skipped: {string.Join(", ", missing)}." : "";

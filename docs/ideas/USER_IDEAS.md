@@ -140,3 +140,7 @@ The menus are too complicated; a child should be able to use them. Fewer words, 
 
 ### U-26 Main menu scene — 2026-10-29 · ✅ (first pass) · GDD §13, UI art in Phase 9
 Before the game starts or continues there should be a main menu: New game, Continue and Settings, so the player sets things up first and then plays without stopping. It is its own scene that loads first, not a pop-up over the game (Ed). Pulled forward by the owner during Phase 7.
+
+### U-27 Standalone and WebGL builds — 2026-10-29 · 💡 · GDD §13, after Phase 9
+Can the game be a standalone app and also run in a browser (WebGL)? If yes, do both.
+- Claude's note: yes, one Unity project builds both. Ed's laptop Unity already has Windows Standalone and WebGL modules (Mac/Linux need theirs added). WebGL needs: a save that reliably persists in browser storage (IndexedDB sync), a browser file picker plus "download save" instead of Upload by path, hiding Quit; Phase 10 online play would need WebSockets. First step: a test Web build to see size and speed.

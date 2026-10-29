@@ -167,6 +167,22 @@ namespace BrineBattle.Editor
             Recipe("reinforce_coralbound_plank", "Coralbound Plank", RecipeKind.Upgrade, new[] { (shell, 2), (scale, 2) }, new[] { (coral, 1) });
             Recipe("reinforce_leviathan_beam", "Leviathan Beam", RecipeKind.Upgrade, new[] { (coral, 2), (fang, 3) }, new[] { (leviathan, 1) });
             Recipe("reinforce_abyssal_keel", "Abyssal Keel", RecipeKind.Upgrade, new[] { (leviathan, 2), (shell, 3) }, new[] { (abyssal, 1) });
+            // Ed's ask: building needs a hammer of the raft's level or better; each hammer upgrades from the last.
+            var hammers = new[]
+            {
+                Hammer("DriftwoodHammer", "driftwood_hammer", "Driftwood Hammer", Rarity.Common, "A fang lashed to a plank. Builds on a Lv 1 raft."),
+                Hammer("TarredHammer", "tarred_hammer", "Tarred Hammer", Rarity.Uncommon, "Heavier, tar-bound head. Builds on a raft up to Lv 2."),
+                Hammer("ShellHammer", "shell_hammer", "Shell Hammer", Rarity.Rare, "A crab-shell head that doesn't chip. Builds on a raft up to Lv 3."),
+                Hammer("CoralHammer", "coral_hammer", "Coral Hammer", Rarity.Epic, "Living coral, hard as stone. Builds on a raft up to Lv 4."),
+                Hammer("LeviathanHammer", "leviathan_hammer", "Leviathan Hammer", Rarity.Legendary, "A great fang for a head. Builds on a raft up to Lv 5."),
+                Hammer("AbyssalHammer", "abyssal_hammer", "Abyssal Hammer", Rarity.Mythic, "Black deep-wood that never breaks. Builds on any raft."),
+            };
+            Recipe("craft_driftwood_hammer", "Driftwood Hammer", RecipeKind.Craft, new[] { (plank, 2), (fang, 1) }, new[] { (hammers[0], 1) });
+            Recipe("upgrade_tarred_hammer", "Tarred Hammer", RecipeKind.Upgrade, new[] { (hammers[0], 1), (tarred, 1), (fang, 1) }, new[] { (hammers[1], 1) });
+            Recipe("upgrade_shell_hammer", "Shell Hammer", RecipeKind.Upgrade, new[] { (hammers[1], 1), (shell, 1), (fang, 2) }, new[] { (hammers[2], 1) });
+            Recipe("upgrade_coral_hammer", "Coral Hammer", RecipeKind.Upgrade, new[] { (hammers[2], 1), (coral, 1), (scale, 2) }, new[] { (hammers[3], 1) });
+            Recipe("upgrade_leviathan_hammer", "Leviathan Hammer", RecipeKind.Upgrade, new[] { (hammers[3], 1), (leviathan, 1), (fang, 3) }, new[] { (hammers[4], 1) });
+            Recipe("upgrade_abyssal_hammer", "Abyssal Hammer", RecipeKind.Upgrade, new[] { (hammers[4], 1), (abyssal, 1), (shell, 2) }, new[] { (hammers[5], 1) });
             // Phase 6: gear power (set every build so older assets get it too) and gear recipes.
             SetGearPower(spear, 4);
             SetGearPower(buckler, 3);
@@ -247,6 +263,14 @@ namespace BrineBattle.Editor
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }
+
+        static ItemDefinition Hammer(string file, string id, string name, Rarity rarity, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Tool;
+                i.rarity = rarity; i.element = Element.None; i.maxStack = 1;
+                i.description = description;
+            });
 
         static ItemDefinition RaftPart(string file, string id, string name, Rarity rarity, Element element, string description) =>
             LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>

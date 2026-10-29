@@ -37,6 +37,8 @@ namespace BrineBattle.Hunting
         public event System.Action<Monsters.MonsterDefinition> MonsterTamed;
         [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
         public ItemDefinition starterModule;
+        [Tooltip("The hammer a new game starts with (building needs a hammer of the raft's level).")]
+        public ItemDefinition starterHammer;
         /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
         public event System.Action LootAdded;
         /// <summary>Raised when a monster is harvested, finished or defeated (collection book).</summary>
@@ -68,6 +70,9 @@ namespace BrineBattle.Hunting
             line.startWidth = line.endWidth = 0.05f;
             line.enabled = false;
             if (starterModule != null) Inventory.Add(starterModule, 1);
+            if (starterHammer != null) Inventory.Add(starterHammer, 1);
+            // Building needs a hammer from this bag (Ed's ask).
+            raft.Grid.Tools = Inventory;
             // Settings menu (Phase 6) needs no scene wiring, so older Hook scenes get it too.
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
