@@ -210,13 +210,14 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 ### HUD and menus (owner idea U-25)
 
-Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status card top-left (raft level and HP, harpoon wear with Fix, pets), one hint banner at the top, and a bottom **dock of picture buttons**: Bag (B), Pets (P), Book (C), Build (R), Settings (Esc). A button lights up while its menu is open. Every menu has a red **×** and is split into **tabs**, so each page is short:
-- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Level up (✔/✘ steps and the button).
+Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status card top-left (raft level and HP, harpoon wear with Fix, pets) and a bottom **dock of picture buttons**: Bag (B), Pets (P), Book (C), Build (R), Settings (Esc). A button lights up while its menu is open. Every menu has a red **×** and is split into **tabs**, so each page is short:
+- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Level up (✔/✘ requirements and the button).
 - **Workbench:** each recipe is a card listing every ingredient as have/need, green ✔ or red ✘ with "need N more". Ready recipes come first, each tab shows how many are ready, and a box hides what can't be made yet (Ed's ask).
 - **Bag:** Items (filter by kind; one line on what each item is for) · Equipment · Essence · Auto-salvage.
 - **Pets:** the list of pets on the left, the picked pet on the right (life and growth bars, Feed, Fuse, Look, battle, Release) · Chores.
 - **Book:** tab labels show found/total; a progress bar.
-- **Settings:** Game · Save · Controls.
+- **Settings:** Game · Save · Controls · **FAQ**.
+- **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
 
 ### Main menu (Ed's ask)
 

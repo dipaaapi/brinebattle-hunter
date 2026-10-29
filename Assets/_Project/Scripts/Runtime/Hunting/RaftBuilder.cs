@@ -118,59 +118,30 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>
-        /// Step-by-step help for the next raft tier (owner idea U-25): each requirement, done or not,
-        /// what to do about it, and a button that takes the player there where it can.
+        /// What the next raft level needs, each ✔ or ✘ with have/need. How-to text lives only in
+        /// Settings → FAQ (Ed's call).
         /// </summary>
-        void DrawGuide()
+        void DrawRequirements()
         {
             var g = raft.Grid;
             var inv = hook.Inventory;
             int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier), cost = RaftRules.UpgradeCost(g.Tier);
-            GUILayout.BeginVertical(HuntStyles.Card);
-            GUILayout.Label($"<b>Steps to raft Lv {(int)g.Tier + 2} ({g.Tier + 1})</b>", HuntStyles.Text);
-
-            if (Step(g.Kills >= kills, $"Defeat monsters: {Mathf.Min(g.Kills, kills)}/{kills}",
-                "Hook monsters marked \"Something moves!\" and win the battle, or finish weakened ones (\"Twitching...\"). Module catches count too."))
-                if (GUILayout.Button("Go hunting (close Build)")) Toggle();
-
-            if (Step(inv.MaterialCount() >= mats, $"Collect monster materials: {Mathf.Min(inv.MaterialCount(), mats)}/{mats}",
-                "Harvest monsters that \"Look dead\", win battles, or let your modules catch drifts. Scales, fangs and feathers count."))
-                if (GUILayout.Button("Go hunting (close Build)")) Toggle();
-
-            if (Step(inv.EssenceAtLeast(g.Tier) >= cost, $"Get {g.Tier}+ essence: {Mathf.Min(inv.EssenceAtLeast(g.Tier), cost)}/{cost}",
-                $"Break down {g.Tier} or rarer items you don't need: Workbench → Dismantle here, or Salvage in the Bag."))
-                if (GUILayout.Button("Open Dismantle")) OpenBench(RecipeCategory.Dismantle);
-
             var (guarded, _) = g.UpstreamModules();
-            if (Step(guarded >= g.ModulesNeeded, $"Modules on the left edge: {guarded}/{g.ModulesNeeded}",
-                "Put an auto-loot module at the left end of a row. The <color=#ffd866>yellow</color> tiles show where."))
-            {
-                var module = inv.Items.Select(kv => kv.Key).FirstOrDefault(i => i.type == ItemType.Module && SalvageRules.IsCompatible(i.type, i.rarity, g.Tier));
-                if (module != null)
-                {
-                    if (GUILayout.Button($"Pick a {module.displayName} to place")) { selected = module; mode = Mode.Place; page = Page.Build; }
-                }
-                else if (GUILayout.Button("No module in the bag: make a Drift Net")) OpenBench(RecipeCategory.Raft);
-            }
-
             var hammer = RaftRules.BestHammer(inv);
-            if (Step(RaftRules.HasHammer(inv, g.Tier), $"A {g.Tier} hammer or better: {(hammer != null ? hammer.displayName : "none")}",
-                "Building and leveling up need a hammer of the raft's level. Craft or upgrade it in the Workbench (Raft tab); a Mystic pet does it for you too."))
-                if (GUILayout.Button("Open the Raft recipes")) OpenBench(RecipeCategory.Raft);
-            if (!g.Tier.Equals(Rarity.Mythic))
-                GUILayout.Label($"<size=11>After the level-up, upgrade the hammer to {g.Tier + 1} to keep building.</size>", HuntStyles.Text);
+            GUILayout.BeginVertical(HuntStyles.Card);
+            GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 2} ({g.Tier + 1}) needs</b>", HuntStyles.Text);
+            Step(g.Kills >= kills, $"Monsters beaten: {Mathf.Min(g.Kills, kills)}/{kills}");
+            Step(inv.MaterialCount() >= mats, $"Monster materials: {Mathf.Min(inv.MaterialCount(), mats)}/{mats}");
+            Step(inv.EssenceAtLeast(g.Tier) >= cost, $"{g.Tier}+ essence: {Mathf.Min(inv.EssenceAtLeast(g.Tier), cost)}/{cost}");
+            Step(guarded >= g.ModulesNeeded, $"Modules on the left edge: {Mathf.Min(guarded, g.ModulesNeeded)}/{g.ModulesNeeded}");
+            Step(RaftRules.HasHammer(inv, g.Tier), $"{g.Tier} hammer or better: {(hammer != null ? hammer.displayName : "none")}");
             GUILayout.EndVertical();
         }
 
-        /// <summary>One guide line. True when it still needs doing (so the caller can add its button).</summary>
-        static bool Step(bool done, string title, string how)
-        {
+        static void Step(bool done, string title) =>
             GUILayout.Label(done ? $"<color={HuntStyles.GoodHex}>✔ {title}</color>" : $"<color={HuntStyles.BadHex}>✘</color> <b>{title}</b>", HuntStyles.Text);
-            if (!done) GUILayout.Label(how, HuntStyles.Hint);
-            return !done;
-        }
 
-        const string HammerText = "You need a hammer of the raft's level or better to build. Craft or upgrade one in the Workbench (Raft tab); a Mystic pet makes it for you too.";
+        const string HammerText = "Your hammer is too weak for this raft level.";
 
         static string PlaceText(PlaceResult r)
         {
@@ -179,8 +150,8 @@ namespace BrineBattle.Hunting
                 case PlaceResult.Occupied: return "There's already a part there.";
                 case PlaceResult.NotAdjacent: return "Parts must touch the raft.";
                 case PlaceResult.OutOfBounds: return "Too far out (max 9x9).";
-                case PlaceResult.BelowTier: return "That part is below the raft level. Reinforce it in the Workbench (Raft tab) into a part of this level.";
-                case PlaceResult.NeedsModules: return "Install more auto-loot modules on the left edge first (half of its rows need one).";
+                case PlaceResult.BelowTier: return "That part is too weak for this raft level.";
+                case PlaceResult.NeedsModules: return "Not enough modules on the left edge yet.";
                 case PlaceResult.NeedsHammer: return HammerText;
                 default: return "That isn't a raft part.";
             }
@@ -296,15 +267,12 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
 
             mode = (Mode)HuntStyles.Tabs((int)mode, new[] { "Place / replace", "Remove" });
-            GUILayout.Label(mode == Mode.Place
-                ? "1. Pick a part below.  2. Click a green tile next to the raft, or a built tile to swap it."
-                : "Click a built tile to take it off (it goes back to the bag).", HuntStyles.Hint);
             if (mode == Mode.Remove) return;
 
             var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module || kv.Key.type == ItemType.Habitat).ToList();
             if (parts.Count == 0)
             {
-                GUILayout.Label("No raft parts in the bag. Harvest planks from drifts, or make some:", HuntStyles.Text);
+                GUILayout.Label("No raft parts in the bag.", HuntStyles.Text);
                 if (GUILayout.Button("Open the Raft recipes", GUILayout.Height(30))) OpenBench(RecipeCategory.Raft);
                 return;
             }
@@ -339,12 +307,11 @@ namespace BrineBattle.Hunting
                 labels[i] = n > 0 ? $"{CraftRules.CategoryLabels[i]} ({n})" : CraftRules.CategoryLabels[i];
             }
             tab = (RecipeCategory)GUILayout.SelectionGrid((int)tab, labels, 3, HuntStyles.TabStyle, GUILayout.Height(60));
-            GUILayout.Label(CraftRules.CategoryHints[(int)tab] + "  (n) = ready to make.", HuntStyles.Hint);
             readyOnly = GUILayout.Toggle(readyOnly, " Show only what I can make now");
 
             var shown = CraftRules.ByReadiness(inv, recipes.Where(r => r != null && CraftRules.CategoryOf(r) == tab));
             if (readyOnly) shown = shown.Where(r => CraftRules.CanCraft(inv, r)).ToList();
-            if (shown.Count == 0) GUILayout.Label(readyOnly ? "Nothing ready here yet. Untick the box to see what's missing." : "No recipes here yet.", HuntStyles.Text);
+            if (shown.Count == 0) GUILayout.Label(readyOnly ? "Nothing ready here yet." : "No recipes here yet.", HuntStyles.Text);
             foreach (var r in shown) RecipeCard(r);
         }
 
@@ -406,8 +373,7 @@ namespace BrineBattle.Hunting
         {
             var g = raft.Grid;
             var (guarded, rows) = g.UpstreamModules();
-            GUILayout.Label($"Left edge: {HuntStyles.Count(guarded, g.ModulesNeeded)} rows guarded (of {rows}). Needed to widen or level up the raft.", HuntStyles.Text);
-            GUILayout.Label("Modules grab loot that floats into them. Place them in the Build tab.", HuntStyles.Hint);
+            GUILayout.Label($"Left edge: {HuntStyles.Count(guarded, g.ModulesNeeded)} rows guarded (of {rows})", HuntStyles.Text);
             if (modules == null || modules.Slots.Count == 0)
             {
                 GUILayout.Label("No modules on the raft yet.", HuntStyles.Text);
@@ -426,14 +392,13 @@ namespace BrineBattle.Hunting
                 GUILayout.EndHorizontal();
                 float fill = s.Durability.Max > 0 ? (float)s.Durability.Current / s.Durability.Max : 0f;
                 HuntStyles.Bar(fill, s.Durability.Broken ? new Color(0.9f, 0.3f, 0.3f) : new Color(0.4f, 0.8f, 0.5f));
-                if (s.Durability.Broken) GUILayout.Label($"<color={HuntStyles.BadHex}>Broken: repair it to use it again.</color>", HuntStyles.Hint);
+                if (s.Durability.Broken) GUILayout.Label($"<color={HuntStyles.BadHex}>Broken</color>", HuntStyles.Hint);
                 GUILayout.EndVertical();
             }
             if (hook.Companions.Best(Companions.CompanionRole.Crew) != null)
             {
                 // One slider per module kind, not per module (owner idea U-25: less clutter). The Crew repairs at or below it.
                 GUILayout.Label("<b>Crew auto-repair</b>", HuntStyles.Text);
-                GUILayout.Label("Your Crew pet fixes a module when it drops to this.", HuntStyles.Hint);
                 foreach (var kind in modules.Slots.Values.Select(x => x.Item).Distinct())
                 {
                     float at = CompanionSettings.CrewRepairAt(kind.id);
@@ -450,7 +415,7 @@ namespace BrineBattle.Hunting
         {
             var g = raft.Grid;
             if (RaftRules.UpgradeCost(g.Tier) <= 0) { GUILayout.Label("The raft is at the highest level.", HuntStyles.Text); return; }
-            DrawGuide();
+            DrawRequirements();
             string blocker = g.UpgradeBlocker(hook.Inventory);
             if (blocker == null)
             {
@@ -461,10 +426,9 @@ namespace BrineBattle.Hunting
             else
             {
                 GUI.enabled = false;
-                GUILayout.Button("Finish the red steps first", GUILayout.Height(32));
+                GUILayout.Button("Not ready yet (see ✘)", GUILayout.Height(32));
                 GUI.enabled = true;
             }
-            GUILayout.Label("After leveling up, parts below the new level can't be added.", HuntStyles.Hint);
         }
     }
 }

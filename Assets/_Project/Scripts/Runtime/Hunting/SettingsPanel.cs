@@ -45,17 +45,18 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             if (!open) return;
             GUI.depth = -5;
-            float w = Mathf.Min(420, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(520, HuntStyles.H - 120);
+            float w = Mathf.Min(520, HuntStyles.W - HookController.HudRight - 22), h = Mathf.Min(560, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, 20, w, h), "Settings", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Settings); GUILayout.EndArea(); return; }
 
-            // Owner idea U-25: three short pages.
-            var labels = inGame ? new[] { "Game", "Save", "Controls" } : new[] { "Game", "Controls" };
+            // Owner idea U-25: short pages. FAQ is the game's only guide (Ed's call).
+            var labels = inGame ? new[] { "Game", "Save", "Controls", "FAQ" } : new[] { "Game", "Controls", "FAQ" };
             page = Mathf.Min(page, labels.Length - 1);
             page = HuntStyles.Tabs(page, labels);
             string current = labels[page];
             if (current == "Controls") { Controls(); GUILayout.EndArea(); return; }
             if (current == "Save") { SavePage(); GUILayout.EndArea(); return; }
+            if (current == "FAQ") { FaqPage(); GUILayout.EndArea(); return; }
 
             GUILayout.Label("Screen size (text and buttons)", HuntStyles.Heading);
             int size = Mathf.Clamp(Mathf.RoundToInt((HuntStyles.Scale - 1f) / 0.25f), 0, 2);
@@ -65,9 +66,6 @@ namespace BrineBattle.Hunting
             GUILayout.Space(8);
             GUILayout.Label("Battle mode", HuntStyles.Heading);
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels, GUILayout.Height(30));
-            GUILayout.Label(BattleSettings.Mode == BattleMode.Auto ? "<size=11>Auto plays every turn and reels for you (50% clean).</size>"
-                : BattleSettings.Mode == BattleMode.SemiAuto ? "<size=11>Basic attacks are automatic; you decide the important turns. Reel: press first, or it auto-presses.</size>"
-                : "<size=11>You pick every action. Reel: press Space in the green zone.</size>", Rich);
 
             GUILayout.Space(8);
             BattleSettings.AutoItems = GUILayout.Toggle(BattleSettings.AutoItems,
@@ -100,9 +98,31 @@ namespace BrineBattle.Hunting
             }
         }
 
+        int faqTopic;
+        string faqOpen;
+        Vector2 faqScroll;
+
+        /// <summary>The full guide: topics on top, questions that open to show their answer.</summary>
+        void FaqPage()
+        {
+            var names = new string[Faq.Topics.Length];
+            for (int i = 0; i < names.Length; i++) names[i] = Faq.Topics[i].Name;
+            int picked = GUILayout.SelectionGrid(faqTopic, names, 4, GUILayout.Height(52));
+            if (picked != faqTopic) { faqTopic = picked; faqOpen = null; faqScroll = Vector2.zero; }
+            faqScroll = GUILayout.BeginScrollView(faqScroll);
+            foreach (var e in Faq.Topics[faqTopic].Entries)
+            {
+                bool isOpen = faqOpen == e.Question;
+                GUILayout.BeginVertical(HuntStyles.Card);
+                if (GUILayout.Button($"{(isOpen ? "▼" : "▶")} <b>{e.Question}</b>", HuntStyles.RichButton)) faqOpen = isOpen ? null : e.Question;
+                if (isOpen) GUILayout.Label(e.Answer, HuntStyles.Text);
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndScrollView();
+        }
+
         void SavePage()
         {
-            GUILayout.Label("One save file holds everything: bag, gear, raft, pets and the book.", HuntStyles.Hint);
             saveInfo ??= SaveSystem.Describe() ?? "no save yet";
             GUILayout.Label($"Last save: <b>{saveInfo}</b>", HuntStyles.Text);
             GUILayout.BeginHorizontal();
@@ -113,8 +133,8 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
             UploadRow();
             GUILayout.Label(BattleSettings.Mode == BattleMode.Manual
-                ? "<size=11>Auto-save is off in Manual. In Semi-auto and Auto it saves to this file every 5 minutes once a save exists.</size>"
-                : $"<size=11>Auto-save: every 5 minutes into this file{(SaveSystem.Exists ? $" (next in {Mathf.CeilToInt((SaveSystem.AutoSaveSeconds - autoTimer) / 60f)} min)" : " once you save or load")}.</size>", Rich);
+                ? "<size=11>Auto-save: off in Manual</size>"
+                : $"<size=11>Auto-save: {(SaveSystem.Exists ? $"next in {Mathf.CeilToInt((SaveSystem.AutoSaveSeconds - autoTimer) / 60f)} min" : "after your first save")}</size>", Rich);
             if (!string.IsNullOrEmpty(saveMessage)) GUILayout.Label($"<size=11>{saveMessage}</size>", Rich);
             GUILayout.BeginHorizontal();
             GUILayout.Label($"<size=10>{SaveSystem.Folder}</size>", Rich);

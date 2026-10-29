@@ -46,7 +46,6 @@ namespace BrineBattle.Hunting
             if (roster.All.Count == 0)
             {
                 GUILayout.Label("No pets yet.", HuntStyles.Heading);
-                GUILayout.Label("Weaken a calm monster in battle (\"Twitching...\"), then press Tame. Build a habitat on the raft for more room.", HuntStyles.Text);
                 GUILayout.EndArea();
                 return;
             }
@@ -77,7 +76,7 @@ namespace BrineBattle.Hunting
             var roster = hook.Companions;
             bool active = roster.Active == c;
             GUILayout.Label($"<color={BagPanel.RarityColor(c.Rarity)}>{c.Name}</color>  <size=12>{c.Rarity} · {c.Element} · {c.StageName}</size>", HuntStyles.Heading);
-            GUILayout.Label($"<b>{c.Role}</b>{(active ? " · fights with you" : "")}: {CompanionRules.Describe(c.Role)}", HuntStyles.Hint);
+            GUILayout.Label($"<b>{c.Role}</b>{(active ? " · in battle" : "")}", HuntStyles.Text);
             GUILayout.Label(c.Stats, HuntStyles.Text);
 
             GUILayout.Label($"Life: {c.AgeLeft} battles left", HuntStyles.Text);
@@ -85,7 +84,7 @@ namespace BrineBattle.Hunting
             if (c.Stage < GrowthStage.Elder)
             {
                 int need = CompanionGrowth.GrowthToEvolve(c.Stage);
-                GUILayout.Label($"Growth to evolve: {HuntStyles.Count(c.Growth, need)}  (feed it monster loot)", HuntStyles.Text);
+                GUILayout.Label($"Growth to evolve: {HuntStyles.Count(c.Growth, need)}", HuntStyles.Text);
                 HuntStyles.Bar((float)c.Growth / need, new Color(0.45f, 0.85f, 0.5f));
             }
             else GUILayout.Label("Fully grown.", HuntStyles.Text);
@@ -119,19 +118,15 @@ namespace BrineBattle.Hunting
         void DrawChores()
         {
             var roster = hook.Companions;
-            GUILayout.Label("What each role does", HuntStyles.Heading);
-            GUILayout.Label("<b>Familiar</b>: fights with you.\n<b>Crew</b>: repairs the raft, harpoon and modules.\n<b>Mystic</b>: helps craft gear, potions, oils and hammers.", HuntStyles.Text);
-            GUILayout.Space(6);
             if (roster.Best(CompanionRole.Crew) == null && roster.Best(CompanionRole.Mystic) == null)
             {
-                GUILayout.Label("Tame a pet and make it Crew or Mystic to set its chores here.", HuntStyles.Hint);
+                GUILayout.Label("No Crew or Mystic pet yet.", HuntStyles.Text);
                 return;
             }
             if (roster.Best(CompanionRole.Crew) != null)
             {
                 GUILayout.Label("Crew", HuntStyles.Heading);
                 CompanionSettings.CrewBuilds = GUILayout.Toggle(CompanionSettings.CrewBuilds, " Build raft parts from the bag onto the raft");
-                GUILayout.Label("Module repair levels are in Build (R) → Modules.", HuntStyles.Hint);
             }
             if (roster.Best(CompanionRole.Mystic) != null)
             {
@@ -156,9 +151,9 @@ namespace BrineBattle.Hunting
             var inv = hook.Inventory;
             if (feeding == c)
             {
-                GUILayout.Label("<b>Pick food</b>: loot adds growth, potions add stats.", HuntStyles.Text);
+                GUILayout.Label("<b>Food</b>", HuntStyles.Text);
                 var food = inv.Items.Where(kv => CompanionGrowth.CanFeed(kv.Key)).ToList();
-                if (food.Count == 0) GUILayout.Label("Nothing to feed: monster loot grows it, potions and oils make it stronger.", HuntStyles.Hint);
+                if (food.Count == 0) GUILayout.Label("Nothing to feed.", HuntStyles.Text);
                 foreach (var kv in food)
                 {
                     var item = kv.Key;
@@ -182,7 +177,7 @@ namespace BrineBattle.Hunting
 
             if (fusing == c)
             {
-                GUILayout.Label($"<b>Transmutation Circle</b>: pick a pet to fuse into {c.Name}. That pet is used up; {c.Name} keeps its echo.", HuntStyles.Text);
+                GUILayout.Label($"<b>Fuse into {c.Name}</b>", HuntStyles.Text);
                 foreach (var other in hook.Companions.All.Where(o => o != c).ToList())
                 {
                     var rarity = CompanionGrowth.ResultRarity(c, other);

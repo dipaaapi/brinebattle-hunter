@@ -549,11 +549,6 @@ namespace BrineBattle.Hunting
             GUILayout.EndVertical();
             GUILayout.EndArea();
 
-            // What to do now, big and centred.
-            string hint = builder != null && builder.Active ? "Building: pick a part, then click the raft."
-                : WorldPause.Open != Menu.None ? "" : "Click a floating monster to hook it!";
-            if (hint.Length > 0) GUI.Label(new Rect(HudRight, 10, HuntStyles.W - 2 * HudRight, 30), hint, HuntStyles.Banner);
-
             // Battle mode and save, small, top-right.
             GUI.Label(new Rect(HuntStyles.W - 330, 8, 320, 20), $"<size=11>Battles: {BattleSettings.Labels[(int)BattleSettings.Mode]} · {SettingsPanel.AutoSaveStatus}</size>", RichRight);
 

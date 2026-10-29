@@ -111,7 +111,7 @@ namespace BrineBattle.Hunting
             if (newPage != page) { page = newPage; selected = null; scroll = Vector2.zero; }
 
             var ids = IdsOf(page);
-            GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% found. Pick an entry on the left; ??? = not found yet.", HuntStyles.Hint);
+            GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% found", HuntStyles.Hint);
             HuntStyles.Bar(Log.Completion(page, ids), new Color(0.98f, 0.82f, 0.3f));
 
             GUILayout.BeginHorizontal();
@@ -169,7 +169,7 @@ namespace BrineBattle.Hunting
 
         void DrawDetail()
         {
-            if (selected == null) { GUILayout.Label("Pick an entry on the left to read about it.", HuntStyles.Text); return; }
+            if (selected == null) { GUILayout.Label("", HuntStyles.Text); return; }
             bool known = Log.Has(page, selected);
             var big = GUILayoutUtility.GetRect(120, 90, GUILayout.ExpandWidth(true));
 
@@ -178,7 +178,7 @@ namespace BrineBattle.Hunting
                 var i = items.FirstOrDefault(x => x.id == selected);
                 if (i == null) return;
                 Silhouette(big, known, Tint.Of(i.element));
-                if (!known) { GUILayout.Label("??? — find it to fill in this page."); return; }
+                if (!known) { GUILayout.Label("???"); return; }
                 GUILayout.Label($"<b><color={BagPanel.RarityColor(i.rarity)}>{i.displayName}</color></b>", Rich);
                 GUILayout.Label($"{i.type} · {i.rarity} · {i.element}");
                 GUILayout.Label(i.description, GUI.skin.textArea);
@@ -190,7 +190,7 @@ namespace BrineBattle.Hunting
                 Silhouette(big, known, Tint.Of(m.element));
                 if (!known)
                 {
-                    GUILayout.Label(page == CollectionPage.Pets ? "??? — tame one to fill in this page." : "??? — hunt one to fill in this page.");
+                    GUILayout.Label("???");
                     return;
                 }
                 GUILayout.Label($"<b><color={BagPanel.RarityColor(m.rarity)}>{m.displayName}</color></b>", Rich);

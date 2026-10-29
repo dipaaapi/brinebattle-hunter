@@ -121,7 +121,7 @@ namespace BrineBattle.Hunting
             var inv = hook.Inventory;
             filter = GUILayout.Toolbar(filter, Filters, GUILayout.Height(26));
             var list = inv.Items.Where(kv => InFilter(kv.Key.type, filter)).OrderBy(kv => kv.Key.type).ThenBy(kv => kv.Key.rarity).ToList();
-            if (list.Count == 0) { GUILayout.Label(filter == 0 ? "The bag is empty. Hook some drifts!" : "Nothing of this kind yet.", HuntStyles.Text); return; }
+            if (list.Count == 0) { GUILayout.Label(filter == 0 ? "The bag is empty." : "Nothing of this kind yet.", HuntStyles.Text); return; }
             foreach (var kv in list)
             {
                 var item = kv.Key;
@@ -145,23 +145,8 @@ namespace BrineBattle.Hunting
                     if (kv.Value > 1 && GUILayout.Button("All", GUILayout.Width(40), GUILayout.Height(26))) Salvage(item, kv.Value);
                 }
                 GUILayout.EndHorizontal();
-                string what = UseText(item);
-                if (what.Length > 0) GUILayout.Label(what, HuntStyles.Hint);
                 GUILayout.EndVertical();
             }
-        }
-
-        /// <summary>One line on what an item is for, so the player doesn't have to guess.</summary>
-        string UseText(ItemDefinition item)
-        {
-            if (GearRules.IsGear(item.type)) { string sk = SkillText(item); return sk.Length > 0 ? sk : "Equip it in the Equipment tab."; }
-            switch (item.type)
-            {
-                case ItemType.Raft: case ItemType.Module: case ItemType.Habitat: return "Build it onto the raft (R).";
-                case ItemType.Tool: return "A hammer for building the raft (kept in the bag).";
-                case ItemType.Consumable: return string.IsNullOrEmpty(item.description) ? "Use it in battle." : item.description;
-            }
-            return IsIngredient(item) ? "Used in Workbench recipes (R → Workbench) and pet food (P → Feed)." : "Pet food (P → Feed), or salvage it for essence.";
         }
 
         static string TypeName(ItemType t) => t == ItemType.Consumable ? "Potion/Oil" : t == ItemType.Raft ? "Raft part" : t.ToString();
@@ -176,7 +161,7 @@ namespace BrineBattle.Hunting
             GUILayout.Space(6);
             GUILayout.Label("<b>Gear in the bag</b>", HuntStyles.Text);
             var gear = hook.Inventory.Items.Where(kv => GearRules.IsGear(kv.Key.type)).ToList();
-            if (gear.Count == 0) GUILayout.Label("No spare gear. Make some in Build (R) → Workbench → Gear.", HuntStyles.Hint);
+            if (gear.Count == 0) GUILayout.Label("No spare gear.", HuntStyles.Text);
             foreach (var kv in gear)
             {
                 var item = kv.Key;
@@ -193,7 +178,6 @@ namespace BrineBattle.Hunting
         void DrawEssence()
         {
             var inv = hook.Inventory;
-            GUILayout.Label("Monster Essence pays for raft level-ups, gear refining and pet fusing. Get it by salvaging items.", HuntStyles.Hint);
             if (!inv.Essence.Any()) { GUILayout.Label("No essence yet.", HuntStyles.Text); return; }
             foreach (var kv in inv.Essence)
                 GUILayout.Label($"<b>{kv.Value}</b> × <color={RarityColor(kv.Key.Rarity)}>{kv.Key}</color>", HuntStyles.Text);
@@ -202,7 +186,7 @@ namespace BrineBattle.Hunting
         void DrawSalvage()
         {
             var inv = hook.Inventory;
-            GUILayout.Label("Weapons and armor below these tiers are \"misfits\". Everything else is always kept.", HuntStyles.Hint);
+            GUILayout.Label("Misfit tiers", HuntStyles.Heading);
             if (hook.raft != null) raftTier = hook.raft.Tier;
             weaponTier = TierRow("Weapon", weaponTier);
             armorTier = TierRow("Armor", armorTier);

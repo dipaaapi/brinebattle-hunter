@@ -165,15 +165,13 @@ namespace BrineBattle.Hunting
             }
         }
 
-        static GUIStyle caption, darkCaption, key, darkKey, darkCaptionBig, bigButton, banner;
+        static GUIStyle caption, darkCaption, key, darkKey, darkCaptionBig, bigButton;
         static GUIStyle Caption => caption ??= Make(14, FontStyle.Bold, Color.white);
         static GUIStyle DarkCaption => darkCaption ??= Make(14, FontStyle.Bold, new Color(0.1f, 0.1f, 0.12f));
         static GUIStyle Key => key ??= Make(10, FontStyle.Normal, new Color(0.7f, 0.75f, 0.8f));
         static GUIStyle DarkKey => darkKey ??= Make(10, FontStyle.Normal, new Color(0.25f, 0.25f, 0.28f));
         static GUIStyle DarkCaptionBig => darkCaptionBig ??= Make(18, FontStyle.Bold, Color.white);
         public static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 16, fontStyle = FontStyle.Bold, richText = true, fixedHeight = 42 };
-        /// <summary>The one-line "what to do now" at the top of the screen.</summary>
-        public static GUIStyle Banner => banner ??= Make(18, FontStyle.Bold, new Color(1f, 0.85f, 0.35f));
 
         static GUIStyle Make(int size, FontStyle style, Color color)
         {
