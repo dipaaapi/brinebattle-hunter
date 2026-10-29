@@ -75,9 +75,11 @@ namespace BrineBattle.Hunting
             foreach (var kv in held.ToList())
             {
                 if (kv.Key == null) { held.Remove(kv.Key); continue; }
-                if (!hook.ModuleBattle(kv.Key, kv.Value)) return;
+                bool calm = Tameable(kv.Key);
+                if (!(calm ? hook.ModuleCatchCalm(kv.Key, kv.Value) : hook.ModuleBattle(kv.Key, kv.Value))) return;
                 held.Remove(kv.Key);
-                hook.Log($"The {kv.Value.Item.displayName}'s {kv.Key.Monster.displayName} attacks: auto battle!");
+                hook.Log(calm ? $"The {kv.Value.Item.displayName} brings in the {kv.Key.Monster.displayName}: finish it or tame it."
+                    : $"The {kv.Value.Item.displayName}'s {kv.Key.Monster.displayName} attacks: auto battle!");
                 return;
             }
         }
@@ -100,15 +102,15 @@ namespace BrineBattle.Hunting
                 Vector3 at = raft.CellToWorld(kv.Key);
                 float reach = ModuleRules.Range(s.Level);
                 // Measured to the drift's edge, so a big crab counts as touching when it looks like it.
-                // Calm weakened drifts are left for the player to tame or finish (idea U-17), never auto-looted.
-                var inReach = drifts.Where(x => x != null && !x.Hooked && Flat(x.transform.position - at).magnitude <= reach + 0.5f * x.transform.localScale.x).ToList();
+                // Everything that touches is hooked (Ed's ask); a calm weakened one is brought in for the hunter to tame or finish.
+                // A drift pressed against the raft next to this module counts too, even in a notch between parts.
+                var inReach = drifts.Where(x => x != null && !x.Hooked && Flat(x.transform.position - at).magnitude
+                    <= reach + 0.5f * x.transform.localScale.x + (x.TouchingRaft ? Raft.CellSize : 0f)).ToList();
                 // Say once per drift why the module leaves it alone, so a skipped drift doesn't look like a bug.
                 foreach (var x in inReach)
-                    if ((Tameable(x) || x.Spooked) && explained.Add(x))
-                        hook.Log(x.Spooked
-                            ? $"The {s.Item.displayName} leaves the {x.Monster.displayName} alone: it already bit a module."
-                            : $"The {s.Item.displayName} leaves the {x.Monster.displayName} alone: weakened and calm, yours to tame or finish.");
-                var d = inReach.Where(x => !x.Spooked && !Tameable(x))
+                    if (x.Spooked && explained.Add(x))
+                        hook.Log($"The {s.Item.displayName} leaves the {x.Monster.displayName} alone: it already bit a module.");
+                var d = inReach.Where(x => !x.Spooked)
                                .OrderBy(x => Flat(x.transform.position - at).sqrMagnitude).FirstOrDefault();
                 if (d == null || !d.TryClaim(s)) continue;   // claim first: no other net, arm or the player can take it
                 s.Timer = ModuleRules.Interval(s.Level);
@@ -161,6 +163,17 @@ namespace BrineBattle.Hunting
         {
             if (s.Level < 2) Flash(at, d.transform.position, false);
             string name = s.Item.displayName;
+            // A calm weakened catch: the hunter chooses Finish or Tame, now or as soon as they're free.
+            if (Tameable(d))
+            {
+                if (hook.ModuleCatchCalm(d, s)) hook.Log($"The {name} caught a weakened {d.Monster.displayName}: finish it or tame it.");
+                else
+                {
+                    held[d] = s;
+                    hook.Log($"The {name} holds a weakened {d.Monster.displayName} for you.");
+                }
+                return;
+            }
             // A live catch can't escape (owner's call): auto battle now, or held on the line until the hunter is free.
             if (d.Actual == DriftState.Alive && hook.CanFight(d))
             {

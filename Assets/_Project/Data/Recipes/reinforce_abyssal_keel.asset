@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c19311c7eb565342b4cdf910b850294, type: 3}
+  m_Name: reinforce_abyssal_keel
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
+  id: reinforce_abyssal_keel
+  displayName: Abyssal Keel
+  kind: 1
+  inputs:
+  - item: {fileID: 11400000, guid: 972f2c4c7a8904c46bcbf144f6eb2ee4, type: 2}
+    count: 2
+  - item: {fileID: 11400000, guid: 532dcdec23be5ca4bb051104c62f909f, type: 2}
+    count: 3
+  outputs:
+  - item: {fileID: 11400000, guid: 9d3794e7e414235499dcc04014055cd2, type: 2}
+    count: 1

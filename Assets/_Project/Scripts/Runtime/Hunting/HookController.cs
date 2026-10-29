@@ -33,10 +33,14 @@ namespace BrineBattle.Hunting
         public Equipment Gear { get; } = new Equipment();
         /// <summary>Tamed monsters (Phase 7); the active one joins battles.</summary>
         public CompanionRoster Companions { get; } = new CompanionRoster();
+        /// <summary>Alchemy Mastery (Idea Round 3): better hints, more recipes, essence combining.</summary>
+        public AlchemyMastery Mastery { get; } = new AlchemyMastery();
         /// <summary>Raised when a monster is tamed (collection book Pets page).</summary>
         public event System.Action<Monsters.MonsterDefinition> MonsterTamed;
         [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
         public ItemDefinition starterModule;
+        [Tooltip("The hammer a new game starts with (building needs a hammer of the raft's level).")]
+        public ItemDefinition starterHammer;
         /// <summary>Raised after loot is added, so the bag can auto-salvage misfits.</summary>
         public event System.Action LootAdded;
         /// <summary>Raised when a monster is harvested, finished or defeated (collection book).</summary>
@@ -68,8 +72,16 @@ namespace BrineBattle.Hunting
             line.startWidth = line.endWidth = 0.05f;
             line.enabled = false;
             if (starterModule != null) Inventory.Add(starterModule, 1);
+            if (starterHammer != null) Inventory.Add(starterHammer, 1);
+            // Building needs a hammer from this bag (Ed's ask).
+            raft.Grid.Tools = Inventory;
             // Settings menu (Phase 6) needs no scene wiring, so older Hook scenes get it too.
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
+            // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
+            if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
+            if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
+            // The hunter's idle, pulling and knocked-out motions (Ed's ask), likewise added at runtime.
+            if (!TryGetComponent<HunterMotion>(out _)) gameObject.AddComponent<HunterMotion>().hook = this;
             // Companions on the raft (Phase 7), likewise added at runtime.
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
             // Storage box = crafting table (owner's ask), likewise added at runtime.
@@ -77,7 +89,11 @@ namespace BrineBattle.Hunting
             // Habitats on the raft give companion room.
             raft.Grid.Changed += SyncHabitats;
             SyncHabitats();
+            Mastery.LeveledUp += OnMasteryLevel;
         }
+
+        // Main menu: Continue loads the save here (New game starts fresh).
+        void Start() => StartCoroutine(GameStart.Apply(this));
 
         void Update()
         {
@@ -91,11 +107,18 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>After a lost battle the hunter rests before hooking again (Ed's call). Unscaled time.</summary>
+        float restUntil;
+        public float RestLeft => Mathf.Max(0f, restUntil - Time.unscaledTime);
+
         void UpdateIdle()
         {
+            Drift.Hunter = Combatant.Hunter(Gear);
+            Drift.Pet = Companions.Active != null ? Combatant.FromCompanion(Companions.Active) : null;
             if (WorldPause.Open != Menu.None) return;
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.wasPressedThisFrame || Camera.main == null) return;
+            if (RestLeft > 0f) { Log($"Still resting after that defeat: {Mathf.CeilToInt(RestLeft)} s."); return; }
             var ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());
             if (!Physics.Raycast(ray, out var hit, 200f)) return;
             var drift = hit.collider.GetComponent<Drift>();
@@ -155,7 +178,9 @@ namespace BrineBattle.Hunting
             }
             // Semi-auto: the player may press first; otherwise the reel presses itself late.
             if (!tensionPressed && tensionSemi && t >= TensionRules.SemiAutoPressAt) AutoPress();
-            var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * raft.EdgeDistance;
+            // Reeled in until its body touches the raft's edge, not over the planks (owner's ask: no overlap).
+            float stop = Mathf.Max(raft.EdgeDistance, (raft.Grid.Radius + 0.5f) * Raft.CellSize + target.BodyRadius + 0.1f);
+            var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * stop;
             edge.y = reelFrom.y;
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
             line.SetPosition(0, HookOrigin());
@@ -191,6 +216,7 @@ namespace BrineBattle.Hunting
                 case DriftState.Dead:
                     resultTitle = $"{m.displayName} — Dead";
                     pendingLoot = RollLoot(m, tensionHit);
+                    Mastery.Add(AlchemyMastery.HarvestPoints);
                     Finish($"Harvested {m.displayName}{(tensionHit ? " (clean reel)" : "")}: {Brief(pendingLoot)}", true, true);
                     return;
                 case DriftState.Weakened:
@@ -321,7 +347,7 @@ namespace BrineBattle.Hunting
 
             var m = target.Monster;
             GUI.depth = -5;
-            var rect = new Rect(HuntStyles.W / 2f - 200, HuntStyles.H / 2f - 120, 400, 240);
+            var rect = new Rect(HuntStyles.W / 2f - 220, HuntStyles.H / 2f - 130, 440, 260);
             GUILayout.BeginArea(rect, resultTitle, HuntStyles.Window);
             GUILayout.Space(6);
             GUILayout.Label(resultBody);
@@ -330,35 +356,35 @@ namespace BrineBattle.Hunting
             switch (target.Actual)
             {
                 case DriftState.Dead:
-                    if (GUILayout.Button("Harvest")) Finish($"Harvested {m.displayName}.", true, true);
+                    if (HuntStyles.ColorButton("Harvest", HuntStyles.Go)) { Mastery.Add(AlchemyMastery.HarvestPoints); Finish($"Harvested {m.displayName}.", true, true); }
                     break;
                 case DriftState.Weakened when pendingPet != null:
                     foreach (CompanionRole role in System.Enum.GetValues(typeof(CompanionRole)))
-                        if (GUILayout.Button(role.ToString(), GUILayout.Height(28))) Adopt(role);
+                        if (HuntStyles.ColorButton(role.ToString(), HuntStyles.Other)) Adopt(role);
                     break;
                 case DriftState.Weakened:
-                    if (GUILayout.Button("Finish it"))
+                    if (HuntStyles.ColorButton("Finish it", HuntStyles.Risky))
                     {
                         pendingLoot = RollLoot(m);
-                        raft.Grid.Kills++;
+                        CountKill();
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
                     GUI.enabled = !Companions.Full;
-                    if (GUILayout.Button(Companions.Full ? "Tame (no room: build a habitat)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})")) Tame();
+                    if (HuntStyles.ColorButton(Companions.Full ? "Tame (no room)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})", HuntStyles.Go)) Tame();
                     GUI.enabled = true;
                     break;
                 default:
                     if (EncounterRules.IsGated(target.Actual, raft.size, m.sizeClass))
                     {
-                        if (GUILayout.Button("Cut line")) Finish($"Cut the line. {m.displayName} drifts away.", false, false);
-                        if (GUILayout.Button("Flee")) Finish($"Fled from {m.displayName}. (It will eat raft parts in Phase 8.)", false, true);
-                        if (GUILayout.Button($"Sedate ({sedateChance:P0})"))
+                        if (HuntStyles.ColorButton("Cut line", HuntStyles.Other)) Finish($"Cut the line. {m.displayName} drifts away.", false, false);
+                        if (HuntStyles.ColorButton("Flee", HuntStyles.Other)) Finish($"Fled from {m.displayName}. (It will eat raft parts in Phase 8.)", false, true);
+                        if (HuntStyles.ColorButton($"Sedate ({sedateChance:P0})", HuntStyles.Go))
                         {
                             if (rng.NextDouble() < sedateChance) Sedated();
                             else Finish($"Sedative failed! {m.displayName} snapped the line.", false, true);
                         }
                     }
-                    else if (GUILayout.Button("Fight!")) StartBattle();
+                    else if (HuntStyles.ColorButton("Fight!", HuntStyles.Go)) StartBattle();
                     break;
             }
             GUILayout.EndHorizontal();
@@ -375,7 +401,7 @@ namespace BrineBattle.Hunting
         /// </summary>
         public bool ModuleBattle(Drift d, object module)
         {
-            if (!CanFight(d) || BattleController.InBattle || WorldPause.Active) return false;
+            if (!CanFight(d) || BattleController.InBattle || WorldPause.Active || RestLeft > 0f) return false;
             // The module's catch comes first (owner's call): drop the hunter's own cast or reel.
             if (phase == Phase.Casting || phase == Phase.Reeling)
             {
@@ -392,6 +418,31 @@ namespace BrineBattle.Hunting
             pendingLoot = null;
             battle.ForceAuto = true;
             StartBattle();
+            return true;
+        }
+
+        /// <summary>
+        /// A module caught a weakened, calm drift (Ed: modules must hook what touches them). The hunter
+        /// gets the same Finish / Tame choice as a hand catch; in Auto with no pet room it's finished for loot.
+        /// False while the hunter is busy: the module keeps holding it.
+        /// </summary>
+        public bool ModuleCatchCalm(Drift d, object module)
+        {
+            if (phase != Phase.Idle || BattleController.InBattle || WorldPause.Open != Menu.None) return false;
+            d.Release(module);
+            if (!d.TryClaim(this)) return false;
+            target = d;
+            tensionHit = false;
+            pendingLoot = null;
+            var m = d.Monster;
+            phase = Phase.Result;
+            if (BattleSettings.Mode == BattleMode.Auto && Companions.Full)
+            {
+                KillWeakened("your pets are full (no room to tame)");
+                return true;
+            }
+            resultTitle = $"{m.displayName} — Weakened, calm";
+            resultBody = "A raft module caught it. It can barely move and isn't hostile. Finish it for loot, or tame it.";
             return true;
         }
 
@@ -415,15 +466,36 @@ namespace BrineBattle.Hunting
                 if (outcome == BattleOutcome.Won)
                 {
                     pendingLoot = RollLoot(m);
-                    raft.Grid.Kills++;
+                    CountKill();
                     Finish($"Victory! Defeated {m.displayName}: {Brief(pendingLoot)}", true, true);
                 }
                 else
                 {
                     string why = outcome == BattleOutcome.LostRaft ? "broke your raft" : "knocked you out";
-                    Finish($"Defeat. {m.displayName} {why} and swam off. (It will eat raft parts in Phase 8.)", false, true);
+                    Finish($"Defeat. {m.displayName} {why} and swam off.", false, true);
+                    Defeated();
+                    IdleWatch.Lost();
                 }
             });
+        }
+
+        void OnMasteryLevel(int level)
+        {
+            string unlocked = builder != null ? string.Join(", ", AlchemyMastery.NewAt(builder.recipes, level)
+                .Select(r => r.outputs.Count > 0 && r.outputs[0].item != null ? r.outputs[0].item.displayName : r.displayName)) : "";
+            Log($"Alchemy Mastery Lv {level}! Hints are right {AlchemyMastery.HintAccuracy(level):P0} of the time."
+                + (unlocked.Length > 0 ? $" New recipes: {unlocked}." : "")
+                + (level == AlchemyMastery.CombineLevel ? " You can now combine essence (Bag → Essence)." : ""));
+        }
+
+        /// <summary>A lost battle (Ed's call): rest a while, and the waves take a few Common materials.</summary>
+        void Defeated()
+        {
+            restUntil = Time.unscaledTime + DefeatRules.RestSeconds;
+            var lost = DefeatRules.WashAway(Inventory, rng);
+            Log(lost.Count > 0
+                ? $"The waves washed away {string.Join(", ", lost.Select(l => $"{l.count} {l.item.displayName}"))}. Resting {DefeatRules.RestSeconds:0} s."
+                : $"Resting {DefeatRules.RestSeconds:0} s.");
         }
 
         /// <summary>Idea U-17: a weakened aggressive monster is finished off without a prompt.</summary>
@@ -431,8 +503,28 @@ namespace BrineBattle.Hunting
         {
             var m = target.Monster;
             pendingLoot = RollLoot(m);
-            raft.Grid.Kills++;
+            CountKill();
             Finish($"{m.displayName} was weakened but {why}, so you finished it: {Brief(pendingLoot)}", true, true);
+        }
+
+        /// <summary>A monster was beaten: counts toward the raft upgrade, and every companion grows one battle older (GDD §10).</summary>
+        void CountKill()
+        {
+            raft.Grid.Kills++;
+            Mastery.Add(AlchemyMastery.HarvestPoints);
+            foreach (var kv in Companions.GrowOlder())
+            {
+                var c = kv.Key;
+                if (kv.Value == AgeResult.Evolved)
+                    Log($"{c.Name} evolved into an {c.StageName}! {c.Stats}");
+                else
+                {
+                    int left = CompanionRules.EssenceLeft(c.Rarity);
+                    Inventory.AddEssence(new EssenceKey(c.Rarity, c.Element), left);
+                    Log($"{c.Name} died of old age after {c.Age} battles. It left {left} {new EssenceKey(c.Rarity, c.Element)}. It is remembered in the Book.");
+                }
+            }
+            ApplyCompanionBonuses();
         }
 
         void Tame()
@@ -444,6 +536,7 @@ namespace BrineBattle.Hunting
                 return;
             }
             pendingPet = Companion.FromMonster(m);
+            pendingPet.Look = rng.Next(CompanionGrowth.Looks.Length);   // a random variety (looks only)
             resultTitle = $"Tamed {m.displayName}! Pick its role";
             resultBody = $"{pendingPet.Stats}\n"
                 + $"Familiar: {CompanionRules.Describe(CompanionRole.Familiar)}.\n"
@@ -456,6 +549,7 @@ namespace BrineBattle.Hunting
             var m = target.Monster;
             pendingPet.Role = role;
             Companions.Add(pendingPet);
+            Mastery.Add(AlchemyMastery.TamePoints);
             pendingPet = null;
             MonsterTamed?.Invoke(m);
             ApplyCompanionBonuses();
@@ -498,38 +592,52 @@ namespace BrineBattle.Hunting
         {
             DrawLog();
             if (BattleController.InBattle) return;
-            // Kept short and big (owner idea U-25): what to do, two bars, four buttons. Details live in the menus.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, HuntStyles.H - LogHeight - 30));
+            // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
+            // at the top, menus as big picture tiles along the bottom.
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 250));
             GUILayout.BeginVertical(HuntStyles.Box);
-            GUILayout.Label("<size=16><b>BrineBattle Hunter</b></size>", Rich);
-            GUILayout.Label(builder != null && builder.Active ? "<color=#ffd866>Building: use the panel on the right.</color>"
-                : "<color=#ffd866>Click a floating monster to hook it!</color>", Rich);
-            GUILayout.Space(4);
-            Meter($"Raft Lv {(int)raft.Tier + 1} ({raft.Tier}, size {raft.size})", 1f, $"{raft.MaxHp} HP", new Color(0.85f, 0.75f, 0.5f));
+            StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size}", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
-            Meter(Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon", Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));
+            StatusRow(HuntIcons.Harpoon, Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon",
+                Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));
             GUI.enabled = !Harpoon.Full && Inventory.MaterialCount() >= 1;
             if (GUILayout.Button(new GUIContent("Fix", "Repair the harpoon +10 for 1 material"), GUILayout.Width(44), GUILayout.Height(34)) && Inventory.SpendMaterials(1)) Harpoon.Repair(10);
             GUI.enabled = true;
             GUILayout.EndHorizontal();
-            if (Companions.All.Count > 0)
-                GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}: " + string.Join(", ", Companions.All.Select(c => $"{c.Name} ({c.Role})")), Rich);
-            GUILayout.Space(4);
+            StatusRow(HuntIcons.Book, $"Mastery Lv {Mastery.Level}", Mastery.Progress,
+                Mastery.Level >= AlchemyMastery.MaxLevel ? "max" : $"{Mastery.Points - AlchemyMastery.PointsFor(Mastery.Level)}/{AlchemyMastery.PointsToNext(Mastery.Level)}", new Color(0.75f, 0.5f, 1f));
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Bag\n<size=10>B</size>", BigButton)) BagToggleRequested?.Invoke();
-            if (GUILayout.Button("Book\n<size=10>C</size>", BigButton)) BookToggleRequested?.Invoke();
+            GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
+            GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}", Rich);
             GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (builder != null && GUILayout.Button("Build\n<size=10>R</size>", BigButton)) builder.Toggle();
-            if (GUILayout.Button("Settings\n<size=10>Esc</size>", BigButton)) WorldPause.Toggle(Menu.Settings);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"<size=11>Battles: {BattleSettings.Labels[(int)BattleSettings.Mode]}</size>", Rich);
-            GUILayout.FlexibleSpace();
-            GUILayout.Label($"<size=11>{SettingsPanel.AutoSaveStatus}</size>", RichRight);
-            GUILayout.EndHorizontal();
+            if (RestLeft > 0f) GUILayout.Label($"<color=#ffb347>Resting… {Mathf.CeilToInt(RestLeft)} s</color>", Rich);
             GUILayout.EndVertical();
             GUILayout.EndArea();
+
+            // Battle mode and save, small, top-right.
+            GUI.Label(new Rect(HuntStyles.W - 330, 8, 320, 20), $"<size=11>Battles: {BattleSettings.Labels[(int)BattleSettings.Mode]} · {SettingsPanel.AutoSaveStatus}</size>", RichRight);
+
+            // Menu dock along the bottom.
+            const float tile = 78f, gap = 8f;
+            float x = (HuntStyles.W - (5 * tile + 4 * gap)) / 2f, y = HuntStyles.H - tile - 10f;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Bag, "Bag", "B", WorldPause.Open == Menu.Bag)) BagToggleRequested?.Invoke();
+            x += tile + gap;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Paw, "Pets", "P", WorldPause.Open == Menu.Pets)) PetsPanel.Toggle();
+            x += tile + gap;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Book", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
+            x += tile + gap;
+            if (builder != null && HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Hammer, "Build", "R", builder.Active)) builder.Toggle();
+            x += tile + gap;
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Gear, "Settings", "Esc", WorldPause.Open == Menu.Settings)) WorldPause.Toggle(Menu.Settings);
+        }
+
+        /// <summary>Icon, name and a bar: one line of the status card.</summary>
+        void StatusRow(Texture2D icon, string label, float fill, string value, Color color)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(icon, GUILayout.Width(26), GUILayout.Height(26));
+            Meter(label, fill, value, color);
+            GUILayout.EndHorizontal();
         }
 
         /// <summary>A labelled bar: easier to read at a glance than numbers.</summary>
@@ -547,8 +655,6 @@ namespace BrineBattle.Hunting
         static GUIStyle richRight;
         static GUIStyle RichRight => richRight ??= new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleRight };
 
-        static GUIStyle bigButton;
-        static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 15, fontStyle = FontStyle.Bold, richText = true, fixedHeight = 46 };
 
         const int LogRows = 3;
         /// <summary>Oldest entries are deleted past this.</summary>
@@ -590,7 +696,17 @@ namespace BrineBattle.Hunting
             logScroll = Vector2.zero;   // jump to the newest so you see it arrive
         }
 
-        Vector3 HookOrigin() => raft.transform.position + Vector3.up * 1.2f;
+        Transform hunterTf;
+        /// <summary>The line starts at the hunter's hands, wherever the hunter stands (Ed's ask: walk to the edge to pull).</summary>
+        Vector3 HookOrigin()
+        {
+            if (hunterTf == null) hunterTf = raft.transform.Find("Hunter");
+            return hunterTf != null ? hunterTf.position + Vector3.up * 0.35f : raft.transform.position + Vector3.up * 1.2f;
+        }
+
+        /// <summary>The drift being cast at or reeled in, else null (for the hunter's pulling motion).</summary>
+        public Drift HookTarget => phase == Phase.Casting || phase == Phase.Reeling ? target : null;
+        public bool Reeling => phase == Phase.Reeling;
         static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
     }
 }

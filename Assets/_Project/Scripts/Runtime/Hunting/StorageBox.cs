@@ -115,13 +115,34 @@ namespace BrineBattle.Hunting
             Destroy(go);
         }
 
+        /// <summary>Pets are hiding inside after a lost battle (Ed's ask): the box shivers, for laughs.</summary>
+        public bool Scared { get; set; }
+        float eep;
+        static readonly string[] Squeaks = { "eep!", "*shiver*", "is it gone?", "eek!", "*teeth chatter*" };
+
         void Update()
         {
             if (body == null) return;
             pulse = Mathf.Max(0f, pulse - Time.unscaledDeltaTime);
             float k = pulse > 0f ? Mathf.Sin((1.2f - pulse) * 14f) * pulse * 0.12f : 0f;
             body.parent.localScale = new Vector3(1f - k, 1f + k, 1f - k);
-            lid.localRotation = Quaternion.Euler(pulse > 0f ? -70f * Mathf.Clamp01(pulse * 2f) : 0f, 0f, 0f);
+            float peek = 0f;
+            if (Scared)
+            {
+                // Rattle in place, and now and then the lid peeks open with a squeak.
+                float t = Time.time;
+                body.parent.localRotation = Quaternion.Euler(Mathf.Sin(t * 47f) * 4f, Mathf.Sin(t * 31f) * 3f, Mathf.Sin(t * 53f) * 5f);
+                eep -= Time.deltaTime;
+                if (eep <= 0f)
+                {
+                    eep = Random.Range(1.2f, 2.4f);
+                    labels.Add((Squeaks[Random.Range(0, Squeaks.Length)], 0f));
+                    if (labels.Count > 3) labels.RemoveAt(0);
+                }
+                peek = eep > 0.9f ? -18f : 0f;
+            }
+            else body.parent.localRotation = Quaternion.identity;
+            lid.localRotation = Quaternion.Euler(pulse > 0f ? -70f * Mathf.Clamp01(pulse * 2f) : peek, 0f, 0f);
             for (int i = labels.Count - 1; i >= 0; i--)
             {
                 var (text, age) = labels[i];

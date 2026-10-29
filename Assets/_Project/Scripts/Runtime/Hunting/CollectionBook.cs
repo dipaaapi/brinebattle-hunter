@@ -97,14 +97,26 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             if (!open) return;
             GUI.depth = -5;
-            float left = HookController.HudRight + 10, w = Mathf.Min(640, HuntStyles.W - left - 12), h = Mathf.Min(520, HuntStyles.H - 40);
+            float left = HookController.HudRight + 10, w = Mathf.Min(640, HuntStyles.W - left - 12), h = Mathf.Min(520, HuntStyles.H - 120);
             GUILayout.BeginArea(new Rect(left, 20, w, h), "Collection Book", HuntStyles.Window);
+            if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Book); GUILayout.EndArea(); return; }
 
-            var newPage = (CollectionPage)GUILayout.Toolbar((int)page, Tabs);
-            if (newPage != page) { page = newPage; selected = null; scroll = Vector2.zero; }
+            var labels = new string[Tabs.Length + 1];
+            for (int i = 0; i < Tabs.Length; i++)
+            {
+                var all = IdsOf((CollectionPage)i);
+                labels[i] = $"{Tabs[i]} {all.Count(x => Log.Has((CollectionPage)i, x))}/{all.Count}";
+            }
+            var recipes = hook != null && hook.builder != null ? hook.builder.recipes.Where(r => r != null).ToList() : new List<RecipeDefinition>();
+            labels[Tabs.Length] = $"Recipes {recipes.Count(r => hook.Mastery.Knows(r))}/{recipes.Count}";
+            int newTab = HuntStyles.Tabs(recipesTab ? Tabs.Length : (int)page, labels);
+            if (newTab == Tabs.Length) { if (!recipesTab) scroll = Vector2.zero; recipesTab = true; }
+            else if (recipesTab || (CollectionPage)newTab != page) { recipesTab = false; page = (CollectionPage)newTab; selected = null; scroll = Vector2.zero; }
+            if (recipesTab) { DrawRecipes(recipes); GUILayout.EndArea(); return; }
 
             var ids = IdsOf(page);
-            GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% complete  ({ids.Count(i => Log.Has(page, i))}/{ids.Count})");
+            GUILayout.Label($"{Mathf.RoundToInt(Log.Completion(page, ids) * 100f)}% found", HuntStyles.Hint);
+            HuntStyles.Bar(Log.Completion(page, ids), new Color(0.98f, 0.82f, 0.3f));
 
             GUILayout.BeginHorizontal();
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.Width(250));
@@ -116,7 +128,7 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Reset book (testing)", GUILayout.Width(170)))
+            if (GUILayout.Button("<size=10>Reset book (testing)</size>", HuntStyles.RichButton, GUILayout.Width(140)))
             {
                 Log.Unlocked -= OnUnlocked;
                 Log = new CollectionLog();
@@ -125,9 +137,37 @@ namespace BrineBattle.Hunting
                 selected = null;
             }
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Close (C)", GUILayout.Width(120))) WorldPause.Close(Menu.Book);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        bool recipesTab;
+
+        /// <summary>
+        /// Idea Round 3 (U-14): every recipe the hunter's Alchemy Mastery knows, with its ingredients;
+        /// the rest are "???" with the mastery level that reveals them.
+        /// </summary>
+        void DrawRecipes(List<RecipeDefinition> recipes)
+        {
+            var m = hook.Mastery;
+            GUILayout.Label($"Alchemy Mastery Lv {m.Level}", HuntStyles.Heading);
+            HuntStyles.Bar(m.Progress, new Color(0.75f, 0.5f, 1f));
+            scroll = GUILayout.BeginScrollView(scroll);
+            foreach (var r in recipes.OrderBy(AlchemyMastery.Needed).ThenBy(r => (int)CraftRules.CategoryOf(r)))
+            {
+                GUILayout.BeginVertical(HuntStyles.Card);
+                if (m.Knows(r))
+                {
+                    var main = r.outputs.FirstOrDefault(o => o.item != null);
+                    string name = r.kind == RecipeKind.Dismantle ? $"Take apart: {CraftRules.Describe(r.inputs)}"
+                        : main != null ? $"<color={BagPanel.RarityColor(main.item.rarity)}>{main.item.displayName}</color>" : r.displayName;
+                    GUILayout.Label($"<b>{name}</b>  <size=11>{CraftRules.CategoryLabels[(int)CraftRules.CategoryOf(r)]}</size>", HuntStyles.Text);
+                    GUILayout.Label(r.kind == RecipeKind.Dismantle ? $"Gives {CraftRules.Describe(r.outputs)}" : CraftRules.Describe(r.inputs), HuntStyles.Hint);
+                }
+                else GUILayout.Label($"<b>???</b>  <color={HuntStyles.BadHex}>Alchemy Mastery Lv {AlchemyMastery.Needed(r)}</color>", HuntStyles.Text);
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndScrollView();
         }
 
         List<string> IdsOf(CollectionPage p) =>
@@ -151,15 +191,18 @@ namespace BrineBattle.Hunting
         {
             bool known = Log.Has(page, id);
             GUILayout.BeginHorizontal();
-            var swatch = GUILayoutUtility.GetRect(22, 22, GUILayout.Width(22));
+            var swatch = GUILayoutUtility.GetRect(26, 26, GUILayout.Width(26));
             GUI.DrawTexture(swatch, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, known ? color : new Color(0.05f, 0.05f, 0.08f), 0, 6);
-            if (GUILayout.Button(known ? name : "???", GUILayout.Height(22))) selected = id;
+            var old = GUI.backgroundColor;
+            if (selected == id) GUI.backgroundColor = HuntStyles.Go;
+            if (GUILayout.Button(known ? name : "???", GUILayout.Height(26))) selected = id;
+            GUI.backgroundColor = old;
             GUILayout.EndHorizontal();
         }
 
         void DrawDetail()
         {
-            if (selected == null) { GUILayout.Label("Select an entry."); return; }
+            if (selected == null) { GUILayout.Label("", HuntStyles.Text); return; }
             bool known = Log.Has(page, selected);
             var big = GUILayoutUtility.GetRect(120, 90, GUILayout.ExpandWidth(true));
 
@@ -168,7 +211,7 @@ namespace BrineBattle.Hunting
                 var i = items.FirstOrDefault(x => x.id == selected);
                 if (i == null) return;
                 Silhouette(big, known, Tint.Of(i.element));
-                if (!known) { GUILayout.Label("??? — find it to fill in this page."); return; }
+                if (!known) { GUILayout.Label("???"); return; }
                 GUILayout.Label($"<b><color={BagPanel.RarityColor(i.rarity)}>{i.displayName}</color></b>", Rich);
                 GUILayout.Label($"{i.type} · {i.rarity} · {i.element}");
                 GUILayout.Label(i.description, GUI.skin.textArea);
@@ -180,7 +223,7 @@ namespace BrineBattle.Hunting
                 Silhouette(big, known, Tint.Of(m.element));
                 if (!known)
                 {
-                    GUILayout.Label(page == CollectionPage.Pets ? "??? — tame one to fill in this page." : "??? — hunt one to fill in this page.");
+                    GUILayout.Label("???");
                     return;
                 }
                 GUILayout.Label($"<b><color={BagPanel.RarityColor(m.rarity)}>{m.displayName}</color></b>", Rich);
@@ -190,6 +233,9 @@ namespace BrineBattle.Hunting
                     GUILayout.Label("Drops: " + string.Join(", ", m.loot.entries.Where(e => e.item != null)
                         .Select(e => Log.Has(CollectionPage.Items, e.item.id) ? $"{e.item.displayName} ({e.chance:P0})" : "???")));
                 GUILayout.Label(m.description, GUI.skin.textArea);
+                if (page == CollectionPage.Pets)
+                    foreach (var g in hook.Companions.Memorials.Where(x => x.Id == m.id))
+                        GUILayout.Label($"In memory of {g.Name}, your {g.Role}: lived {g.Age} battles.");
             }
         }
 

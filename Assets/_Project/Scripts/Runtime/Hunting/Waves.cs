@@ -22,13 +22,15 @@ namespace BrineBattle.Hunting
         static readonly float[] speed = { 1.1f, 0.9f, 1.4f, 1.2f };
 
         /// <summary>
-        /// Calm water around the raft (owner's ask: a big raft was sinking into the swell). Inside
+        /// Calmer water around a low-level raft (owner's ask: a big raft was sinking into the swell; a
+        /// higher raft level has thicker planks and rides bigger waves). Inside
         /// <see cref="CalmRadius"/> of <see cref="CalmCenter"/> the waves drop to <see cref="CalmShare"/>,
         /// rising back to full over <see cref="CalmFade"/> metres. The raft sets these every frame.
         /// </summary>
         public static Vector3 CalmCenter;
         public static float CalmRadius;
-        public const float CalmShare = 0.12f;
+        /// <summary>Set by the raft from its level (<see cref="Rafts.RaftRules.SeaShare"/>); 1 = full waves.</summary>
+        public static float CalmShare = 1f;
         public const float CalmFade = 5f;
 
         static float Calm(float x, float z)

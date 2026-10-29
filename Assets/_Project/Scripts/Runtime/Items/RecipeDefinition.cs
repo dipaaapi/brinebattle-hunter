@@ -80,6 +80,29 @@ namespace BrineBattle.Items
             }
         }
 
+        /// <summary>How many more items the bag needs before this recipe can be made (0 = ready). Ed: show what is missing.</summary>
+        public static int Missing(Inventory inv, RecipeDefinition r)
+        {
+            int missing = 0;
+            foreach (var i in r.inputs)
+                if (i.item != null) missing += System.Math.Max(0, i.count - inv.Count(i.item));
+            return missing;
+        }
+
+        /// <summary>Workbench order: ready recipes first, then the ones closest to ready.</summary>
+        public static List<RecipeDefinition> ByReadiness(Inventory inv, IEnumerable<RecipeDefinition> recipes)
+        {
+            var list = new List<RecipeDefinition>(recipes);
+            var order = new Dictionary<RecipeDefinition, int>();
+            for (int n = 0; n < list.Count; n++) order[list[n]] = n;
+            list.Sort((a, b) =>
+            {
+                int c = Missing(inv, a).CompareTo(Missing(inv, b));
+                return c != 0 ? c : order[a].CompareTo(order[b]);
+            });
+            return list;
+        }
+
         public static string Describe(List<Ingredient> list)
         {
             var parts = new List<string>();

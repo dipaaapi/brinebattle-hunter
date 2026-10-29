@@ -89,6 +89,7 @@ namespace BrineBattle.Editor
             builder.hook = hook;
             hook.builder = builder;
             hook.starterModule = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/_Project/Data/Items/DriftNet.asset");
+            hook.starterHammer = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/_Project/Data/Items/DriftwoodHammer.asset");
             var modules = new GameObject("Raft Modules").AddComponent<RaftModules>();
             modules.raft = raft;
             modules.hook = hook;
@@ -138,12 +139,7 @@ namespace BrineBattle.Editor
             return mat;
         }
 
-        static void AddToBuildSettings(string path)
-        {
-            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            scenes.RemoveAll(s => s.path == path);
-            scenes.Insert(0, new EditorBuildSettingsScene(path, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
-        }
+        // The main menu stays first in the build, the Hook scene right after it.
+        static void AddToBuildSettings(string path) => MainMenuSceneBuilder.OrderBuildScenes();
     }
 }

@@ -230,13 +230,14 @@ namespace BrineBattle.Hunting
                 // Consumables (Phase 6): using one takes the hunter's turn. Semi-auto and Auto use them when low (BattleAI.ChooseItem).
                 var items = state.Bag.Items.Where(kv => kv.Key.effect != ConsumableEffect.None).ToList();
                 GUILayout.BeginHorizontal();
-                if (items.Count == 0) GUILayout.Label("<size=11>No consumables — craft them at the Workbench.</size>", new GUIStyle(GUI.skin.label) { richText = true });
+                if (items.Count == 0) GUILayout.Label("<size=11>No consumables.</size>", new GUIStyle(GUI.skin.label) { richText = true });
                 bool waiting = Waiting();
                 foreach (var kv in items)
                 {
                     var item = kv.Key;
                     string what = item.effect == ConsumableEffect.HealHunter ? $"+{item.effectAmount} HP"
                         : item.effect == ConsumableEffect.RepairRaft ? $"+{item.effectAmount} raft"
+                        : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} pet"
                         : $"{item.element}, {item.effectAmount} rounds";
                     GUI.enabled = waiting && state.CanUseItem(item);
                     if (GUILayout.Button($"{item.displayName} ×{kv.Value} ({what})")) UseItem(item);

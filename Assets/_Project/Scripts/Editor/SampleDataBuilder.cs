@@ -153,6 +153,36 @@ namespace BrineBattle.Editor
             Recipe("craft_sky_perch", "Sky Perch", RecipeKind.Craft, new[] { (plank, 3), (feather, 3) }, new[] { (skyPerch, 1) });
             Recipe("dismantle_tide_pool", "Tide Pool", RecipeKind.Dismantle, new[] { (tidePool, 1) }, new[] { (plank, 2), (scale, 1) });
             Recipe("dismantle_sky_perch", "Sky Perch", RecipeKind.Dismantle, new[] { (skyPerch, 1) }, new[] { (plank, 2), (feather, 1) });
+            // Ed's playtest: a leveled-up raft needs parts of its own level. Reinforce recipes turn lower parts into the next level.
+            var tarred = RaftPart("TarredPlank", "tarred_plank", "Tarred Plank", Rarity.Uncommon, Element.Water,
+                "Two planks bound with eel-skin and tar. Fits a Lv 2 raft.");
+            var coral = RaftPart("CoralboundPlank", "coralbound_plank", "Coralbound Plank", Rarity.Epic, Element.Earth,
+                "Shell plates grown together with living coral. Fits a Lv 4 raft.");
+            var leviathan = RaftPart("LeviathanBeam", "leviathan_beam", "Leviathan Beam", Rarity.Legendary, Element.Water,
+                "A beam studded with great fangs. Fits a Lv 5 raft.");
+            var abyssal = RaftPart("AbyssalKeel", "abyssal_keel", "Abyssal Keel", Rarity.Mythic, Element.None,
+                "Black wood from the deep that never rots. Fits a Lv 6 raft.");
+            Recipe("reinforce_tarred_plank", "Tarred Plank", RecipeKind.Upgrade, new[] { (plank, 2), (patch, 1) }, new[] { (tarred, 1) });
+            Recipe("reinforce_shellback_plate", "Shellback Plate", RecipeKind.Upgrade, new[] { (tarred, 2), (fang, 2) }, new[] { (shell, 1) });
+            Recipe("reinforce_coralbound_plank", "Coralbound Plank", RecipeKind.Upgrade, new[] { (shell, 2), (scale, 2) }, new[] { (coral, 1) });
+            Recipe("reinforce_leviathan_beam", "Leviathan Beam", RecipeKind.Upgrade, new[] { (coral, 2), (fang, 3) }, new[] { (leviathan, 1) });
+            Recipe("reinforce_abyssal_keel", "Abyssal Keel", RecipeKind.Upgrade, new[] { (leviathan, 2), (shell, 3) }, new[] { (abyssal, 1) });
+            // Ed's ask: building needs a hammer of the raft's level or better; each hammer upgrades from the last.
+            var hammers = new[]
+            {
+                Hammer("DriftwoodHammer", "driftwood_hammer", "Driftwood Hammer", Rarity.Common, "A fang lashed to a plank. Builds on a Lv 1 raft."),
+                Hammer("TarredHammer", "tarred_hammer", "Tarred Hammer", Rarity.Uncommon, "Heavier, tar-bound head. Builds on a raft up to Lv 2."),
+                Hammer("ShellHammer", "shell_hammer", "Shell Hammer", Rarity.Rare, "A crab-shell head that doesn't chip. Builds on a raft up to Lv 3."),
+                Hammer("CoralHammer", "coral_hammer", "Coral Hammer", Rarity.Epic, "Living coral, hard as stone. Builds on a raft up to Lv 4."),
+                Hammer("LeviathanHammer", "leviathan_hammer", "Leviathan Hammer", Rarity.Legendary, "A great fang for a head. Builds on a raft up to Lv 5."),
+                Hammer("AbyssalHammer", "abyssal_hammer", "Abyssal Hammer", Rarity.Mythic, "Black deep-wood that never breaks. Builds on any raft."),
+            };
+            Recipe("craft_driftwood_hammer", "Driftwood Hammer", RecipeKind.Craft, new[] { (plank, 2), (fang, 1) }, new[] { (hammers[0], 1) });
+            Recipe("upgrade_tarred_hammer", "Tarred Hammer", RecipeKind.Upgrade, new[] { (hammers[0], 1), (tarred, 1), (fang, 1) }, new[] { (hammers[1], 1) });
+            Recipe("upgrade_shell_hammer", "Shell Hammer", RecipeKind.Upgrade, new[] { (hammers[1], 1), (shell, 1), (fang, 2) }, new[] { (hammers[2], 1) });
+            Recipe("upgrade_coral_hammer", "Coral Hammer", RecipeKind.Upgrade, new[] { (hammers[2], 1), (coral, 1), (scale, 2) }, new[] { (hammers[3], 1) });
+            Recipe("upgrade_leviathan_hammer", "Leviathan Hammer", RecipeKind.Upgrade, new[] { (hammers[3], 1), (leviathan, 1), (fang, 3) }, new[] { (hammers[4], 1) });
+            Recipe("upgrade_abyssal_hammer", "Abyssal Hammer", RecipeKind.Upgrade, new[] { (hammers[4], 1), (abyssal, 1), (shell, 2) }, new[] { (hammers[5], 1) });
             // Phase 6: gear power (set every build so older assets get it too) and gear recipes.
             SetGearPower(spear, 4);
             SetGearPower(buckler, 3);
@@ -173,6 +203,15 @@ namespace BrineBattle.Editor
                 i.effect = ConsumableEffect.RepairRaft; i.effectAmount = 30;
                 i.description = "An eel-skin patch with a plank backing, slapped on mid-fight. Restores 30 raft HP.";
             });
+            // Phase 7: companion treat (heals or wakes the battle companion).
+            var biscuit = LoadOrCreate<ItemDefinition>($"{Root}/Items/KelpBiscuit.asset", i =>
+            {
+                i.id = "kelp_biscuit"; i.displayName = "Kelp Biscuit"; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Common; i.element = Element.Water;
+                i.effect = ConsumableEffect.HealCompanion; i.effectAmount = 20;
+                i.description = "A crunchy treat for companions. Heals your battle companion 20 HP, or wakes it up if it was knocked out.";
+            });
+            Recipe("craft_kelp_biscuit", "Kelp Biscuit", RecipeKind.Craft, new[] { (scale, 1), (fang, 1) }, new[] { (biscuit, 1) });
             Recipe("craft_brine_tonic", "Brine Tonic", RecipeKind.Craft, new[] { (scale, 2), (feather, 1) }, new[] { (tonic, 1) });
             Recipe("craft_tar_patch", "Tar Patch", RecipeKind.Craft, new[] { (patch, 1), (plank, 1) }, new[] { (tarPatch, 1) });
             EnsureEntry(loot, tonic, 0.2f, 1, 1);
@@ -224,6 +263,22 @@ namespace BrineBattle.Editor
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }
+
+        static ItemDefinition Hammer(string file, string id, string name, Rarity rarity, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Tool;
+                i.rarity = rarity; i.element = Element.None; i.maxStack = 1;
+                i.description = description;
+            });
+
+        static ItemDefinition RaftPart(string file, string id, string name, Rarity rarity, Element element, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Raft;
+                i.rarity = rarity; i.element = element;
+                i.description = description;
+            });
 
         static ItemDefinition Oil(string file, string id, string name, Element element, string description) =>
             LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>

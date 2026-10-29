@@ -52,6 +52,9 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **Battle modes:** Manual, Semi-auto, Auto.
   - Set in **Settings** (Esc); applied automatically when battle starts. Settings also has a toggle for auto-use of consumables in Semi-auto and Auto.
   - Can be changed anytime, including mid-battle.
+- **Losing (Ed's call: rest + a little lost):** the monster swims off, the hunter rests 30 s before hooking again (module catches wait too), and the waves wash away up to 3 Common materials. Gear, pets, raft parts, tools, potions and rarer items are never lost; the next fight starts at full HP. No game over. (Phase 8 may add a monster eating a raft part.)
+- **Looks of a loss (Ed's ask):** the hunter lies knocked out ("z Z") while resting; the pets scurry into the storage box, which shivers and squeaks ("eep!") with the lid peeking, and they pop back out when the rest is over.
+- **⚠ Danger!** shows over a drift whose monster would likely beat the hunter and the battle pet (hits needed on each side, average damage with elements).
 - Resource for actions: *TBD* (stamina only, or weapon charge/durability — no mana, since hunters have no magic).
 
 ## 6. Raft (Builder)
@@ -63,9 +66,10 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
   - Hybrids possible, with trade-offs.
 - **Grid (Phase 5):** parts snap to a grid (max 9x9), must touch the raft and can't split it. Raft size = 1 at 9 parts, +1 per 4 more parts; size gates fights. Battle HP = sum of part HP (10 × (rarity + 1), +20% per raft tier).
 - **Raft tier = raft level (owner's call):** shown as Lv 1 (Common) … Lv 6 (Mythic). A higher tier gives more HP, but raft parts with rarity below the tier can no longer be added. Auto-loot modules and habitats fit any tier (a module's strength is its level), so the left-edge rule can always be met. Raising it one step needs (owner's call, tunable): **kills** since the last upgrade (5 × (tier + 1): 5, 10, 15 …; battle wins and finishing weakened monsters count), **monster materials** spent (5 × (tier + 1), any rarity), Monster Essence spent (10 × (tier + 1), rarity ≥ current tier), and the module rule below. Kills are kept in the save.
-- **Looks (owner's ask, U-24):** the raft rides a moving swell (rises, falls and leans with the water under it); the sea is calm right around the raft (12% of the swell) so a big raft never sinks into a wave; drifts float on the same waves. Katig (outrigger floats on bamboo arms) along both long sides and a small sail at the right edge, turned to the current: decoration only, no gameplay.
+- **Looks (owner's ask, U-24):** the raft rides a moving swell (rises, falls and leans with the water under it); the raft leans fully with the water. **Raft level = plank thickness (owner's call):** each level the deck stands higher above the water (Lv 1 0.30 m … Lv 6 0.90 m, above the tallest wave) and the raft rides a bigger share of the swell (Lv 1 half-height waves … Lv 6 the open sea), so low levels rock gently and high levels ride real waves without water over the deck; drifts float on the same waves. **Nothing overlaps (owner's ask):** drifts push apart, a reeled monster stops at the raft's edge, pets keep clear of the hunter, the box and each other, and a battle lunge stops where the bodies touch. Katig (outrigger floats on bamboo arms) along both long sides and a small sail at the right edge, turned to the current: decoration only, no gameplay.
 - **Modules before growth (owner's call):** the raft can only be **widened** (raft parts) or **upgraded** while at least **50%** of its rows end on the left (upstream) edge in an auto-loot module (3 rows → 2 modules). Modules themselves can always be installed.
 - **Upgrade guide (owner's ask):** Build has a guide that lists each tier requirement as done / to do, says how to get it, offers a shortcut button, and highlights in yellow the left-edge spots that still need a module.
+- **Modules hook everything that touches them (Ed's ask):** any monster, any state. A drift pressed against the raft next to a module counts as touching, even in a notch between parts. A **weakened, calm** catch is brought to the hunter as a Finish / Tame choice (in Auto with no pet room it is finished for loot); if the hunter is busy the module holds it until they're free. A drift that bit a module is left alone for 20 s while it swims off, not forever.
 - **Module catches a live monster (owner's call):** it can't swim off; a battle starts at once and plays in **Auto** (mode can't be switched), the monster striking first. It comes first: if the hunter is casting or reeling, that line is dropped. Only during another battle or a prompt does the module hold it on the line, and its battle starts right after. This ignores the raft-size gate: even a monster too big for the raft is fought (owner's call).
 - Raft holds weapon stations, alchemy stations, Transmutation Circle, and companion habitats.
 - **Absorption / downgrade:** when you lose, flee, or are exhausted, monsters eat raft parts. The monster grows stronger; defeating it later recovers your parts plus a bonus.
@@ -81,6 +85,11 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **No job/class. No magic.**
 - **Level (EXP):** base stats and free stat points.
 - **Alchemy Mastery:** recipe unlocks, fusion success rate, taming rarity, potion and gear quality.
+- **Implemented (Idea Round 3: U-14 + C-1, with U-6):** mastery points from harvesting or beating a monster (2), taming (3) and crafting (1, not dismantling). Lv 1–10; each level needs 10 × level more points. Effects so far:
+  - **Hint accuracy (C-1):** 60% at Lv 1, +4% per level (96% at Lv 10).
+  - **Recipe knowledge (U-14):** a recipe needs mastery by its output's rarity (Common 1 … Mythic 6, one per raft level; dismantling always known). Unknown recipes show as "???" with the level that reveals them, in the Workbench and in a new **Book → Recipes** tab; a level-up names the new recipes. The Mystic only crafts known recipes.
+  - **Essence combining (U-6):** from Lv 3, 5 essence of one rarity and element → 1 of the next rarity (Bag → Essence).
+  - Older saves start at the mastery level of their raft, so nothing they already used is hidden. Fusion, taming and quality effects are still open.
 - **Power comes from gear.**
 
 ## 8. Elements
@@ -133,7 +142,7 @@ Applies to gear, companions, and monsters (type chart).
 - Need habitats on the raft; can power Beast-Driven / Sky rafts.
 - *Open question:* are fused companions consumed?
 
-**Implemented (Phase 7 slice 1, tunable):** Tame appears on a weakened, calm drift. Chance by rarity: Common 90%, Uncommon 75%, Rare 55%, Epic 40%, Legendary 25%, Mythic 15%; a failed tame lets it slip away. A companion has 60% of the monster's HP/ATK/DEF (speed kept). The raft keeps 3 companions, +1 per habitat. One is active: it attacks after the hunter every round, the monster goes for it 25% of the time, and a knocked-out companion sits out the rest of the battle. It rests to full HP between battles. Release from the Bag (asks twice).
+**Implemented (Phase 7 slice 1, tunable):** Tame appears on a weakened, calm drift. Chance by rarity: Common 90%, Uncommon 75%, Rare 55%, Epic 40%, Legendary 25%, Mythic 15%; a failed tame lets it slip away. A companion has 60% of the monster's HP/ATK/DEF (speed kept). The raft keeps 3 companions, +1 per habitat. One is active: it attacks after the hunter every round, the monster goes for it 25% of the time, and a knocked-out companion sits out the rest of the battle. It rests to full HP between battles. Release from the Pets menu (asks twice).
 
 **Habitats (Phase 7, tunable):** a habitat is a raft piece crafted at the workbench (Raft tab) and placed in Build like a part; each one on the raft gives room for one more companion (3 + habitats). **Tide Pool** (4 Driftwood Plank + 3 Eel Scale) and **Sky Perch** (3 Driftwood Plank + 3 Gale Feather); both can be dismantled. Habitats fit any raft tier and don't need the left-edge modules. Taking one off doesn't release anyone, but no new companion can be tamed until there is room. *Claude's proposal; any companion can use either habitat for now.*
 
@@ -145,9 +154,22 @@ Applies to gear, companions, and monsters (type chart).
 
 **More chores (Ed's ask):** the Crew also **repairs auto-loot modules** once one drops to a share set **per module kind** in Build (R) (slider, default 50%), paying the module's normal repair cost; between fights it mends the harpoon +1 every 15 s. The Mystic **restocks consumables first**: when a potion or oil the workbench can make is below the "keep at least" amount (Bag slider, default 2) it crafts one (potions before oils), otherwise it refines gear. In battle the Mystic **supports**: at the end of each round it heals whichever of the hunter or the Familiar is lower on HP (Common 3, +2 per rarity step).
 
+**Hammer and replacing (Ed's ask):** building is done with tools, not bare hands. Placing, replacing and removing raft parts, modules and habitats, and leveling the raft up, need a **hammer of the raft's level or better** in the bag (not used up). After a level-up the hammer must be upgraded to keep building. Hammers are crafted from loot in the Raft tab: Driftwood Hammer (2 Driftwood Plank + 1 Eel Fang, Lv 1; a new game starts with one, and older saves get one), then each upgrades from the one before plus that level's raft part: Tarred (+ Tarred Plank + 1 Eel Fang), Shell (+ Shellback Plate + 2 Eel Fang), Coral (+ Coralbound Plank + 2 Eel Scale), Leviathan (+ Leviathan Beam + 3 Eel Fang), Abyssal (+ Abyssal Keel + 2 Shellback Plate). A **Mystic** makes or upgrades the hammer by itself (before potions) when the raft has outgrown it; the **Crew** only builds when the hammer fits. In Build, clicking a built tile with a part selected **replaces** it; the old part goes back to the bag.
+
+**Reinforced raft parts (Ed's call):** a leveled-up raft only takes parts of its level or higher, so the workbench's Raft tab has a **Reinforce** recipe for each level: 2 Driftwood Plank + 1 Eel-Skin Patch → Tarred Plank (Lv 2, Uncommon); 2 Tarred Plank + 2 Eel Fang → Shellback Plate (Lv 3, Rare); 2 Shellback Plate + 2 Eel Scale → Coralbound Plank (Lv 4, Epic); 2 Coralbound Plank + 3 Eel Fang → Leviathan Beam (Lv 5, Legendary); 2 Leviathan Beam + 3 Shellback Plate → Abyssal Keel (Lv 6, Mythic). Items that any craft or reinforce recipe uses are never salvaged as misfits; the Bag marks them "crafting". Auto-salvage on pickup only ever touches **weapons and armor** below their target tier (Ed's call): raft parts, modules, materials and consumables of any rarity are always kept, so a higher raft level never stops you looting Common items.
+
+**Growth and old age (Phase 7 part 2, tunable, *Claude's proposal until Ed confirms*):** until day/night exists (U-10), a companion's **age counts battles won** (every companion on the raft gets one older for each monster beaten). Lifespan by rarity: Common 40 battles, +20 per rarity step (Mythic 140). Stages: **Young → Adult** at a quarter of its life, **Adult → Elder** at three quarters; each step is an **evolution**: HP, ATK and DEF ×1.25, SPD +1. At the end of its lifespan it **dies of old age**: it leaves the roster (the next Familiar becomes active), drops Monster Essence of its rarity and element (1 + rarity step), and the Book's Pets page keeps a memorial ("In memory of …, lived N battles"). The Bag shows each companion's stage and battles left. Feeding and fusion will add other ways to evolve.
+
+**Feeding, fusion, treats and looks (Phase 7 part 2, tunable, *Claude's proposal until Ed confirms*):**
+- **Feed** (Pets menu → Feed): monster loot (materials) adds growth, 1 + rarity step, doubled for its own element ("favourite"). Growth 10 evolves a Young one, 20 an Adult one (same boost as aging). Elders are fully grown. Potions and oils **infuse** a permanent stat instead: healing +3 HP, oils +1 ATK, raft patches +1 DEF; a Young companion takes 3, +2 per stage. Gear, raft parts and modules aren't food. No EXP anywhere.
+- **Fuse** (Pets menu → Fuse, the Transmutation Circle): pick a second companion to fuse into the first. The second is **always used up** (U-8 answered with C-5). Same kind: one rarity up, each stat the better of the two ×1.15. Different kinds: a **hybrid** named from both (Brinefang Eel + Gale Gull → Brinefang Gull) with the rarer rarity, its own element, each stat the better ×1.05. Either way it keeps an **echo** of the source: a quarter of its HP, ATK and DEF and the higher stage ("Echo of Gale Gull"; a new fusion replaces it). Chance: same kind 85%, hybrid 65%; an essence **catalyst** (2 + rarity step, of the result's rarity or rarer) adds 15%. On a failure the source slips away and the first is unchanged.
+- **Companion treats:** **Kelp Biscuit** (1 Eel Scale + 1 Eel Fang, Potions tab) heals the battle companion 20 HP or wakes it up if knocked out; Semi-auto and Auto use one when the companion is at 35% HP or less (after the hunter's and raft's needs). The Mystic restocks it like other potions.
+- **Looks (U-23 varieties):** Plain, Scarf, Bandana or Crown, random at taming, changeable for free in the Pets menu; looks only.
+- **Pets menu (Ed's ask):** pet management has its own menu (HUD **Pets** button or **P**), not the Bag: roles, the active Familiar, Crew/Mystic chores, Feed, Fuse, Look and Release.
+
 ### Saving
 
-Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the persistent data path; "Open folder" button). **Upload save file** makes a save from anywhere the one save file and loads it; the previous save is kept as `save.backup.json` (owner's call). In the Editor it opens a file picker; in a build, paste the file path. **Auto-save every 5 minutes** into that file once a save exists (made or loaded), only in Semi-auto and Auto, and never during a battle, menu or prompt (owner's call). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts, installed modules and their wear, tier and kills toward the next tier, companions and their roles, the collection book, and the menu settings (owner's call): battle mode and auto-use (Settings), auto-salvage, target tiers and companion chores (Bag), and the Crew repair share per module kind (Build). Saves from before settings were saved load with the current settings. Items are stored by id, so renaming an asset is safe but changing an id is not.
+Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the persistent data path; "Open folder" button). **Upload save file** makes a save from anywhere the one save file and loads it; the previous save is kept as `save.backup.json` (owner's call). In the Editor it opens a file picker; in a build, paste the file path. **Auto-save every 5 minutes** into that file once a save exists (made or loaded), only in Semi-auto and Auto, and never during a battle, menu or prompt (owner's call). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts, installed modules and their wear, tier and kills toward the next tier, companions and their roles, age, stage, growth, potions, echo and look, memorials, the collection book, and the menu settings (owner's call): battle mode and auto-use (Settings), auto-salvage, target tiers and companion chores (Bag), and the Crew repair share per module kind (Build). Saves from before settings were saved load with the current settings. Items are stored by id, so renaming an asset is safe but changing an id is not.
 
 ## 11. Loot & Salvage
 
@@ -158,7 +180,7 @@ Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the p
   - Refining (+) weapons and armor
   - Secondary material for raft/gear upgrades
   - Companion growth
-- Proposed: combine low-rarity essence into higher-rarity essence.
+- **Combining (U-6, Idea Round 3):** from Alchemy Mastery Lv 3, 5 essence → 1 of the next rarity, same element.
 - **Implemented (Phase 4):** an equippable item fits when its rarity ≥ the target's tier. Salvage gives essence of the item's rarity and element, Common 1 … Mythic 6 per item.
 
 ### Collection book (U-11)
@@ -195,11 +217,33 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 - **Collision** meshes authored in Blender (simplified, `_col` naming) for easy iteration.
 - **Modular, grid-based** raft parts.
 
+### HUD and menus (owner idea U-25)
+
+Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status card top-left (raft level and HP, harpoon wear with Fix, pets) and a bottom **dock of picture buttons**: Bag (B), Pets (P), Book (C), Build (R), Settings (Esc). A button lights up while its menu is open. Every menu has a red **×** and is split into **tabs**, so each page is short:
+- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Level up (✔/✘ requirements and the button).
+- **Workbench:** each recipe is a card listing every ingredient as have/need, green ✔ or red ✘ with "need N more". Ready recipes come first, each tab shows how many are ready, and a box hides what can't be made yet (Ed's ask).
+- **Bag:** Items (filter by kind; one line on what each item is for) · Equipment · Essence · Auto-salvage.
+- **Pets:** the list of pets on the left, the picked pet on the right (life and growth bars, Feed, Fuse, Look, battle, Release) · Chores.
+- **Book:** tab labels show found/total; a progress bar.
+- **Settings:** Game · Save · Controls · **FAQ**.
+- **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
+
+### Hunter on the raft (Ed's ask)
+
+Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces.
+
+### Away pause (Ed's call)
+
+If the player falls asleep with the game running, nothing should happen while they're gone. After **10 minutes with no key, click or mouse move** (Settings → Game: Off / 5 / 10 / 20 min), the game **pauses**: no hooks, no module battles, no auto-save, and a "You fell asleep" screen. A battle already running finishes first. In Semi-auto and Auto it saves once when it pauses. Any key or click continues. A battle lost after a minute with no input pauses the game at once.
+
+### Main menu (Ed's ask)
+
+The game opens on its own **MainMenu scene** before the game (Hook) scene: **Continue** (shows the save's date; loads the save), **New game** (asks first if a save exists; the old save is kept as `save.backup.json`, so auto-save can't overwrite it, and Upload save file brings it back), **Settings** (screen size, battle mode, auto-use; saving needs a game) and **Quit**. In the game, Settings has **Save and go to main menu**. In the Editor, Play always starts at the main menu. Both scenes are built from code (`MainMenuSceneBuilder`, `HookSceneBuilder`).
+
 ## 14. Open Questions
 
 - Action resource in battle (stamina vs weapon charge).
-- Fusion: are source companions consumed?
-- Companion roles: what triggers evolution; how lifespan is counted before a day/night cycle; what happens on death.
+- Companion growth: confirm the proposal in §10 (age in battles, evolve at 1/4 and 3/4 of life, essence + memorial on death; feeding, fusion and treat numbers).
 - Level-range limits on item share?
-- Target platform(s): PC, mobile, or both.
+- Target platform(s): PC standalone and WebGL both look possible (U-27); mobile still open.
 - Title trademark check.

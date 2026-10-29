@@ -66,6 +66,40 @@ namespace BrineBattle.Companions
         }
 
         public static int Share(int wild) => Math.Max(1, (int)Math.Round(wild * StatShare));
+
+        // Growth and old age (owner idea U-23, GDD §10). Age counts battles won until day/night exists (U-10).
+
+        /// <summary>Battles a companion lives through before it dies of old age: Common 40, +20 per rarity step.</summary>
+        public static int Lifespan(Rarity r) => 40 + 20 * (int)r;
+        /// <summary>Age at which a companion reaches a stage: Adult at a quarter of its life, Elder at three quarters.</summary>
+        public static int AgeFor(GrowthStage stage, Rarity r)
+        {
+            switch (stage)
+            {
+                case GrowthStage.Adult: return Lifespan(r) / 4;
+                case GrowthStage.Elder: return Lifespan(r) * 3 / 4;
+                default: return 0;
+            }
+        }
+        /// <summary>Each evolution multiplies HP, attack and defense by this (speed +1).</summary>
+        public const float EvolveBoost = 1.25f;
+        /// <summary>Essence a companion leaves behind when it dies of old age: 1 + its rarity step, of its own rarity and element.</summary>
+        public static int EssenceLeft(Rarity r) => 1 + (int)r;
+    }
+
+    /// <summary>Life stage of a companion. Each step up is an evolution with a stat boost.</summary>
+    public enum GrowthStage { Young = 0, Adult = 1, Elder = 2 }
+
+    /// <summary>What happened to a companion when it grew one battle older.</summary>
+    public enum AgeResult { None, Evolved, Died }
+
+    /// <summary>A companion that died of old age, remembered in the Book.</summary>
+    public class Memorial
+    {
+        public string Id, Name;
+        public Rarity Rarity;
+        public CompanionRole Role;
+        public int Age;
     }
 
     /// <summary>A tamed monster. HP is refilled before each battle (it rests on the raft).</summary>
@@ -78,6 +112,48 @@ namespace BrineBattle.Companions
         public Rarity Rarity;
         public CompanionRole Role;
         public int MaxHp, Attack, Defense, Speed;
+        /// <summary>Battles won since it was tamed.</summary>
+        public int Age;
+        public GrowthStage Stage;
+        /// <summary>Feeding points toward the next evolution (<see cref="CompanionGrowth.GrowthToEvolve"/>).</summary>
+        public int Growth;
+        /// <summary>Potions infused so far (each gives a small permanent stat; capped by stage).</summary>
+        public int Infusions;
+        /// <summary>The passive kept from the last companion fused into this one ("Echo of …"), or null.</summary>
+        public string Echo;
+        /// <summary>Looks only (U-23 varieties): 0 Plain, 1 Scarf, 2 Bandana, 3 Crown.</summary>
+        public int Look;
+
+        public int Lifespan => CompanionRules.Lifespan(Rarity);
+        public int AgeLeft => Math.Max(0, Lifespan - Age);
+        public string StageName => Stage == GrowthStage.Young ? "Young" : Stage == GrowthStage.Adult ? "Adult" : "Elder";
+
+        /// <summary>Grows one battle older: evolves when it reaches the next stage, dies at the end of its lifespan.</summary>
+        public AgeResult GrowOlder()
+        {
+            Age++;
+            if (Age >= Lifespan) return AgeResult.Died;
+            if (Stage < GrowthStage.Elder && Age >= CompanionRules.AgeFor(Stage + 1, Rarity))
+            {
+                Evolve();
+                return AgeResult.Evolved;
+            }
+            return AgeResult.None;
+        }
+
+        /// <summary>Moves up one stage with a stat boost (also used later by feeding and fusion).</summary>
+        public bool Evolve()
+        {
+            if (Stage >= GrowthStage.Elder) return false;
+            Stage++;
+            MaxHp = Boost(MaxHp);
+            Attack = Boost(Attack);
+            Defense = Boost(Defense);
+            Speed += 1;
+            return true;
+        }
+
+        static int Boost(int v) => Math.Max(v + 1, (int)Math.Round(v * CompanionRules.EvolveBoost));
 
         public static Companion FromMonster(MonsterDefinition m, CompanionRole role = CompanionRole.Familiar) => new Companion
         {
@@ -100,6 +176,7 @@ namespace BrineBattle.Companions
     public class CompanionRoster
     {
         readonly List<Companion> all = new List<Companion>();
+        readonly List<Memorial> memorials = new List<Memorial>();
 
         public event Action Changed;
         public int Habitats { get; set; }
@@ -107,6 +184,8 @@ namespace BrineBattle.Companions
         public IReadOnlyList<Companion> All => all;
         public Companion Active { get; private set; }
         public bool Full => all.Count >= Capacity;
+        /// <summary>Companions that died of old age, oldest first.</summary>
+        public IReadOnlyList<Memorial> Memorials => memorials;
 
         /// <summary>Adds a companion if there is room; the first Familiar becomes active.</summary>
         public bool Add(Companion c)
@@ -144,6 +223,36 @@ namespace BrineBattle.Companions
             Habitats = habitats;
             Active = active >= 0 && active < all.Count && all[active].Role == CompanionRole.Familiar ? all[active] : null;
             Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// Every companion grows one battle older (call after each battle won). Returns who evolved and who died;
+        /// the dead leave the roster and get a memorial.
+        /// </summary>
+        public List<KeyValuePair<Companion, AgeResult>> GrowOlder()
+        {
+            var changes = new List<KeyValuePair<Companion, AgeResult>>();
+            foreach (var c in all.ToArray())
+            {
+                var r = c.GrowOlder();
+                if (r == AgeResult.None) continue;
+                changes.Add(new KeyValuePair<Companion, AgeResult>(c, r));
+                if (r == AgeResult.Died)
+                {
+                    memorials.Add(new Memorial { Id = c.Id, Name = c.Name, Rarity = c.Rarity, Role = c.Role, Age = c.Age });
+                    all.Remove(c);
+                    if (Active == c) Active = all.Find(x => x.Role == CompanionRole.Familiar);
+                }
+            }
+            if (changes.Count > 0) Changed?.Invoke();
+            return changes;
+        }
+
+        /// <summary>Replaces the memorials (loading a save).</summary>
+        public void RestoreMemorials(IEnumerable<Memorial> list)
+        {
+            memorials.Clear();
+            if (list != null) memorials.AddRange(list);
         }
 
         /// <summary>The highest-rarity companion in a role (the one whose bonus counts), or null.</summary>

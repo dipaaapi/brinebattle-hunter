@@ -22,11 +22,11 @@ Monsters eat raft parts when you lose or flee; beat them later to recover parts 
 
 ## Open (proposed in the GDD, not yet decided)
 
-### U-6 Combine low-rarity essence into higher-rarity essence — 2026-10-28 · 💡 · GDD §11
+### U-6 Combine low-rarity essence into higher-rarity essence — 2026-10-28 · ✅ Idea Round 3 (Mastery Lv 3, 5 → 1) · GDD §11
 
-### U-7 Battle action resource: stamina vs weapon charge — 2026-10-28 · 💡 · GDD §5, §14
+### U-7 Battle action resource: stamina vs weapon charge — 2026-10-28 · ✅ answered by C-4 (stamina + durability) · GDD §5, §14
 
-### U-8 Are fused companions consumed? — 2026-10-28 · 💡 · GDD §10, §14
+### U-8 Are fused companions consumed? — 2026-10-28 · ✅ yes, with an echo (C-5), Phase 7 · GDD §10, §14
 
 ## New ideas
 
@@ -47,7 +47,7 @@ A collection book with pages for **monsters, items, and pets/companions**. Entri
 
 Related: C-6 (Hunter's Journal) is similar but only for monsters; U-11 covers all three and adds the silhouette reveal.
 
-### U-12 Skill slots limited by rarity (weapons, gear, accessories) — 2026-10-28 · 💡 · GDD §9
+### U-12 Skill slots limited by rarity (weapons, gear, accessories) — 2026-10-28 · 🟡 gear skills by rarity done (Phase 6); accessories open · GDD §9
 The number of skill slots (passive and active) on weapons, gear **and accessories** depends on rarity. Example: a **Common** weapon literally can't hold any passive or active skill; rarer items get more slots.
 
 Builds on the GDD §9 rarity table (Common = element only, Rare = 1 passive, Epic = 1 active + 1 passive, Legendary/Mythic = multiple slots). New here: **accessories** as a gear type, and slots as a hard limit.
@@ -82,7 +82,7 @@ A raft part built on the **edge of the raft** that automatically loots monsters 
 - **Repair** (per 10 durability): Lv 1–2 = materials only; Lv 3 = materials + essence of the module's rarity; Lv 4–5 = essence only. Cost = level × (rarity + 1). Same-element essence repairs 25% more.
 - Fits Phase 5 (raft builder) as a buildable part; durability shares a system with C-4 weapon durability.
 
-### U-14 Crafting knowledge unlocks the book — 2026-10-28 · 💡 · GDD §7, §9, §11, U-11
+### U-14 Crafting knowledge unlocks the book — 2026-10-28 · ✅ Idea Round 3 (Alchemy Mastery, Book → Recipes) · GDD §7, §9, §11, U-11
 The book should also show **how to craft** things, but you only know a recipe once you have the **skill/knowledge** for it. That is the point of harvesting: harvesting builds your skills, skills let you craft, and crafting unlocks more.
 - Right now the book only lists what you've looted.
 - As skills grow, **new "???" entries appear** (craftable items, gear, potions, raft parts) that you can now learn to make.
@@ -124,7 +124,7 @@ No fog and no day/night look yet. Fog at night (and maybe in rough seas) that li
 When the game is finished, make a manual for players: viewable inside the game if possible, otherwise a downloadable PDF, whichever is better.
 - Claude's suggestion: both from one source. An in-game "How to Play" screen (works offline, always matches the build, can open on the relevant page) plus a PDF made from the same text for the store page / download. Write it at the end, once mechanics stop changing; the Settings menu's Controls list is the seed.
 
-### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · ✅ · GDD §10
+### U-23 Three companion roles, looks, evolution, old age — 2026-10-29 · ✅ (first pass; numbers wait for Ed) · GDD §10
 Companions come in three roles:
 1. **Crew** (Ed's word: "slave") — looks after the raft: repairs and upkeep.
 2. **Mystic** — helps with alchemy and crafting, except the raft: gear, weapons, consumables.
@@ -135,5 +135,16 @@ Each role has varieties that only change the look and outfit. Companions can **e
 ### U-24 Rocking raft, moving waves, katig — 2026-10-29 · ✅ (first pass) · GDD §6, Phase 9 art later
 The raft should rock with the sea and the sea should have real waves, not only lines. A raft has katig (outriggers) and something to catch the wind; here they are looks only. Pulled forward by the owner during Phase 7: `Waves` swell shared by the ocean mesh, raft and drifts; `RaftDecor` adds katig and a sail. Real models come with U-18.
 
-### U-25 Kid-friendly, simpler UI — 2026-10-29 · 🟡 quick cleanup done, full redesign in Phase 9
+### U-25 Kid-friendly, simpler UI — 2026-10-29 · 🟡 cleanup + icon dock done (Phase 7), full redesign with real art in Phase 9
 The menus are too complicated; a child should be able to use them. Fewer words, bigger buttons, icons, one thing per screen. Ed chose both: a quick cleanup now (done in Phase 7: Screen size setting Small/Big/Huge, default Big; shorter HUD with bars and big buttons; one Crew repair slider per module kind) and a full UI redesign with icons in Phase 9.
+
+### U-26 Main menu scene — 2026-10-29 · ✅ (first pass) · GDD §13, UI art in Phase 9
+Before the game starts or continues there should be a main menu: New game, Continue and Settings, so the player sets things up first and then plays without stopping. It is its own scene that loads first, not a pop-up over the game (Ed). Pulled forward by the owner during Phase 7.
+
+### U-27 Standalone and WebGL builds — 2026-10-29 · 💡 · GDD §13, after Phase 9
+Can the game be a standalone app and also run in a browser (WebGL)? If yes, do both.
+- Claude's note: yes, one Unity project builds both. Ed's laptop Unity already has Windows Standalone and WebGL modules (Mac/Linux need theirs added). WebGL needs: a save that reliably persists in browser storage (IndexedDB sync), a browser file picker plus "download save" instead of Upload by path, hiding Quit; Phase 10 online play would need WebSockets. First step: a test Web build to see size and speed.
+
+### U-28 Free on itch.io with microtransactions and small ads — 2026-10-29 · 💡 · after the game is finished
+Release the game free on itch.io, with microtransactions and small ads, to earn back what making it cost.
+- Claude's notes (to check before building anything): itch.io hosts both the WebGL (play in browser) and downloadable builds and supports "pay what you want" and paid add-ons, but it has no in-game purchase system, so microtransactions need an outside payment service. Many ad networks don't serve inside itch.io's embedded page. The game targets kids, so ads and purchases aimed at children fall under child-privacy rules (e.g. COPPA) and ad networks' child-directed settings. Cosmetic-only purchases (pet looks, raft skins) fit the design best.

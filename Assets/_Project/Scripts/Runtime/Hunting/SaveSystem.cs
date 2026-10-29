@@ -47,6 +47,8 @@ namespace BrineBattle.Hunting
                 modules?.Slots.Select(kv => new KeyValuePair<Cell, int>(kv.Key, kv.Value.Durability.Current)),
                 hook.Companions, book != null ? book.Log.Serialize() : null, DateTime.Now);
             CaptureSettings(data, hook, book);
+            data.hasMastery = true;
+            data.mastery = hook.Mastery.Points;
             try
             {
                 Directory.CreateDirectory(Folder);
@@ -55,6 +57,22 @@ namespace BrineBattle.Hunting
             catch (Exception e) { return $"Save failed: {e.Message}"; }
             hook.Log(auto ? $"Auto-saved ({data.savedAt})." : $"Game saved ({data.savedAt}).");
             return $"Saved ({data.savedAt}).";
+        }
+
+        /// <summary>
+        /// New game (main menu): the current save moves to save.backup.json so auto-save can't write
+        /// the new game over it. Saving the new game makes a fresh save.json. Returns null, or what went wrong.
+        /// </summary>
+        public static string StartNew()
+        {
+            try
+            {
+                if (!Exists) return null;
+                File.Copy(FilePath, BackupPath, true);
+                File.Delete(FilePath);
+                return null;
+            }
+            catch (Exception e) { return $"Couldn't put the old save aside: {e.Message}"; }
         }
 
         /// <summary>
@@ -158,6 +176,10 @@ namespace BrineBattle.Hunting
                     if (durability.TryGetValue(kv.Key, out var cur)) kv.Value.Durability.Set(cur);
             if (book != null && data.collection != null) book.Restore(data.collection);
             if (data.hasSettings) ApplySettings(data.settings);
+            hook.Mastery.Restore(data.hasMastery ? data.mastery : AlchemyMastery.StartingPoints(hook.raft.Tier));
+            // Saves from before hammers existed get the starter hammer, so building isn't locked out.
+            if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))
+                hook.Inventory.Add(hook.starterHammer, 1);
             hook.SyncHabitats();
             hook.ApplyCompanionBonuses();
             string note = missing.Count > 0 ? $" Unknown items skipped: {string.Join(", ", missing)}." : "";

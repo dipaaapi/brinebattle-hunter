@@ -4,7 +4,7 @@
 
 Format: `### C-<n> Title` · date · status (💡 open / ✅ accepted / ❌ dropped / 🔀 merged) · related GDD section · cost (S/M/L) · earliest phase.
 
-### C-1 Drift "reading" as a skill check — 2026-10-28 · 💡 · §4 · S · Phase 2
+### C-1 Drift "reading" as a skill check — 2026-10-28 · ✅ Idea Round 3 · §4 · S · Phase 2
 Alchemy Mastery raises the accuracy of the Dead/Weakened/Alive hint (e.g. 50% → 90%). Gives Mastery a use from the very first loop, and makes "hook the unknown" a choice instead of pure luck.
 
 ### C-2 Line tension mini-step on reel-in — 2026-10-28 · ✅ Idea Round 1 · §4 · S · Phase 2
@@ -16,7 +16,7 @@ Storm = bigger/Alive drifts, calm = more Dead loot, fog = hints unreliable. One 
 ### C-4 Action resource = weapon durability + stamina (answer to U-7) — 2026-10-28 · ✅ Idea Round 2 · §5 · S · Phase 3
 Stamina per turn for basic actions, weapon durability for skills. Both are fed by alchemy (potions refill stamina, oils repair weapons), which ties battle back to the core pillar.
 
-### C-5 Fusion keeps one "echo" (answer to U-8) — 2026-10-28 · 💡 · §10 · M · Phase 7
+### C-5 Fusion keeps one "echo" (answer to U-8) — 2026-10-28 · ✅ Phase 7 · §10 · M · Phase 7
 Sources are consumed, but the result inherits one passive from the consumed one. Makes fusion a real trade-off without feeling like pure loss.
 
 ### C-6 Bestiary / Hunter's Journal — 2026-10-28 · 🔀 merged into U-11 · §4, §11 · S · Phase 4

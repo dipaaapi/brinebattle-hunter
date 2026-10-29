@@ -50,6 +50,8 @@ namespace BrineBattle.Hunting
             public float Busy;   // seconds of "working" hop left after a job
             public Vector3 Walk;   // Crew: local spot on the raft it is walking to
             public float NextWalk;
+            public int Look = -1;   // the look its attire was built for
+            public GameObject Attire;
         }
 
         readonly Dictionary<Companion, Body> bodies = new Dictionary<Companion, Body>();
@@ -88,11 +90,15 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>After a lost battle the pets hide in the storage box until the hunter is up again (Ed's ask).</summary>
+        bool Scared => hook.RestLeft > 0f && !BattleController.InBattle;
+
         void Update()
         {
             if (hook == null || Raft == null) return;
             Place();
-            if (WorldPause.Open != Menu.None || BattleController.InBattle) return;
+            if (StorageBox.Instance != null) StorageBox.Instance.Scared = Scared && bodies.Count > 0;
+            if (WorldPause.Open != Menu.None || BattleController.InBattle || Scared) return;
             Chores();
         }
 
@@ -105,14 +111,30 @@ namespace BrineBattle.Hunting
                 b.Phase += Time.deltaTime;
                 b.Busy = Mathf.Max(0f, b.Busy - Time.deltaTime);
                 // In battle the stage shows the fighting Familiar; hide the idle one.
-                b.Go.SetActive(!(BattleController.InBattle && b.Pet == hook.Companions.Active));
+                if (Scared)
+                {
+                    // Scurry into the box in a little arc, then vanish inside it.
+                    if (!b.Go.activeSelf) continue;
+                    var inBox = Box + Vector3.up * 0.3f;
+                    var cur = b.Go.transform.localPosition;
+                    var next = Vector3.MoveTowards(cur, inBox, Time.deltaTime * 3f);
+                    float left = Vector3.Distance(next, inBox);
+                    b.Go.transform.localPosition = next + Vector3.up * Mathf.Min(0.4f, left * 0.5f);
+                    if (left < 0.08f) b.Go.SetActive(false);
+                    continue;
+                }
+                bool show = !(BattleController.InBattle && b.Pet == hook.Companions.Active);
+                // Back out of the box after the rest: pop out of the lid.
+                if (show && !b.Go.activeSelf && !BattleController.InBattle) b.Go.transform.localPosition = Box + Vector3.up * 0.8f;
+                b.Go.SetActive(show);
+                if (b.Look != b.Pet.Look) Dress(b);
                 float hop = Mathf.Abs(Mathf.Sin(b.Phase * (b.Busy > 0f ? 12f : 3f))) * (b.Busy > 0f ? 0.35f : 0.08f);
                 Vector3 p;
                 switch (b.Pet.Role)
                 {
                     case CompanionRole.Mystic:
                         // Works beside the storage box (the crafting table), never inside it.
-                        p = Box + new Vector3(0.6f, 0.2f, 0f);
+                        p = Box + new Vector3(0.8f, 0.2f, 0f);
                         break;
                     case CompanionRole.Crew:
                         // Walks from tile to tile, always on the raft.
@@ -127,6 +149,53 @@ namespace BrineBattle.Hunting
                 }
                 b.Go.transform.localPosition = p + Vector3.up * hop;
             }
+            KeepApart(hunterLocal);
+        }
+
+        /// <summary>Looks only (U-23 varieties): a scarf, a bandana or a little crown on the pet.</summary>
+        static void Dress(Body b)
+        {
+            b.Look = b.Pet.Look;
+            if (b.Attire != null) Destroy(b.Attire);
+            b.Attire = null;
+            var look = CompanionGrowth.LookName(b.Pet.Look);
+            if (look == "Plain") return;
+            var go = GameObject.CreatePrimitive(look == "Scarf" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
+            go.name = look;
+            Destroy(go.GetComponent<Collider>());
+            go.transform.SetParent(b.Go.transform, false);
+            // Sizes are in the pet's own space (the pet sphere is 1 unit across).
+            if (look == "Scarf") { go.transform.localPosition = new Vector3(0f, -0.15f, 0f); go.transform.localScale = new Vector3(1.05f, 0.08f, 1.05f); }
+            else if (look == "Bandana") { go.transform.localPosition = new Vector3(0f, 0.32f, 0f); go.transform.localScale = new Vector3(0.95f, 0.14f, 0.95f); }
+            else { go.transform.localPosition = new Vector3(0f, 0.55f, 0f); go.transform.localScale = new Vector3(0.45f, 0.25f, 0.45f); }
+            Tint.Apply(go.GetComponent<Renderer>(), look == "Scarf" ? new Color(0.9f, 0.25f, 0.3f) : look == "Bandana" ? new Color(0.25f, 0.4f, 0.9f) : new Color(1f, 0.82f, 0.2f));
+            b.Attire = go;
+        }
+
+        const float PetRadius = 0.21f, HunterRadius = 0.3f, BoxRadius = 0.55f;
+
+        /// <summary>Pets never stand inside the hunter, the storage box or each other (owner's ask).</summary>
+        void KeepApart(Vector3 hunter)
+        {
+            var shown = bodies.Values.Where(b => b.Go.activeSelf).ToList();
+            foreach (var b in shown)
+            {
+                var p = b.Go.transform.localPosition;
+                p = PushOut(p, hunter, PetRadius + HunterRadius, 1f);
+                p = PushOut(p, Box, PetRadius + BoxRadius, 1f);
+                foreach (var other in shown)
+                    if (other != b) p = PushOut(p, other.Go.transform.localPosition, PetRadius * 2f, 0.5f);
+                b.Go.transform.localPosition = p;
+            }
+        }
+
+        static Vector3 PushOut(Vector3 p, Vector3 from, float gap, float share)
+        {
+            var d = new Vector3(p.x - from.x, 0f, p.z - from.z);
+            float dist = d.magnitude;
+            if (dist >= gap) return p;
+            var away = dist > 0.001f ? d / dist : Vector3.right;
+            return p + away * (gap - dist) * share;
         }
 
         static Vector3 Local(Rafts.Cell c) => new Vector3(c.X * Raft.CellSize, 0.5f, c.Z * Raft.CellSize);
@@ -218,7 +287,13 @@ namespace BrineBattle.Hunting
                 if (mysticTimer >= CompanionWork.JobSeconds)
                 {
                     mysticTimer = 0f;
-                    var recipe = hook.builder != null ? CompanionWork.MysticCraftPick(hook.builder.recipes, hook.Inventory, CompanionSettings.MysticKeep) : null;
+                    // The hammer comes first when the raft has outgrown it (Ed's ask), then potions and oils.
+                    // Only recipes the hunter's Alchemy Mastery knows (Idea Round 3).
+                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Mastery.Knows(r)).ToList() : null;
+                    var recipe = known != null
+                        ? CompanionWork.MysticHammerPick(known, hook.Inventory, Raft.Tier)
+                          ?? CompanionWork.MysticCraftPick(known, hook.Inventory, CompanionSettings.MysticKeep)
+                        : null;
                     var slot = recipe == null && CompanionSettings.MysticRefines ? CompanionWork.MysticPick(hook.Gear, hook.Inventory) : null;
                     if (recipe != null && CraftRules.Craft(hook.Inventory, recipe))
                     {

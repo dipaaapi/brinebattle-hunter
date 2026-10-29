@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 7 — Companions (`phase/7-companions`, PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
-| **Next step** | Ed picks: merge PR #4 now or keep going on the branch (card open). Then evolution and old age (U-23), feeding, fusion, companion consumables |
+| **Current phase** | Phase 8 — Raft types & absorption (not started). Phase 7 and Idea Round 3 merged (PR #4, PR #5) |
+| **Next step** | Start Phase 8 on `phase/8-raft-types` when Ed gives the go: raft types (Fortress / Sky / Beast-Driven), hybrids, monsters eating raft parts and recovery |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
@@ -104,7 +104,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 
-### 🟨 Phase 7 — Companions
+### ✅ Phase 7 — Companions
 - [x] Tame a weakened, calm drift (chance by rarity) → companion with 60% of its wild stats; roster with one active companion (Bag: set active / release); Collection book Pets page fills in
 - [x] Active companion fights beside the hunter: attacks after the hunter each round, can be targeted (25%) and knocked out; rests to full HP between battles
 - [x] Battle visuals first pass (owner idea U-19, asked for now): fighters lunge, harpoon and skills fly, hits flash and shake, damage numbers pop, KO sinks; battle panel moved bottom-right
@@ -118,12 +118,23 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Rocking raft on moving waves, katig and sail (owner idea U-24, looks only)
 - [x] Quick UI cleanup (owner idea U-25): screen size setting, simpler HUD, fewer Build sliders
 - [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
-- [ ] Evolution and old age (U-23)
-- [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
-- [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)
-- [ ] Companion consumables (moved from Phase 6)
+- [x] Evolution and old age (U-23): age in battles won, Young → Adult → Elder, death leaves essence + Book memorial (numbers wait for Ed)
+- [x] Pets menu (P), separate from the Bag (owner's ask)
+- [x] Hammer needed to build and level up (one per raft level, upgradable, crafted from loot, Mystic makes it); Replace a built tile (owner's asks)
+- [x] Feeding / infusion with loot and potions (companion growth, no EXP): Pets → Feed
+- [x] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; essence catalyst; source used up, keeps an echo): Pets → Fuse
+- [x] Companion consumables (moved from Phase 6): Kelp Biscuit heals or wakes the battle companion; Semi-auto/Auto use it
+- [x] Looks (U-23 varieties): Plain, Scarf, Bandana, Crown; random at taming, changeable in the Pets menu
+- [x] Owner's asks during part 2: crafting materials kept after a raft level-up, Reinforce recipes per level, main menu scene, raft rocks with thicker planks per level, nothing overlaps
 
 **Done when:** a tamed monster joins battles, lives in a raft habitat, and can grow by feeding and fusion.
+
+### ✅ Idea Round 3 (after Phase 7) — Alchemy knowledge
+- [x] **U-14 Crafting knowledge** — recipes unlock by Alchemy Mastery; "???" in the Workbench and Book → Recipes
+- [x] **C-1 Drift reading** — mastery raises the hint accuracy (60% → 96%)
+- [x] (merged in) **U-6** essence combining from Mastery Lv 3
+
+**Done when:** mastery grows from hunting and crafting, reveals recipes, makes hints more accurate, and essence can be combined. (Built on `phase/7-growth` at Ed's ask; merged with Phase 7 in PR #5.)
 
 ### ⬜ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.

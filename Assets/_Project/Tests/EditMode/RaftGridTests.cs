@@ -203,5 +203,48 @@ namespace BrineBattle.Tests
             Assert.AreEqual(4, inv.EssenceAtLeast(Rarity.Common));
             Assert.AreEqual(4, inv.EssenceAtLeast(Rarity.Rare));
         }
+    
+        [Test]
+        public void HigherRaftLevelsStandHigherAndRideBiggerWaves()
+        {
+            for (var t = Rarity.Common; t < Rarity.Mythic; t++)
+            {
+                Assert.Less(RaftRules.Freeboard(t), RaftRules.Freeboard(t + 1));
+                Assert.LessOrEqual(RaftRules.SeaShare(t), RaftRules.SeaShare(t + 1));
+            }
+            Assert.AreEqual(1f, RaftRules.SeaShare(Rarity.Mythic), 1e-5f, "the top level rides the open sea");
+            Assert.Greater(RaftRules.Freeboard(Rarity.Mythic), 0.77f, "the top level stays above the tallest wave");
+        }
+    
+        [Test]
+        public void BuildingNeedsAHammerOfTheRaftLevel()
+        {
+            var g = Starter();
+            var bag = new Inventory();
+            g.Tools = bag;
+            var plank = Part(Rarity.Common);
+            Assert.AreEqual(PlaceResult.NeedsHammer, g.CanPlace(new Cell(2, 0), plank));
+            Assert.AreEqual(RemoveResult.NeedsHammer, g.CanRemove(new Cell(1, 0)));
+            StringAssert.Contains("Common hammer", g.UpgradeBlocker(bag));
+
+            var hammer = Part(Rarity.Common, ItemType.Tool);
+            bag.Add(hammer, 1);
+            Assert.AreEqual(PlaceResult.Ok, g.CanPlace(new Cell(2, 0), plank));
+            Assert.IsTrue(RaftRules.HasHammer(bag, Rarity.Common));
+            Assert.IsFalse(RaftRules.HasHammer(bag, Rarity.Uncommon), "after a level-up the hammer must be upgraded too");
+        }
+
+        [Test]
+        public void ReplaceSwapsAPartInPlace()
+        {
+            var g = Starter();
+            var better = Part(Rarity.Rare);
+            int count = g.Count;
+            Assert.AreEqual(PlaceResult.Ok, g.Replace(new Cell(1, 0), better, out var old));
+            Assert.IsNotNull(old);
+            Assert.AreEqual(count, g.Count, "same shape");
+            Assert.AreEqual(PlaceResult.Same, g.CanReplace(new Cell(1, 0), better));
+            Assert.AreEqual(PlaceResult.NotAdjacent, g.CanReplace(new Cell(3, 3), better), "nothing there to replace");
+        }
     }
 }
