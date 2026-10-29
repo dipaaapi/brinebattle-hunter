@@ -190,6 +190,9 @@ namespace BrineBattle.Hunting
                     GUILayout.Label("Drops: " + string.Join(", ", m.loot.entries.Where(e => e.item != null)
                         .Select(e => Log.Has(CollectionPage.Items, e.item.id) ? $"{e.item.displayName} ({e.chance:P0})" : "???")));
                 GUILayout.Label(m.description, GUI.skin.textArea);
+                if (page == CollectionPage.Pets)
+                    foreach (var g in hook.Companions.Memorials.Where(x => x.Id == m.id))
+                        GUILayout.Label($"In memory of {g.Name}, your {g.Role}: lived {g.Age} battles.");
             }
         }
 

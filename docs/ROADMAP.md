@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 7 — Companions, part 2 (`phase/7-growth`). Part 1 merged (PR #4): taming, roles, battle visuals, save, habitats, raft levels, waves, storage box |
-| **Next step** | Companion growth: evolution and old age (U-23), feeding, fusion with echo (U-8 + C-5), companion consumables. Combined idea plan in `ideas/COMPARISON.md` |
+| **Next step** | Evolution + old age done (awaiting Ed's playtest). Next: feeding, fusion with echo (U-8 + C-5), companion consumables. Combined idea plan in `ideas/COMPARISON.md` |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-29 |
@@ -118,7 +118,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Rocking raft on moving waves, katig and sail (owner idea U-24, looks only)
 - [x] Quick UI cleanup (owner idea U-25): screen size setting, simpler HUD, fewer Build sliders
 - [x] Habitats on the raft (each adds roster room): Tide Pool and Sky Perch
-- [ ] Evolution and old age (U-23)
+- [x] Evolution and old age (U-23): age in battles won, Young → Adult → Elder, death leaves essence + Book memorial (numbers wait for Ed)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)
 - [ ] Fusion in the Transmutation Circle (same + same → rarity up; different → hybrid; catalysts)
 - [ ] Companion consumables (moved from Phase 6)

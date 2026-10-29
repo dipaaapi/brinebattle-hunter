@@ -340,7 +340,7 @@ namespace BrineBattle.Hunting
                     if (GUILayout.Button("Finish it"))
                     {
                         pendingLoot = RollLoot(m);
-                        raft.Grid.Kills++;
+                        CountKill();
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
                     GUI.enabled = !Companions.Full;
@@ -415,7 +415,7 @@ namespace BrineBattle.Hunting
                 if (outcome == BattleOutcome.Won)
                 {
                     pendingLoot = RollLoot(m);
-                    raft.Grid.Kills++;
+                    CountKill();
                     Finish($"Victory! Defeated {m.displayName}: {Brief(pendingLoot)}", true, true);
                 }
                 else
@@ -431,8 +431,27 @@ namespace BrineBattle.Hunting
         {
             var m = target.Monster;
             pendingLoot = RollLoot(m);
-            raft.Grid.Kills++;
+            CountKill();
             Finish($"{m.displayName} was weakened but {why}, so you finished it: {Brief(pendingLoot)}", true, true);
+        }
+
+        /// <summary>A monster was beaten: counts toward the raft upgrade, and every companion grows one battle older (GDD §10).</summary>
+        void CountKill()
+        {
+            raft.Grid.Kills++;
+            foreach (var kv in Companions.GrowOlder())
+            {
+                var c = kv.Key;
+                if (kv.Value == AgeResult.Evolved)
+                    Log($"{c.Name} evolved into an {c.StageName}! {c.Stats}");
+                else
+                {
+                    int left = CompanionRules.EssenceLeft(c.Rarity);
+                    Inventory.AddEssence(new EssenceKey(c.Rarity, c.Element), left);
+                    Log($"{c.Name} died of old age after {c.Age} battles. It left {left} {new EssenceKey(c.Rarity, c.Element)}. It is remembered in the Book.");
+                }
+            }
+            ApplyCompanionBonuses();
         }
 
         void Tame()

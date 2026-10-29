@@ -130,5 +130,43 @@ namespace BrineBattle.Tests
             s.PlayRound(BattleAction.Brace);
             Assert.AreEqual(before, s.Log.Count(l => l.StartsWith("eel attacks:")));
         }
+    
+        [Test]
+        public void CompanionEvolvesAsItAgesThenDiesOfOldAge()
+        {
+            var c = Companion.FromMonster(Monster());
+            int life = CompanionRules.Lifespan(Rarity.Common);
+            int hp = c.MaxHp;
+            var results = Enumerable.Range(0, life).Select(_ => c.GrowOlder()).ToList();
+            Assert.AreEqual(2, results.Count(r => r == AgeResult.Evolved), "Young → Adult → Elder");
+            Assert.AreEqual(GrowthStage.Elder, c.Stage);
+            Assert.Greater(c.MaxHp, hp);
+            Assert.AreEqual(AgeResult.Died, results.Last());
+            Assert.AreEqual(1, results.Count(r => r == AgeResult.Died));
+        }
+
+        [Test]
+        public void RarerCompanionsLiveLonger()
+        {
+            for (var r = Rarity.Common; r < Rarity.Mythic; r++)
+                Assert.Less(CompanionRules.Lifespan(r), CompanionRules.Lifespan(r + 1));
+        }
+
+        [Test]
+        public void DeadCompanionLeavesTheRosterAndIsRemembered()
+        {
+            var roster = new CompanionRoster();
+            var old = Companion.FromMonster(Monster("old"));
+            var young = Companion.FromMonster(Monster("young"));
+            roster.Add(old);
+            roster.Add(young);
+            old.Age = old.Lifespan - 1;
+            var changes = roster.GrowOlder();
+            Assert.AreEqual(1, changes.Count);
+            Assert.AreEqual(AgeResult.Died, changes[0].Value);
+            CollectionAssert.DoesNotContain(roster.All.ToList(), old);
+            Assert.AreEqual(young, roster.Active, "the next Familiar takes over");
+            Assert.AreEqual("old", roster.Memorials.Single().Id);
+        }
     }
 }

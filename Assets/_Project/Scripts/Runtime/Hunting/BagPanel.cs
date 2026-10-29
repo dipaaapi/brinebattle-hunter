@@ -156,7 +156,7 @@ namespace BrineBattle.Hunting
                 bool active = roster.Active == c;
                 GUILayout.BeginHorizontal();
                 string tip = $"{c.Role}: {CompanionRules.Describe(c.Role)}";
-                GUILayout.Label(new GUIContent($"<color={RarityColor(c.Rarity)}>{c.Name}</color> <b>{c.Role}</b>{(active ? " (in battle)" : "")}  <size=10>{c.Element} · {c.Stats}</size>", tip), Rich, GUILayout.Width(360));
+                GUILayout.Label(new GUIContent($"<color={RarityColor(c.Rarity)}>{c.Name}</color> <b>{c.Role}</b>{(active ? " (in battle)" : "")}  <size=10>{c.Element} · {c.StageName}, {c.AgeLeft} battles left · {c.Stats}</size>", tip), Rich, GUILayout.Width(360));
                 if (c.Role == CompanionRole.Familiar)
                 {
                     GUI.enabled = !active;

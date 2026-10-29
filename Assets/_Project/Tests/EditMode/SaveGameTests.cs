@@ -48,7 +48,8 @@ namespace BrineBattle.Tests
             raft.Kills = 4;
             var pets = new CompanionRoster();
             pets.Add(new Companion { Id = "gull", Name = "Gale Gull", Element = Element.Wind, Habitat = Habitat.Sky, Rarity = Rarity.Common, Role = CompanionRole.Crew, MaxHp = 12 });
-            pets.Add(new Companion { Id = "eel", Name = "Brinefang Eel", Role = CompanionRole.Familiar, MaxHp = 18, Attack = 4 });
+            pets.Add(new Companion { Id = "eel", Name = "Brinefang Eel", Role = CompanionRole.Familiar, MaxHp = 18, Attack = 4, Age = 12, Stage = GrowthStage.Adult });
+            pets.RestoreMemorials(new[] { new Memorial { Id = "crab", Name = "Old Crab", Rarity = Rarity.Common, Role = CompanionRole.Crew, Age = 40 } });
 
             var data = SaveGame.Capture(bag, gear, harpoon, raft,
                 new[] { new KeyValuePair<Cell, int>(new Cell(2, 0), 9) }, pets, "Monsters:eel|Items:|Pets:eel", new DateTime(2026, 10, 29, 12, 0, 0));
@@ -75,6 +76,9 @@ namespace BrineBattle.Tests
             Assert.AreEqual(2, pets2.All.Count);
             Assert.AreEqual(CompanionRole.Crew, pets2.All[0].Role);
             Assert.AreEqual("Brinefang Eel", pets2.Active.Name);
+            Assert.AreEqual(12, pets2.Active.Age);
+            Assert.AreEqual(GrowthStage.Adult, pets2.Active.Stage);
+            Assert.AreEqual("Old Crab", pets2.Memorials.Single().Name);
             Assert.AreEqual("Monsters:eel|Items:|Pets:eel", data.collection);
             Assert.AreEqual("2026-10-29 12:00", data.savedAt);
         }

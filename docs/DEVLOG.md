@@ -2,6 +2,11 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 7 part 2 (companion growth: evolution and old age)
+- Branch `phase/7-growth` from main after PR #4. Ideas merged into one plan in `ideas/COMPARISON.md` (U-25 and C-9 kept on their own).
+- `Companion.Age`/`Stage`/`GrowOlder()`/`Evolve()`, `CompanionRules.Lifespan`/`AgeFor`/`EvolveBoost`/`EssenceLeft`, `CompanionRoster.GrowOlder()` and `Memorials`. `HookController.CountKill()` (every beaten monster): raft kill count + every companion ages; evolutions and deaths go to the log, the dead leave essence. Bag shows stage and battles left; Book Pets page shows memorials. Save keeps age, stage and memorials (older saves load as Young, age 0).
+- Numbers are Claude's proposal (GDD §10), waiting for Ed. 122/122 rules tests; Runtime compiles. Next: feeding/infusion.
+
 ## 2026-10-29 — Phase 7 (raft progression asks)
 - Settings: **Upload save file...** (Editor file picker; path field in a build) copies a save into the one slot, keeps the old one as `save.backup.json`, and loads it.
 - Raft tier upgrade now needs kills since the last upgrade (5, 10, 15 …) and monster materials (same numbers) on top of essence. `RaftGrid.Kills` (saved), `UpgradeBlocker` says what's missing; Build panel shows each requirement.

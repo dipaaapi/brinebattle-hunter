@@ -31,6 +31,8 @@ namespace BrineBattle.Saving
         public List<Part> modules = new List<Part>();
         public List<Pet> companions = new List<Pet>();
         public int activeCompanion = -1;
+        /// <summary>Companions that died of old age (Book).</summary>
+        public List<Grave> memorials = new List<Grave>();
         public int habitats;
         public string collection;
         /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>
@@ -64,7 +66,10 @@ namespace BrineBattle.Saving
         {
             public string id, name;
             public int element, habitat, rarity, role, maxHp, attack, defense, speed;
+            /// <summary>Battles won since taming and growth stage; 0 in older saves (a young companion).</summary>
+            public int age, stage;
         }
+        [Serializable] public class Grave { public string id, name; public int rarity, role, age; }
     }
 
     /// <summary>Turns game state into <see cref="SaveData"/> and back (GDD: save points). Plain C# for EditMode tests.</summary>
@@ -93,7 +98,10 @@ namespace BrineBattle.Saving
                 {
                     id = c.Id, name = c.Name, element = (int)c.Element, habitat = (int)c.Habitat, rarity = (int)c.Rarity,
                     role = (int)c.Role, maxHp = c.MaxHp, attack = c.Attack, defense = c.Defense, speed = c.Speed,
+                    age = c.Age, stage = (int)c.Stage,
                 });
+            foreach (var m in pets.Memorials)
+                d.memorials.Add(new SaveData.Grave { id = m.Id, name = m.Name, rarity = (int)m.Rarity, role = (int)m.Role, age = m.Age });
             d.activeCompanion = pets.Active == null ? -1 : pets.All.ToList().IndexOf(pets.Active);
             d.habitats = pets.Habitats;
             return d;
@@ -130,7 +138,10 @@ namespace BrineBattle.Saving
             {
                 Id = p.id, Name = p.name, Element = (Element)p.element, Habitat = (Habitat)p.habitat, Rarity = (Rarity)p.rarity,
                 Role = (CompanionRole)p.role, MaxHp = p.maxHp, Attack = p.attack, Defense = p.defense, Speed = p.speed,
+                Age = p.age, Stage = (GrowthStage)p.stage,
             }), d.activeCompanion, d.habitats);
+            pets.RestoreMemorials(d.memorials.Select(m => new Memorial
+                { Id = m.id, Name = m.name, Rarity = (Rarity)m.rarity, Role = (CompanionRole)m.role, Age = m.age }));
             return missing;
         }
     }

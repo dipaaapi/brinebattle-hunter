@@ -145,9 +145,11 @@ Applies to gear, companions, and monsters (type chart).
 
 **More chores (Ed's ask):** the Crew also **repairs auto-loot modules** once one drops to a share set **per module kind** in Build (R) (slider, default 50%), paying the module's normal repair cost; between fights it mends the harpoon +1 every 15 s. The Mystic **restocks consumables first**: when a potion or oil the workbench can make is below the "keep at least" amount (Bag slider, default 2) it crafts one (potions before oils), otherwise it refines gear. In battle the Mystic **supports**: at the end of each round it heals whichever of the hunter or the Familiar is lower on HP (Common 3, +2 per rarity step).
 
+**Growth and old age (Phase 7 part 2, tunable, *Claude's proposal until Ed confirms*):** until day/night exists (U-10), a companion's **age counts battles won** (every companion on the raft gets one older for each monster beaten). Lifespan by rarity: Common 40 battles, +20 per rarity step (Mythic 140). Stages: **Young → Adult** at a quarter of its life, **Adult → Elder** at three quarters; each step is an **evolution**: HP, ATK and DEF ×1.25, SPD +1. At the end of its lifespan it **dies of old age**: it leaves the roster (the next Familiar becomes active), drops Monster Essence of its rarity and element (1 + rarity step), and the Book's Pets page keeps a memorial ("In memory of …, lived N battles"). The Bag shows each companion's stage and battles left. Feeding and fusion will add other ways to evolve.
+
 ### Saving
 
-Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the persistent data path; "Open folder" button). **Upload save file** makes a save from anywhere the one save file and loads it; the previous save is kept as `save.backup.json` (owner's call). In the Editor it opens a file picker; in a build, paste the file path. **Auto-save every 5 minutes** into that file once a save exists (made or loaded), only in Semi-auto and Auto, and never during a battle, menu or prompt (owner's call). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts, installed modules and their wear, tier and kills toward the next tier, companions and their roles, the collection book, and the menu settings (owner's call): battle mode and auto-use (Settings), auto-salvage, target tiers and companion chores (Bag), and the Crew repair share per module kind (Build). Saves from before settings were saved load with the current settings. Items are stored by id, so renaming an asset is safe but changing an id is not.
+Save/Load in the Settings menu, **one save file** (`Saves/save.json` under the persistent data path; "Open folder" button). **Upload save file** makes a save from anywhere the one save file and loads it; the previous save is kept as `save.backup.json` (owner's call). In the Editor it opens a file picker; in a build, paste the file path. **Auto-save every 5 minutes** into that file once a save exists (made or loaded), only in Semi-auto and Auto, and never during a battle, menu or prompt (owner's call). A save holds the bag and essence, gear and refine levels, harpoon wear, raft parts, installed modules and their wear, tier and kills toward the next tier, companions and their roles, age and stage, memorials, the collection book, and the menu settings (owner's call): battle mode and auto-use (Settings), auto-salvage, target tiers and companion chores (Bag), and the Crew repair share per module kind (Build). Saves from before settings were saved load with the current settings. Items are stored by id, so renaming an asset is safe but changing an id is not.
 
 ## 11. Loot & Salvage
 
@@ -199,7 +201,7 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 - Action resource in battle (stamina vs weapon charge).
 - Fusion: are source companions consumed?
-- Companion roles: what triggers evolution; how lifespan is counted before a day/night cycle; what happens on death.
+- Companion growth: confirm the proposal in §10 (age in battles, evolve at 1/4 and 3/4 of life, essence + memorial on death).
 - Level-range limits on item share?
 - Target platform(s): PC, mobile, or both.
 - Title trademark check.
