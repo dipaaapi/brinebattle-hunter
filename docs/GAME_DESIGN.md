@@ -219,6 +219,10 @@ Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status ca
 - **Settings:** Game · Save · Controls · **FAQ**.
 - **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
 
+### Away pause (Ed's call)
+
+If the player falls asleep with the game running, nothing should happen while they're gone. After **10 minutes with no key, click or mouse move** (Settings → Game: Off / 5 / 10 / 20 min), the game **pauses**: no hooks, no module battles, no auto-save, and a "You fell asleep" screen. A battle already running finishes first. In Semi-auto and Auto it saves once when it pauses. Any key or click continues. Losing a battle still has no penalty (a raft-part penalty may come in Phase 8).
+
 ### Main menu (Ed's ask)
 
 The game opens on its own **MainMenu scene** before the game (Hook) scene: **Continue** (shows the save's date; loads the save), **New game** (asks first if a save exists; the old save is kept as `save.backup.json`, so auto-save can't overwrite it, and Upload save file brings it back), **Settings** (screen size, battle mode, auto-use; saving needs a game) and **Quit**. In the game, Settings has **Save and go to main menu**. In the Editor, Play always starts at the main menu. Both scenes are built from code (`MainMenuSceneBuilder`, `HookSceneBuilder`).

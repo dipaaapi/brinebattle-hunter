@@ -10,12 +10,14 @@ namespace BrineBattle.Hunting
     public static class WorldPause
     {
         public static bool Prompt;
+        /// <summary>The player fell asleep (no input for a while, Ed's scenario): nothing happens until they're back.</summary>
+        public static bool Asleep;
         public static Menu Open { get; private set; }
-        public static bool Active => BattleController.InBattle || Prompt || Open != Menu.None;
+        public static bool Active => BattleController.InBattle || Prompt || Asleep || Open != Menu.None;
 
         public static void Toggle(Menu m) => Open = Open == m ? Menu.None : m;
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetOnPlay() { Prompt = false; Open = Menu.None; }
+        static void ResetOnPlay() { Prompt = false; Asleep = false; Open = Menu.None; }
 
         public static void Close(Menu m) { if (Open == m) Open = Menu.None; }
     }

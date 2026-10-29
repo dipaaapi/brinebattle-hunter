@@ -34,7 +34,7 @@ namespace BrineBattle.Hunting
             if (!inGame || BattleSettings.Mode == BattleMode.Manual || !SaveSystem.Exists) return;
             autoTimer += Time.unscaledDeltaTime;
             if (autoTimer < SaveSystem.AutoSaveSeconds) return;
-            if (BattleController.InBattle || WorldPause.Open != Menu.None || WorldPause.Prompt) return;
+            if (BattleController.InBattle || WorldPause.Open != Menu.None || WorldPause.Prompt || WorldPause.Asleep) return;
             autoTimer = 0f;
             saveMessage = SaveSystem.Save(auto: true);
             saveInfo = null;
@@ -66,6 +66,12 @@ namespace BrineBattle.Hunting
             GUILayout.Space(8);
             GUILayout.Label("Battle mode", HuntStyles.Heading);
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels, GUILayout.Height(30));
+
+            GUILayout.Space(8);
+            GUILayout.Label("Pause when I'm away", HuntStyles.Heading);
+            int sleep = System.Array.IndexOf(IdleRules.Choices, IdleRules.Minutes);
+            int pickedSleep = GUILayout.Toolbar(Mathf.Max(0, sleep), IdleRules.Labels, GUILayout.Height(28));
+            if (pickedSleep != sleep) IdleRules.Minutes = IdleRules.Choices[pickedSleep];
 
             GUILayout.Space(8);
             BattleSettings.AutoItems = GUILayout.Toggle(BattleSettings.AutoItems,
