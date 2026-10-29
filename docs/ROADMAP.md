@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Idea Round 2 done (Phase 5 + Round 2 on main) |
-| **Next step** | Idea Round 2 QA'd by Ed and merged to main. Next: Phase 6 (Alchemy & gear + Settings menu) — wait for Ed's go |
+| **Current phase** | Phase 6 — Alchemy & gear (slice 1: gear) |
+| **Next step** | Ed: run `unity-verify`, then BrineBattle → Create Sample Data and Build Hook Scene, and playtest gear (equip, craft, refine) on `phase/6-alchemy` |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `C:\Users\USER\brinebattle-hunter` |
 | **Last updated** | 2026-10-29 |
@@ -91,8 +91,15 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** a module can be built on the raft edge and loots passing drifts until its durability runs out; Harpoon uses weapon durability.
 
-### ⬜ Phase 6 — Alchemy & gear
-Craft, refine (+), gear rarity skills, consumables. Also a real **Settings menu** (battle mode lives on the HUD until then).
+### 🟨 Phase 6 — Alchemy & gear
+- [x] Gear slots (weapon, armor) in the bag: equip / take off, tier check; gear power feeds hunter ATK/DEF, weapon element = hunter element
+- [x] Craft gear at the workbench (Eel-Fang Spear, Gull-Bone Buckler)
+- [x] Refine (+1…+10) with essence of the item's rarity or higher
+- [ ] Gear rarity skills (GDD §9 table)
+- [ ] Consumables (HP, raft repair, elemental oils)
+- [ ] Real **Settings menu** (battle mode lives on the HUD until then)
+
+**Done when:** gear crafted from monster parts can be equipped and refined and changes battle numbers, a consumable can be used, and settings live in their own menu.
 
 ### ⬜ Phase 7 — Companions
 Taming Weakened monsters, habitats, feeding/infusion, fusion in the Transmutation Circle.

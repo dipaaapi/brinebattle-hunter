@@ -15,6 +15,8 @@ namespace BrineBattle.Items
         [Min(1)] public int maxStack = 99;
         [Tooltip("Modules only: level 1-5 (idea U-13).")]
         [Range(1, 5)] public int moduleLevel = 1;
+        [Tooltip("Gear only: attack (weapon) or defense (armor) added to the hunter. Refine (+) raises it.")]
+        [Min(0)] public int gearPower;
         public Sprite icon;
         [TextArea] public string description;
     }

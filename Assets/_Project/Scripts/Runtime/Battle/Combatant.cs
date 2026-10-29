@@ -1,4 +1,5 @@
 using BrineBattle.Elements;
+using BrineBattle.Items;
 using BrineBattle.Monsters;
 
 namespace BrineBattle.Battle
@@ -30,15 +31,15 @@ namespace BrineBattle.Battle
             Speed = m.stats.speed,
         };
 
-        /// <summary>No class, no magic: base hunter until levels and gear arrive (GDD §7).</summary>
-        public static Combatant Hunter() => new Combatant
+        /// <summary>No class, no magic: power comes from gear (GDD §7, §9). Levels come later.</summary>
+        public static Combatant Hunter(Equipment gear = null) => new Combatant
         {
             Name = "Hunter",
-            Element = Element.None,
+            Element = gear?.Element ?? Element.None,
             MaxHp = 60,
             Hp = 60,
-            Attack = 9,
-            Defense = 3,
+            Attack = 9 + (gear?.Attack ?? 0),
+            Defense = 3 + (gear?.Defense ?? 0),
             Speed = 6,
         };
     }

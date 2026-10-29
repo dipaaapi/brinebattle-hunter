@@ -136,6 +136,11 @@ namespace BrineBattle.Editor
             Recipe("upgrade_hook_arm", "Hook Arm", RecipeKind.Upgrade, new[] { (net, 1), (fang, 2), (plank, 2) }, new[] { (hookArm, 1) });
             Recipe("dismantle_drift_net", "Drift Net", RecipeKind.Dismantle, new[] { (net, 1) }, new[] { (plank, 2), (patch, 1) });
             Recipe("dismantle_hook_arm", "Hook Arm", RecipeKind.Dismantle, new[] { (hookArm, 1) }, new[] { (net, 1), (fang, 1) });
+            // Phase 6: gear power (set every build so older assets get it too) and gear recipes.
+            SetGearPower(spear, 4);
+            SetGearPower(buckler, 3);
+            Recipe("craft_eel_fang_spear", "Eel-Fang Spear", RecipeKind.Craft, new[] { (fang, 2), (plank, 1) }, new[] { (spear, 1) });
+            Recipe("craft_gull_bone_buckler", "Gull-Bone Buckler", RecipeKind.Craft, new[] { (feather, 3), (plank, 1) }, new[] { (buckler, 1) });
             EnsureEntry(gullLoot, plank, 0.5f, 1, 2);
             EnsureEntry(loot, patch, 0.4f, 1, 2);
             EnsureEntry(loot, spear, 0.15f, 1, 1);
@@ -158,6 +163,13 @@ namespace BrineBattle.Editor
             r.inputs = inputs.Select(x => new Ingredient { item = x.Item1, count = x.Item2 }).ToList();
             r.outputs = outputs.Select(x => new Ingredient { item = x.Item1, count = x.Item2 }).ToList();
             EditorUtility.SetDirty(r);
+        }
+
+        static void SetGearPower(ItemDefinition item, int power)
+        {
+            if (item == null || item.gearPower == power) return;
+            item.gearPower = power;
+            EditorUtility.SetDirty(item);
         }
 
         static void SetAggression(string asset, float value)

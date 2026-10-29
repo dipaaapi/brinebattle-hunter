@@ -81,6 +81,12 @@ namespace BrineBattle.Hunting
             companionTier = TierRow("Companion", companionTier);
             autoSalvage = GUILayout.Toggle(autoSalvage, " Auto-salvage misfits on pickup");
 
+            var hunter = Battle.Combatant.Hunter(hook.Gear);
+            string el = hunter.Element == Elements.Element.None ? "Neutral" : hunter.Element.ToString();
+            GUILayout.Label($"<b>Equipment</b>  (hunter: ATK {hunter.Attack} · DEF {hunter.Defense} · {el})", Rich);
+            GearRow(GearSlot.Weapon);
+            GearRow(GearSlot.Armor);
+
             scroll = GUILayout.BeginScrollView(scroll);
             GUILayout.Label("<b>Items</b>", Rich);
             if (!inv.Items.Any()) GUILayout.Label("  (empty)");
@@ -91,6 +97,13 @@ namespace BrineBattle.Hunting
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{kv.Value} × <color={RarityColor(item.rarity)}>{item.displayName}</color>  <size=10>{item.type} · {item.rarity}</size>", Rich, GUILayout.Width(320));
                 GUILayout.Label(fits ? "<color=#7f7>fits</color>" : "<color=#f77>misfit</color>", Rich, GUILayout.Width(50));
+                if (GearRules.IsGear(item.type))
+                {
+                    GUI.enabled = hook.Gear.CanEquip(item, inv, TierOf(item.type));
+                    if (GUILayout.Button("Equip", GUILayout.Width(55)) && hook.Gear.Equip(item, inv, TierOf(item.type)))
+                        hook.Log($"Equipped {hook.Gear.Label(GearRules.SlotOf(item.type))}.");
+                    GUI.enabled = true;
+                }
                 int yield = SalvageRules.EssenceYield(item.type, item.rarity);
                 if (GUILayout.Button($"Salvage 1 (+{yield})")) Salvage(item, 1);
                 if (GUILayout.Button("All")) Salvage(item, kv.Value);
@@ -113,6 +126,28 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Close (B)")) WorldPause.Close(Menu.Bag);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        void GearRow(GearSlot slot)
+        {
+            var gear = hook.Gear;
+            var inv = hook.Inventory;
+            var item = gear.Get(slot);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(slot.ToString(), GUILayout.Width(80));
+            string stat = slot == GearSlot.Weapon ? "ATK" : "DEF";
+            GUILayout.Label(item == null ? "(none — equip from the list below)"
+                : $"<color={RarityColor(item.rarity)}>{gear.Label(slot)}</color>  <size=10>{stat} +{gear.PowerOf(slot)}</size>", Rich, GUILayout.Width(260));
+            if (item != null)
+            {
+                int cost = gear.RefineCost(slot);
+                GUI.enabled = gear.CanRefine(slot, inv);
+                if (GUILayout.Button(cost > 0 ? $"Refine +1 ({cost} {item.rarity}+ essence)" : $"Max +{GearRules.MaxRefine}") && gear.Refine(slot, inv))
+                    hook.Log($"Refined to {gear.Label(slot)} ({stat} +{gear.PowerOf(slot)}).");
+                GUI.enabled = true;
+                if (GUILayout.Button("Take off", GUILayout.Width(70))) gear.Unequip(slot, inv);
+            }
+            GUILayout.EndHorizontal();
         }
 
         void Salvage(ItemDefinition item, int qty)

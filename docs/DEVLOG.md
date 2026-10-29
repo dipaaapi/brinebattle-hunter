@@ -2,6 +2,12 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-29 — Phase 6 (slice 1: gear)
+- Ed picked gear first. Branch `phase/6-alchemy`: `ItemDefinition.gearPower`, `GearRules` (power + refine step = ¼ base, min 1; refine cost 2 × next level; max +10), `Equipment` (weapon/armor slots, equip/swap/take off, refine kept per item kind), `Combatant.Hunter(gear)`.
+- Bag: Equipment rows (refine, take off) and Equip buttons on gear. Workbench: craft Eel-Fang Spear (2 Eel Fang + 1 Plank) and Gull-Bone Buckler (3 Gale Feather + 1 Plank). Spear power 4, Buckler 3 (set by Create Sample Data).
+- Written in a cloud session: rules + tests compiled and passed outside Unity (58 rules tests incl. 6 new gear tests); `unity-verify` and play mode not run yet.
+- Next: Ed verifies and playtests; then gear rarity skills, consumables, Settings menu.
+
 ## 2026-10-29 — Idea Round 2
 - Branch `round/2-ideas`: **C-4** `Durability` (shared): Harpoon has 20, each throw uses 1, broken = can't throw; repair +10 for 1 material on the HUD. **U-13** `ItemType.Module` + `ModuleRules` (U-13 scaling table, Lv 1–5) + `RaftModules`: modules sit on the raft grid; Lv 1 Drift Net grabs one touching drift every 20 s, dead/weakened = loot (−1), alive = bites (−5) and swims off; durability shown over the module, repair in the build panel (Lv 1 = materials). Removing and re-placing keeps the wear. Starter: 1 Drift Net in the bag.
 - Phase 5 feedback fixes: build panel X button; drifts bump off the raft edge instead of passing through.
