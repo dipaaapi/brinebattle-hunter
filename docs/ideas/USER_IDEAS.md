@@ -118,3 +118,7 @@ No music or sound effects yet. Add ocean ambience, battle music and SFX (cast, r
 
 ### U-21 Fog and time-of-day look — 2026-10-29 · 💡 · GDD §2, Phase 9
 No fog and no day/night look yet. Fog at night (and maybe in rough seas) that limits how far you can see drifts. Pairs with U-10 (day/night cycle) and U-15 (rough seas).
+
+### U-22 Player manual — 2026-10-29 · 💡 · after the game is finalized
+When the game is finished, make a manual for players: viewable inside the game if possible, otherwise a downloadable PDF, whichever is better.
+- Claude's suggestion: both from one source. An in-game "How to Play" screen (works offline, always matches the build, can open on the relevant page) plus a PDF made from the same text for the store page / download. Write it at the end, once mechanics stop changing; the Settings menu's Controls list is the seed.
