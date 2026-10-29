@@ -111,6 +111,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 - [x] Roles (owner idea U-23), picked after taming: Familiar (battle), Crew (raft repair in battle, mends harpoon/modules), Mystic (extra crafts, cheaper refines)
 - [x] Companions visible on the raft: Mystic at a workbench auto-refines gear, Crew walks the raft, installs modules upstream (left) and builds parts downstream (right) (switchable in the Bag)
 - [x] Save / Load (Settings, one JSON save file, auto-save every 5 min in Semi-auto/Auto)
+- [x] Crew repairs modules at a % set per module kind (Build); Mystic restocks potions/oils and heals the hunter or Familiar each battle round
 - [ ] Habitats on the raft (each adds roster room)
 - [ ] Evolution and old age (U-23)
 - [ ] Feeding / infusion with loot and potions (companion growth, no EXP)

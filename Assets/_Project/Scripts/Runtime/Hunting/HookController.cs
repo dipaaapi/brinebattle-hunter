@@ -413,7 +413,7 @@ namespace BrineBattle.Hunting
         public void ApplyCompanionBonuses() =>
             Gear.RefineDiscount = Companions.Best(CompanionRole.Mystic) != null ? CompanionRules.MysticRefineDiscount : 0;
 
-        /// <summary>Crew: between fights, +1 durability to the harpoon and every module now and then.</summary>
+        /// <summary>Crew: between fights, +1 harpoon durability now and then (modules: see RaftCompanions).</summary>
         void CrewMend()
         {
             var crew = Companions.Best(CompanionRole.Crew);
@@ -421,13 +421,9 @@ namespace BrineBattle.Hunting
             crewTimer += Time.deltaTime;
             if (crewTimer < CompanionRules.CrewMendSeconds) return;
             crewTimer = 0f;
-            bool mended = !Harpoon.Full;
+            if (Harpoon.Full) return;
             Harpoon.Repair(1);
-            var modules = builder != null ? builder.modules : null;
-            if (modules != null)
-                foreach (var slot in modules.Slots.Values)
-                    if (!slot.Durability.Full) { slot.Durability.Repair(1); mended = true; }
-            if (mended) Log($"{crew.Name} (Crew) mended the harpoon and modules.");
+            Log($"{crew.Name} (Crew) mended the harpoon (+1).");
         }
 
         void Sedated()

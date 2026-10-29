@@ -240,6 +240,16 @@ namespace BrineBattle.Hunting
                     if (GUILayout.Button($"Repair ({RaftModules.CostText(s)})", GUILayout.Width(170))) message = modules.Repair(s);
                     GUI.enabled = true;
                     GUILayout.EndHorizontal();
+                    if (hook.Companions.Best(Companions.CompanionRole.Crew) != null)
+                    {
+                        // Per module kind: the Crew repairs it at or below this share (Phase 7, owner's call).
+                        float at = CompanionSettings.CrewRepairAt(s.Item.id);
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label($"<size=11>  Crew repairs at ≤ {Mathf.RoundToInt(at * 100)}%</size>", Rich, GUILayout.Width(170));
+                        float picked = Mathf.Round(GUILayout.HorizontalSlider(at, 0f, 0.9f) * 10f) / 10f;
+                        if (!Mathf.Approximately(picked, at)) CompanionSettings.SetCrewRepairAt(s.Item.id, picked);
+                        GUILayout.EndHorizontal();
+                    }
                 }
             }
 

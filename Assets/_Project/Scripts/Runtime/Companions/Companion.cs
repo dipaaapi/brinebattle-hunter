@@ -49,6 +49,9 @@ namespace BrineBattle.Companions
 
         /// <summary>Chance a Mystic makes one extra of a gear, potion or oil craft: Common 20%, +5% per rarity step.</summary>
         public static float MysticExtraChance(Rarity r) => 0.2f + 0.05f * (int)r;
+        /// <summary>HP a Mystic heals the most-hurt ally (hunter or Familiar) at the end of each battle round: Common 3, +2 per rarity step.</summary>
+        public static int MysticBattleHeal(Rarity r) => 3 + 2 * (int)r;
+
         /// <summary>Essence a Mystic saves on each refine (never below 1).</summary>
         public const int MysticRefineDiscount = 1;
 
@@ -56,8 +59,8 @@ namespace BrineBattle.Companions
         {
             switch (role)
             {
-                case CompanionRole.Crew: return "walks the raft: patches it in battle, mends the harpoon and modules, and builds raft parts from your bag onto it";
-                case CompanionRole.Mystic: return "works the workbench: refines your gear with essence, may craft an extra gear, potion or oil, and refines cost less";
+                case CompanionRole.Crew: return "walks the raft: patches it in battle, mends the harpoon, installs and repairs auto-loot modules, and builds raft parts from your bag";
+                case CompanionRole.Mystic: return "works the workbench: restocks potions and oils, refines your gear, heals you and your Familiar in battle";
                 default: return "fights beside you";
             }
         }

@@ -14,6 +14,17 @@ namespace BrineBattle.Hunting
             set => PlayerPrefs.SetInt("brinebattle.crewBuilds", value ? 1 : 0);
         }
 
+        /// <summary>Durability share (0-1) at which the Crew repairs a module kind; set per kind in Build (R). Default 50%.</summary>
+        public static float CrewRepairAt(string moduleId) => PlayerPrefs.GetFloat($"brinebattle.crewRepair.{moduleId}", 0.5f);
+        public static void SetCrewRepairAt(string moduleId, float share) => PlayerPrefs.SetFloat($"brinebattle.crewRepair.{moduleId}", Mathf.Clamp01(share));
+
+        /// <summary>The Mystic crafts a potion or oil when the bag has fewer than this many. Default 2.</summary>
+        public static int MysticKeep
+        {
+            get => PlayerPrefs.GetInt("brinebattle.mysticKeep", 2);
+            set => PlayerPrefs.SetInt("brinebattle.mysticKeep", Mathf.Clamp(value, 0, 10));
+        }
+
         public static bool MysticRefines
         {
             get => PlayerPrefs.GetInt("brinebattle.mysticRefines", 1) == 1;
@@ -42,7 +53,7 @@ namespace BrineBattle.Hunting
 
         readonly Dictionary<Companion, Body> bodies = new Dictionary<Companion, Body>();
         GameObject bench;
-        float crewTimer, mysticTimer;
+        float crewTimer, mysticTimer, repairTimer;
         GUIStyle nameStyle;
 
         Raft Raft => hook.raft;
@@ -169,15 +180,44 @@ namespace BrineBattle.Hunting
                     }
                 }
             }
+            // Crew keeps auto-loot modules above the share set per module kind in Build (R), paying the usual cost.
+            var modules = hook.builder != null ? hook.builder.modules : null;
+            if (crew != null && modules != null)
+            {
+                repairTimer += Time.deltaTime;
+                if (repairTimer >= 5f)
+                {
+                    repairTimer = 0f;
+                    RaftModules.Slot worst = null;
+                    foreach (var s in modules.Slots.Values)
+                        if (CompanionWork.CrewShouldRepair(s.Durability, CompanionSettings.CrewRepairAt(s.Item.id))
+                            && (worst == null || s.Durability.Current / (float)s.Durability.Max < worst.Durability.Current / (float)worst.Durability.Max))
+                            worst = s;
+                    if (worst != null)
+                    {
+                        int before = worst.Durability.Current;
+                        string result = modules.Repair(worst);
+                        if (worst.Durability.Current > before) { Work(crew); hook.Log($"{crew.Name} (Crew): {result}"); }
+                    }
+                }
+            }
+
+            // Mystic: restock potions and oils first, otherwise refine gear.
             var mystic = hook.Companions.Best(CompanionRole.Mystic);
-            if (mystic != null && CompanionSettings.MysticRefines)
+            if (mystic != null)
             {
                 mysticTimer += Time.deltaTime;
                 if (mysticTimer >= CompanionWork.JobSeconds)
                 {
                     mysticTimer = 0f;
-                    var slot = CompanionWork.MysticPick(hook.Gear, hook.Inventory);
-                    if (slot != null && hook.Gear.Refine(slot.Value, hook.Inventory))
+                    var recipe = hook.builder != null ? CompanionWork.MysticCraftPick(hook.builder.recipes, hook.Inventory, CompanionSettings.MysticKeep) : null;
+                    var slot = recipe == null && CompanionSettings.MysticRefines ? CompanionWork.MysticPick(hook.Gear, hook.Inventory) : null;
+                    if (recipe != null && CraftRules.Craft(hook.Inventory, recipe))
+                    {
+                        Work(mystic);
+                        hook.Log($"{mystic.Name} (Mystic) crafted {CraftRules.Describe(recipe.outputs)}.");
+                    }
+                    else if (slot != null && hook.Gear.Refine(slot.Value, hook.Inventory))
                     {
                         Work(mystic);
                         hook.Log($"{mystic.Name} (Mystic) refined your {hook.Gear.Label(slot.Value)}.");

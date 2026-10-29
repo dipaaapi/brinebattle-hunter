@@ -142,7 +142,13 @@ namespace BrineBattle.Hunting
             if (roster.Best(CompanionRole.Crew) != null)
                 CompanionSettings.CrewBuilds = GUILayout.Toggle(CompanionSettings.CrewBuilds, " Crew builds raft parts from the bag onto the raft");
             if (roster.Best(CompanionRole.Mystic) != null)
-                CompanionSettings.MysticRefines = GUILayout.Toggle(CompanionSettings.MysticRefines, " Mystic refines your equipped gear with essence");
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Mystic keeps at least {CompanionSettings.MysticKeep} of each potion and oil", GUILayout.Width(300));
+                CompanionSettings.MysticKeep = Mathf.RoundToInt(GUILayout.HorizontalSlider(CompanionSettings.MysticKeep, 0, 5));
+                GUILayout.EndHorizontal();
+                CompanionSettings.MysticRefines = GUILayout.Toggle(CompanionSettings.MysticRefines, " Mystic refines your equipped gear with essence when stocked");
+            }
             if (roster.All.Count == 0) GUILayout.Label("  (none — tame a weakened, calm drift)");
             foreach (var c in roster.All.ToList())
             {

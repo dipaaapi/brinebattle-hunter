@@ -33,6 +33,8 @@ namespace BrineBattle.Battle
         public Combatant Companion { get; set; }
         /// <summary>Raft HP a Crew companion patches at the end of each round (Phase 7). 0 = no crew.</summary>
         public int CrewRepair { get; set; }
+        /// <summary>HP a Mystic heals the most-hurt ally at the end of each round (Phase 7). 0 = no mystic.</summary>
+        public int SupportHeal { get; set; }
 
         /// <summary>Element of an elemental oil on the weapon (None = no coating) and the rounds it has left.</summary>
         public Element Coating { get; private set; }
@@ -121,6 +123,7 @@ namespace BrineBattle.Battle
 
             Hunter.Bracing = false;
             shellGuard = false;
+            if (SupportHeal > 0 && Outcome == BattleOutcome.Ongoing) Support();
             if (CrewRepair > 0 && Outcome == BattleOutcome.Ongoing && RaftHp < RaftMaxHp)
             {
                 int fixedHp = Math.Min(CrewRepair, RaftMaxHp - RaftHp);
@@ -165,6 +168,20 @@ namespace BrineBattle.Battle
                     Hit(1f, "Attack", BattleEventKind.Strike);
                     return;
             }
+        }
+
+        /// <summary>The Mystic heals whichever ally (hunter or Familiar) is lower on HP, if either is hurt.</summary>
+        void Support()
+        {
+            float hunter = Hunter.Hp / (float)Hunter.MaxHp;
+            bool pet = Companion != null && Companion.Alive && Companion.Hp < Companion.MaxHp
+                && Companion.Hp / (float)Companion.MaxHp < hunter;
+            var target = pet ? Companion : Hunter;
+            if (target.Hp >= target.MaxHp) return;
+            int heal = Math.Min(SupportHeal, target.MaxHp - target.Hp);
+            target.Hp += heal;
+            Add(pet ? $"Your mystic heals {Companion.Name}: +{heal} HP." : $"Your mystic heals you: +{heal} HP.");
+            Emit(BattleEventKind.Heal, BattleActor.Raft, pet ? BattleActor.Companion : BattleActor.Hunter, heal, "Mystic");
         }
 
         void CompanionTurn()

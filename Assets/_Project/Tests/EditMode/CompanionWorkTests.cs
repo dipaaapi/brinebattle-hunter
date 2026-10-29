@@ -1,4 +1,7 @@
+using System.Linq;
+using BrineBattle.Battle;
 using BrineBattle.Companions;
+using BrineBattle.Monsters;
 using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Rafts;
@@ -59,6 +62,61 @@ namespace BrineBattle.Tests
             bag.AddEssence(new EssenceKey(Rarity.Common, Element.None), 50);
             gear.Refine(GearSlot.Weapon, bag);
             Assert.AreEqual(GearSlot.Armor, CompanionWork.MysticPick(gear, bag), "armor is behind");
+        }
+
+        static RecipeDefinition Recipe(ItemDefinition input, ItemDefinition output)
+        {
+            var r = ScriptableObject.CreateInstance<RecipeDefinition>();
+            r.kind = RecipeKind.Craft;
+            r.inputs.Add(new Ingredient { item = input, count = 1 });
+            r.outputs.Add(new Ingredient { item = output, count = 1 });
+            return r;
+        }
+
+        [Test]
+        public void MysticRestocksPotionsBeforeOils()
+        {
+            var mat = Item(ItemType.Material);
+            var tonic = Item(ItemType.Consumable);
+            tonic.id = "tonic";
+            tonic.effect = ConsumableEffect.HealHunter;
+            var oil = Item(ItemType.Consumable);
+            oil.id = "oil";
+            oil.effect = ConsumableEffect.CoatWeapon;
+            var recipes = new[] { Recipe(mat, oil), Recipe(mat, tonic) };
+            var bag = new Inventory();
+            Assert.IsNull(CompanionWork.MysticCraftPick(recipes, bag, 2), "no materials");
+            bag.Add(mat, 5);
+            Assert.AreEqual(tonic, CompanionWork.MysticCraftPick(recipes, bag, 2).outputs[0].item);
+            bag.Add(tonic, 2);
+            Assert.AreEqual(oil, CompanionWork.MysticCraftPick(recipes, bag, 2).outputs[0].item, "tonics are stocked");
+            bag.Add(oil, 2);
+            Assert.IsNull(CompanionWork.MysticCraftPick(recipes, bag, 2));
+        }
+
+        [Test]
+        public void CrewRepairsAtTheSetPercentage()
+        {
+            var d = new Durability(30, 20);
+            Assert.IsFalse(CompanionWork.CrewShouldRepair(d, 0.5f));
+            d.Set(15);
+            Assert.IsTrue(CompanionWork.CrewShouldRepair(d, 0.5f));
+            d.Set(30);
+            Assert.IsFalse(CompanionWork.CrewShouldRepair(d, 1f), "full needs nothing");
+        }
+
+        [Test]
+        public void MysticHealsTheMostHurtAllyInBattle()
+        {
+            var mon = new Combatant { Name = "Mon", MaxHp = 999, Hp = 999, Attack = 0, Speed = 1, Habitat = Habitat.Sea };
+            var s = new BattleState(Combatant.Hunter(), mon, 90, new System.Random(1));
+            s.Companion = new Combatant { Name = "Pet", MaxHp = 20, Hp = 20, Attack = 1, Speed = 1 };
+            s.SupportHeal = CompanionRules.MysticBattleHeal(Rarity.Common);
+            s.Hunter.Hp = 30;
+            s.Companion.Hp = 5;
+            s.PlayRound(BattleAction.Brace);
+            Assert.IsTrue(s.Log.Any(l => l.StartsWith("Your mystic heals Pet")), "the pet is lower (25% vs 50%)");
+            Assert.IsTrue(s.Events.Any(e => e.Kind == BattleEventKind.Heal && e.To == BattleActor.Companion && e.Text == "Mystic"));
         }
     }
 }

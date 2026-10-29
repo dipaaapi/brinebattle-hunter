@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Items;
 using BrineBattle.Rafts;
@@ -49,6 +50,25 @@ namespace BrineBattle.Companions
             if (!bag.Remove(part, 1)) return false;
             raft.Place(cell, part);
             return true;
+        }
+
+        /// <summary>Crew repairs a module once its durability is at or below <paramref name="threshold"/> (0-1, set per module kind in Build).</summary>
+        public static bool CrewShouldRepair(Durability d, float threshold) =>
+            d != null && !d.Full && d.Current <= d.Max * threshold;
+
+        /// <summary>
+        /// The consumable the Mystic would craft to keep the bag stocked: a potion or oil recipe the bag
+        /// can pay for whose output is below <paramref name="keep"/>. Potions before oils, emptiest first. Null if none.
+        /// </summary>
+        public static RecipeDefinition MysticCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, int keep)
+        {
+            return recipes
+                .Where(r => r != null && r.kind == RecipeKind.Craft && r.outputs.Count > 0 && r.outputs[0].item != null)
+                .Where(r => { var c = CraftRules.CategoryOf(r); return c == RecipeCategory.Potions || c == RecipeCategory.Oils; })
+                .Where(r => bag.Count(r.outputs[0].item) < keep && CraftRules.CanCraft(bag, r))
+                .OrderBy(r => CraftRules.CategoryOf(r) == RecipeCategory.Potions ? 0 : 1)
+                .ThenBy(r => bag.Count(r.outputs[0].item))
+                .FirstOrDefault();
         }
 
         /// <summary>The equipped slot the Mystic would refine next: the lower + that the bag can pay for. Null if none.</summary>
