@@ -144,3 +144,7 @@ Before the game starts or continues there should be a main menu: New game, Conti
 ### U-27 Standalone and WebGL builds — 2026-10-29 · 💡 · GDD §13, after Phase 9
 Can the game be a standalone app and also run in a browser (WebGL)? If yes, do both.
 - Claude's note: yes, one Unity project builds both. Ed's laptop Unity already has Windows Standalone and WebGL modules (Mac/Linux need theirs added). WebGL needs: a save that reliably persists in browser storage (IndexedDB sync), a browser file picker plus "download save" instead of Upload by path, hiding Quit; Phase 10 online play would need WebSockets. First step: a test Web build to see size and speed.
+
+### U-28 Free on itch.io with microtransactions and small ads — 2026-10-29 · 💡 · after the game is finished
+Release the game free on itch.io, with microtransactions and small ads, to earn back what making it cost.
+- Claude's notes (to check before building anything): itch.io hosts both the WebGL (play in browser) and downloadable builds and supports "pay what you want" and paid add-ons, but it has no in-game purchase system, so microtransactions need an outside payment service. Many ad networks don't serve inside itch.io's embedded page. The game targets kids, so ads and purchases aimed at children fall under child-privacy rules (e.g. COPPA) and ad networks' child-directed settings. Cosmetic-only purchases (pet looks, raft skins) fit the design best.
