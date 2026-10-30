@@ -854,8 +854,9 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
             // at the top, menus as big picture tiles along the bottom.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 330 + 34 * Mathf.Min(4, Companions.All.Count)));
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 400 + 34 * Mathf.Min(4, Companions.All.Count)));
             GUILayout.BeginVertical(HuntStyles.Box);
+            HuntStyles.Section("Hunter & raft");
             string ailing = HunterBody.Status != StatusEffect.None ? $" <color=#c9a0ff>{StatusRules.Tag(HunterBody.Status)}</color>" : "";
             StatusRow(HuntIcons.Paw, $"Hunter{ailing}", HunterBody.Hp / (float)Mathf.Max(1, HunterBody.MaxHp), $"{HunterBody.Hp}/{HunterBody.MaxHp} HP", new Color(0.4f, 0.85f, 0.45f));
             StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size} · {raft.Grid.Type}", new Color(0.85f, 0.75f, 0.5f));
@@ -868,11 +869,14 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
             StatusRow(HuntIcons.Book, $"Mastery Lv {Mastery.Level}", Mastery.Progress,
                 Mastery.Level >= AlchemyMastery.MaxLevel ? "max" : $"{Mastery.Points - AlchemyMastery.PointsFor(Mastery.Level)}/{AlchemyMastery.PointsToNext(Mastery.Level)}", new Color(0.75f, 0.5f, 1f));
+            GUILayout.Space(4);
             MinionRows();
             if (RestLeft > 0f) GUILayout.Label($"<color=#ffb347>Resting… {Mathf.CeilToInt(RestLeft)} s</color>", Rich);
             // Idea Round 4: time, weather and the forecast (C-12).
             if (WorldClock.Now != null)
             {
+                GUILayout.Space(4);
+                HuntStyles.Section("Sea");
                 GUILayout.Label($"{WorldClock.Summary}  <size=11><color=#9fc7ff>Next: {WorldClock.Now.Forecast}</color></size>", Rich);
                 if (WorldClock.Burning) GUILayout.Label("<color=#ff9a3c><b>Raft on fire! Click the fire.</b></color>", Rich);
             }
@@ -902,10 +906,8 @@ namespace BrineBattle.Hunting
         /// </summary>
         void MinionRows()
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
-            GUILayout.Label($"<b>Minions</b> {Companions.All.Count}/{Companions.Capacity}", Rich);
-            GUILayout.EndHorizontal();
+            HuntStyles.Section($"Minions {Companions.All.Count}/{Companions.Capacity}");
+            if (Companions.All.Count == 0) GUILayout.Label("<size=11>none yet</size>", Rich);
             foreach (var c in Companions.All.Take(4))
             {
                 int need = MinionRules.ExpToNext(c.Level);

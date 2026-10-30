@@ -161,6 +161,7 @@ Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 - [x] Ed's U-39 **Minions** (laptop): one kind of minion, levels from eating loot, 12 skills in four branches, auto jobs with Chores switches, skill tree page, HUD minion list
 - [x] Ed's U-40 **Quest tab**: right-edge tab (J), quests from game state with ✔/✘ have/need and a Go button
 - [x] Ed's U-41 **grand boss fights**: warning + rise + aura, top HP bar, enrage and tidal waves, all minions help, slow-mo finish, treasure burst + BOSS DEFEATED card
+- [x] Ed's ask: new HUD and UI everywhere (deep-sea theme on every menu, HUD in sections)
 - [ ] Ed's Unity test of U-39/40/41 (Test Runner, then Play)
 - [x] Ed's raft/workbench batch (U-34): workbench sub-tabs, accessories, Salvage Bin, planks-only walking, raft looks by type, one raft skill tree with a single type pick, Mystic circle, Crew hammering
 - [ ] Ed's Unity test, then merge
