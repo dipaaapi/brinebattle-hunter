@@ -19,6 +19,7 @@
   - Raft tree: Level up + Tree in one page; type picked once (`RaftGrid.Chosen/CanChoose/Choose`, `RaftTree.PickLevel` = 2: Ed picked one choice at the first level-up, since raft levels stop at 6); unpicked types lock.
   - Mystic: incantation circle when it crafts/refines. Crew: walks over and hammers for 4 s with a progress bar (`CompanionWork.CrewInstall`).
   - FAQ updated. +5 rules tests (232 in the cloud check).
+  - Ed's test: his Sky raft showed as a sea train (Fortress) because the Crew had built Shellback Plates. Fix: the picked type is the raft's type (`RaftGrid.Type`), so look and bonuses follow the pick.
 
 ## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
 - Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).

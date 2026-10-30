@@ -75,6 +75,7 @@ namespace BrineBattle.Tests
             Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Fortress, 1), "unpicked types lock, even Lv 1");
             CollectionAssert.AreEqual(new[] { RaftKind.Sky, RaftKind.Sky }, g.Paths);
             Assert.IsFalse(g.Choose(RaftKind.Beast));
+            Assert.AreEqual(RaftKind.Sky, g.Type.Main, "the picked type is the raft's type, whatever the parts");
         }
 
         [Test]

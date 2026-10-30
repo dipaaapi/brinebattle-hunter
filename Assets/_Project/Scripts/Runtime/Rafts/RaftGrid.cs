@@ -138,7 +138,11 @@ namespace BrineBattle.Rafts
         /// <summary>Battle HP: every part's HP, with the raft type's bonus (Phase 8).</summary>
         public int MaxHp => parts.Count == 0 ? 0 : RaftTypeRules.WithHpBonus(parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier)), Type.Bonus);
         /// <summary>Fortress, Sky, Beast, a hybrid or Plain, from the raft parts (Phase 8).</summary>
-        public RaftType Type => RaftTypeRules.Classify(parts.Values);
+        /// <summary>
+        /// The type picked in the raft tree wins (Ed: a Sky raft must look and fight like Sky even with
+        /// Fortress planks on it). Before a pick, the parts decide (Phase 8).
+        /// </summary>
+        public RaftType Type => Chosen != RaftKind.Plain ? new RaftType(Chosen) : RaftTypeRules.Classify(parts.Values);
         /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
         public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));

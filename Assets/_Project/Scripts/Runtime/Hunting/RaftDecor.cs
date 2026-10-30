@@ -31,15 +31,8 @@ namespace BrineBattle.Hunting
         static readonly Color Wing = new Color(0.9f, 0.93f, 0.97f), Sky = new Color(0.35f, 0.6f, 0.95f);
         static readonly Color Hull = new Color(0.42f, 0.27f, 0.15f), DarkWood = new Color(0.28f, 0.18f, 0.1f), Black = new Color(0.08f, 0.08f, 0.09f);
 
-        /// <summary>The look follows the parts on the raft; with no clear type yet, the type picked in the raft tree.</summary>
-        RaftKind Look
-        {
-            get
-            {
-                var t = raft.Grid.Type;
-                return t.Main != RaftKind.Plain ? t.Main : raft.Grid.Chosen;
-            }
-        }
+        /// <summary>The look follows the raft's type: the one picked in the raft tree, or before a pick, the parts'.</summary>
+        RaftKind Look => raft.Grid.Type.Main;
 
         void Start()
         {
