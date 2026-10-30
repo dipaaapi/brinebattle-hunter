@@ -99,6 +99,8 @@ namespace BrineBattle.Hunting
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
             if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
+            // Quest tab (Ed's ask), likewise.
+            if (FindFirstObjectByType<QuestPanel>() == null) new GameObject("Quests").AddComponent<QuestPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
             // Day, night and weather (Idea Round 4), likewise added at runtime.
             if (FindFirstObjectByType<WorldClock>() == null)

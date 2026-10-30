@@ -119,6 +119,8 @@ Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown b
 - **The Self-Sustained:** fully self-sufficient raft.
 - **The Apex Hunter:** most powerful living hunter.
 
+**Quests (Ed's ask, 2026-10-30):** a slim **Quest** tab on the right edge of the screen (or **J**) opens a list of current quests and a checklist for the picked one, each line ✔/✘ with have/need, and a button to the place that fixes it (Raft tree, Build, the right Workbench sub-tab, or Leave). Quests are built from the game state every time (`Rafts/QuestRules`): pick the raft type, next raft level (kills, materials, essence, modules, hammer, boss), the level's boss, guard the left edge (with the module recipe's ingredients), the next hammer (its recipe's ingredients), the next vehicle part (make it or put it on) and leaving the sea. Status only; how-to text stays in Settings → FAQ.
+
 ## 7. Player Progression
 
 - **No job/class. No magic.**

@@ -25,7 +25,7 @@ namespace BrineBattle.Hunting
                 new Entry("What do I do in this game?",
                     "You live on a raft on an endless ocean. Monsters and loot float past. Hook them with your harpoon, fight or harvest them, then use the loot to build a bigger, stronger raft, make gear and potions, and raise minions."),
                 new Entry("What are the keys?",
-                    "Click a floating thing: throw the harpoon at it.\nSpace: reel in.\nB: Bag.  P: Minions.  C: Collection Book.  R: Build.  Esc: Settings, or close a menu.\nMouse wheel or + / -: zoom in and out.  Right-drag or Q / E: turn the view.  F: put the view back.\nYou can also click the picture buttons at the bottom of the screen."),
+                    "Click a floating thing: throw the harpoon at it.\nSpace: reel in.\nB: Bag.  P: Minions.  J: Quests.  C: Collection Book.  R: Build.  Esc: Settings, or close a menu.\nMouse wheel or + / -: zoom in and out.  Right-drag or Q / E: turn the view.  F: put the view back.\nYou can also click the picture buttons at the bottom of the screen."),
                 new Entry("What do the boxes at the top-left mean?",
                     "Hunter: your HP and any ailment. Raft: its level, HP, size and type. Harpoon: how worn it is (press Fix to mend it). Minions: each one's level, EXP and what it is doing. The line under them shows the day, the time, the weather and the forecast (what weather comes next, and when).")),
 

@@ -7,6 +7,7 @@
 - Pets became **minions**: `Companions/Minion.cs` (plain C#: `MinionSkill`, `MinionRules` levels/EXP/skill order/gates/room/junk/tree states). `Companion` has Level, Exp, Skills, `GainExp`, `CatchUp`, `Learn`; `CompanionRoster.Best(MinionSkill)`; Fighter-only battle minion. Feeding gives EXP; fusion keeps the higher level and passes a skill. `CompanionWork`: Builder (vehicle parts, modules, reinforce, level-up), Tinker, junk picks, Hungriest.
 - `RaftCompanions`: jobs by skill with Chores switches (Mender, Alchemist, Smith, Tinker, Builder, Salvager, Glutton); taming has no role pick. `PetsPanel` is the Minions menu (My minions / Skill tree / Chores); HUD lists minions with level, EXP and current job (`MinionActivity`). Wording "Pets" → "Minions" in menus and FAQ (new Minions topic).
 - Save: level, exp, skills; older saves turn roles into skills (Familiar → Fighter + Looter, Crew → Crewmate + Mender, Mystic → Alchemist + Smith) and stage into a level.
+- **Quest tab** (Ed's U-40): `Rafts/QuestRules` builds quests from the raft, bag and known recipes (type, next level, boss, modules, hammer, next vehicle part, leave) with have/need lines and a target; `Hunting/QuestPanel` draws the slim right-edge tab (J) and the list/checklist with a Go button (`RaftBuilder.OpenBench` is public now). +4 `QuestTests`.
 - Tests: new `MinionTests` (12), updated companion/save tests. Compiled with Unity's Roslyn while the Editor was open; Ed runs the Test Runner.
 
 ## 2026-10-30 — Idea Round 4: World conditions

@@ -294,8 +294,10 @@ namespace BrineBattle.Hunting
         bool readyOnly;
         readonly Dictionary<RecipeCategory, RecipeSub> subTab = new Dictionary<RecipeCategory, RecipeSub>();
 
-        void OpenBench(RecipeSub sub)
+        /// <summary>Opens Build on a Workbench sub-tab (the Quest tab's Go button and the modules page use it).</summary>
+        public void OpenBench(RecipeSub sub)
         {
+            if (!Active) Toggle();
             page = Page.Workbench;
             tab = CraftRules.CategoryOf(sub);
             subTab[tab] = sub;

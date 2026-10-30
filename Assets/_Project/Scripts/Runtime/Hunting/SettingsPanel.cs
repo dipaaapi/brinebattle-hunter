@@ -127,6 +127,7 @@ namespace BrineBattle.Hunting
             ("Space", "Reel in (press in the green zone)"),
             ("B", "Bag"),
             ("P", "Minions"),
+            ("J", "Quests (or the tab on the right edge)"),
             ("C", "Collection Book"),
             ("R", "Build the raft and the Workbench"),
             ("Esc", "Settings, or close a menu"),
