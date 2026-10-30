@@ -131,5 +131,51 @@ namespace BrineBattle.Tests
             Assert.IsTrue(ModuleRules.CatchesFlotsam(Rarity.Rare, Rarity.Rare));
             Assert.IsFalse(ModuleRules.CatchesFlotsam(Rarity.Common, Rarity.Uncommon));
         }
+
+        [Test]
+        public void PickingATypeSendsOtherTypesPartsBackToTheBag()
+        {
+            var basic = Item(RaftKind.Plain, Rarity.Common);
+            var g = new RaftGrid();
+            g.FillSquare(basic, 1);
+            g.Kills = 999;
+            var fortress = Item(RaftKind.Fortress, Rarity.Rare);
+            var sky = Item(RaftKind.Sky, Rarity.Rare);
+            g.Place(new Cell(2, 0), fortress);
+            g.Place(new Cell(-2, 0), sky);
+            var bag = Rich();
+            Assert.IsTrue(g.TryUpgrade(bag, RaftKind.Sky));
+            var back = g.ResetOffType(basic, bag);
+            CollectionAssert.AreEqual(new[] { fortress }, back);
+            Assert.AreEqual(basic, g.Parts[new Cell(2, 0)], "a basic plank keeps the raft's shape");
+            Assert.AreEqual(sky, g.Parts[new Cell(-2, 0)]);
+            Assert.AreEqual(1, bag.Count(fortress));
+            Assert.AreEqual(PlaceResult.WrongType, g.CanPlace(new Cell(3, 0), fortress));
+            Assert.IsFalse(g.FitsType(fortress));
+            Assert.IsTrue(g.FitsType(sky));
+        }
+
+        [Test]
+        public void ResettingTheRaftLosesAFifthAndKeepsHabitats()
+        {
+            var basic = Item(RaftKind.Plain, Rarity.Common);
+            var g = new RaftGrid();
+            g.FillSquare(basic, 1);
+            var extra = Item(RaftKind.Plain, Rarity.Uncommon);
+            var home = Item(RaftKind.Plain, Rarity.Common, ItemType.Habitat);
+            for (int z = -1; z <= 1; z++) { g.Place(new Cell(2, z), extra); g.Place(new Cell(-2, z), extra); }
+            g.Place(new Cell(0, 2), extra);
+            g.Place(new Cell(0, -2), extra);
+            g.Place(new Cell(1, 2), extra);
+            g.Place(new Cell(1, -2), extra);   // 10 extra parts
+            g.Place(new Cell(-1, 2), home);
+            var bag = new Inventory();
+            var lost = g.ResetRaft(basic, bag, new System.Random(1));
+            Assert.AreEqual(2, lost.Count, "a fifth of 10");
+            Assert.AreEqual(8, bag.Count(extra));
+            Assert.AreEqual(10, g.Count, "starter square plus the habitat");
+            Assert.AreEqual(1, g.HabitatCount);
+            Assert.AreEqual(0, bag.Count(basic), "the starter planks don't come back as extras");
+        }
     }
 }

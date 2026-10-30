@@ -1,3 +1,4 @@
+using System.Linq;
 using BrineBattle.Battle;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -77,10 +78,48 @@ namespace BrineBattle.Hunting
             BattleSettings.AutoItems = GUILayout.Toggle(BattleSettings.AutoItems,
                 $" Auto-use consumables at {Mathf.RoundToInt(BattleAI.LowHp * 100)}% HP or below (Semi-auto and Auto)");
 
+            if (inGame) ResetRaftRow();
             GUILayout.EndArea();
         }
 
         int page;
+        bool confirmReset;
+
+        /// <summary>
+        /// Reset raft (Ed's ask): back to the starter square so the raft can be rebuilt, but the sea takes
+        /// about a fifth of the parts that come off. Asks twice, since it can't be undone.
+        /// </summary>
+        void ResetRaftRow()
+        {
+            var hook = FindFirstObjectByType<HookController>();
+            if (hook == null || hook.raft == null || hook.raft.starterPart == null) return;
+            GUILayout.Space(10);
+            GUILayout.Label("Reset raft", HuntStyles.Heading);
+            GUILayout.Label($"<size=11>Takes the raft back to the starter 3x3 so you can build it again. Level and type stay. "
+                + $"About {Mathf.RoundToInt(Rafts.RaftGrid.WashAwayShare * 100)}% of the parts that come off float away; the rest go to the Bag. Habitats are kept.</size>", Rich);
+            GUI.enabled = !BattleController.InBattle;
+            if (!confirmReset)
+            {
+                if (HuntStyles.ColorButton("Reset raft…", HuntStyles.Risky)) confirmReset = true;
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                if (HuntStyles.ColorButton("Yes, reset it", HuntStyles.Risky))
+                {
+                    confirmReset = false;
+                    var lost = hook.raft.Grid.ResetRaft(hook.raft.starterPart, hook.Inventory, new System.Random());
+                    hook.SyncHabitats();
+                    hook.Log(lost.Count == 0 ? "The raft is back to its starter square. Every part is in the Bag."
+                        : $"The raft is back to its starter square. The sea took {lost.Count} part(s): "
+                          + string.Join(", ", lost.GroupBy(p => p.displayName).Select(x => x.Count() > 1 ? $"{x.Count()}× {x.Key}" : x.Key))
+                          + ". The rest are in the Bag.");
+                }
+                if (GUILayout.Button("Cancel", GUILayout.Height(30))) confirmReset = false;
+                GUILayout.EndHorizontal();
+            }
+            GUI.enabled = true;
+        }
 
         static readonly (string key, string what)[] Keys =
         {

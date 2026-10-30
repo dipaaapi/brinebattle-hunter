@@ -173,3 +173,9 @@ Consumable potions in variants: HP, toxic relief (poison), confusion relief, a b
 - Raft skill tree: Level up and Tree in one page; pick the type once (Ed: at Lv 10, after the 10 levels of basics); the picked type's tab is the default, the others lock and don't branch out.
 - Mystic crafting shows a glowing incantation circle; the Crew hammers each install with a loading bar, never instant.
 Ed's call: the raft levels stop at 6, so the type is picked once at the first level-up (Lv 2).
+
+### U-35 Picking a type resets the off-type parts — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+Once the raft type is picked, parts that don't suit it reset to basic by themselves and can't be used any more. The parts that come off go to the inventory; nothing is lost from the bag or the Salvage Bin.
+
+### U-36 Reset raft in Settings — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+A Reset raft button in Settings to rebuild the raft, but about 20% of the parts that come off are washed away by the sea.

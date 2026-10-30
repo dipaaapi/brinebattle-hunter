@@ -141,6 +141,18 @@ namespace BrineBattle.Hunting
         static void Step(bool done, string title) =>
             GUILayout.Label(done ? $"<color={HuntStyles.GoodHex}>✔ {title}</color>" : $"<color={HuntStyles.BadHex}>✘</color> <b>{title}</b>", HuntStyles.Text);
 
+        /// <summary>
+        /// Ed's ask: right after the type is picked, parts of the other types on the raft go back to the
+        /// bag and basic planks take their place.
+        /// </summary>
+        void ResetForType()
+        {
+            var back = raft.Grid.ResetOffType(raft.starterPart, hook.Inventory);
+            if (back.Count == 0) return;
+            var names = back.GroupBy(p => p.displayName).Select(x => x.Count() > 1 ? $"{x.Count()}× {x.Key}" : x.Key);
+            hook.Log($"Parts for other raft types came off and are back in the bag ({string.Join(", ", names)}); basic planks took their place.");
+        }
+
         const string HammerText = "Your hammer is too weak for this raft level.";
 
         static string PlaceText(PlaceResult r)
@@ -153,6 +165,7 @@ namespace BrineBattle.Hunting
                 case PlaceResult.BelowTier: return "That part is too weak for this raft level.";
                 case PlaceResult.NeedsModules: return "Not enough modules on the left edge yet.";
                 case PlaceResult.NeedsHammer: return HammerText;
+                case PlaceResult.WrongType: return "That part is for another raft type, so it stays off your raft.";
                 default: return "That isn't a raft part.";
             }
         }
@@ -304,10 +317,12 @@ namespace BrineBattle.Hunting
             foreach (var kv in parts)
             {
                 var p = kv.Key;
-                bool fits = SalvageRules.IsCompatible(p.type, p.rarity, g.Tier);
+                bool strong = SalvageRules.IsCompatible(p.type, p.rarity, g.Tier), ofType = g.FitsType(p);
+                bool fits = strong && ofType;
                 string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color>"
                     + (p.type == ItemType.Raft && p.raftKind != RaftKind.Plain ? $"  <size=11>{p.raftKind}</size>" : "")
-                    + (fits ? "" : $"  <size=11><color={HuntStyles.BadHex}>too weak for Lv {(int)g.Tier + 1}</color></size>");
+                    + (!ofType ? $"  <size=11><color={HuntStyles.BadHex}>not for a {g.Chosen} raft</color></size>"
+                        : strong ? "" : $"  <size=11><color={HuntStyles.BadHex}>too weak for Lv {(int)g.Tier + 1}</color></size>");
                 GUI.enabled = fits;
                 var old = GUI.backgroundColor;
                 if (selected == p) GUI.backgroundColor = HuntStyles.Go;
@@ -396,6 +411,7 @@ namespace BrineBattle.Hunting
                 {
                     treeTab = path;
                     hook.Log($"Your raft is now a {path}: {RaftTree.Look(path)}. Its branch of the raft tree is open up to Lv {(int)g.Tier + 1}.");
+                    ResetForType();
                 }
             }
 
@@ -414,6 +430,7 @@ namespace BrineBattle.Hunting
                         if (g.Chosen != RaftKind.Plain) treeTab = g.Chosen;
                         hook.Log($"Raft leveled up to Lv {(int)g.Tier + 1} ({g.Tier})! Max HP {g.MaxHp}."
                             + (g.Chosen != RaftKind.Plain ? $" The {g.Chosen} branch grew to Lv {(int)g.Tier + 1}." : ""));
+                        ResetForType();
                     }
                 }
                 else

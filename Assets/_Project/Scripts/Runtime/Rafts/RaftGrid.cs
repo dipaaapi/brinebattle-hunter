@@ -37,6 +37,8 @@ namespace BrineBattle.Rafts
         NeedsHammer = 7,
         /// <summary>Replace: the new part is the same as the one already there.</summary>
         Same = 8,
+        /// <summary>A typed part of a raft type that wasn't picked (Ed's ask: it's disabled once a type is picked).</summary>
+        WrongType = 9,
     }
 
     public enum RemoveResult
@@ -207,6 +209,7 @@ namespace BrineBattle.Rafts
             if (parts.ContainsKey(c)) return PlaceResult.Occupied;
             if (parts.Count > 0 && !c.Neighbours().Any(parts.ContainsKey)) return PlaceResult.NotAdjacent;
             if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
+            if (!FitsType(part)) return PlaceResult.WrongType;
             if (part.type == ItemType.Raft && !ModulesReady) return PlaceResult.NeedsModules;
             if (!HammerReady) return PlaceResult.NeedsHammer;
             return PlaceResult.Ok;
@@ -222,6 +225,7 @@ namespace BrineBattle.Rafts
             if (!parts.TryGetValue(c, out var old)) return PlaceResult.NotAdjacent;
             if (old == part) return PlaceResult.Same;
             if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
+            if (!FitsType(part)) return PlaceResult.WrongType;
             if (!HammerReady) return PlaceResult.NeedsHammer;
             return PlaceResult.Ok;
         }
@@ -334,6 +338,83 @@ namespace BrineBattle.Rafts
             for (int i = 0; i < paths.Count; i++) if (i + 2 >= RaftTree.PickLevel) paths[i] = kind;
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>
+        /// False for a typed raft part of a type that wasn't picked (Ed's ask). Plain parts, modules,
+        /// habitats and every part before the pick always fit.
+        /// </summary>
+        public bool FitsType(ItemDefinition part) =>
+            part == null || part.type != ItemType.Raft || part.raftKind == RaftKind.Plain
+            || Chosen == RaftKind.Plain || part.raftKind == Chosen;
+
+        /// <summary>
+        /// Once the type is picked (Ed's ask), every placed part of another type goes back to the bag and
+        /// a basic plank takes its cell, so the raft keeps its shape. Returns the parts sent to the bag.
+        /// </summary>
+        public List<ItemDefinition> ResetOffType(ItemDefinition basic, Inventory bag)
+        {
+            var back = new List<ItemDefinition>();
+            if (basic == null || Chosen == RaftKind.Plain) return back;
+            foreach (var c in parts.Keys.ToList())
+            {
+                var p = parts[c];
+                if (FitsType(p)) continue;
+                parts[c] = basic;
+                bag?.Add(p, 1);
+                back.Add(p);
+            }
+            if (back.Count > 0) Changed?.Invoke();
+            return back;
+        }
+
+        /// <summary>Share of the parts the sea takes when the raft is reset from Settings (Ed's ask).</summary>
+        public const float WashAwayShare = 0.2f;
+
+        /// <summary>
+        /// Reset raft (Settings, Ed's ask): the raft goes back to the starter square of basic planks so it
+        /// can be rebuilt. Level and type stay. Every other part comes off: about
+        /// <see cref="WashAwayShare"/> of them float away, the rest go to the bag. Habitats are never lost
+        /// (companions live in them): they go back on the edge of the square. Returns what the sea took.
+        /// </summary>
+        public List<ItemDefinition> ResetRaft(ItemDefinition basic, Inventory bag, Random rng)
+        {
+            var lost = new List<ItemDefinition>();
+            if (basic == null) return lost;
+            var square = new List<Cell>();
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++) square.Add(new Cell(x, z));
+            var off = new List<ItemDefinition>();
+            var habitats = new List<ItemDefinition>();
+            foreach (var kv in parts)
+            {
+                // Basic planks already in the square just stay.
+                if (kv.Value == basic && square.Contains(kv.Key)) continue;
+                if (kv.Value.type == ItemType.Habitat) habitats.Add(kv.Value);
+                else off.Add(kv.Value);
+            }
+            int wash = (int)Math.Round(off.Count * WashAwayShare);
+            for (int i = 0; i < wash; i++)
+            {
+                int k = rng.Next(off.Count);
+                lost.Add(off[k]);
+                off.RemoveAt(k);
+            }
+            foreach (var p in off) bag?.Add(p, 1);
+            parts.Clear();
+            foreach (var c in square) parts[c] = basic;
+            var ring = new List<Cell>();
+            for (int x = -2; x <= 2; x++)
+                for (int z = -2; z <= 2; z++)
+                    if (Math.Max(Math.Abs(x), Math.Abs(z)) == 2 && Math.Abs(x) + Math.Abs(z) < 4) ring.Add(new Cell(x, z));
+            ring = ring.OrderByDescending(c => c.X).ThenBy(c => Math.Abs(c.Z)).ToList();
+            for (int i = 0; i < habitats.Count; i++)
+            {
+                if (i < ring.Count) parts[ring[i]] = habitats[i];
+                else bag?.Add(habitats[i], 1);
+            }
+            Changed?.Invoke();
+            return lost;
         }
 
         readonly List<RaftKind> paths = new List<RaftKind>();

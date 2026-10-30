@@ -20,6 +20,8 @@
   - Mystic: incantation circle when it crafts/refines. Crew: walks over and hammers for 4 s with a progress bar (`CompanionWork.CrewInstall`).
   - FAQ updated. +5 rules tests (232 in the cloud check).
   - Ed's test: his Sky raft showed as a sea train (Fortress) because the Crew had built Shellback Plates. Fix: the picked type is the raft's type (`RaftGrid.Type`), so look and bonuses follow the pick.
+  - Ed (U-35): once the type is picked, parts of other types come off by themselves. `RaftGrid.ResetOffType` sends them to the Bag and puts basic planks (the starter part) in their cells; `FitsType` / `PlaceResult.WrongType` block placing them (Build greys them out "not for a Sky raft"; the Crew skips them since it uses `CanPlace`).
+  - Ed (U-36): Settings → Game → **Reset raft** (asks twice). `RaftGrid.ResetRaft`: back to the starter 3x3, level and type stay, a fifth of the parts that come off float away (`WashAwayShare` 0.2), the rest go to the Bag, habitats are never lost (back on the square's edge). +2 tests (234 in the cloud check).
 
 ## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
 - Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).
