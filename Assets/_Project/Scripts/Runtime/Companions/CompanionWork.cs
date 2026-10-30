@@ -43,6 +43,20 @@ namespace BrineBattle.Companions
             return false;
         }
 
+        /// <summary>Seconds the Crew hammers to install one part or module (Ed's ask: never instant).</summary>
+        public const float InstallSeconds = 4f;
+
+        /// <summary>
+        /// Finishes an install the Crew started: the part must still be in the bag and the cell still fit
+        /// (the player may have built there meanwhile). Takes it from the bag and places it.
+        /// </summary>
+        public static bool CrewInstall(RaftGrid raft, Inventory bag, Cell cell, ItemDefinition part)
+        {
+            if (part == null || bag.Count(part) <= 0 || raft.CanPlace(cell, part) != PlaceResult.Ok) return false;
+            if (!bag.Remove(part, 1)) return false;
+            return raft.Place(cell, part) == PlaceResult.Ok;
+        }
+
         /// <summary>Builds or installs one piece (takes it from the bag). False if there was nothing to do.</summary>
         public static bool CrewBuild(RaftGrid raft, Inventory bag, out ItemDefinition part, int upstreamX = -1)
         {
@@ -79,9 +93,9 @@ namespace BrineBattle.Companions
         {
             return recipes
                 .Where(r => r != null && r.kind == RecipeKind.Craft && r.outputs.Count > 0 && r.outputs[0].item != null)
-                .Where(r => { var c = CraftRules.CategoryOf(r); return c == RecipeCategory.Potions || c == RecipeCategory.Oils; })
+                .Where(r => { var s = CraftRules.SubOf(r); return s == RecipeSub.Potions || s == RecipeSub.Oils || s == RecipeSub.Treats; })
                 .Where(r => bag.Count(r.outputs[0].item) < keep && CraftRules.CanCraft(bag, r))
-                .OrderBy(r => CraftRules.CategoryOf(r) == RecipeCategory.Potions ? 0 : 1)
+                .OrderBy(r => CraftRules.SubOf(r) == RecipeSub.Oils ? 1 : 0)
                 .ThenBy(r => bag.Count(r.outputs[0].item))
                 .FirstOrDefault();
         }
@@ -90,7 +104,7 @@ namespace BrineBattle.Companions
         public static GearSlot? MysticPick(Equipment gear, Inventory bag)
         {
             GearSlot? best = null;
-            foreach (var slot in new[] { GearSlot.Weapon, GearSlot.Armor })
+            foreach (var slot in new[] { GearSlot.Weapon, GearSlot.Armor, GearSlot.Accessory })
             {
                 if (!gear.CanRefine(slot, bag)) continue;
                 if (best == null || gear.RefineOf(gear.Get(slot)) < gear.RefineOf(gear.Get(best.Value))) best = slot;

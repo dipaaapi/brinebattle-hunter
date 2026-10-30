@@ -140,15 +140,17 @@ namespace BrineBattle.Hunting
                 switch (b.Pet.Role)
                 {
                     case CompanionRole.Mystic:
-                        // Works beside the storage box (the crafting table), never inside it.
-                        p = Box + new Vector3(0.8f, 0.2f, 0f);
+                        // Works beside the storage box (the crafting table), never inside it, and on a plank.
+                        p = MysticSpot() + Vector3.up * 0.2f;
                         break;
                     case CompanionRole.Crew:
-                        // Walks from tile to tile, always on the raft.
+                        // Walks from plank to plank, always on the raft; with a job it goes to the spot and hammers.
                         var from = b.Go.transform.localPosition;
                         from.y = 0.5f;
-                        if (b.Phase >= b.NextWalk || !OnRaft(b.Walk)) { b.Walk = RandomTile(from, hunterLocal); b.NextWalk = b.Phase + Random.Range(2f, 4f); }
+                        if (job != null && job.Crew == b.Pet) b.Walk = job.Stand;
+                        else if (b.Phase >= b.NextWalk || !OnRaft(b.Walk)) { b.Walk = RandomTile(from, hunterLocal); b.NextWalk = b.Phase + Random.Range(2f, 4f); }
                         p = OnRaft(from) ? Vector3.MoveTowards(from, b.Walk, Time.deltaTime * 1.2f) : b.Walk;
+                        if (job != null && job.Crew == b.Pet && Flat(p - job.Stand) < 0.1f) { job.Working = true; hop = Mathf.Abs(Mathf.Sin(b.Phase * 10f)) * 0.12f; }
                         break;
                     default:
                         // Walks after the hunter at its own pace. While the hunter hooks and reels at
@@ -198,6 +200,7 @@ namespace BrineBattle.Hunting
                 var p = b.Go.transform.localPosition;
                 p = PushOut(p, hunter, PetRadius + HunterRadius, 1f);
                 p = PushOut(p, Box, PetRadius + BoxRadius, 1f);
+                if (SalvageBin.Instance != null && SalvageBin.Instance.Placed) p = PushOut(p, SalvageBin.Instance.LocalPosition, PetRadius + BoxRadius, 1f);
                 foreach (var other in shown)
                     if (other != b) p = PushOut(p, other.Go.transform.localPosition, PetRadius * 2f, 0.5f);
                 b.Go.transform.localPosition = p;
@@ -224,7 +227,8 @@ namespace BrineBattle.Hunting
         /// </summary>
         Vector3 RandomTile(Vector3 from, Vector3 hunter)
         {
-            var tiles = Raft.Grid.Parts.Keys.Select(Local).ToList();
+            // Planks only (Ed's ask): never onto an auto-loot module or a habitat.
+            var tiles = Raft.Grid.Parts.Keys.Where(Raft.Grid.Walkable).Select(Local).ToList();
             if (tiles.Count == 0) return Vector3.up * 0.5f;
             for (int tries = 0; tries < 8; tries++)
             {
@@ -244,8 +248,21 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>True when a local point sits over a raft tile.</summary>
-        bool OnRaft(Vector3 local) =>
-            Raft.Grid.Has(new Rafts.Cell(Mathf.RoundToInt(local.x / Raft.CellSize), Mathf.RoundToInt(local.z / Raft.CellSize)));
+        bool OnRaft(Vector3 local) => Raft.WalkableAt(local);
+
+        static float Flat(Vector3 v) => new Vector2(v.x, v.z).magnitude;
+
+        /// <summary>A plank beside the storage box for the Mystic: right of it if that's a plank, else the nearest plank next to it.</summary>
+        Vector3 MysticSpot()
+        {
+            var want = Box + new Vector3(0.8f, 0f, 0f);
+            want.y = 0.5f;
+            if (OnRaft(want)) return want;
+            var box = Raft.LocalToCell(Box);
+            foreach (var n in box.Neighbours())
+                if (Raft.Grid.Walkable(n) && !(SalvageBin.Instance != null && SalvageBin.Instance.Cell.Equals(n))) return (Local(n) + Box) / 2f + Vector3.up * 0.2f;
+            return want;
+        }
 
         /// <summary>−1 when drifts come from −X (the left), from the spawner's current.</summary>
         int UpstreamX()
@@ -260,18 +277,14 @@ namespace BrineBattle.Hunting
             if (crew != null && CompanionSettings.CrewBuilds)
             {
                 crewTimer += Time.deltaTime;
-                if (crewTimer >= CompanionWork.JobSeconds)
+                if (job == null && crewTimer >= CompanionWork.JobSeconds)
                 {
                     crewTimer = 0f;
-                    if (CompanionWork.CrewBuild(Raft.Grid, hook.Inventory, out var part, UpstreamX()))
-                    {
-                        Work(crew);
-                        hook.Log(part.type == ItemType.Module
-                            ? $"{crew.Name} (Crew) installed a {part.displayName} on the upstream side."
-                            : $"{crew.Name} (Crew) built a {part.displayName} onto the raft.");
-                    }
+                    if (CompanionWork.CrewPick(Raft.Grid, hook.Inventory, out var cell, out var part, UpstreamX()))
+                        StartJob(crew, cell, part);
                 }
             }
+            Install();
             // Crew keeps auto-loot modules above the share set per module kind in Build (R), paying the usual cost.
             var modules = hook.builder != null ? hook.builder.modules : null;
             if (crew != null && modules != null)
@@ -313,12 +326,14 @@ namespace BrineBattle.Hunting
                     if (recipe != null && CraftRules.Craft(hook.Inventory, recipe))
                     {
                         Work(mystic);
+                        Incantation(mystic);
                         hook.Log($"{mystic.Name} (Mystic) crafted {CraftRules.Describe(recipe.outputs)}.");
                         StorageBox.Instance?.Crafted($"{CraftRules.Describe(recipe.outputs)} ({mystic.Name})");
                     }
                     else if (slot != null && hook.Gear.Refine(slot.Value, hook.Inventory))
                     {
                         Work(mystic);
+                        Incantation(mystic);
                         hook.Log($"{mystic.Name} (Mystic) refined your {hook.Gear.Label(slot.Value)}.");
                         StorageBox.Instance?.Crafted($"refined {hook.Gear.Label(slot.Value)} ({mystic.Name})");
                     }
@@ -329,6 +344,144 @@ namespace BrineBattle.Hunting
         void Work(Companion c)
         {
             if (bodies.TryGetValue(c, out var b)) b.Busy = 1.5f;
+        }
+
+        // ---- Crew installs take time (Ed's ask): walk over, hammer with a progress bar, then the part is on ----
+
+        class Job
+        {
+            public Companion Crew;
+            public Rafts.Cell Cell;
+            public ItemDefinition Part;
+            public Vector3 Stand;      // plank next to the spot, raft-local
+            public bool Working;       // standing there and hammering
+            public float Progress;     // 0..1
+            public GameObject Ghost, Hammer;
+        }
+
+        Job job;
+
+        void StartJob(Companion crew, Rafts.Cell cell, ItemDefinition part)
+        {
+            // Stand on the plank next to the spot that's nearest the raft's middle.
+            var stand = cell.Neighbours().Where(Raft.Grid.Walkable).OrderBy(n => Mathf.Abs(n.X) + Mathf.Abs(n.Z)).Select(Local).FirstOrDefault();
+            if (stand == default) stand = Local(new Rafts.Cell(0, 0));
+            var ghost = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ghost.name = $"Installing {part.displayName}";
+            Destroy(ghost.GetComponent<Collider>());
+            ghost.transform.SetParent(Raft.transform, false);
+            ghost.transform.localPosition = new Vector3(cell.X * Raft.CellSize, 0.05f, cell.Z * Raft.CellSize);
+            ghost.transform.localScale = new Vector3(0.95f, 0.06f, 0.95f);
+            Tint.Apply(ghost.GetComponent<Renderer>(), Raft.PartColor(part) * 0.6f);
+            job = new Job { Crew = crew, Cell = cell, Part = part, Stand = stand, Ghost = ghost };
+            hook.Log($"{crew.Name} (Crew) is going to {(part.type == ItemType.Module ? "install" : "build")} a {part.displayName}.");
+        }
+
+        void Install()
+        {
+            if (job == null) return;
+            if (!bodies.TryGetValue(job.Crew, out var b) || !hook.Companions.All.Contains(job.Crew) || !CompanionSettings.CrewBuilds) { EndJob(); return; }
+            if (!job.Working) return;
+            if (job.Hammer == null)
+            {
+                job.Hammer = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                job.Hammer.name = "Crew hammer";
+                Destroy(job.Hammer.GetComponent<Collider>());
+                job.Hammer.transform.SetParent(b.Go.transform, false);
+                var head = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Destroy(head.GetComponent<Collider>());
+                head.transform.SetParent(job.Hammer.transform, false);
+                head.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+                head.transform.localScale = new Vector3(2.2f, 0.45f, 1.2f);
+                Tint.Apply(head.GetComponent<Renderer>(), new Color(0.45f, 0.45f, 0.5f));
+                job.Hammer.transform.localScale = new Vector3(0.12f, 0.8f, 0.12f);
+                Tint.Apply(job.Hammer.GetComponent<Renderer>(), new Color(0.55f, 0.36f, 0.2f));
+            }
+            // Swing: up slowly, down fast, toward the spot.
+            float swing = Mathf.Repeat(Time.time * 2.5f, 1f);
+            float angle = swing < 0.7f ? Mathf.Lerp(-20f, 70f, swing / 0.7f) : Mathf.Lerp(70f, -20f, (swing - 0.7f) / 0.3f);
+            var toSpot = new Vector3(job.Cell.X * Raft.CellSize, 0f, job.Cell.Z * Raft.CellSize) - job.Stand;
+            float yaw = Mathf.Atan2(toSpot.x, toSpot.z) * Mathf.Rad2Deg;
+            job.Hammer.transform.localRotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(-angle, 0f, 0f);
+            job.Hammer.transform.localPosition = Quaternion.Euler(0f, yaw, 0f) * new Vector3(0f, 0.6f, 0.6f);
+            b.Busy = 0.3f;
+            job.Progress += Time.deltaTime / CompanionWork.InstallSeconds;
+            job.Ghost.transform.localScale = new Vector3(0.95f, Mathf.Lerp(0.06f, 0.3f, job.Progress), 0.95f);
+            if (job.Progress < 1f) return;
+            var part = job.Part;
+            bool ok = CompanionWork.CrewInstall(Raft.Grid, hook.Inventory, job.Cell, part);
+            var crew = job.Crew;
+            EndJob();
+            if (ok) hook.Log(part.type == ItemType.Module
+                ? $"{crew.Name} (Crew) installed a {part.displayName} on the upstream side."
+                : $"{crew.Name} (Crew) built a {part.displayName} onto the raft.");
+        }
+
+        void EndJob()
+        {
+            if (job == null) return;
+            if (job.Ghost != null) Destroy(job.Ghost);
+            if (job.Hammer != null) Destroy(job.Hammer);
+            job = null;
+        }
+
+        // ---- Mystic crafting shows an incantation circle (Ed's ask) ----
+
+        /// <summary>A glowing magic circle with spinning runes opens under the Mystic for a moment while it crafts.</summary>
+        public void Incantation(Companion mystic)
+        {
+            if (mystic == null || !bodies.TryGetValue(mystic, out var b)) return;
+            StartCoroutine(Circle(b.Go.transform));
+        }
+
+        System.Collections.IEnumerator Circle(Transform pet)
+        {
+            var root = new GameObject("Incantation").transform;
+            root.SetParent(Raft.transform, false);
+            var at = pet.localPosition;
+            root.localPosition = new Vector3(at.x, 0.2f, at.z);
+            var glow = new Color(0.75f, 0.45f, 1f);
+            var ring = Disc(root, 1.4f, 0.02f, glow);
+            var inner = Disc(root, 1.0f, 0.025f, new Color(0.25f, 0.1f, 0.4f));
+            var core = Disc(root, 0.55f, 0.03f, new Color(1f, 0.85f, 1f));
+            var runes = new Transform[6];
+            for (int i = 0; i < runes.Length; i++)
+            {
+                var r = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Destroy(r.GetComponent<Collider>());
+                r.transform.SetParent(root, false);
+                r.transform.localScale = new Vector3(0.12f, 0.04f, 0.22f);
+                Tint.Apply(r.GetComponent<Renderer>(), new Color(1f, 0.9f, 0.5f));
+                runes[i] = r.transform;
+            }
+            const float life = 1.6f;
+            for (float t = 0f; t < life; t += Time.deltaTime)
+            {
+                if (root == null || pet == null) break;
+                float open = Mathf.Clamp01(t / 0.25f) * Mathf.Clamp01((life - t) / 0.35f);
+                root.localScale = new Vector3(open, 1f, open);
+                root.localRotation = Quaternion.Euler(0f, t * 120f, 0f);
+                core.localRotation = Quaternion.Euler(0f, -t * 300f, 0f);
+                for (int i = 0; i < runes.Length; i++)
+                {
+                    float a = i * Mathf.PI * 2f / runes.Length;
+                    runes[i].localPosition = new Vector3(Mathf.Cos(a) * 0.6f, 0.06f + Mathf.Sin(t * 8f + i) * 0.05f, Mathf.Sin(a) * 0.6f);
+                    runes[i].localRotation = Quaternion.Euler(0f, -a * Mathf.Rad2Deg, 0f);
+                }
+                yield return null;
+            }
+            if (root != null) Destroy(root.gameObject);
+        }
+
+        static Transform Disc(Transform parent, float size, float height, Color color)
+        {
+            var d = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(d.GetComponent<Collider>());
+            d.transform.SetParent(parent, false);
+            d.transform.localScale = new Vector3(size, height, size);
+            d.transform.localPosition = Vector3.up * height;
+            Tint.Apply(d.GetComponent<Renderer>(), color);
+            return d.transform;
         }
 
         void OnGUI()
@@ -344,6 +497,16 @@ namespace BrineBattle.Hunting
                 if (sp.z < 0f) continue;
                 string tag = b.Busy > 0f ? " <color=#ffd866>working!</color>" : "";
                 GUI.Label(new Rect(sp.x - 70, HuntStyles.H - sp.y - 10, 140, 20), $"<b>{b.Pet.Role}</b>{tag}", nameStyle);
+            }
+            // The Crew's install progress over the spot (Ed's ask: a loading bar, not instant).
+            if (job != null && job.Ghost != null)
+            {
+                var sp = HuntStyles.Ui(cam.WorldToScreenPoint(job.Ghost.transform.position + Vector3.up * 0.6f));
+                if (sp.z < 0f) return;
+                var r = new Rect(sp.x - 60, HuntStyles.H - sp.y - 6, 120, 12);
+                GUI.Label(new Rect(r.x - 30, r.y - 18, 180, 18), $"<color=#ffd866>{(job.Working ? "Hammering" : "On the way")}: {job.Part.displayName}</color>", nameStyle);
+                GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.6f), 0, 3);
+                GUI.DrawTexture(new Rect(r.x + 1, r.y + 1, (r.width - 2) * Mathf.Clamp01(job.Progress), r.height - 2), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.8f, 0.3f), 0, 3);
             }
         }
     }

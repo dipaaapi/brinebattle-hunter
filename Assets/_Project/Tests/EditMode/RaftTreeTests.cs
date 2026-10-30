@@ -62,17 +62,32 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void SwitchingLaterOpensTheWholeBranchUpToThatLevel()
+        public void TheTypeIsPickedOnceAndTheOthersStayLocked()
         {
             var g = Ready();
             var inv = Rich();
             g.TryUpgrade(inv, RaftKind.Sky);
             g.Kills = 999;
-            g.TryUpgrade(inv, RaftKind.Beast);
-            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Beast, 2));
-            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Beast, 3));
-            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Sky, 3));
-            CollectionAssert.AreEqual(new[] { RaftKind.Sky, RaftKind.Beast }, g.Paths);
+            g.TryUpgrade(inv, RaftKind.Beast);   // ignored: the raft is already Sky
+            Assert.AreEqual(RaftKind.Sky, g.Chosen);
+            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Sky, 3));
+            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Beast, 2));
+            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Fortress, 1), "unpicked types lock, even Lv 1");
+            CollectionAssert.AreEqual(new[] { RaftKind.Sky, RaftKind.Sky }, g.Paths);
+            Assert.IsFalse(g.Choose(RaftKind.Beast));
+        }
+
+        [Test]
+        public void ARaftPastThePickLevelCanChooseWithoutLevelingUp()
+        {
+            var g = new RaftGrid();
+            g.Restore(new[] { new KeyValuePair<Cell, ItemDefinition>(new Cell(0, 0), Item(RaftKind.Plain, Rarity.Rare)) }, Rarity.Rare);
+            g.RestorePaths(null);
+            Assert.IsTrue(g.CanChoose);
+            Assert.IsTrue(g.Choose(RaftKind.Fortress));
+            Assert.AreEqual(RaftKind.Fortress, g.Chosen);
+            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Fortress, 3));
+            Assert.IsFalse(g.CanChoose);
         }
 
         [Test]

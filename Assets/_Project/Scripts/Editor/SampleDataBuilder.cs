@@ -260,6 +260,22 @@ namespace BrineBattle.Editor
             Recipe("craft_shell_maul", "Shell Maul", RecipeKind.Craft, new[] { (shell, 3), (fang, 2) }, new[] { (maul, 1) });
             Recipe("craft_tidecaller_lance", "Tidecaller Lance", RecipeKind.Craft, new[] { (spear, 1), (fang, 4), (shell, 3) }, new[] { (lance, 1) });
             Recipe("craft_shellback_carapace", "Shellback Carapace", RecipeKind.Craft, new[] { (shell, 5), (scale, 4) }, new[] { (carapace, 1) });
+            // Ed's ask: accessories, a third gear slot. Their worth is their skills (by rarity), element and + refine.
+            var charm = Accessory("ShellCharm", "shell_charm", "Shell Charm", Rarity.Uncommon, Element.Earth, 2, null, null,
+                "A crab-shell bead on a cord. A little sturdier, a little stronger. Earth gives the hunter no sun or moon.");
+            var earring = Accessory("GaleEarring", "gale_earring", "Gale Feather Earring", Rarity.Rare, Element.Wind, 3,
+                new[] { GearPassive.Swift }, null, "A feather that never stops fluttering. Swift: +2 SPD in battle.");
+            var amulet = Accessory("MoonpearlAmulet", "moonpearl_amulet", "Moonpearl Amulet", Rarity.Epic, Element.Water, 4,
+                new[] { GearPassive.SecondWind }, new[] { GearActive.TidalStrike },
+                "A pearl that glows at night. Water (Moon): stronger after dark. Second Wind, and Tidal Strike in battle.");
+            var sunstone = Accessory("SunstoneBand", "sunstone_band", "Sunstone Band", Rarity.Legendary, Element.Fire, 5,
+                new[] { GearPassive.Leech, GearPassive.Swift }, new[] { GearActive.ShellGuard },
+                "A ring of tar-baked stone that holds the day's heat. Fire (Sun): stronger by day. Leech, Swift, Shell Guard.");
+            Recipe("craft_shell_charm", "Shell Charm", RecipeKind.Craft, new[] { (shell, 1), (fang, 1) }, new[] { (charm, 1) });
+            Recipe("craft_gale_earring", "Gale Feather Earring", RecipeKind.Craft, new[] { (feather, 4), (fang, 1) }, new[] { (earring, 1) });
+            Recipe("craft_moonpearl_amulet", "Moonpearl Amulet", RecipeKind.Craft, new[] { (scale, 6), (shell, 2), (fang, 2) }, new[] { (amulet, 1) });
+            Recipe("craft_sunstone_band", "Sunstone Band", RecipeKind.Craft, new[] { (charm, 1), (tarred, 3), (shell, 4) }, new[] { (sunstone, 1) });
+            Recipe("dismantle_shell_charm", "Shell Charm", RecipeKind.Dismantle, new[] { (charm, 1) }, new[] { (shell, 1) });
             // Phase 6: elemental oils coat the weapon for a few rounds (Wind beats the eel, Earth the gull, Fire the crab).
             var galeOil = Oil("GaleOil", "gale_oil", "Gale Oil", Element.Wind, "Feather down steeped in fish oil. Attacks turn Wind for 3 rounds.");
             var gritOil = Oil("GritOil", "grit_oil", "Grit Oil", Element.Earth, "Ground crab shell in a paste. Attacks turn Earth for 3 rounds.");
@@ -476,6 +492,17 @@ namespace BrineBattle.Editor
             table.entries.Add(new LootEntry { item = item, chance = chance, minQuantity = min, maxQuantity = max });
             EditorUtility.SetDirty(table);
         }
+
+        static ItemDefinition Accessory(string file, string id, string name, Rarity rarity, Element element, int power,
+            GearPassive[] passives, GearActive[] actives, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Accessory;
+                i.rarity = rarity; i.element = element; i.maxStack = 1; i.gearPower = power;
+                i.passives = passives ?? new GearPassive[0];
+                i.actives = actives ?? new GearActive[0];
+                i.description = description;
+            });
 
         static T LoadOrCreate<T>(string path, System.Action<T> init = null) where T : ScriptableObject
         {

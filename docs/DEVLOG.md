@@ -10,6 +10,15 @@
 - Claude's ideas, per Ed's ask to add my own: **C-12 Forecast** and **C-13 Wreck field**.
 - Save: time, day, weather, forecast, wrecks (`hasWorld`; older saves start in the morning). FAQ topic "Day & weather". No data/builder changes (DataVersion stays 11). +10 rules tests (226 in the cloud check); Runtime compiles. Unity test on Ed's PC next.
 - Ed's Unity test: the hunter didn't face the monster in battle, and no sun or moon could be seen. Fixes: `HunterMotion` turns the hunter toward `BattleController.Foe` during battles; `WorldClock` draws a sky strip (top-right) with the sun or a crescent moon on its arc (`WorldRules.SkyArc`), clouds in bad weather, and turns on soft sun shadows. +1 test (227).
+- Ed's raft/workbench batch (build now, not later):
+  - Workbench tabs → Gear (Weapon/Armor/Accessory), Player (Potions/Oils), Pet (Treats/Habitats), Raft (Planks & parts/Auto-loot/Hammers): `RecipeSub`, `CraftRules.SubOf/SubsOf`.
+  - Accessories: `ItemType.Accessory`, `GearSlot.Accessory`, power splits ATK/DEF, element when the weapon is neutral, `GearPassive.Swift`; four accessories + recipes (`SampleDataBuilder.Accessory`, DataVersion 12); saved.
+  - `SalvageBin`: its own box next to the storage box; `Inventory.Salvaged` and dismantle crafts fly essence orbs into it; click to open (essence + dismantle).
+  - Planks only: `RaftGrid.Walkable`, `Raft.WalkableAt`; hunter and pets never step on modules or habitats.
+  - Raft looks by type (`RaftDecor`): sea train, winged plane, pirate ship.
+  - Raft tree: Level up + Tree in one page; type picked once (`RaftGrid.Chosen/CanChoose/Choose`, `RaftTree.PickLevel` = 2 until Ed decides on Lv 10); unpicked types lock.
+  - Mystic: incantation circle when it crafts/refines. Crew: walks over and hammers for 4 s with a progress bar (`CompanionWork.CrewInstall`).
+  - FAQ updated. +5 rules tests (232 in the cloud check).
 
 ## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
 - Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).

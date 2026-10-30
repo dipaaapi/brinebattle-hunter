@@ -16,5 +16,7 @@ namespace BrineBattle.Items
         Habitat = 8,
         /// <summary>Building tool (Ed's ask): a hammer of the raft's level or better is needed to build on it.</summary>
         Tool = 9,
+        /// <summary>Accessory (Ed's ask): a third gear slot whose worth is its skills, element and + refine.</summary>
+        Accessory = 10,
     }
 }

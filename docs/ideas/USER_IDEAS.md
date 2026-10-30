@@ -163,3 +163,13 @@ No more aging for pets. Instead, pets have health that drops when the enemy atta
 
 ### U-33 Status-curing potions — 2026-10-30 · ✅ Phase 8 · GDD §11 Consumables
 Consumable potions in variants: HP, toxic relief (poison), confusion relief, a blood-clotting patch (bleeding) and an eye cleanser (for silence/blindness). Needs status effects in battle first.
+
+### U-34 Raft, workbench and pets polish — 2026-10-30 · ✅ Idea Round 4 (built at Ed's ask) · GDD §6, §9, §13
+- Workbench sub-tabs: hammers, planks and auto-loot apart; player (potions + oils) and pet apart; weapon, armor and accessory apart.
+- Accessories with unique skills by rarity, element and + refine.
+- Dismantling in its own Salvage Bin, with essence flying into it from the Bag and Build menus.
+- Pets and the player walk on planks only, never on auto-loot modules.
+- Raft looks by type: Fortress (STR tank) = sea train, Sky (INT) = winged plane, Beast (DEX) = pirate ship.
+- Raft skill tree: Level up and Tree in one page; pick the type once (Ed: at Lv 10, after the 10 levels of basics); the picked type's tab is the default, the others lock and don't branch out.
+- Mystic crafting shows a glowing incantation circle; the Crew hammers each install with a loading bar, never instant.
+Open: raft levels stop at 6, so the Lv 10 pick waits on Ed's answer (Lv 2 for now).

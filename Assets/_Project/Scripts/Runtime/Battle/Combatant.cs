@@ -65,7 +65,7 @@ namespace BrineBattle.Battle
             Hp = 60,
             Attack = 9 + (gear?.Attack ?? 0),
             Defense = 3 + (gear?.Defense ?? 0),
-            Speed = 6,
+            Speed = 6 + (gear != null && System.Linq.Enumerable.Contains(gear.Passives, GearPassive.Swift) ? GearSkillRules.SwiftSpeed : 0),
         };
     }
 }

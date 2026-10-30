@@ -157,6 +157,8 @@ Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 - [x] **U-21 Fog**: far drifts show "???", scene fog, hints worse
 - [x] Claude's **C-12 Forecast** (next weather + countdown in the HUD) and **C-13 Wreck field** (rarer floating loot after a storm)
 - [x] Saved; FAQ topic "Day & weather"; rules tests (`WorldTests`)
+- [x] Ed's asks while testing: hunter faces the monster in battle; sun and moon on screen (sky strip, shadows)
+- [x] Ed's raft/workbench batch (U-34): workbench sub-tabs, accessories, Salvage Bin, planks-only walking, raft looks by type, one raft skill tree with a single type pick, Mystic circle, Crew hammering
 - [ ] Ed's Unity test, then merge
 
 **Done when:** the day turns to night and back, weather changes with a forecast, storms strike the raft, fog hides far drifts, and sun/moon creatures are stronger at their time.

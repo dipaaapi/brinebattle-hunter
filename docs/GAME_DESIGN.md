@@ -99,7 +99,11 @@ Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown b
 - **Module catches a live monster (owner's call):** it can't swim off; a battle starts at once and plays in **Auto** (mode can't be switched), the monster striking first. It comes first: if the hunter is casting or reeling, that line is dropped. Only during another battle or a prompt does the module hold it on the line, and its battle starts right after. This ignores the raft-size gate: even a monster too big for the raft is fought (owner's call).
 - Raft holds weapon stations, alchemy stations, Transmutation Circle, and companion habitats.
 - **Absorption / downgrade:** when you lose, flee, or are exhausted, monsters eat raft parts. The monster grows stronger; defeating it later recovers your parts plus a bonus.
-- **Raft tree (Ed's U-31):** at each raft level-up the player picks a type to build toward (Fortress, Sky or Beast). That opens the type's branch up to the new level: one refined material per level (Fortress: Hardened Scale, Shell Weave, Coral Bulwark, Leviathan Hide, Abyssal Carapace; Sky: Gale Down, Storm Silk, Cloud Bladder, Tempest Plume, Aether Membrane; Beast: Fang Rope, Sinew Strap, Bone Yoke, Leviathan Tendon, Abyssal Chain) made from the level's base part + level × the kind's raw material, and the typed part of that level (last level's part + the material). Picking a type later opens its whole branch up to that level. Lv 1 is open for all. Build → Tree shows it; locked recipes say which pick they need. Tree materials aren't spent as "monster materials".
+- **Raft tree (Ed's U-31, reworked 2026-10-30 on his ask):** the type is picked **once**, at `RaftTree.PickLevel` (Lv 2 for now; Ed wants Lv 10 once the raft has that many levels, see Open Questions). Lv 1 typed parts of every type are open before that. After the pick only that type's branch grows, one level per level-up; the other types lock for good (even Lv 1) and don't branch out. A raft already past the pick level with no type picks it in the tree without leveling up. Build → **Raft tree** is one page: level, type, requirements and the Level-up button on top, then one tab per type (the picked one opens by default, the others show 🔒). Each type's branch: one refined material per level (Fortress: Hardened Scale, Shell Weave, Coral Bulwark, Leviathan Hide, Abyssal Carapace; Sky: Gale Down, Storm Silk, Cloud Bladder, Tempest Plume, Aether Membrane; Beast: Fang Rope, Sinew Strap, Bone Yoke, Leviathan Tendon, Abyssal Chain) made from the level's base part + level × the kind's raw material, and the typed part of that level (last level's part + the material). Locked recipes say why.
+- **Looks by type (Ed's ask):** Fortress (STR, tank) is a **sea train**: locomotive with a smoking stack, cowcatcher, rails and turning wheels. Sky (INT) is a **winged plane**: wings to both sides, a spinning propeller, a tail. Beast (DEX) is a **pirate ship**: hull walls with cannons, pointed bow and bowsprit, stern castle, two masts with square sails and a skull flag. Plain keeps the katig and small sail. The look follows the parts' type, or the picked type until the parts make one.
+- **Walking (Ed's ask):** the hunter and pets only stand on planks (raft parts), never on auto-loot modules or habitats.
+- **Crew installs take time (Ed's ask):** the Crew walks to a plank next to the spot and hammers for 4 s with a progress bar and a ghost of the part; the part is taken from the bag only when it's done (and only if the spot still fits).
+- **Salvage Bin (Ed's ask):** a metal bin on its own plank next to the storage box. Salvaging (Bag, auto-salvage) and dismantling send glowing essence orbs flying from the storage box into it, with a label. Clicking it opens it: the essence inside and the dismantle recipes (no longer a Workbench tab). Tree materials aren't spent as "monster materials".
 - **Modules by rarity and floating loot (Ed's U-30):** Tarred Net (U), Shell Trap (R), Coral Snare (E), Leviathan Grapple (L), Abyssal Maw (M), each upgraded from the last. Floating loot (Driftwood Bundle C, Tar Barrel U, Shell Wreck R, Coral Chunk E, Leviathan Bones L, Abyssal Driftwood M) drifts in (30% of drifts, up to one rarity above the raft) carrying raft materials; a module only catches floating loot up to its own rarity, creatures at any rarity.
 - **Absorption (Phase 8, tunable):** losing a battle or pressing Flee lets the monster eat **one raft part on the edge** (not modules or habitats, never one that would split the raft, never when the raft has 5 parts or fewer). Losing a battle a module started costs no part (Claude's default; open question below). The monster swims off **gorged** and is kept in the save. While no gorged drift is on the water, each new drift has a 30% chance to be the oldest gorged monster coming back: always alive, bigger, "Gorged! Ate N raft parts" over it, and +20% HP/ATK/DEF per part (up to double). Beating it (by hand or by a module) puts every eaten part back in the Bag plus one extra loot roll per part. Cut line costs nothing.
 
@@ -142,7 +146,7 @@ Applies to gear, companions, and monsters (type chart).
 
 ## 9. Gear
 
-- Weapons and armor crafted from monster parts via alchemy.
+- Weapons, armor and **accessories** (Ed's ask, a third slot) crafted from monster parts via alchemy. An accessory's power (+ refine) splits into ATK (larger half) and DEF; its worth is its skills by rarity and its element, which counts when the weapon is neutral (and gives sun/moon affinity). New passive **Swift** (+2 SPD). Accessories: Shell Charm (U, Earth), Gale Feather Earring (R, Wind, Swift), Moonpearl Amulet (E, Water, Second Wind + Tidal Strike), Sunstone Band (L, Fire, Leech + Swift + Shell Guard).
 - Rarity decides skills (proposed):
 
 | Rarity | Skills |
@@ -251,7 +255,9 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 ### HUD and menus (owner idea U-25)
 
 Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status card top-left (raft level and HP, harpoon wear with Fix, pets) and a bottom **dock of picture buttons**: Bag (B), Pets (P), Book (C), Build (R), Settings (Esc). A button lights up while its menu is open. Every menu has a red **×** and is split into **tabs**, so each page is short:
-- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Level up (✔/✘ requirements and the button).
+- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Raft tree (✔/✘ requirements, the button, the type pick and the branches).
+- **Workbench tabs (Ed's ask):** Gear (Weapon · Armor · Accessory), Player (Potions · Oils), Pet (Treats · Habitats), Raft (Planks & parts · Auto-loot · Hammers). Dismantling is in the Salvage Bin.
+- **Mystic crafting (Ed's ask):** a glowing magic circle with spinning runes opens under the Mystic for a moment whenever it crafts or refines.
 - **Workbench:** each recipe is a card listing every ingredient as have/need, green ✔ or red ✘ with "need N more". Ready recipes come first, each tab shows how many are ready, and a box hides what can't be made yet (Ed's ask).
 - **Bag:** Items (filter by kind; one line on what each item is for) · Equipment · Essence · Auto-salvage.
 - **Pets:** the list of pets on the left, the picked pet on the right (life and growth bars, Feed, Fuse, Look, battle, Release) · Chores.
@@ -280,6 +286,7 @@ The game opens on its own **MainMenu scene** before the game (Hook) scene: **Con
 - Action resource in battle (stamina vs weapon charge).
 - Companion growth: confirm feeding, fusion and treat numbers in §10 (aging was replaced by health, Ed's U-32).
 - Level-range limits on item share?
+- Raft type pick at Lv 10 (Ed): raft levels stop at 6 now; pick level is Lv 2 until Ed decides (decision card).
 - Sky raft: real flight (over waves, other monsters) or keep it a speed and reach bonus? (Phase 8 default: bonus only.)
 - Should losing a module battle also cost a raft part? (Phase 8 default: no.)
 - Target platform(s): PC standalone and WebGL both look possible (U-27); mobile still open.

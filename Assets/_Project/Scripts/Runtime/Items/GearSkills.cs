@@ -16,6 +16,8 @@ namespace BrineBattle.Items
         SecondWind = 3,
         /// <summary>The raft takes less damage.</summary>
         Bulwark = 4,
+        /// <summary>Faster in battle (accessories, Ed's ask).</summary>
+        Swift = 5,
     }
 
     /// <summary>Gear skills the player triggers in battle; each costs stamina and takes the turn (GDD §9).</summary>
@@ -35,6 +37,7 @@ namespace BrineBattle.Items
         public const float ThornsShare = 0.25f;
         public const int SecondWindStamina = 1;
         public const float BulwarkFactor = 0.8f;
+        public const int SwiftSpeed = 2;
         public const int TidalStrikeCost = 6;
         public const float TidalStrikePower = 2.2f;
         public const int ShellGuardCost = 4;
@@ -67,6 +70,7 @@ namespace BrineBattle.Items
                 case GearPassive.Thorns: return $"Thorns (return {ThornsShare:P0} of damage taken)";
                 case GearPassive.SecondWind: return $"Second Wind (+{SecondWindStamina} stamina/round)";
                 case GearPassive.Bulwark: return $"Bulwark (raft takes {1f - BulwarkFactor:P0} less)";
+                case GearPassive.Swift: return $"Swift (+{SwiftSpeed} SPD)";
                 default: return "";
             }
         }

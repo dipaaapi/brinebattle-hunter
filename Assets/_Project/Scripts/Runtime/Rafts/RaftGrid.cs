@@ -154,6 +154,9 @@ namespace BrineBattle.Rafts
 
         public bool Has(Cell c) => parts.ContainsKey(c);
 
+        /// <summary>Planks only (Ed's ask): the hunter and pets walk on raft parts, never on modules or habitats.</summary>
+        public bool Walkable(Cell c) => parts.TryGetValue(c, out var p) && p.type == ItemType.Raft;
+
         /// <summary>Rows of the raft, and how many of them end upstream in an auto-loot module.</summary>
         public (int guarded, int rows) UpstreamModules()
         {
@@ -286,7 +289,11 @@ namespace BrineBattle.Rafts
         /// </summary>
         public bool TryUpgrade(Inventory inv) => TryUpgrade(inv, RaftKind.Plain);
 
-        /// <summary>Levels up and records the raft type picked for the new level (U-31's material tree).</summary>
+        /// <summary>
+        /// Levels up (U-31's material tree). The raft type is picked once (Ed's ask): before
+        /// <see cref="RaftTree.PickLevel"/> every level is Plain; the level-up that reaches it records
+        /// <paramref name="path"/> as the raft's type, and after that every level goes to that type.
+        /// </summary>
         public bool TryUpgrade(Inventory inv, RaftKind path)
         {
             if (UpgradeBlocker(inv) != null) return false;
@@ -294,7 +301,33 @@ namespace BrineBattle.Rafts
             inv.SpendEssence(Tier, RaftRules.UpgradeCost(Tier));
             Kills = 0;
             Tier++;
-            paths.Add(path);
+            int level = (int)Tier + 1;
+            paths.Add(Chosen != RaftKind.Plain ? Chosen : level >= RaftTree.PickLevel ? path : RaftKind.Plain);
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>The raft type picked once in the raft tree (Ed's ask), or Plain before it's picked.</summary>
+        public RaftKind Chosen
+        {
+            get
+            {
+                for (int i = paths.Count - 1; i >= 0; i--) if (paths[i] != RaftKind.Plain) return paths[i];
+                return RaftKind.Plain;
+            }
+        }
+
+        /// <summary>True when the raft is at the pick level or past it and no type is picked yet.</summary>
+        public bool CanChoose => Chosen == RaftKind.Plain && (int)Tier + 1 >= RaftTree.PickLevel;
+
+        /// <summary>
+        /// Picks the raft type now, without a level-up (for a raft already at the pick level). It counts
+        /// from the pick level up to the current level, so that branch opens that far. Once only.
+        /// </summary>
+        public bool Choose(RaftKind kind)
+        {
+            if (!CanChoose || kind == RaftKind.Plain) return false;
+            for (int i = 0; i < paths.Count; i++) if (i + 2 >= RaftTree.PickLevel) paths[i] = kind;
             Changed?.Invoke();
             return true;
         }

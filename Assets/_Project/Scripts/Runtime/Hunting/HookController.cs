@@ -100,6 +100,13 @@ namespace BrineBattle.Hunting
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
             // Storage box = crafting table (owner's ask), likewise added at runtime.
             if (StorageBox.Instance == null && !TryGetComponent<StorageBox>(out _)) gameObject.AddComponent<StorageBox>().raft = raft;
+            // Salvage Bin (Ed's ask: dismantling has its own box), likewise added at runtime.
+            if (SalvageBin.Instance == null && !TryGetComponent<SalvageBin>(out _))
+            {
+                var bin = gameObject.AddComponent<SalvageBin>();
+                bin.raft = raft;
+                bin.hook = this;
+            }
             // Habitats on the raft give companion room.
             raft.Grid.Changed += SyncHabitats;
             SyncHabitats();
@@ -139,6 +146,7 @@ namespace BrineBattle.Hunting
             var ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());
             if (!Physics.Raycast(ray, out var hit, 200f)) return;
             // A thunderstrike fire (U-15): click it to throw seawater on it.
+            if (hit.collider.GetComponent<SalvageBinClick>() != null) { SalvageBin.Toggle(); return; }
             var fire = hit.collider.GetComponent<RaftFire>();
             if (fire != null)
             {

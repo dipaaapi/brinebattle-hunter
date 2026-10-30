@@ -209,13 +209,26 @@ namespace BrineBattle.Hunting
             hover = null;
         }
 
-        enum Page { Build, Workbench, Modules, LevelUp, Tree }
+        // Ed's ask: Level up and the Tree are one page, the raft skill tree.
+        enum Page { Build, Workbench, Modules, Tree }
         RaftKind path = RaftKind.Fortress;
-        static readonly string[] PageLabels = { "Build", "Workbench", "Modules", "Level up", "Tree" };
+        /// <summary>The type tab shown in the raft tree; follows the picked type once there is one.</summary>
+        RaftKind treeTab = RaftKind.Plain;
+        static readonly string[] PageLabels = { "Build", "Workbench", "Modules", "Raft tree" };
         Page page;
         bool readyOnly;
+        readonly Dictionary<RecipeCategory, RecipeSub> subTab = new Dictionary<RecipeCategory, RecipeSub>();
 
-        void OpenBench(RecipeCategory category) { page = Page.Workbench; tab = category; panelScroll = Vector2.zero; }
+        void OpenBench(RecipeSub sub)
+        {
+            page = Page.Workbench;
+            tab = CraftRules.CategoryOf(sub);
+            subTab[tab] = sub;
+            panelScroll = Vector2.zero;
+        }
+
+        /// <summary>Opens the raft skill tree page (the HUD and the level-up log point here).</summary>
+        public void OpenTree() { if (!Active) Toggle(); page = Page.Tree; panelScroll = Vector2.zero; }
 
         void OnGUI()
         {
@@ -232,7 +245,7 @@ namespace BrineBattle.Hunting
             var labels = (string[])PageLabels.Clone();
             int ready = recipes.Count(r => r != null && hook.Knows(r) && CraftRules.CanCraft(hook.Inventory, r));
             if (ready > 0) labels[1] = $"Workbench ({ready})";
-            if (RaftRules.UpgradeCost(g.Tier) > 0 && g.UpgradeBlocker(hook.Inventory) == null) labels[3] = "Level up ✔";
+            if ((RaftRules.UpgradeCost(g.Tier) > 0 && g.UpgradeBlocker(hook.Inventory) == null) || g.CanChoose) labels[3] = "Raft tree ✔";
             var picked = (Page)HuntStyles.Tabs((int)page, labels);
             if (picked != page) { page = picked; panelScroll = Vector2.zero; }
 
@@ -242,8 +255,7 @@ namespace BrineBattle.Hunting
                 case Page.Build: DrawBuild(); break;
                 case Page.Workbench: DrawWorkbench(w); break;
                 case Page.Modules: DrawModules(); break;
-                case Page.Tree: DrawTree(); break;
-                default: DrawLevelUp(); break;
+                default: DrawTree(); break;
             }
             GUILayout.EndScrollView();
             if (!string.IsNullOrEmpty(message)) GUILayout.Label(message, HuntStyles.Text);
@@ -276,7 +288,7 @@ namespace BrineBattle.Hunting
             GUILayout.Label(HuntIcons.Hammer, GUILayout.Width(28), GUILayout.Height(28));
             GUILayout.Label(hasHammer ? $"Hammer: <b>{hammerNow.displayName}</b>"
                 : $"<color={HuntStyles.BadHex}>Hammer: {(hammerNow != null ? hammerNow.displayName + " is too weak" : "none")}</color>", HuntStyles.Text);
-            if (!hasHammer && GUILayout.Button("Make one", GUILayout.Width(90), GUILayout.Height(28))) OpenBench(RecipeCategory.Raft);
+            if (!hasHammer && GUILayout.Button("Make one", GUILayout.Width(90), GUILayout.Height(28))) OpenBench(RecipeSub.Hammers);
             GUILayout.EndHorizontal();
 
             mode = (Mode)HuntStyles.Tabs((int)mode, new[] { "Place / replace", "Remove" });
@@ -286,7 +298,7 @@ namespace BrineBattle.Hunting
             if (parts.Count == 0)
             {
                 GUILayout.Label("No raft parts in the bag.", HuntStyles.Text);
-                if (GUILayout.Button("Open the Raft recipes", GUILayout.Height(30))) OpenBench(RecipeCategory.Raft);
+                if (GUILayout.Button("Open the plank recipes", GUILayout.Height(30))) OpenBench(RecipeSub.Parts);
                 return;
             }
             foreach (var kv in parts)
@@ -304,7 +316,7 @@ namespace BrineBattle.Hunting
                 GUI.enabled = true;
             }
             if (parts.Any(kv => !SalvageRules.IsCompatible(kv.Key.type, kv.Key.rarity, g.Tier)))
-                if (GUILayout.Button("Make stronger parts (Reinforce)", GUILayout.Height(28))) OpenBench(RecipeCategory.Raft);
+                if (GUILayout.Button("Make stronger parts (Reinforce)", GUILayout.Height(28))) OpenBench(RecipeSub.Parts);
         }
 
         /// <summary>
@@ -314,17 +326,25 @@ namespace BrineBattle.Hunting
         void DrawWorkbench(float w)
         {
             var inv = hook.Inventory;
-            var labels = new string[CraftRules.CategoryLabels.Length];
-            for (int i = 0; i < labels.Length; i++)
-            {
-                int n = recipes.Count(r => r != null && (int)CraftRules.CategoryOf(r) == i && hook.Knows(r) && CraftRules.CanCraft(inv, r));
-                labels[i] = n > 0 ? $"{CraftRules.CategoryLabels[i]} ({n})" : CraftRules.CategoryLabels[i];
-            }
-            tab = (RecipeCategory)GUILayout.SelectionGrid((int)tab, labels, 3, HuntStyles.TabStyle, GUILayout.Height(60));
+            int Ready(System.Func<RecipeDefinition, bool> where) =>
+                recipes.Count(r => r != null && where(r) && hook.Knows(r) && CraftRules.CanCraft(inv, r));
+            // Ed's ask: Gear, Player (potions + oils), Pet, Raft; dismantling lives in the Salvage Bin.
+            var cats = new[] { RecipeCategory.Gear, RecipeCategory.Player, RecipeCategory.Pet, RecipeCategory.Raft };
+            if (tab == RecipeCategory.Dismantle) tab = RecipeCategory.Gear;
+            var labels = cats.Select(c => { int n = Ready(r => CraftRules.CategoryOf(r) == c); return n > 0 ? $"{CraftRules.CategoryLabels[(int)c]} ({n})" : CraftRules.CategoryLabels[(int)c]; }).ToArray();
+            tab = cats[HuntStyles.Tabs(System.Array.IndexOf(cats, tab), labels)];
+            var subs = CraftRules.SubsOf(tab);
+            if (!subTab.TryGetValue(tab, out var sub) || System.Array.IndexOf(subs, sub) < 0) sub = subs[0];
+            var subLabels = subs.Select(x => { int n = Ready(r => CraftRules.SubOf(r) == x); return n > 0 ? $"{CraftRules.Label(x)} ({n})" : CraftRules.Label(x); }).ToArray();
+            sub = subTab[tab] = subs[GUILayout.Toolbar(System.Array.IndexOf(subs, sub), subLabels, GUILayout.Height(26))];
+            GUILayout.BeginHorizontal();
             readyOnly = GUILayout.Toggle(readyOnly, " Show only what I can make now");
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Dismantle → Salvage Bin", GUILayout.Width(170))) SalvageBin.Toggle();
+            GUILayout.EndHorizontal();
 
             // Recipes above the hunter's Alchemy Mastery stay "???" at the end (Idea Round 3, U-14).
-            var inTab = recipes.Where(r => r != null && CraftRules.CategoryOf(r) == tab).ToList();
+            var inTab = recipes.Where(r => r != null && CraftRules.SubOf(r) == sub).ToList();
             var shown = CraftRules.ByReadiness(inv, inTab.Where(r => hook.Knows(r)));
             if (readyOnly) shown = shown.Where(r => CraftRules.CanCraft(inv, r)).ToList();
             if (shown.Count == 0) GUILayout.Label(readyOnly ? "Nothing ready here yet." : "No recipes here yet.", HuntStyles.Text);
@@ -339,30 +359,110 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>
-        /// The material tree (Ed's U-31): one row per raft level, one column per type. A branch opens up to
-        /// the level where its type was picked at a raft level-up; each node lists what it lets you make.
+        /// The raft skill tree (Ed's ask: Level up and Tree in one place). Top: the raft's level, type and
+        /// what the next level needs, with the level-up button. The type is picked once (at
+        /// <see cref="RaftTree.PickLevel"/>); then the picked type's tab opens by default and its branch
+        /// grows one level per level-up. The other types' tabs stay locked and never branch out.
         /// </summary>
         void DrawTree()
         {
             var g = raft.Grid;
-            GUILayout.Label($"Picked: {(g.Paths.Count == 0 ? "nothing yet" : string.Join(" → ", g.Paths.Select((p, i) => $"Lv {i + 2} {p}")))}", HuntStyles.Text);
-            var nodes = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && RaftTree.KindOf(r) != RaftKind.Plain).ToList();
-            for (int lv = 1; lv <= 6; lv++)
+            var chosen = g.Chosen;
+            GUILayout.BeginVertical(HuntStyles.Card);
+            GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 1}</b> ({g.Tier}) · {(chosen == RaftKind.Plain ? "no type yet" : $"<b>{chosen}</b>  <size=12>{RaftTree.Look(chosen)}</size>")}", HuntStyles.Text);
+            if (chosen == RaftKind.Plain)
+                GUILayout.Label($"<size=12>Lv 1–{RaftTree.PickLevel - 1}: the basics. At Lv {RaftTree.PickLevel} you pick the raft's type, once.</size>", HuntStyles.Text);
+            GUILayout.EndVertical();
+
+            // Pick the type: once, at the pick level (or now, if the raft is already past it).
+            bool pickNow = g.CanChoose;
+            bool pickAtLevelUp = chosen == RaftKind.Plain && (int)g.Tier + 2 >= RaftTree.PickLevel && !pickNow;
+            if (pickNow || pickAtLevelUp)
             {
-                GUILayout.BeginVertical(HuntStyles.Card);
-                GUILayout.Label($"<b>Lv {lv}</b>{(lv == (int)g.Tier + 1 ? "  <size=11>(your raft)</size>" : "")}", HuntStyles.Text);
+                GUILayout.Label($"<b>Pick your raft type</b>  <size=12>once only; the others lock</size>", HuntStyles.Text);
                 GUILayout.BeginHorizontal();
                 foreach (var kind in RaftTree.Kinds)
                 {
-                    bool open = RaftTree.Unlocked(g, kind, lv);
-                    var made = nodes.Where(r => RaftTree.KindOf(r) == kind && RaftTree.LevelOf(r.outputs[0].item) == lv)
-                        .Select(r => r.outputs[0].item.displayName).Distinct();
-                    string list = string.Join("\n", made);
-                    GUILayout.Label(open ? $"<color={HuntStyles.GoodHex}>✔ {kind}</color>\n<size=11>{list}</size>" : $"<color=#999999>🔒 {kind}</color>\n<size=11><color=#888888>{list}</color></size>",
-                        HuntStyles.Text, GUILayout.Width(130));
+                    GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Width(132));
+                    GUILayout.Label($"<b>{kind}</b>\n<size=11>{RaftTree.Look(kind)}</size>\n<size=11>{RaftTypeRules.BonusOf(kind)}</size>", HuntStyles.Text);
+                    var old = GUI.backgroundColor;
+                    if (path == kind) GUI.backgroundColor = HuntStyles.Go;
+                    if (GUILayout.Button(path == kind ? "▶ Picked" : "Pick", GUILayout.Height(26))) path = kind;
+                    GUI.backgroundColor = old;
+                    GUILayout.EndVertical();
                 }
                 GUILayout.EndHorizontal();
+                if (pickNow && HuntStyles.ColorButton($"Make my raft a {path} ({RaftTree.Look(path)})", HuntStyles.Go) && g.Choose(path))
+                {
+                    treeTab = path;
+                    hook.Log($"Your raft is now a {path}: {RaftTree.Look(path)}. Its branch of the raft tree is open up to Lv {(int)g.Tier + 1}.");
+                }
+            }
+
+            // Level up.
+            if (RaftRules.UpgradeCost(g.Tier) <= 0) GUILayout.Label("The raft is at the highest level.", HuntStyles.Text);
+            else
+            {
+                DrawRequirements();
+                string blocker = g.UpgradeBlocker(hook.Inventory);
+                int next = (int)g.Tier + 2;
+                string become = pickAtLevelUp ? $" · becomes {path}" : "";
+                if (blocker == null && !pickNow)
+                {
+                    if (HuntStyles.ColorButton($"Level up the raft → Lv {next} ({g.Tier + 1}){become}", HuntStyles.Go) && g.TryUpgrade(hook.Inventory, path))
+                    {
+                        if (g.Chosen != RaftKind.Plain) treeTab = g.Chosen;
+                        hook.Log($"Raft leveled up to Lv {(int)g.Tier + 1} ({g.Tier})! Max HP {g.MaxHp}."
+                            + (g.Chosen != RaftKind.Plain ? $" The {g.Chosen} branch grew to Lv {(int)g.Tier + 1}." : ""));
+                    }
+                }
+                else
+                {
+                    GUI.enabled = false;
+                    GUILayout.Button(pickNow ? "Pick the raft type first" : "Not ready yet (see ✘)", GUILayout.Height(32));
+                    GUI.enabled = true;
+                }
+            }
+
+            // The tree, one tab per type; the picked type's tab is the default.
+            if (chosen != RaftKind.Plain && treeTab == RaftKind.Plain) treeTab = chosen;
+            if (treeTab == RaftKind.Plain) treeTab = path;
+            GUILayout.Space(6);
+            var tabLabels = RaftTree.Kinds.Select(k => chosen == RaftKind.Plain || k == chosen ? k.ToString() : $"🔒 {k}").ToArray();
+            treeTab = RaftTree.Kinds[HuntStyles.Tabs(System.Array.IndexOf(RaftTree.Kinds, treeTab), tabLabels)];
+            DrawBranch(treeTab);
+        }
+
+        /// <summary>One type's branch: a trunk with a node per level, each listing what it lets you make.</summary>
+        void DrawBranch(RaftKind kind)
+        {
+            var g = raft.Grid;
+            var chosen = g.Chosen;
+            if (chosen != RaftKind.Plain && kind != chosen)
+            {
+                // Not the raft's type: locked, and it doesn't branch out.
+                GUILayout.BeginVertical(HuntStyles.Card);
+                GUILayout.Label($"<color=#999999>🔒 <b>{kind}</b> · {RaftTree.Look(kind)}</color>", HuntStyles.Heading);
+                GUILayout.Label($"<color=#888888>Your raft is a {chosen}. This branch stays locked.</color>", HuntStyles.Text);
                 GUILayout.EndVertical();
+                return;
+            }
+            GUILayout.Label($"<b>{kind}</b> · {RaftTree.Look(kind)}  <size=12>{RaftTypeRules.BonusOf(kind)}</size>", HuntStyles.Text);
+            var nodes = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && RaftTree.KindOf(r) == kind).ToList();
+            for (int lv = 1; lv <= 6; lv++)
+            {
+                bool open = RaftTree.Unlocked(g, kind, lv);
+                bool here = lv == (int)g.Tier + 1;
+                var made = nodes.Where(r => RaftTree.LevelOf(r.outputs[0].item) == lv).Select(r => r.outputs[0].item.displayName).Distinct().ToList();
+                string branch = string.Join("\n", made.Select((m, i) => $"{(i == made.Count - 1 ? "└─" : "├─")} {m}"));
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(lv == 1 ? "  ●" : "  │\n  ●", HuntStyles.Text, GUILayout.Width(28));
+                GUILayout.BeginVertical(HuntStyles.Card);
+                string head = open ? $"<color={HuntStyles.GoodHex}>✔ Lv {lv}</color>" : $"<color=#999999>🔒 Lv {lv}</color>";
+                GUILayout.Label($"{head}{(here ? "  <size=11>(your raft)</size>" : "")}", HuntStyles.Text);
+                GUILayout.Label(open ? $"<size=12>{branch}</size>" : $"<size=12><color=#888888>{branch}</color></size>", HuntStyles.Text);
+                GUILayout.EndVertical();
+                GUILayout.EndHorizontal();
             }
         }
 
@@ -372,10 +472,13 @@ namespace BrineBattle.Hunting
             if (!hook.Mastery.Knows(r)) return $"Alchemy Mastery Lv {AlchemyMastery.Needed(r)}";
             var kind = RaftTree.KindOf(r);
             int lv = RaftTree.LevelOf(r.outputs[0].item);
-            return $"Raft tree: pick {kind} at a raft level-up (Lv {lv} or higher)";
+            var chosen = hook.raft != null ? hook.raft.Grid.Chosen : RaftKind.Plain;
+            return chosen != RaftKind.Plain && chosen != kind ? $"Raft tree: only for {kind} rafts (yours is {chosen})"
+                : $"Raft tree: {kind} Lv {lv} (pick {kind} and level the raft up)";
         }
 
-        void RecipeCard(RecipeDefinition r)
+        /// <summary>One recipe with have/need per ingredient and a Make button (also used by the Salvage Bin).</summary>
+        public void RecipeCard(RecipeDefinition r)
         {
             var inv = hook.Inventory;
             bool ok = CraftRules.CanCraft(inv, r);
@@ -417,15 +520,18 @@ namespace BrineBattle.Hunting
             CraftRules.Craft(hook.Inventory, r);
             if (r.kind != RecipeKind.Dismantle) hook.Mastery.Add(AlchemyMastery.CraftPoints);
             message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
-            StorageBox.Instance?.Crafted(CraftRules.Describe(r.outputs));
+            // Taking apart goes through the Salvage Bin (Ed's ask); making pops out of the storage box.
+            if (r.kind == RecipeKind.Dismantle) SalvageBin.Instance?.Took($"{CraftRules.Describe(r.inputs)} → {CraftRules.Describe(r.outputs)}", 3, new Color(0.8f, 0.45f, 1f));
+            else StorageBox.Instance?.Crafted(CraftRules.Describe(r.outputs));
             // A Mystic companion (Phase 7) sometimes makes one more of a gear, potion or oil.
             var mystic = hook.Companions.Best(Companions.CompanionRole.Mystic);
             var cat = CraftRules.CategoryOf(r);
-            if (mystic != null && r.kind == RecipeKind.Craft && cat != RecipeCategory.Raft && cat != RecipeCategory.Dismantle
+            if (mystic != null && r.kind == RecipeKind.Craft && cat != RecipeCategory.Raft && cat != RecipeCategory.Dismantle && cat != RecipeCategory.Pet
                 && Random.value < Companions.CompanionRules.MysticExtraChance(mystic.Rarity))
             {
                 foreach (var o in r.outputs) hook.Inventory.Add(o.item, o.count);
                 message += $" {mystic.Name} (Mystic) made an extra one!";
+                if (hook.TryGetComponent<RaftCompanions>(out var pets)) pets.Incantation(mystic);
             }
             hook.Log(message);
         }
@@ -438,7 +544,7 @@ namespace BrineBattle.Hunting
             if (modules == null || modules.Slots.Count == 0)
             {
                 GUILayout.Label("No modules on the raft yet.", HuntStyles.Text);
-                if (GUILayout.Button("Make a Drift Net", GUILayout.Height(30))) OpenBench(RecipeCategory.Raft);
+                if (GUILayout.Button("Make a Drift Net", GUILayout.Height(30))) OpenBench(RecipeSub.Modules);
                 return;
             }
             foreach (var kv in modules.Slots)
@@ -469,31 +575,6 @@ namespace BrineBattle.Hunting
                     if (!Mathf.Approximately(pickedAt, at)) CompanionSettings.SetCrewRepairAt(kind.id, pickedAt);
                     GUILayout.EndHorizontal();
                 }
-            }
-        }
-
-        void DrawLevelUp()
-        {
-            var g = raft.Grid;
-            if (RaftRules.UpgradeCost(g.Tier) <= 0) { GUILayout.Label("The raft is at the highest level.", HuntStyles.Text); return; }
-            DrawRequirements();
-            string blocker = g.UpgradeBlocker(hook.Inventory);
-            // U-31: pick the raft type to build toward; it opens that branch of the material tree.
-            int next = (int)g.Tier + 2;
-            GUILayout.Label($"<b>Build toward</b>  <size=12>opens that type's materials and parts up to Lv {next}</size>", HuntStyles.Text);
-            path = (RaftKind)(HuntStyles.Tabs((int)path - 1, new[] { "Fortress", "Sky", "Beast" }) + 1);
-            GUILayout.Label($"<size=12>{RaftTypeRules.BonusOf(path)}</size>", HuntStyles.Text);
-            if (blocker == null)
-            {
-                if (HuntStyles.ColorButton($"Level up the raft → Lv {next} ({g.Tier + 1}) · {path}", HuntStyles.Go)
-                    && g.TryUpgrade(hook.Inventory, path))
-                    hook.Log($"Raft leveled up to Lv {(int)g.Tier + 1} ({g.Tier})! Max HP {g.MaxHp}. The {path} branch is open up to Lv {(int)g.Tier + 1}: see Build → Tree.");
-            }
-            else
-            {
-                GUI.enabled = false;
-                GUILayout.Button("Not ready yet (see ✘)", GUILayout.Height(32));
-                GUI.enabled = true;
             }
         }
     }

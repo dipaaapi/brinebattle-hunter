@@ -22,6 +22,8 @@ namespace BrineBattle.Saving
         public List<EssenceStack> essence = new List<EssenceStack>();
         public string weapon;
         public string armor;
+        /// <summary>Accessory slot (Ed's ask); empty in older saves.</summary>
+        public string accessory;
         public List<Stack> refines = new List<Stack>();
         public int harpoon = -1;
         public int raftTier;
@@ -105,6 +107,7 @@ namespace BrineBattle.Saving
                 d.essence.Add(new SaveData.EssenceStack { rarity = (int)kv.Key.Rarity, element = (int)kv.Key.Element, count = kv.Value });
             d.weapon = gear.Get(GearSlot.Weapon)?.id;
             d.armor = gear.Get(GearSlot.Armor)?.id;
+            d.accessory = gear.Get(GearSlot.Accessory)?.id;
             foreach (var kv in gear.Refines) d.refines.Add(new SaveData.Stack { id = kv.Key.id, count = kv.Value });
             d.harpoon = harpoon?.Current ?? -1;
             d.raftTier = (int)raft.Tier;
@@ -150,7 +153,7 @@ namespace BrineBattle.Saving
             foreach (var s in d.items) bag.Add(Find(s.id), s.count);
             foreach (var e in d.essence) bag.AddEssence(new EssenceKey((Rarity)e.rarity, (Element)e.element), e.count);
             gear.Restore(Find(d.weapon), Find(d.armor),
-                d.refines.Select(r => new KeyValuePair<ItemDefinition, int>(Find(r.id), r.count)));
+                d.refines.Select(r => new KeyValuePair<ItemDefinition, int>(Find(r.id), r.count)), Find(d.accessory));
             if (harpoon != null && d.harpoon >= 0) harpoon.Set(d.harpoon);
             if (d.parts.Count > 0)
                 raft.Restore(d.parts.Select(p => new KeyValuePair<Cell, ItemDefinition>(new Cell(p.x, p.z), Find(p.id))), (Rarity)d.raftTier);

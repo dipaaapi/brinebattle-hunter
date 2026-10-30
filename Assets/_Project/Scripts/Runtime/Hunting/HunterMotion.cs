@@ -114,6 +114,7 @@ namespace BrineBattle.Hunting
                 {
                     var p = Random.insideUnitCircle * 0.35f;
                     wanderTo = Home + new Vector3(p.x, 0f, p.y);
+                    if (!Raft.WalkableAt(wanderTo)) wanderTo = Home;
                 }
             }
             switch (idle)
@@ -154,7 +155,7 @@ namespace BrineBattle.Hunting
             for (float s = 0.25f; s < 6f; s += 0.25f)
             {
                 var p = Home + dir * s;
-                if (!Raft.Grid.Has(new Rafts.Cell(Mathf.RoundToInt(p.x / Raft.CellSize), Mathf.RoundToInt(p.z / Raft.CellSize)))) break;
+                if (!Raft.WalkableAt(p)) break;   // planks only, never onto a module (Ed's ask)
                 last = p;
             }
             return last - dir * 0.1f;

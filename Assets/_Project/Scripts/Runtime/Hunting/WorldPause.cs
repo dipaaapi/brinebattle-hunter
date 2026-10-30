@@ -1,6 +1,6 @@
 namespace BrineBattle.Hunting
 {
-    public enum Menu { None, Bag, Book, Build, Settings, Pets }
+    public enum Menu { None, Bag, Book, Build, Settings, Pets, Bin }
 
     /// <summary>
     /// Holds the world around the raft still (drifts, spawner, current, modules) while the player

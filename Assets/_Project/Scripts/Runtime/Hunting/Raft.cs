@@ -71,6 +71,12 @@ namespace BrineBattle.Hunting
 
         static Vector3 Local(Cell c) => new Vector3(c.X * CellSize, 0.15f, c.Z * CellSize);
 
+        /// <summary>The cell under a point in the raft's local space.</summary>
+        public static Cell LocalToCell(Vector3 local) => new Cell(Mathf.RoundToInt(local.x / CellSize), Mathf.RoundToInt(local.z / CellSize));
+
+        /// <summary>True when a local point is over a plank the hunter and pets may stand on (not a module or habitat).</summary>
+        public bool WalkableAt(Vector3 local) => Grid.Walkable(LocalToCell(local));
+
         public Cell WorldToCell(Vector3 p)
         {
             var local = transform.InverseTransformPoint(p);

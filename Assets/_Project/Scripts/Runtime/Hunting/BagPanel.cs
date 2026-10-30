@@ -85,7 +85,7 @@ namespace BrineBattle.Hunting
             {
                 case 1: return t == ItemType.Material || t == ItemType.Essence;
                 case 2: return t == ItemType.Raft || t == ItemType.Module || t == ItemType.Habitat;
-                case 3: return t == ItemType.Weapon || t == ItemType.Armor;
+                case 3: return GearRules.IsGear(t);
                 case 4: return t == ItemType.Consumable;
                 case 5: return t == ItemType.Tool;
                 default: return true;
@@ -162,6 +162,7 @@ namespace BrineBattle.Hunting
             GUILayout.Label($"Hunter: <b>ATK {hunter.Attack} · DEF {hunter.Defense}</b> · {el}", HuntStyles.Heading);
             GearRow(GearSlot.Weapon);
             GearRow(GearSlot.Armor);
+            GearRow(GearSlot.Accessory);
             GUILayout.Space(6);
             GUILayout.Label("<b>Gear in the bag</b>", HuntStyles.Text);
             var gear = hook.Inventory.Items.Where(kv => GearRules.IsGear(kv.Key.type)).ToList();
@@ -182,6 +183,7 @@ namespace BrineBattle.Hunting
         void DrawEssence()
         {
             var inv = hook.Inventory;
+            if (GUILayout.Button("Open the Salvage Bin (dismantle)", GUILayout.Height(28))) SalvageBin.Toggle();
             if (!inv.Essence.Any()) { GUILayout.Label("No essence yet.", HuntStyles.Text); return; }
             var mastery = hook.Mastery;
             bool canCombine = mastery.Level >= AlchemyMastery.CombineLevel;
@@ -232,15 +234,18 @@ namespace BrineBattle.Hunting
             GUILayout.BeginHorizontal();
             GUILayout.Label($"<b>{slot}</b>", HuntStyles.Text, GUILayout.Width(70));
             string stat = slot == GearSlot.Weapon ? "ATK" : "DEF";
+            string power = slot == GearSlot.Accessory
+                ? $"ATK +{GearRules.AccessoryAttack(gear.PowerOf(slot))} DEF +{GearRules.AccessoryDefense(gear.PowerOf(slot))}{(item != null && item.element != Elements.Element.None ? $" · {item.element}" : "")}"
+                : $"{stat} +{gear.PowerOf(slot)}";
             GUILayout.Label(item == null ? "(nothing: equip from the list below)"
-                : $"<color={RarityColor(item.rarity)}>{gear.Label(slot)}</color>  <size=10>{stat} +{gear.PowerOf(slot)}</size>", Rich, GUILayout.Width(220));
+                : $"<color={RarityColor(item.rarity)}>{gear.Label(slot)}</color>  <size=10>{power}</size>", Rich, GUILayout.Width(220));
             if (item != null)
             {
                 int cost = gear.RefineCost(slot);
                 GUI.enabled = gear.CanRefine(slot, inv);
                 string refine = cost > 0 ? $"Refine +1 ({cost} {item.rarity}+ ess.)" : $"Max +{GearRules.MaxRefine}";
                 if (GUILayout.Button(refine, GUILayout.Width(190)) && gear.Refine(slot, inv))
-                    hook.Log($"Refined to {gear.Label(slot)} ({stat} +{gear.PowerOf(slot)}).");
+                    hook.Log($"Refined to {gear.Label(slot)}.");
                 GUI.enabled = true;
                 if (GUILayout.Button("Take off", GUILayout.Width(70))) gear.Unequip(slot, inv);
             }
