@@ -191,3 +191,6 @@ A tamed monster becomes a minion, one kind, no Mystic/Crew/Familiar split. It le
 
 ### U-40 Quest tab — 2026-10-30 · 🟨 Idea Round 4 · GDD §6
 A separate Quest UI, apart from the workbench: a slim tab at the screen edge opens a list of current quests and a description of the picked one, so the player always knows what's missing to upgrade or craft the next thing, with a button that jumps there.
+
+### U-41 Grand boss fights — 2026-10-30 · 🟨 Idea Round 4 · GDD §6
+Boss fights grand from start to loot: a warning (dim, rumble, red BOSS banner with name and level), the boss rising big with a splash, camera shake and an aura in its element colour; a boss HP bar, phases (enraged at half HP, a special move like a tidal wave), every minion helping with its own skill; a slow-motion last hit, then a treasure burst onto the raft with a BOSS DEFEATED card listing the drops.

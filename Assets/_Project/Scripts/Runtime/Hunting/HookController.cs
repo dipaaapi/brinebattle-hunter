@@ -524,6 +524,7 @@ namespace BrineBattle.Hunting
                 if (outcome == BattleOutcome.Won)
                 {
                     pendingLoot = RollLoot(m);
+                    if (m.isBoss) BossTreasure(m);
                     string back = gorged > 0 ? Recover(m) : "";
                     CountKill();
                     Thrash(target);
@@ -537,6 +538,24 @@ namespace BrineBattle.Hunting
                     IdleWatch.Lost();
                 }
             });
+        }
+
+        /// <summary>
+        /// Boss treasure (Ed's ask): one more roll of its loot per Looter minion (up to 3, "Lucky") and a pile of
+        /// its essence, then the treasure burst and the BOSS DEFEATED card.
+        /// </summary>
+        void BossTreasure(Monsters.MonsterDefinition m)
+        {
+            int lucky = BossFightRules.LuckyRolls(Companions.All);
+            for (int i = 0; i < lucky && m.loot != null; i++) pendingLoot.AddRange(m.loot.Roll(rng));
+            pendingLoot = pendingLoot.GroupBy(d => d.Item).Select(g => new Drop<ItemDefinition>(g.Key, g.Sum(d => d.Quantity))).ToList();
+            int essence = BossFightRules.TreasureEssence(m.rarity, lucky);
+            Inventory.AddEssence(new EssenceKey(m.rarity, m.element), essence);
+            var lines = pendingLoot.Select(d => $"{d.Quantity} × {d.Item.displayName} ({d.Item.rarity})").ToList();
+            lines.Add($"{essence} × {new EssenceKey(m.rarity, m.element)}");
+            if (lucky > 0) lines.Add($"Lucky: +{lucky} roll{(lucky == 1 ? "" : "s")} from your Looters");
+            Log($"Boss treasure: {string.Join(", ", lines)}.");
+            BossShow.Instance?.Victory(m.displayName, lines);
         }
 
         void OnMasteryLevel(int level)

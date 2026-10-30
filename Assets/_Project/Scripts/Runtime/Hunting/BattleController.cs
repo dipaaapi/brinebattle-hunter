@@ -22,6 +22,8 @@ namespace BrineBattle.Hunting
         public static bool InBattle { get; private set; }
         /// <summary>The monster being fought, so the hunter can face it (Ed's ask).</summary>
         public static Drift Foe { get; private set; }
+        /// <summary>The battle being fought, or null (the boss show reads its HP and enrage).</summary>
+        public static BattleState Current { get; private set; }
         /// <summary>True while the battle camera is still easing back; the camera rig waits for it.</summary>
         public static bool CameraBusy { get; private set; }
 
@@ -57,6 +59,7 @@ namespace BrineBattle.Hunting
             var hook = FindFirstObjectByType<HookController>();
             state = new BattleState(hook != null ? hook.Fighter() : Combatant.Hunter(), target.Fighter, raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
+            Current = state;
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
             // A knocked-out pet (U-32: HP carries over) stays on the raft and rests.
@@ -67,6 +70,18 @@ namespace BrineBattle.Hunting
             if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rank);
             var mystic = hook?.Companions.Best(Companions.MinionSkill.Alchemist);
             if (mystic != null) state.SupportHeal = Companions.CompanionRules.MysticBattleHeal(mystic.Rank);
+            // Grand boss fights (Ed's ask): every minion helps, and the boss show plays the entrance first.
+            if (target.Monster.isBoss)
+            {
+                state.IsBoss = true;
+                if (hook != null)
+                {
+                    state.AllyAttack = BossFightRules.AllyStrike(hook.Companions.All, hook.Companions.Active);
+                    foreach (var line in BossFightRules.Contributions(hook.Companions.All, hook.Companions.Active)) state.Log.Add(line + ".");
+                }
+                if (!TryGetComponent(out bossShow)) bossShow = gameObject.AddComponent<BossShow>();
+                bossShow.Intro(target);
+            }
             // Battle visuals (idea U-19): created here so older Hook scenes get them without a rebuild.
             if (stage == null && !TryGetComponent(out stage)) stage = gameObject.AddComponent<BattleStage>();
             stage.Begin(raft, target, state.Companion);
@@ -111,12 +126,12 @@ namespace BrineBattle.Hunting
             if (!Active) return;
 
             Feed();
-            if (stage.Busy) { timer = 0f; return; }
+            if (stage.Busy || (bossShow != null && bossShow.Busy)) { timer = 0f; return; }
 
             if (state.Outcome != BattleOutcome.Ongoing)
             {
                 endTimer += Time.deltaTime;
-                if (endTimer >= 1.2f) End();
+                if (endTimer >= (state.IsBoss ? 2.4f : 1.2f)) End();
                 return;
             }
             var autoItem = AutoItem();
@@ -177,12 +192,16 @@ namespace BrineBattle.Hunting
             timer = 0f;
         }
 
+        BossShow bossShow;
+
         /// <summary>The pet fighting in this battle, so its HP and ailment can be kept afterwards (U-32).</summary>
         Companions.Companion fighter;
 
         void End()
         {
             var outcome = state.Outcome;
+            if (state.IsBoss && outcome != BattleOutcome.Won) bossShow?.Stop();
+            Current = null;
             FindFirstObjectByType<HookController>()?.TakeVitals(state.Hunter, fighter, state.Companion);
             fighter = null;
             stage.Clear();

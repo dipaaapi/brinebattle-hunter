@@ -137,6 +137,8 @@ namespace BrineBattle.Hunting
             new Topic("Bosses & leaving",
                 new Entry("What are bosses?",
                     "Every raft level has a boss. It comes once you've beaten enough monsters for the next level, and it's big, always alive and can't be tamed. Beat it to level up the raft. Its core is needed for a vehicle part. If you lose or let it pass, it comes back."),
+                new Entry("What happens in a boss fight?",
+                    "At half HP the boss becomes ENRAGED: it hits harder and sends a tidal wave at the raft every 3 rounds (Shell Guard stops one). All your minions help: other Fighters strike too, Alchemists heal, Crewmates patch the raft, and each Looter gives one more roll of the boss's treasure (up to 3). The treasure is its core plus a pile of its essence."),
                 new Entry("What is the vehicle?",
                     "Your raft type turns into a vehicle, part by part: Fortress a sea train (Sea Track, Iron Wheels, Boiler, Smokestack, Locomotive Cab), Sky a plane (Wings, Tail Fin, Propeller, Engine, Cockpit), Beast a pirate ship (Hull Walls, Cannons, Bow & Bowsprit, Masts & Sails, Stern Castle). One part opens at each raft level from Lv 2 to Lv 6. Make it at Workbench → Raft → Vehicle (two parts of your type of that level and a boss core), then put it on in Build → Raft tree. Each part shows on the raft."),
                 new Entry("How do I leave the sea?",

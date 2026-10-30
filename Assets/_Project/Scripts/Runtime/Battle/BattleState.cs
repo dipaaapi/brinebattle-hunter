@@ -35,6 +35,12 @@ namespace BrineBattle.Battle
         public int CrewRepair { get; set; }
         /// <summary>HP a Mystic heals the most-hurt ally at the end of each round (Phase 7). 0 = no mystic.</summary>
         public int SupportHeal { get; set; }
+        /// <summary>A boss fight (Ed's ask): it enrages at half HP and sends tidal waves (<see cref="BossFightRules"/>).</summary>
+        public bool IsBoss { get; set; }
+        /// <summary>Boss fights: damage the other Fighter minions add each round.</summary>
+        public int AllyAttack { get; set; }
+        public bool Enraged { get; private set; }
+        int enragedRound;
 
         /// <summary>Element of an elemental oil on the weapon (None = no coating) and the rounds it has left.</summary>
         public Element Coating { get; private set; }
@@ -125,6 +131,7 @@ namespace BrineBattle.Battle
                 if (Outcome == BattleOutcome.Ongoing) CompanionTurn();
             }
 
+            BossEffects();
             Hunter.Bracing = false;
             shellGuard = false;
             if (SupportHeal > 0 && Outcome == BattleOutcome.Ongoing) Support();
@@ -181,6 +188,54 @@ namespace BrineBattle.Battle
                 default:
                     Hit(1f, "Attack", BattleEventKind.Strike);
                     return;
+            }
+        }
+
+        /// <summary>Boss fights: the other minions strike, the boss enrages at half HP, then tidal waves hit the raft.</summary>
+        void BossEffects()
+        {
+            if (!IsBoss || Outcome != BattleOutcome.Ongoing) return;
+            if (AllyAttack > 0)
+            {
+                int dmg = Math.Min(AllyAttack, Monster.Hp);
+                Monster.Hp -= dmg;
+                Add($"Your minions strike {Monster.Name} together: {dmg} damage.");
+                Emit(BattleEventKind.Shot, BattleActor.Raft, BattleActor.Monster, dmg, "Minions");
+                if (!Monster.Alive)
+                {
+                    Outcome = BattleOutcome.Won;
+                    Add($"{Monster.Name} is defeated!");
+                    Emit(BattleEventKind.KnockedOut, BattleActor.Raft, BattleActor.Monster, 0);
+                    return;
+                }
+            }
+            if (BossFightRules.ShouldEnrage(Monster, Enraged))
+            {
+                Enraged = true;
+                enragedRound = Round;
+                Monster.Attack = Math.Max(Monster.Attack + 1, (int)Math.Round(Monster.Attack * BossFightRules.EnragedAttack));
+                Add($"{Monster.Name} is ENRAGED! Its attacks hit harder.");
+                Emit(BattleEventKind.Buff, BattleActor.Monster, BattleActor.Monster, 0, "ENRAGED!");
+            }
+            if (Enraged && BossFightRules.TidalRound(Round, enragedRound))
+            {
+                if (shellGuard)
+                {
+                    Add($"{Monster.Name} calls a tidal wave, but Shell Guard holds it off.");
+                    Emit(BattleEventKind.Blocked, BattleActor.Monster, BattleActor.Raft, 0, "Blocked");
+                    return;
+                }
+                int dmg = BossFightRules.TidalDamage(RaftMaxHp);
+                if (Passives.Contains(GearPassive.Bulwark)) dmg = Math.Max(1, (int)Math.Round(dmg * GearSkillRules.BulwarkFactor));
+                RaftHp = Math.Max(0, RaftHp - dmg);
+                Add($"{Monster.Name} calls a TIDAL WAVE onto the raft: {dmg} damage.");
+                Emit(BattleEventKind.BigShot, BattleActor.Monster, BattleActor.Raft, dmg, "Tidal Wave", Monster.Element);
+                if (RaftHp == 0)
+                {
+                    Outcome = BattleOutcome.LostRaft;
+                    Add("The raft breaks apart!");
+                    Emit(BattleEventKind.KnockedOut, BattleActor.Monster, BattleActor.Raft, 0);
+                }
             }
         }
 
