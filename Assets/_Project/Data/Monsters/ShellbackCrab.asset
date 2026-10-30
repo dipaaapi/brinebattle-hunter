@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cc78fe654aae14a8b5e8209fa6e95b, type: 3}
   m_Name: ShellbackCrab
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Monsters.MonsterDefinition
+  isFlotsam: 0
   id: shellback_crab
   displayName: Shellback Crab
   element: 3
@@ -24,5 +25,7 @@ MonoBehaviour:
     attack: 14
     defense: 12
     speed: 2
+  inflicts: 3
+  inflictChance: 0.3
   loot: {fileID: 11400000, guid: 7b73a73483e3dd24aadaf6a30d440613, type: 2}
   description: Too big for a starter raft. Tests the raft-size gate.

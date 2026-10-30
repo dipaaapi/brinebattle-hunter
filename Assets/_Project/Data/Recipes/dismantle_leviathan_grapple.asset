@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c19311c7eb565342b4cdf910b850294, type: 3}
+  m_Name: dismantle_leviathan_grapple
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
+  id: dismantle_leviathan_grapple
+  displayName: Leviathan Grapple
+  kind: 2
+  inputs:
+  - item: {fileID: 11400000, guid: 2b9f7f77fcf041441ad360ea4f439779, type: 2}
+    count: 1
+  outputs:
+  - item: {fileID: 11400000, guid: 24af6ac1efa04974280e68c8cd2a7c95, type: 2}
+    count: 1
+  - item: {fileID: 11400000, guid: 972f2c4c7a8904c46bcbf144f6eb2ee4, type: 2}
+    count: 1
