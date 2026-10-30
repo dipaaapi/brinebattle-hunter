@@ -24,7 +24,7 @@ namespace BrineBattle.Hunting
         public Rarity Tier => Grid.Tier;
         /// <summary>Distance from the centre to just past the outer parts.</summary>
         public float EdgeDistance => (Grid.Radius + 1.2f) * CellSize;
-        public float HookReach => hookRange + Grid.Radius * CellSize;
+        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach;
 
         readonly Dictionary<Cell, GameObject> tiles = new Dictionary<Cell, GameObject>();
 
@@ -104,7 +104,20 @@ namespace BrineBattle.Hunting
                 tile.transform.localScale = new Vector3(width, top - bottom, width);
                 tile.transform.localPosition = new Vector3(kv.Key.X * CellSize, (top + bottom) / 2f, kv.Key.Z * CellSize);
                 Tint.Apply(tile.GetComponent<Renderer>(), module ? new Color(0.25f, 0.55f, 0.45f)
-                    : perch ? new Color(0.8f, 0.65f, 0.4f) : habitat ? new Color(0.3f, 0.75f, 0.9f) : PartColor(kv.Value.rarity));
+                    : perch ? new Color(0.8f, 0.65f, 0.4f) : habitat ? new Color(0.3f, 0.75f, 0.9f) : PartColor(kv.Value));
+            }
+        }
+
+        /// <summary>A raft part's colour: its rarity, mixed with its raft kind (Phase 8) so the type shows.</summary>
+        public static Color PartColor(ItemDefinition part)
+        {
+            var c = PartColor(part.rarity);
+            switch (part.raftKind)
+            {
+                case RaftKind.Fortress: return Color.Lerp(c, new Color(0.45f, 0.4f, 0.38f), 0.55f);
+                case RaftKind.Sky: return Color.Lerp(c, new Color(0.75f, 0.9f, 1f), 0.55f);
+                case RaftKind.Beast: return Color.Lerp(c, new Color(0.75f, 0.35f, 0.3f), 0.55f);
+                default: return c;
             }
         }
 

@@ -25,9 +25,9 @@ namespace BrineBattle.Hunting
                 new Entry("What do I do in this game?",
                     "You live on a raft on an endless ocean. Monsters and loot float past. Hook them with your harpoon, fight or harvest them, then use the loot to build a bigger, stronger raft, make gear and potions, and raise pets."),
                 new Entry("What are the keys?",
-                    "Click a floating thing: throw the harpoon at it.\nSpace: reel in.\nB: Bag.  P: Pets.  C: Collection Book.  R: Build.  Esc: Settings, or close a menu.\nYou can also click the picture buttons at the bottom of the screen."),
+                    "Click a floating thing: throw the harpoon at it.\nSpace: reel in.\nB: Bag.  P: Pets.  C: Collection Book.  R: Build.  Esc: Settings, or close a menu.\nMouse wheel or + / -: zoom in and out.  Right-drag or Q / E: turn the view.  F: put the view back.\nYou can also click the picture buttons at the bottom of the screen."),
                 new Entry("What do the boxes at the top-left mean?",
-                    "Raft: its level and HP. Harpoon: how worn it is (press Fix to mend it). Pets: how many you have and how much room there is.")),
+                    "Raft: its level, HP, size and type. Harpoon: how worn it is (press Fix to mend it). Pets: how many you have and how much room there is.")),
 
             new Topic("Hunting",
                 new Entry("How do I catch something?",
@@ -35,7 +35,7 @@ namespace BrineBattle.Hunting
                 new Entry("What do \"Looks dead\", \"Twitching...\" and \"Something moves!\" mean?",
                     "It's a guess about the monster's state, and it can be wrong.\nLooks dead: usually safe to harvest for loot.\nTwitching...: weak; finish it for loot, or tame it as a pet.\nSomething moves!: alive; it may fight you."),
                 new Entry("What are Harvest, Finish it, Tame, Fight, Flee and Cut line?",
-                    "Harvest: take the loot from a dead monster.\nFinish it: beat a weak monster for its loot.\nTame: try to make a weak, calm monster your pet.\nFight!: start a battle.\nFlee / Cut line: let it go.\nGreen buttons are the safe choice, red is risky, blue lets it go."),
+                    "Harvest: take the loot from a dead monster.\nFinish it: beat a weak monster for its loot.\nTame: try to make a weak, calm monster your pet.\nFight!: start a battle.\nCut line: let it go, nothing lost.\nFlee: run from it, but it bites off one raft part on the way (see Raft).\nGreen buttons are the safe choice, red is risky, blue lets it go."),
                 new Entry("Some monsters are too big. Why?",
                     "A small raft can't fight a big monster. Grow the raft (more parts) to take on bigger ones.")),
 
@@ -49,7 +49,7 @@ namespace BrineBattle.Hunting
                 new Entry("What does \"⚠ Danger!\" over a monster mean?",
                     "That monster would probably beat you and your battle pet. Better gear, a stronger pet, or leaving it alone helps."),
                 new Entry("What happens if I lose?",
-                    "The monster swims off and you get no loot. You rest for 30 seconds before you can hook again, and the waves wash away up to 3 Common materials from your Bag. Gear, pets, raft parts, tools, potions and rarer items are never lost. Your pets hide in the storage box until you're back up. You start the next fight with full HP.")),
+                    "The monster swims off and you get no loot. It also eats one raft part from the edge of your raft (see Raft → Gorged monsters). You rest for 30 seconds before you can hook again, and the waves wash away up to 3 Common materials from your Bag. Gear, pets, tools, potions and rarer items in the Bag are never lost. Your pets hide in the storage box until you're back up. You start the next fight with full HP. Losing a fight a module started doesn't cost a raft part.")),
 
             new Topic("Bag & loot",
                 new Entry("Where is my loot?",
@@ -90,6 +90,12 @@ namespace BrineBattle.Hunting
                     "Build → Level up. Every step shows ✔ when done and ✘ when not:\n• beat monsters (5 for Lv 2, 10 for Lv 3, …)\n• monster materials in the Bag (same numbers)\n• Monster Essence of the raft's rarity or better\n• auto-loot modules on half the rows of the left edge\n• a hammer of the raft's level.\nWhen all are ✔, press the green Level up button. Then upgrade your hammer to keep building."),
                 new Entry("What are modules?",
                     "Nets and hooks that grab loot floating into them, even monsters (then a battle starts by itself). Put them on the left edge, where drifts come from. They wear out: repair them in Build → Modules, or let a Crew pet do it."),
+                new Entry("What are raft types?",
+                    "The raft parts you build with decide the raft's type:\n• Fortress (Shell Plating, Shellback Plate, Coralbound Plank): +40% raft HP, +3 DEF, −1 SPD.\n• Sky (Wing Sail): +3 SPD, +4 m hook reach, −10% raft HP.\n• Beast (Beast Harness): +4 ATK, +1 SPD.\nA kind sets the type when at least 3 parts and half of all raft parts are that kind. Two kinds with 3+ parts and almost a third each make a Hybrid with half of both bonuses. Otherwise the raft is Plain. Build shows the type and how many parts of each kind you have. Modules and habitats don't count."),
+                new Entry("How do I make typed parts?",
+                    "Workbench → Raft. Each kind starts from 1 plank + 2 of its material (Eel Scale, Gale Feather or Eel Fang). Two of a part + more material makes the next level (Lv 2, Lv 3 …), so you can keep your type after a raft level-up."),
+                new Entry("What is a gorged monster?",
+                    "When you lose a fight or flee, the monster eats one raft part from the edge (never one that would split the raft, and never when the raft has 5 parts or fewer). It swims off gorged: later it comes back with \"Gorged!\" over it, 20% stronger for each part it ate. Beat it to get every part back in your Bag, plus one extra loot roll per part. Build shows how many parts gorged monsters are holding."),
                 new Entry("What are habitats?",
                     "Tide Pool and Sky Perch. Each one on the raft gives room for one more pet.")),
 

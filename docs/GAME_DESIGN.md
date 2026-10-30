@@ -52,7 +52,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **Battle modes:** Manual, Semi-auto, Auto.
   - Set in **Settings** (Esc); applied automatically when battle starts. Settings also has a toggle for auto-use of consumables in Semi-auto and Auto.
   - Can be changed anytime, including mid-battle.
-- **Losing (Ed's call: rest + a little lost):** the monster swims off, the hunter rests 30 s before hooking again (module catches wait too), and the waves wash away up to 3 Common materials. Gear, pets, raft parts, tools, potions and rarer items are never lost; the next fight starts at full HP. No game over. (Phase 8 may add a monster eating a raft part.)
+- **Losing (Ed's call: rest + a little lost):** the monster swims off, the hunter rests 30 s before hooking again (module catches wait too), and the waves wash away up to 3 Common materials. Gear, pets, raft parts, tools, potions and rarer items are never lost; the next fight starts at full HP. No game over. Since Phase 8 the monster also eats one raft part (§6 Absorption).
 - **Looks of a loss (Ed's ask):** the hunter lies knocked out ("z Z") while resting; the pets scurry into the storage box, which shivers and squeaks ("eep!") with the lid peeking, and they pop back out when the rest is over.
 - **⚠ Danger!** shows over a drift whose monster would likely beat the hunter and the battle pet (hits needed on each side, average damage with elements).
 - Resource for actions: *TBD* (stamina only, or weapon charge/durability — no mana, since hunters have no magic).
@@ -64,6 +64,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
   - **Sky Raft:** wings and gas bladders; can fly.
   - **Beast-Driven Raft:** powered by reanimated/tamed monsters; fast.
   - Hybrids possible, with trade-offs.
+- **Raft types (Phase 8, tunable; Claude's numbers until Ed confirms):** every raft part has a kind (Plain, Fortress, Sky, Beast). Only raft parts count (not modules or habitats). A kind with ≥ 3 parts and ≥ 50% of the raft parts sets the type; two kinds with ≥ 3 parts and ≥ 30% each make a **Hybrid** with half of both bonuses; otherwise **Plain**. Bonuses: **Fortress** +40% raft HP, +3 DEF, −1 SPD; **Sky** +3 SPD, +4 m hook reach, −10% raft HP; **Beast** +4 ATK, +1 SPD. Parts: Shell Plating (Fortress; Eel Scale), Wing Sail (Sky; Gale Feather), Beast Harness (Beast; Eel Fang), one per raft level (Lv 1 = 1 plank + 2 material, each next level = 2 of the last + level × material). Shellback Plate and Coralbound Plank count as Fortress. Typed parts are tinted by kind; Build and the HUD show the type. For now the Sky raft doesn't really fly: its type is a speed and reach bonus (open question below).
 - **Grid (Phase 5):** parts snap to a grid (max 9x9), must touch the raft and can't split it. Raft size = 1 at 9 parts, +1 per 4 more parts; size gates fights. Battle HP = sum of part HP (10 × (rarity + 1), +20% per raft tier).
 - **Raft tier = raft level (owner's call):** shown as Lv 1 (Common) … Lv 6 (Mythic). A higher tier gives more HP, but raft parts with rarity below the tier can no longer be added. Auto-loot modules and habitats fit any tier (a module's strength is its level), so the left-edge rule can always be met. Raising it one step needs (owner's call, tunable): **kills** since the last upgrade (5 × (tier + 1): 5, 10, 15 …; battle wins and finishing weakened monsters count), **monster materials** spent (5 × (tier + 1), any rarity), Monster Essence spent (10 × (tier + 1), rarity ≥ current tier), and the module rule below. Kills are kept in the save.
 - **Looks (owner's ask, U-24):** the raft rides a moving swell (rises, falls and leans with the water under it); the raft leans fully with the water. **Raft level = plank thickness (owner's call):** each level the deck stands higher above the water (Lv 1 0.30 m … Lv 6 0.90 m, above the tallest wave) and the raft rides a bigger share of the swell (Lv 1 half-height waves … Lv 6 the open sea), so low levels rock gently and high levels ride real waves without water over the deck; drifts float on the same waves. **Nothing overlaps (owner's ask):** drifts push apart, a reeled monster stops at the raft's edge, pets keep clear of the hunter, the box and each other, and a battle lunge stops where the bodies touch. Katig (outrigger floats on bamboo arms) along both long sides and a small sail at the right edge, turned to the current: decoration only, no gameplay.
@@ -73,6 +74,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **Module catches a live monster (owner's call):** it can't swim off; a battle starts at once and plays in **Auto** (mode can't be switched), the monster striking first. It comes first: if the hunter is casting or reeling, that line is dropped. Only during another battle or a prompt does the module hold it on the line, and its battle starts right after. This ignores the raft-size gate: even a monster too big for the raft is fought (owner's call).
 - Raft holds weapon stations, alchemy stations, Transmutation Circle, and companion habitats.
 - **Absorption / downgrade:** when you lose, flee, or are exhausted, monsters eat raft parts. The monster grows stronger; defeating it later recovers your parts plus a bonus.
+- **Absorption (Phase 8, tunable):** losing a battle or pressing Flee lets the monster eat **one raft part on the edge** (not modules or habitats, never one that would split the raft, never when the raft has 5 parts or fewer). Losing a battle a module started costs no part (Claude's default; open question below). The monster swims off **gorged** and is kept in the save. While no gorged drift is on the water, each new drift has a 30% chance to be the oldest gorged monster coming back: always alive, bigger, "Gorged! Ate N raft parts" over it, and +20% HP/ATK/DEF per part (up to double). Beating it (by hand or by a module) puts every eaten part back in the Bag plus one extra loot roll per part. Cut line costs nothing.
 
 ### Goal paths
 
@@ -228,9 +230,13 @@ Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status ca
 - **Settings:** Game · Save · Controls · **FAQ**.
 - **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
 
+### Camera (Ed's ask)
+
+The view orbits the raft: mouse wheel or + / − zooms (8–45 m), right-drag or Q / E turns it (tilt 25°–85°), F puts it back. Battles still move the camera by themselves and hand it back afterwards. The camera follows the raft's centre at sea level, so it doesn't bob.
+
 ### Hunter on the raft (Ed's ask)
 
-Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces.
+Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces. The Familiar walks after the hunter at its own pace and stays where it is, hopping, while the hunter hooks (Ed: it used to move as if stuck to the hunter).
 
 ### Away pause (Ed's call)
 
@@ -245,5 +251,7 @@ The game opens on its own **MainMenu scene** before the game (Hook) scene: **Con
 - Action resource in battle (stamina vs weapon charge).
 - Companion growth: confirm the proposal in §10 (age in battles, evolve at 1/4 and 3/4 of life, essence + memorial on death; feeding, fusion and treat numbers).
 - Level-range limits on item share?
+- Sky raft: real flight (over waves, other monsters) or keep it a speed and reach bonus? (Phase 8 default: bonus only.)
+- Should losing a module battle also cost a raft part? (Phase 8 default: no.)
 - Target platform(s): PC standalone and WebGL both look possible (U-27); mobile still open.
 - Title trademark check.

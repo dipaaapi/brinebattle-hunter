@@ -59,6 +59,9 @@ namespace BrineBattle.Hunting
         {
             if (monsters.Count == 0 || raft == null) return;
             var monster = monsters[rng.Next(monsters.Count)];
+            // Phase 8: a monster that ate raft parts comes back now and then (one at a time).
+            var back = hook != null && !live.Exists(d => d != null && d.GorgedParts > 0) ? hook.Gorged.PickReturning(rng) : null;
+            if (back != null) monster = monsters.Find(m => m != null && m.id == back.MonsterId) ?? monster;
             if (monster == null) return;
 
             var dir = currentDirection.normalized;
@@ -75,6 +78,7 @@ namespace BrineBattle.Hunting
             var drift = go.AddComponent<Drift>();
             drift.Init(monster, state, hint, dir * driftSpeed * Random.Range(0.7f, 1.3f));
             drift.Aggression = Encounters.EncounterRules.RollAggression(monster.aggression, new System.Random(Random.Range(0, int.MaxValue)));
+            if (back != null && monster.id == back.MonsterId) drift.MakeGorged(back.Parts);
             live.Add(drift);
         }
     }

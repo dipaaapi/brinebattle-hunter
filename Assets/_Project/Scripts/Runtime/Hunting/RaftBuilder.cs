@@ -257,6 +257,17 @@ namespace BrineBattle.Hunting
                 if (RaftRules.SizeFor(g.Count + n) > g.Size) { next = n; break; }
             if (next > 0 && g.Size < 10) GUILayout.Label($"{next} more part(s) to reach size {g.Size + 1}.", HuntStyles.Hint);
 
+            // Phase 8: the raft's type and what it gives, with how many parts of each kind are on it.
+            var type = g.Type;
+            var kinds = g.Parts.Values.Where(p => p.type == ItemType.Raft).GroupBy(p => p.raftKind).ToDictionary(x => x.Key, x => x.Count());
+            int Kind(RaftKind k) => kinds.TryGetValue(k, out var n) ? n : 0;
+            GUILayout.BeginVertical(HuntStyles.Card);
+            GUILayout.Label($"Type: <b>{type}</b>  <size=12>{type.Bonus}</size>", HuntStyles.Text);
+            GUILayout.Label($"<size=12>Fortress {Kind(RaftKind.Fortress)} · Sky {Kind(RaftKind.Sky)} · Beast {Kind(RaftKind.Beast)} · Plain {Kind(RaftKind.Plain)}</size>", HuntStyles.Text);
+            if (hook.Gorged.Count > 0)
+                GUILayout.Label($"<size=12><color={HuntStyles.BadHex}>{hook.Gorged.Entries.Sum(e => e.Parts.Count)} part(s) inside gorged monsters</color></size>", HuntStyles.Text);
+            GUILayout.EndVertical();
+
             var hammerNow = RaftRules.BestHammer(hook.Inventory);
             bool hasHammer = RaftRules.HasHammer(hook.Inventory, raft.Tier);
             GUILayout.BeginHorizontal(HuntStyles.Card);
@@ -281,6 +292,7 @@ namespace BrineBattle.Hunting
                 var p = kv.Key;
                 bool fits = SalvageRules.IsCompatible(p.type, p.rarity, g.Tier);
                 string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color>"
+                    + (p.type == ItemType.Raft && p.raftKind != RaftKind.Plain ? $"  <size=11>{p.raftKind}</size>" : "")
                     + (fits ? "" : $"  <size=11><color={HuntStyles.BadHex}>too weak for Lv {(int)g.Tier + 1}</color></size>");
                 GUI.enabled = fits;
                 var old = GUI.backgroundColor;

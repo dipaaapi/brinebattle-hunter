@@ -36,6 +36,8 @@ namespace BrineBattle.Saving
         public int activeCompanion = -1;
         /// <summary>Companions that died of old age (Book).</summary>
         public List<Grave> memorials = new List<Grave>();
+        /// <summary>Monsters that ate raft parts (Phase 8).</summary>
+        public List<Gorge> gorged = new List<Gorge>();
         public int habitats;
         public string collection;
         /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>
@@ -75,6 +77,7 @@ namespace BrineBattle.Saving
             public int growth, infusions, look;
             public string echo;
         }
+        [Serializable] public class Gorge { public string monster; public List<string> parts = new List<string>(); }
         [Serializable] public class Grave { public string id, name; public int rarity, role, age; }
     }
 

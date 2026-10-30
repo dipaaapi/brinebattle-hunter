@@ -22,7 +22,7 @@ Sources are consumed, but the result inherits one passive from the consumed one.
 ### C-6 Bestiary / Hunter's Journal — 2026-10-28 · 🔀 merged into U-11 · §4, §11 · S · Phase 4
 Each monster entry fills in as you harvest/fight it: weakness, loot table, tame chance. Cheap to build on the Phase 1 data, rewards repeat hunts.
 
-### C-7 Absorbed parts are visible on the monster — 2026-10-28 · 💡 · §6 · M · Phase 8
+### C-7 Absorbed parts are visible on the monster — 2026-10-28 · 🟨 built in Phase 8 (eaten parts stick out of the gorged drift) · §6 · M · Phase 8
 A monster that ate your Fortress shell shows it and gains armor; you see what you'll get back. Makes U-3 readable and personal ("that one has my mast").
 
 ### C-8 Asynchronous hunters before real multiplayer — 2026-10-28 · 💡 · §12 · M · Phase 10

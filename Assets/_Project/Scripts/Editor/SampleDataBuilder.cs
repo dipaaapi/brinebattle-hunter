@@ -3,6 +3,7 @@ using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Loot;
 using BrineBattle.Monsters;
+using BrineBattle.Rafts;
 using UnityEditor;
 using UnityEngine;
 
@@ -167,6 +168,15 @@ namespace BrineBattle.Editor
             Recipe("reinforce_coralbound_plank", "Coralbound Plank", RecipeKind.Upgrade, new[] { (shell, 2), (scale, 2) }, new[] { (coral, 1) });
             Recipe("reinforce_leviathan_beam", "Leviathan Beam", RecipeKind.Upgrade, new[] { (coral, 2), (fang, 3) }, new[] { (leviathan, 1) });
             Recipe("reinforce_abyssal_keel", "Abyssal Keel", RecipeKind.Upgrade, new[] { (leviathan, 2), (shell, 3) }, new[] { (abyssal, 1) });
+            // Phase 8: raft types. Typed parts at every raft level; most parts of one kind set the raft's type.
+            SetRaftKind(shell, RaftKind.Fortress);
+            SetRaftKind(coral, RaftKind.Fortress);
+            TypedParts(RaftKind.Fortress, "ShellPlating", "shell_plating", "Shell Plating", Element.Earth, plank, scale,
+                "Scales riveted over planks. Fortress part: slow but sturdy.");
+            TypedParts(RaftKind.Sky, "WingSail", "wing_sail", "Wing Sail", Element.Wind, plank, feather,
+                "A feathered sail on a frame. Sky part: quick, with a longer hook reach.");
+            TypedParts(RaftKind.Beast, "BeastHarness", "beast_harness", "Beast Harness", Element.Water, plank, fang,
+                "Fang-studded straps for a monster to pull the raft. Beast part: hits harder and moves faster.");
             // Ed's ask: building needs a hammer of the raft's level or better; each hammer upgrades from the last.
             var hammers = new[]
             {
@@ -279,6 +289,36 @@ namespace BrineBattle.Editor
                 i.rarity = rarity; i.element = element;
                 i.description = description;
             });
+
+        static void SetRaftKind(ItemDefinition part, RaftKind kind)
+        {
+            if (part.raftKind == kind) return;
+            part.raftKind = kind;
+            EditorUtility.SetDirty(part);
+        }
+
+        /// <summary>
+        /// One typed part per raft level (Phase 8): Lv 1 from a plank and 2 of the kind's material,
+        /// each next level from 2 of the last plus more material. Names say the level they fit.
+        /// </summary>
+        static void TypedParts(RaftKind kind, string file, string id, string name, Element element,
+            ItemDefinition plank, ItemDefinition material, string description)
+        {
+            ItemDefinition last = null;
+            for (var r = Rarity.Common; r <= Rarity.Mythic; r++)
+            {
+                int lv = (int)r + 1;
+                string suffix = lv == 1 ? "" : $" Lv {lv}";
+                var part = RaftPart($"{file}{(lv == 1 ? "" : lv.ToString())}", $"{id}{(lv == 1 ? "" : "_" + lv)}", name + suffix, r, element,
+                    $"{description} Fits a raft up to Lv {lv}.");
+                SetRaftKind(part, kind);
+                if (last == null)
+                    Recipe($"craft_{id}", name, RecipeKind.Craft, new[] { (plank, 1), (material, 2) }, new[] { (part, 1) });
+                else
+                    Recipe($"reinforce_{id}_{lv}", name + suffix, RecipeKind.Upgrade, new[] { (last, 2), (material, lv) }, new[] { (part, 1) });
+                last = part;
+            }
+        }
 
         static ItemDefinition Oil(string file, string id, string name, Element element, string description) =>
             LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>

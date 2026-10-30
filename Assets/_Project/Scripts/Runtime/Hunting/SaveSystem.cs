@@ -49,6 +49,8 @@ namespace BrineBattle.Hunting
             CaptureSettings(data, hook, book);
             data.hasMastery = true;
             data.mastery = hook.Mastery.Points;
+            foreach (var e in hook.Gorged.Entries)
+                data.gorged.Add(new SaveData.Gorge { monster = e.MonsterId, parts = e.Parts.Select(p => p.id).ToList() });
             try
             {
                 Directory.CreateDirectory(Folder);
@@ -176,6 +178,10 @@ namespace BrineBattle.Hunting
                     if (durability.TryGetValue(kv.Key, out var cur)) kv.Value.Durability.Set(cur);
             if (book != null && data.collection != null) book.Restore(data.collection);
             if (data.hasSettings) ApplySettings(data.settings);
+            hook.Gorged.Clear();
+            foreach (var g in data.gorged ?? new List<SaveData.Gorge>())
+                foreach (var id in g.parts)
+                    if (known.TryGetValue(id ?? "", out var part)) hook.Gorged.Add(g.monster, part);
             hook.Mastery.Restore(data.hasMastery ? data.mastery : AlchemyMastery.StartingPoints(hook.raft.Tier));
             // Saves from before hammers existed get the starter hammer, so building isn't locked out.
             if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))

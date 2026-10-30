@@ -35,6 +35,8 @@ namespace BrineBattle.Hunting
         public CompanionRoster Companions { get; } = new CompanionRoster();
         /// <summary>Alchemy Mastery (Idea Round 3): better hints, more recipes, essence combining.</summary>
         public AlchemyMastery Mastery { get; } = new AlchemyMastery();
+        /// <summary>Monsters that ate raft parts and will come back for them (Phase 8).</summary>
+        public Rafts.GorgedLog Gorged { get; } = new Rafts.GorgedLog();
         /// <summary>Raised when a monster is tamed (collection book Pets page).</summary>
         public event System.Action<Monsters.MonsterDefinition> MonsterTamed;
         [Tooltip("Given once at start so the auto-loot module can be tried (idea U-13).")]
@@ -115,7 +117,7 @@ namespace BrineBattle.Hunting
 
         void UpdateIdle()
         {
-            Drift.Hunter = Combatant.Hunter(Gear);
+            Drift.Hunter = Fighter();
             Drift.Pet = Companions.Active != null ? Combatant.FromCompanion(Companions.Active) : null;
             if (WorldPause.Open != Menu.None) return;
             var mouse = Mouse.current;
@@ -379,7 +381,7 @@ namespace BrineBattle.Hunting
                     if (EncounterRules.IsGated(target.Actual, raft.size, m.sizeClass))
                     {
                         if (HuntStyles.ColorButton("Cut line", HuntStyles.Other)) Finish($"Cut the line. {m.displayName} drifts away.", false, false);
-                        if (HuntStyles.ColorButton("Flee", HuntStyles.Other)) Finish($"Fled from {m.displayName}. (It will eat raft parts in Phase 8.)", false, true);
+                        if (HuntStyles.ColorButton("Flee", HuntStyles.Other)) Finish($"Fled from {m.displayName}.{Eat(target)}", false, true);
                         if (HuntStyles.ColorButton($"Sedate ({sedateChance:P0})", HuntStyles.Go))
                         {
                             if (rng.NextDouble() < sedateChance) Sedated();
@@ -463,18 +465,22 @@ namespace BrineBattle.Hunting
             }
             phase = Phase.Battle;
             var m = target.Monster;
+            // Module battles don't cost raft parts (Phase 8, Claude's default until Ed decides).
+            bool moduleFight = battle.ForceAuto;
+            int gorged = target.GorgedParts;
             battle.Begin(target, tensionHit ? Initiative.Hunter : Initiative.Monster, outcome =>
             {
                 if (outcome == BattleOutcome.Won)
                 {
                     pendingLoot = RollLoot(m);
+                    string back = gorged > 0 ? Recover(m) : "";
                     CountKill();
-                    Finish($"Victory! Defeated {m.displayName}: {Brief(pendingLoot)}", true, true);
+                    Finish($"Victory! Defeated {(gorged > 0 ? "the gorged " : "")}{m.displayName}: {Brief(pendingLoot)}{back}", true, true);
                 }
                 else
                 {
                     string why = outcome == BattleOutcome.LostRaft ? "broke your raft" : "knocked you out";
-                    Finish($"Defeat. {m.displayName} {why} and swam off.", false, true);
+                    Finish($"Defeat. {m.displayName} {why} and swam off.{(moduleFight ? "" : Eat(target))}", false, true);
                     Defeated();
                     IdleWatch.Lost();
                 }
@@ -488,6 +494,32 @@ namespace BrineBattle.Hunting
             Log($"Alchemy Mastery Lv {level}! Hints are right {AlchemyMastery.HintAccuracy(level):P0} of the time."
                 + (unlocked.Length > 0 ? $" New recipes: {unlocked}." : "")
                 + (level == AlchemyMastery.CombineLevel ? " You can now combine essence (Bag → Essence)." : ""));
+        }
+
+        /// <summary>The hunter in battle: gear plus the raft type's bonus (Phase 8).</summary>
+        public Combatant Fighter() => Rafts.RaftTypeRules.Apply(Combatant.Hunter(Gear), raft != null ? raft.Grid.Type.Bonus : default);
+
+        /// <summary>
+        /// Phase 8 absorption: after a lost battle or a flee the monster eats one edge part and swims off
+        /// gorged. Returns the line to add to the log ("" if nothing could be eaten).
+        /// </summary>
+        string Eat(Drift d)
+        {
+            if (d == null || d.Monster == null || raft == null) return "";
+            var part = raft.Grid.Absorb(rng, out _);
+            if (part == null) return "";
+            Gorged.Add(d.Monster.id, part);
+            return $" It ate your {part.displayName}! Beat the gorged {d.Monster.displayName} when it comes back to get it back.";
+        }
+
+        /// <summary>Beat a gorged monster: the parts it ate go to the Bag, plus one extra loot roll per part.</summary>
+        string Recover(Monsters.MonsterDefinition m)
+        {
+            var parts = Gorged.Recover(m.id);
+            if (parts.Count == 0) return "";
+            foreach (var p in parts) pendingLoot.Add(new Drop<ItemDefinition>(p, 1));
+            for (int i = 0; i < Rafts.AbsorbRules.BonusRolls(parts.Count); i++) pendingLoot.AddRange(RollLoot(m, false));
+            return $" You got back {parts.Count} raft part{(parts.Count == 1 ? "" : "s")} (in the Bag) and extra loot!";
         }
 
         /// <summary>A lost battle (Ed's call): rest a while, and the waves take a few Common materials.</summary>
@@ -598,7 +630,7 @@ namespace BrineBattle.Hunting
             // at the top, menus as big picture tiles along the bottom.
             GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 250));
             GUILayout.BeginVertical(HuntStyles.Box);
-            StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size}", new Color(0.85f, 0.75f, 0.5f));
+            StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size} · {raft.Grid.Type}", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
             StatusRow(HuntIcons.Harpoon, Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon",
                 Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));

@@ -6,11 +6,11 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 8 — Raft types & absorption (not started). Phase 7 and Idea Round 3 merged (PR #4, PR #5) |
-| **Next step** | Start Phase 8 on `phase/8-raft-types` when Ed gives the go: raft types (Fortress / Sky / Beast-Driven), hybrids, monsters eating raft parts and recovery |
+| **Current phase** | Phase 8 — Raft types & absorption (🟨 built on `phase/8-raft-types`, waiting for Ed's Unity test) |
+| **Next step** | Ed tests in Unity (Test Runner Run All, then Play) and answers the two open questions (Sky flight, module battles eating parts); then PR and merge |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
-| **Last updated** | 2026-10-29 |
+| **Last updated** | 2026-10-30 |
 
 > Start every session by reading this box. Finish every session by updating it.
 
@@ -136,8 +136,17 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** mastery grows from hunting and crafting, reveals recipes, makes hints more accurate, and essence can be combined. (Built on `phase/7-growth` at Ed's ask; merged with Phase 7 in PR #5.)
 
-### ⬜ Phase 8 — Raft types & absorption
+### 🟨 Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
+- [x] Raft kind per part; type from the parts (Fortress / Sky / Beast / Hybrid / Plain) with battle, HP and reach bonuses (`RaftTypeRules`)
+- [x] Typed parts at every raft level: Shell Plating, Wing Sail, Beast Harness (+ recipes); parts tinted by kind; Build and HUD show the type
+- [x] Absorption: a loss or a flee eats one edge part (`RaftGrid.Absorb`); the monster comes back gorged and stronger (`AbsorbRules`, `GorgedLog`, saved)
+- [x] Recovery: beating a gorged monster returns the parts plus extra loot
+- [x] FAQ entries; rules tests (raft types, absorption, camera)
+- [x] Owner's asks: Familiar no longer glued to the hunter while hooking; camera zoom and rotate
+- [ ] Ed's Unity test; answers on Sky flight and module battles
+
+**Done when:** building with one kind of part changes the raft's type and its bonuses show in battle, and a monster that ate a part comes back gorged and gives the part back when beaten.
 
 ### ⬜ Phase 9 — Art pass
 Blender pipeline (chibi hunter, raft part, monster), `_col` collision meshes, toon shader + inverted-hull outline.

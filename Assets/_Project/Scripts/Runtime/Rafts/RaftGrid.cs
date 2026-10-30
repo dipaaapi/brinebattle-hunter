@@ -135,7 +135,10 @@ namespace BrineBattle.Rafts
         public IReadOnlyDictionary<Cell, ItemDefinition> Parts => parts;
         public int Count => parts.Count;
         public int Size => RaftRules.SizeFor(parts.Count);
-        public int MaxHp => parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier));
+        /// <summary>Battle HP: every part's HP, with the raft type's bonus (Phase 8).</summary>
+        public int MaxHp => parts.Count == 0 ? 0 : RaftTypeRules.WithHpBonus(parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier)), Type.Bonus);
+        /// <summary>Fortress, Sky, Beast, a hybrid or Plain, from the raft parts (Phase 8).</summary>
+        public RaftType Type => RaftTypeRules.Classify(parts.Values);
         /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
         public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));
@@ -290,6 +293,33 @@ namespace BrineBattle.Rafts
             Tier++;
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>
+        /// Raft parts a monster could eat (Phase 8): plain raft parts (not modules or habitats) on the
+        /// edge, whose loss doesn't split the raft. None while the raft has <see cref="AbsorbRules.MinParts"/> parts or fewer.
+        /// </summary>
+        public List<Cell> EdibleParts()
+        {
+            if (parts.Count <= AbsorbRules.MinParts) return new List<Cell>();
+            return parts.Where(kv => kv.Value.type == ItemType.Raft && kv.Key.Neighbours().Any(n => !parts.ContainsKey(n)))
+                .Select(kv => kv.Key)
+                .Where(StaysConnectedWithout)
+                .OrderBy(c => c.X).ThenBy(c => c.Z)
+                .ToList();
+        }
+
+        /// <summary>A monster eats one edge part (no hammer needed). Null if nothing can be eaten.</summary>
+        public ItemDefinition Absorb(Random rng, out Cell eaten)
+        {
+            eaten = default;
+            var options = EdibleParts();
+            if (options.Count == 0) return null;
+            eaten = options[rng.Next(options.Count)];
+            var part = parts[eaten];
+            parts.Remove(eaten);
+            Changed?.Invoke();
+            return part;
         }
 
         bool StaysConnectedWithout(Cell removed)

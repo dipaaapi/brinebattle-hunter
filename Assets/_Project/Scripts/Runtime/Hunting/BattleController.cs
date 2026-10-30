@@ -52,7 +52,7 @@ namespace BrineBattle.Hunting
             InBattle = true;
             endTimer = 0f;
             var hook = FindFirstObjectByType<HookController>();
-            state = new BattleState(Combatant.Hunter(hook?.Gear), Combatant.FromMonster(target.Monster), raft.MaxHp, new System.Random());
+            state = new BattleState(hook != null ? hook.Fighter() : Combatant.Hunter(), target.Fighter, raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
