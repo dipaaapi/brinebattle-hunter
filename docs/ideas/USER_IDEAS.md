@@ -179,3 +179,9 @@ Once the raft type is picked, parts that don't suit it reset to basic by themsel
 
 ### U-36 Reset raft in Settings — 2026-10-30 · ✅ Idea Round 4 · GDD §6
 A Reset raft button in Settings to rebuild the raft, but about 20% of the parts that come off are washed away by the sea.
+
+### U-37 Vehicles to leave the sea, and a boss per tier — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+The raft type's parts are modules that build into a whole vehicle: Sky a plane, Fortress a sea train with its track, Beast a pirate ship. Finished at the final tier, it can leave the sea (the plane flies). To go further, kill the boss of each tier first. Ed picked: after leaving, a new, harder sea back at Lv 1, keeping pets, gear and the bag.
+
+### U-38 Difficulty by raft types — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+Easy: unlock (finish) 1 raft type; Normal: 2 types; Hard: all 3. Harder means less loot and tougher monsters in battle.

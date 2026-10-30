@@ -49,6 +49,9 @@ namespace BrineBattle.Hunting
             CaptureSettings(data, hook, book);
             data.hasMastery = true;
             data.mastery = hook.Mastery.Points;
+            data.difficulty = (int)hook.Voyage.Difficulty;
+            data.sea = hook.Voyage.Sea;
+            data.escaped = hook.Voyage.Escaped.Select(k => (int)k).ToList();
             var world = WorldClock.Now;
             if (world != null)
             {
@@ -193,6 +196,9 @@ namespace BrineBattle.Hunting
             foreach (var g in data.gorged ?? new List<SaveData.Gorge>())
                 foreach (var id in g.parts)
                     if (known.TryGetValue(id ?? "", out var part)) hook.Gorged.Add(g.monster, part);
+            if (data.hasVoyage)
+                hook.Voyage.Restore((Difficulty)data.difficulty, data.sea, (data.escaped ?? new List<int>()).Select(k => (RaftKind)k));
+            else hook.Voyage.Restore(Difficulty.Normal, 1, null);
             var clock = UnityEngine.Object.FindFirstObjectByType<WorldClock>();
             if (clock != null && data.hasWorld)
                 clock.Restore(new World.WorldState

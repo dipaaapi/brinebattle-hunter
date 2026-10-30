@@ -81,7 +81,7 @@ namespace BrineBattle.Rafts
     /// A kind with at least <see cref="MinParts"/> parts and half of all raft parts sets the type. Two kinds
     /// that each have <see cref="MinParts"/> parts and <see cref="HybridShare"/> of the parts make a
     /// hybrid with half of each bonus. Otherwise the raft is Plain.
-    /// Sky rafts don't fly yet (Claude's default until Ed decides): the type is a battle and reach bonus.
+    /// The type is a battle and reach bonus; the finished vehicle (a plane for Sky) leaves the sea (Ed's ask, VesselRules).
     /// Plain C# for EditMode tests.
     /// </summary>
     public static class RaftTypeRules

@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Idea Round 4 — World conditions 🟨 (built on `idea-round/4-world`, waiting for Ed's Unity test). Then Phase 9 — Art pass |
-| **Next step** | Ed tests day/night, weather, fog, lightning and the forecast in Unity (Test Runner, then Play), then merge. Open: Sky raft real flight? Module battles eat parts? (defaults: no, no) |
+| **Next step** | Ed tests in Unity (Test Runner, then Play): day/night and weather, workbench tabs, Salvage Bin, raft tree, off-type reset, Reset raft, bosses, vehicles, leaving the sea, difficulty. Then merge PR #7. Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-30 |

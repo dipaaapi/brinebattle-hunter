@@ -13,6 +13,8 @@ namespace BrineBattle.Hunting
         public const string MenuScene = "MainMenu";
         public const string GameScene = "Hook";
         public static StartKind Kind = StartKind.Direct;
+        /// <summary>Picked on New game (Ed's ask); a loaded save brings its own.</summary>
+        public static Rafts.Difficulty Difficulty = Rafts.Difficulty.Normal;
 
         public static void Play(StartKind kind)
         {
@@ -46,7 +48,7 @@ namespace BrineBattle.Hunting
     /// </summary>
     public class MainMenu : MonoBehaviour
     {
-        bool confirmNew;
+        bool confirmNew, pickDifficulty;
         string message;
         GUIStyle title, big, richButton, rich;
 
@@ -55,7 +57,7 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             title ??= new GUIStyle(GUI.skin.label) { fontSize = 40, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
             big ??= new GUIStyle(GUI.skin.button) { fontSize = 20 };
-            richButton ??= new GUIStyle(big) { richText = true };
+            richButton ??= new GUIStyle(big) { richText = true, wordWrap = true };
             rich ??= new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, alignment = TextAnchor.MiddleCenter };
             if (WorldPause.Open == Menu.Settings) return;   // the Settings panel is showing
 
@@ -66,7 +68,8 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
 
             GUILayout.BeginArea(new Rect(x, y + 100, w, 360));
-            if (confirmNew) ConfirmNew();
+            if (pickDifficulty) PickDifficulty();
+            else if (confirmNew) ConfirmNew();
             else Buttons();
             if (!string.IsNullOrEmpty(message)) GUILayout.Label($"<size=12>{message}</size>", rich);
             GUILayout.EndArea();
@@ -79,15 +82,33 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button(saved != null ? $"Continue  <size=12>({saved})</size>" : "Continue", richButton, GUILayout.Height(52)))
                 GameStart.Play(StartKind.Continue);
             GUI.enabled = true;
-            if (GUILayout.Button("New game", big, GUILayout.Height(52)))
-            {
-                if (SaveSystem.Exists) confirmNew = true;
-                else GameStart.Play(StartKind.NewGame);
-            }
+            if (GUILayout.Button("New game", big, GUILayout.Height(52))) pickDifficulty = true;
             if (GUILayout.Button("Settings", big, GUILayout.Height(44))) WorldPause.Toggle(Menu.Settings);
             if (GUILayout.Button("Quit", big, GUILayout.Height(44))) Quit();
             if (saved == "unreadable") message = "The save file can't be read. Start a new game, or upload a save in Settings.";
         }
+
+        /// <summary>
+        /// Difficulty (Ed's ask): how many raft types must leave the sea to win, and how tough the sea is.
+        /// </summary>
+        void PickDifficulty()
+        {
+            GUILayout.Label("<b>Pick a difficulty</b>", rich);
+            for (int i = 0; i < DifficultyLabels.Length; i++)
+            {
+                var d = (Rafts.Difficulty)i;
+                if (GUILayout.Button($"{DifficultyLabels[i]}  <size=12>{Rafts.DifficultyRules.Describe(d)}</size>", richButton, GUILayout.Height(52)))
+                {
+                    GameStart.Difficulty = d;
+                    pickDifficulty = false;
+                    if (SaveSystem.Exists) confirmNew = true;
+                    else GameStart.Play(StartKind.NewGame);
+                }
+            }
+            if (GUILayout.Button("Back", big, GUILayout.Height(40))) pickDifficulty = false;
+        }
+
+        static readonly string[] DifficultyLabels = Rafts.DifficultyRules.Labels;
 
         void ConfirmNew()
         {

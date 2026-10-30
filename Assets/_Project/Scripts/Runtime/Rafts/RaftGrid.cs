@@ -288,6 +288,7 @@ namespace BrineBattle.Rafts
             var (guarded, _) = UpstreamModules();
             if (guarded < ModulesNeeded) missing.Add($"{ModulesNeeded - guarded} more auto-loot module{(ModulesNeeded - guarded == 1 ? "" : "s")} on the left edge");
             if (!HammerReady) missing.Add($"a {Tier} hammer or better");
+            if (BossesNeeded && !BossBeaten(Tier)) missing.Add($"beat the Lv {(int)Tier + 1} boss");
             return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
         }
 
@@ -377,7 +378,13 @@ namespace BrineBattle.Rafts
         /// <see cref="WashAwayShare"/> of them float away, the rest go to the bag. Habitats are never lost
         /// (companions live in them): they go back on the edge of the square. Returns what the sea took.
         /// </summary>
-        public List<ItemDefinition> ResetRaft(ItemDefinition basic, Inventory bag, Random rng)
+        public List<ItemDefinition> ResetRaft(ItemDefinition basic, Inventory bag, Random rng) => Strip(basic, bag, rng, WashAwayShare);
+
+        /// <summary>
+        /// Back to the starter square: every other part comes off, <paramref name="share"/> of them are lost,
+        /// the rest go to the bag; habitats go back on the square's edge.
+        /// </summary>
+        List<ItemDefinition> Strip(ItemDefinition basic, Inventory bag, Random rng, float share)
         {
             var lost = new List<ItemDefinition>();
             if (basic == null) return lost;
@@ -393,8 +400,8 @@ namespace BrineBattle.Rafts
                 if (kv.Value.type == ItemType.Habitat) habitats.Add(kv.Value);
                 else off.Add(kv.Value);
             }
-            int wash = (int)Math.Round(off.Count * WashAwayShare);
-            for (int i = 0; i < wash; i++)
+            int wash = (int)Math.Round(off.Count * share);
+            for (int i = 0; i < wash && off.Count > 0; i++)
             {
                 int k = rng.Next(off.Count);
                 lost.Add(off[k]);
@@ -415,6 +422,87 @@ namespace BrineBattle.Rafts
             }
             Changed?.Invoke();
             return lost;
+        }
+
+        // ---- Vehicle and bosses (Ed's ask) ----
+
+        /// <summary>Bosses gate the level-ups. Off for bare grids in tests; the game turns it on.</summary>
+        public bool BossesNeeded { get; set; }
+        readonly HashSet<Rarity> bosses = new HashSet<Rarity>();
+        /// <summary>Raft levels whose boss is beaten (by the level's rarity).</summary>
+        public IEnumerable<Rarity> BossesBeaten => bosses;
+        public bool BossBeaten(Rarity level) => bosses.Contains(level);
+        public void MarkBoss(Rarity level)
+        {
+            if (bosses.Add(level)) Changed?.Invoke();
+        }
+
+        readonly HashSet<int> vessel = new HashSet<int>();
+        /// <summary>The vehicle parts on the raft (slots 1-5) for the picked type.</summary>
+        public IEnumerable<int> Vessel => vessel;
+        public bool HasVessel(int slot) => vessel.Contains(slot);
+        public int VesselCount => vessel.Count;
+        public bool VesselComplete => vessel.Count >= VesselRules.Parts;
+
+        /// <summary>Why this vehicle part can't go on yet, or null when it can.</summary>
+        public string VesselBlocker(ItemDefinition part, Inventory bag)
+        {
+            if (part == null || part.type != ItemType.Vessel || part.vesselSlot < 1) return "That isn't a vehicle part.";
+            if (Chosen == RaftKind.Plain) return "Pick the raft's type first.";
+            if (part.raftKind != Chosen) return $"That part is for a {VesselRules.Vehicle(part.raftKind)}.";
+            if (vessel.Contains(part.vesselSlot)) return "It's already on.";
+            int need = VesselRules.UnlockLevel(part.vesselSlot);
+            if ((int)Tier + 1 < need) return $"Opens at raft Lv {need}.";
+            if (bag != null && bag.Count(part) <= 0) return "Make it at the Workbench first.";
+            if (!HammerReady) return $"Needs a {Tier} hammer or better.";
+            return null;
+        }
+
+        public bool InstallVessel(ItemDefinition part, Inventory bag)
+        {
+            if (VesselBlocker(part, bag) != null) return false;
+            bag?.Remove(part, 1);
+            vessel.Add(part.vesselSlot);
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>Why the vehicle can't leave the sea yet, or null when it can.</summary>
+        public string LeaveBlocker()
+        {
+            if (Chosen == RaftKind.Plain) return "Pick the raft's type first.";
+            var missing = new List<string>();
+            if (Tier < Rarity.Mythic) missing.Add("reach raft Lv 6");
+            if (!VesselComplete) missing.Add($"put on {VesselRules.Parts - vessel.Count} more vehicle part{(VesselRules.Parts - vessel.Count == 1 ? "" : "s")}");
+            if (!BossBeaten(Rarity.Mythic)) missing.Add("beat the Lv 6 boss");
+            return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
+        }
+
+        public bool CanLeave => LeaveBlocker() == null;
+
+        /// <summary>
+        /// A new sea (Ed's ask): the raft goes back to the starter square at Lv 1 with no type, no vehicle
+        /// and no bosses beaten. Every part that comes off goes to the bag; habitats stay on.
+        /// </summary>
+        public void NewSea(ItemDefinition basic, Inventory bag)
+        {
+            Strip(basic, bag, new Random(0), 0f);
+            Tier = Rarity.Common;
+            Kills = 0;
+            paths.Clear();
+            vessel.Clear();
+            bosses.Clear();
+            Changed?.Invoke();
+        }
+
+        /// <summary>Loads the vehicle and bosses from a save.</summary>
+        public void RestoreVoyage(IEnumerable<int> vesselSlots, IEnumerable<Rarity> beaten)
+        {
+            vessel.Clear();
+            bosses.Clear();
+            if (vesselSlots != null) foreach (var v in vesselSlots) vessel.Add(v);
+            if (beaten != null) foreach (var b in beaten) bosses.Add(b);
+            Changed?.Invoke();
         }
 
         readonly List<RaftKind> paths = new List<RaftKind>();

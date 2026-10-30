@@ -48,6 +48,12 @@ namespace BrineBattle.Saving
         public bool hasWorld;
         public float worldTime, weatherLeft;
         public int day = 1, weather, nextWeather, wrecks;
+        /// <summary>Vehicle parts on the raft, bosses beaten, difficulty, sea and types that left (Ed's ask); false in older saves.</summary>
+        public bool hasVoyage;
+        public List<int> vessel = new List<int>();
+        public List<int> bosses = new List<int>();
+        public int difficulty = 1, sea = 1;
+        public List<int> escaped = new List<int>();
         public int habitats;
         public string collection;
         /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>
@@ -113,6 +119,9 @@ namespace BrineBattle.Saving
             d.raftTier = (int)raft.Tier;
             d.raftKills = raft.Kills;
             d.raftPaths = raft.Paths.Select(p => (int)p).ToList();
+            d.hasVoyage = true;
+            d.vessel = raft.Vessel.OrderBy(v => v).ToList();
+            d.bosses = raft.BossesBeaten.Select(b => (int)b).OrderBy(b => b).ToList();
             foreach (var kv in raft.Parts) d.parts.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, id = kv.Value.id });
             if (moduleDurability != null)
                 foreach (var kv in moduleDurability) d.modules.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, count = kv.Value });
@@ -159,6 +168,10 @@ namespace BrineBattle.Saving
                 raft.Restore(d.parts.Select(p => new KeyValuePair<Cell, ItemDefinition>(new Cell(p.x, p.z), Find(p.id))), (Rarity)d.raftTier);
             raft.Kills = d.raftKills;
             raft.RestorePaths((d.raftPaths ?? new List<int>()).Select(p => (RaftKind)p));
+            // Older saves: the bosses of the levels already passed count as beaten.
+            raft.RestoreVoyage(d.vessel ?? new List<int>(), d.hasVoyage
+                ? (d.bosses ?? new List<int>()).Select(b => (Rarity)b)
+                : Enumerable.Range(0, (int)raft.Tier).Select(b => (Rarity)b));
             moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
             pets.Restore(d.companions.Select(p => new Companion
             {

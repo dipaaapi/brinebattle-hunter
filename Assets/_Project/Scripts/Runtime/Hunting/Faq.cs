@@ -134,6 +134,18 @@ namespace BrineBattle.Hunting
                 new Entry("What are habitats?",
                     "Tide Pool and Sky Perch. Each one on the raft gives room for one more pet, and makes pets heal faster.")),
 
+            new Topic("Bosses & leaving",
+                new Entry("What are bosses?",
+                    "Every raft level has a boss. It comes once you've beaten enough monsters for the next level, and it's big, always alive and can't be tamed. Beat it to level up the raft. Its core is needed for a vehicle part. If you lose or let it pass, it comes back."),
+                new Entry("What is the vehicle?",
+                    "Your raft type turns into a vehicle, part by part: Fortress a sea train (Sea Track, Iron Wheels, Boiler, Smokestack, Locomotive Cab), Sky a plane (Wings, Tail Fin, Propeller, Engine, Cockpit), Beast a pirate ship (Hull Walls, Cannons, Bow & Bowsprit, Masts & Sails, Stern Castle). One part opens at each raft level from Lv 2 to Lv 6. Make it at Workbench → Raft → Vehicle (two parts of your type of that level and a boss core), then put it on in Build → Raft tree. Each part shows on the raft."),
+                new Entry("How do I leave the sea?",
+                    "Raft Lv 6, all five vehicle parts on, and the Lv 6 boss beaten. Then Build → Raft tree → the leave button: the plane takes off, the train rides its track out, the ship sets sail."),
+                new Entry("What happens after I leave?",
+                    "A new sea, tougher than the last (+35% monster strength each sea). The raft starts again at Lv 1 with no type; your pets, gear and Bag come along, and habitats stay on. A type that already left can't be picked again until you win."),
+                new Entry("What do the difficulties change?",
+                    "Picked when you start a new game. Easy: finish 1 raft type to win. Normal: 2 types, monsters ×1.25, loot ×0.8. Hard: all 3 types, monsters ×1.5, loot ×0.6. Bosses always drop their core.")),
+
             new Topic("Pets",
                 new Entry("How do I get a pet?",
                     "Hook a monster that is \"Twitching...\" and calm, then press Tame. Rarer monsters are harder to tame. You need room: build habitats for more."),

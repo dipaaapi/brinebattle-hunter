@@ -50,6 +50,9 @@ namespace BrineBattle.Hunting
         /// <summary>Where the water meets the raft, in raft space: thicker planks at higher levels lift the deck.</summary>
         public float WaterLine => DeckTop - RaftRules.Freeboard(Tier);
 
+        /// <summary>Height above the water while the plane takes off (Ed's ask: leaving the sea).</summary>
+        public float Lift { get; set; }
+
         /// <summary>Rides the swell: rises and falls with the water under its centre and leans with the slope (owner's ask).</summary>
         void LateUpdate()
         {
@@ -60,7 +63,7 @@ namespace BrineBattle.Hunting
             Waves.CalmRadius = (Grid.Radius + 2f) * CellSize;
             Waves.CalmShare = RaftRules.SeaShare(Tier);
             float span = Mathf.Max(1.5f, Grid.Radius * CellSize);
-            p.y = restY + Waves.Height(p.x, p.z) - WaterLine;   // the planks' water line sits on the water
+            p.y = restY + Waves.Height(p.x, p.z) - WaterLine + Lift;   // the planks' water line sits on the water
             transform.position = p;
             var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), Rock);
             transform.rotation = Quaternion.FromToRotation(Vector3.up, up);

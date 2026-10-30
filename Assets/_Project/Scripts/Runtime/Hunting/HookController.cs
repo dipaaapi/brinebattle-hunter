@@ -27,6 +27,10 @@ namespace BrineBattle.Hunting
         [Range(0f, 1f)] public float sedateChance = 0.5f;
 
         public Inventory Inventory { get; } = new Inventory();
+        /// <summary>Difficulty, sea and the raft types that left (Ed's ask).</summary>
+        public Rafts.Voyage Voyage { get; } = new Rafts.Voyage();
+        /// <summary>The running game's voyage, for drifts that scale their monster.</summary>
+        public static Rafts.Voyage CurrentVoyage { get; private set; }
         /// <summary>Harpoon wear (idea C-4).</summary>
         public Durability Harpoon { get; } = new Durability(Battle.BattleRules.HarpoonDurability);
         /// <summary>Weapon and armor slots (Phase 6); their power feeds the hunter in battle.</summary>
@@ -80,6 +84,17 @@ namespace BrineBattle.Hunting
             if (starterHammer != null) Inventory.Add(starterHammer, 1);
             // Building needs a hammer from this bag (Ed's ask).
             raft.Grid.Tools = Inventory;
+            // Each raft level has a boss to beat before the next (Ed's ask).
+            raft.Grid.BossesNeeded = true;
+            CurrentVoyage = Voyage;
+            Voyage.Difficulty = GameStart.Difficulty;
+            // Leaving the sea and the ending screen (Ed's ask), likewise added at runtime.
+            if (FindFirstObjectByType<VoyageController>() == null)
+            {
+                var v = new GameObject("Voyage").AddComponent<VoyageController>();
+                v.hook = this;
+                v.raft = raft;
+            }
             // Settings menu (Phase 6) needs no scene wiring, so older Hook scenes get it too.
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
@@ -293,8 +308,11 @@ namespace BrineBattle.Hunting
         List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m, bool clean)
         {
             var drops = m.loot != null ? m.loot.Roll(rng) : new List<Drop<ItemDefinition>>();
-            if (!clean) return drops;
-            return drops.Select(d => new Drop<ItemDefinition>(d.Item, d.Quantity + TensionRules.CleanReelBonus)).ToList();
+            if (clean) drops = drops.Select(d => new Drop<ItemDefinition>(d.Item, d.Quantity + TensionRules.CleanReelBonus)).ToList();
+            // Harder difficulties give less loot (Ed's ask); bosses always drop in full.
+            if (m.isBoss) return drops;
+            return drops.Select(d => new Drop<ItemDefinition>(d.Item, Rafts.DifficultyRules.ScaleLoot(d.Quantity, Voyage.Difficulty, rng)))
+                .Where(d => d.Quantity > 0).ToList();
         }
 
         static string Brief(List<Drop<ItemDefinition>> drops) =>
@@ -405,8 +423,8 @@ namespace BrineBattle.Hunting
                         Thrash(target);
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
-                    GUI.enabled = !Companions.Full;
-                    if (HuntStyles.ColorButton(Companions.Full ? "Tame (no room)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})", HuntStyles.Go)) Tame();
+                    GUI.enabled = !Companions.Full && !m.isBoss;   // bosses can't be tamed
+                    if (HuntStyles.ColorButton(m.isBoss ? "Tame (a boss can't be tamed)" : Companions.Full ? "Tame (no room)" : $"Tame ({CompanionRules.TameChance(m.rarity):P0})", HuntStyles.Go)) Tame();
                     GUI.enabled = true;
                     break;
                 default:
@@ -715,6 +733,12 @@ namespace BrineBattle.Hunting
         void CountKill()
         {
             raft.Grid.Kills++;
+            if (target != null && target.Monster != null && target.Monster.isBoss)
+            {
+                raft.Grid.MarkBoss(target.Monster.rarity);
+                Log($"You beat the Lv {(int)target.Monster.rarity + 1} boss, {target.Monster.displayName}!"
+                    + (target.Monster.rarity == raft.Tier && raft.Tier < Rarity.Mythic ? " The raft can level up now." : ""));
+            }
             Mastery.Add(AlchemyMastery.HarvestPoints);
             // Pets no longer age or die of old age (Ed's U-32); they grow by feeding and fusion.
             ApplyCompanionBonuses();

@@ -18,5 +18,7 @@ namespace BrineBattle.Items
         Tool = 9,
         /// <summary>Accessory (Ed's ask): a third gear slot whose worth is its skills, element and + refine.</summary>
         Accessory = 10,
+        /// <summary>Vehicle part (Ed's ask): one of the five pieces that finish the plane, sea train or pirate ship.</summary>
+        Vessel = 11,
     }
 }

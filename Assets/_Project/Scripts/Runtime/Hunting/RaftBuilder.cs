@@ -135,6 +135,68 @@ namespace BrineBattle.Hunting
             Step(inv.EssenceAtLeast(g.Tier) >= cost, $"{g.Tier}+ essence: {Mathf.Min(inv.EssenceAtLeast(g.Tier), cost)}/{cost}");
             Step(guarded >= g.ModulesNeeded, $"Modules on the left edge: {Mathf.Min(guarded, g.ModulesNeeded)}/{g.ModulesNeeded}");
             Step(RaftRules.HasHammer(inv, g.Tier), $"{g.Tier} hammer or better: {(hammer != null ? hammer.displayName : "none")}");
+            Step(g.BossBeaten(g.Tier), BossLine(g.Tier));
+            GUILayout.EndVertical();
+        }
+
+        DriftSpawner spawner;
+
+        /// <summary>"Beat the Lv 2 boss, Tidecaller Eel (comes after 10 monsters)".</summary>
+        string BossLine(Rarity level)
+        {
+            if (spawner == null) spawner = FindFirstObjectByType<DriftSpawner>();
+            var boss = spawner != null ? spawner.BossFor(level) : null;
+            var g = raft.Grid;
+            string name = boss != null ? $", {boss.displayName}" : "";
+            string when = g.BossBeaten(level) ? "" : g.Kills >= RaftRules.KillsToUpgrade(level) ? " (it's out there now)" : " (comes once enough monsters are beaten)";
+            return $"Beat the Lv {(int)level + 1} boss{name}{when}";
+        }
+
+        /// <summary>
+        /// The vehicle of the raft's type (Ed's ask): five parts that open one per level from Lv 2, made at
+        /// the Workbench (Raft → Vehicle) and put on here. All five, Lv 6 and the last boss: leave the sea.
+        /// </summary>
+        void DrawVehicle()
+        {
+            var g = raft.Grid;
+            var kind = g.Chosen;
+            if (kind == RaftKind.Plain) return;
+            var inv = hook.Inventory;
+            GUILayout.Space(6);
+            GUILayout.BeginVertical(HuntStyles.Card);
+            GUILayout.Label($"<b>Your {VesselRules.Vehicle(kind)}</b>  <size=12>{g.VesselCount}/{VesselRules.Parts} parts on</size>", HuntStyles.Text);
+            for (int slot = 1; slot <= VesselRules.Parts; slot++)
+            {
+                int lv = VesselRules.UnlockLevel(slot);
+                var item = recipes.Where(r => r != null && r.outputs.Count > 0 && r.outputs[0].item != null)
+                    .Select(r => r.outputs[0].item).FirstOrDefault(i => i.type == ItemType.Vessel && i.raftKind == kind && i.vesselSlot == slot);
+                string name = VesselRules.PartName(kind, slot);
+                GUILayout.BeginHorizontal();
+                if (g.HasVessel(slot)) GUILayout.Label($"<color={HuntStyles.GoodHex}>✔ {name}</color>", HuntStyles.Text);
+                else if ((int)g.Tier + 1 < lv) GUILayout.Label($"<color=#999999>🔒 {name} · opens at Lv {lv}</color>", HuntStyles.Text);
+                else if (item != null && inv.Count(item) > 0)
+                {
+                    GUILayout.Label($"<b>{name}</b> · in the Bag", HuntStyles.Text);
+                    string why = g.VesselBlocker(item, inv);
+                    GUI.enabled = why == null;
+                    if (HuntStyles.ColorButton(why == null ? "Put it on" : why, HuntStyles.Go, GUILayout.Width(150)) && g.InstallVessel(item, inv))
+                        hook.Log($"The {name} is on your {VesselRules.Vehicle(kind)} ({g.VesselCount}/{VesselRules.Parts}).");
+                    GUI.enabled = true;
+                }
+                else
+                {
+                    GUILayout.Label($"<color={HuntStyles.BadHex}>✘</color> <b>{name}</b> · not made yet", HuntStyles.Text);
+                    if (GUILayout.Button("Make it", GUILayout.Width(80), GUILayout.Height(26))) OpenBench(RecipeSub.Vehicle);
+                }
+                GUILayout.EndHorizontal();
+            }
+            string leave = g.LeaveBlocker();
+            if (g.Tier == Rarity.Mythic) Step(g.BossBeaten(Rarity.Mythic), BossLine(Rarity.Mythic));
+            var voyage = VoyageController.Instance;
+            GUI.enabled = leave == null && voyage != null;
+            if (HuntStyles.ColorButton(leave == null ? VesselRules.LeaveVerb(kind) : $"Leave the sea: {leave}", HuntStyles.Go) && voyage != null && voyage.Leave())
+                WorldPause.Close(Menu.Build);
+            GUI.enabled = true;
             GUILayout.EndVertical();
         }
 
@@ -396,13 +458,18 @@ namespace BrineBattle.Hunting
             {
                 GUILayout.Label($"<b>Pick your raft type</b>  <size=12>once only; the others lock</size>", HuntStyles.Text);
                 GUILayout.BeginHorizontal();
+                var voyage = hook.Voyage;
+                // A type that already left a sea can't be picked again until the game is won (Ed's ask).
+                if (!voyage.CanPick(path)) path = RaftTree.Kinds.FirstOrDefault(voyage.CanPick);
                 foreach (var kind in RaftTree.Kinds)
                 {
                     GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Width(132));
                     GUILayout.Label($"<b>{kind}</b>\n<size=11>{RaftTree.Look(kind)}</size>\n<size=11>{RaftTypeRules.BonusOf(kind)}</size>", HuntStyles.Text);
                     var old = GUI.backgroundColor;
                     if (path == kind) GUI.backgroundColor = HuntStyles.Go;
-                    if (GUILayout.Button(path == kind ? "▶ Picked" : "Pick", GUILayout.Height(26))) path = kind;
+                    GUI.enabled = voyage.CanPick(kind);
+                    if (GUILayout.Button(!voyage.CanPick(kind) ? "✔ Finished" : path == kind ? "▶ Picked" : "Pick", GUILayout.Height(26))) path = kind;
+                    GUI.enabled = true;
                     GUI.backgroundColor = old;
                     GUILayout.EndVertical();
                 }
@@ -440,6 +507,7 @@ namespace BrineBattle.Hunting
                     GUI.enabled = true;
                 }
             }
+            DrawVehicle();
 
             // The tree, one tab per type; the picked type's tab is the default.
             if (chosen != RaftKind.Plain && treeTab == RaftKind.Plain) treeTab = chosen;

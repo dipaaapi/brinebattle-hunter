@@ -18,7 +18,7 @@ namespace BrineBattle.Items
         Weapon = 0, Armor = 1, Accessory = 2,
         Potions = 10, Oils = 11,
         Treats = 20, Habitats = 21,
-        Parts = 30, Modules = 31, Hammers = 32,
+        Parts = 30, Modules = 31, Hammers = 32, Vehicle = 33,
         Dismantle = 40,
     }
 
@@ -71,7 +71,7 @@ namespace BrineBattle.Items
             "Weapons, armor and accessories. Equip them from the Bag (B).",
             "Potions for you and the raft, and oils for your weapon.",
             "Treats for your pets and habitats where they live.",
-            "Planks and parts, auto-loot modules, and hammers.",
+            "Planks and parts, auto-loot modules, hammers, and the vehicle parts of your raft type.",
             "Take crafted things apart to get materials back (Salvage Bin).",
         };
 
@@ -83,7 +83,7 @@ namespace BrineBattle.Items
                 case RecipeCategory.Gear: return new[] { RecipeSub.Weapon, RecipeSub.Armor, RecipeSub.Accessory };
                 case RecipeCategory.Player: return new[] { RecipeSub.Potions, RecipeSub.Oils };
                 case RecipeCategory.Pet: return new[] { RecipeSub.Treats, RecipeSub.Habitats };
-                case RecipeCategory.Raft: return new[] { RecipeSub.Parts, RecipeSub.Modules, RecipeSub.Hammers };
+                case RecipeCategory.Raft: return new[] { RecipeSub.Parts, RecipeSub.Modules, RecipeSub.Hammers, RecipeSub.Vehicle };
                 default: return new[] { RecipeSub.Dismantle };
             }
         }
@@ -107,6 +107,7 @@ namespace BrineBattle.Items
                 case ItemType.Habitat: return RecipeSub.Habitats;
                 case ItemType.Module: return RecipeSub.Modules;
                 case ItemType.Tool: return RecipeSub.Hammers;
+                case ItemType.Vessel: return RecipeSub.Vehicle;
                 default: return RecipeSub.Parts;
             }
         }
@@ -115,7 +116,7 @@ namespace BrineBattle.Items
             s <= RecipeSub.Accessory ? RecipeCategory.Gear
             : s <= RecipeSub.Oils ? RecipeCategory.Player
             : s <= RecipeSub.Habitats ? RecipeCategory.Pet
-            : s <= RecipeSub.Hammers ? RecipeCategory.Raft
+            : s < RecipeSub.Dismantle ? RecipeCategory.Raft
             : RecipeCategory.Dismantle;
 
         public static RecipeCategory CategoryOf(RecipeDefinition r) => CategoryOf(SubOf(r));

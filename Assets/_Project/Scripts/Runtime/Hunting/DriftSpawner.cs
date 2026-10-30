@@ -44,16 +44,49 @@ namespace BrineBattle.Hunting
         void Start()
         {
             flotsam.AddRange(monsters.FindAll(m => m != null && m.isFlotsam));
-            monsters.RemoveAll(m => m == null || m.isFlotsam);
+            bosses.AddRange(monsters.FindAll(m => m != null && m.isBoss));
+            monsters.RemoveAll(m => m == null || m.isFlotsam || m.isBoss);
             hook = FindFirstObjectByType<HookController>();
             // A few drifts already in reach so there is something to hook right away.
             for (int i = 0; i < 3; i++) Spawn(Random.Range(-8f, 4f));
+        }
+
+        /// <summary>Raft-level bosses (Ed's ask), split from the creature list at start.</summary>
+        readonly List<MonsterDefinition> bosses = new List<MonsterDefinition>();
+        float bossTimer = Rafts.BossRules.SpawnSeconds - 5f;
+
+        /// <summary>The boss of a raft level (by its rarity), or null.</summary>
+        public MonsterDefinition BossFor(Items.Rarity level) => bosses.Find(b => b.rarity == level);
+
+        /// <summary>The boss of the raft's level, once it's due (one at a time).</summary>
+        void SpawnBoss()
+        {
+            if (raft == null || !Rafts.BossRules.Due(raft.Grid) || live.Exists(d => d != null && d.Monster.isBoss)) { bossTimer = 0f; return; }
+            bossTimer += Time.deltaTime;
+            if (bossTimer < Rafts.BossRules.SpawnSeconds) return;
+            bossTimer = 0f;
+            var boss = bosses.Find(b => b.rarity == raft.Tier);
+            if (boss == null) return;
+            var dir = currentDirection.normalized;
+            var side = Vector3.Cross(Vector3.up, dir);
+            var pos = raft.transform.position + dir * -spawnDistance + side * Random.Range(-4f, 4f);
+            pos.y = 0.1f;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            go.transform.SetParent(transform, true);
+            go.transform.position = pos;
+            var drift = go.AddComponent<Drift>();
+            // Slow, so there's time to hook it; always alive and hostile, and the hint never lies.
+            drift.Init(boss, DriftState.Alive, DriftState.Alive, dir * driftSpeed * 0.6f);
+            drift.Aggression = 1f;
+            live.Add(drift);
+            if (hook != null) hook.Log($"BOSS! {boss.displayName} rises from the deep. Beat it to level up the raft.");
         }
 
         void Update()
         {
             live.RemoveAll(d => d == null);
             if (WorldPause.Active) return;
+            SpawnBoss();
             timer += Time.deltaTime;
             if (timer >= spawnInterval && live.Count < maxDrifts)
             {

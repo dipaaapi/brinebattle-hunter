@@ -84,7 +84,7 @@ namespace BrineBattle.Hunting
             switch (f)
             {
                 case 1: return t == ItemType.Material || t == ItemType.Essence;
-                case 2: return t == ItemType.Raft || t == ItemType.Module || t == ItemType.Habitat;
+                case 2: return t == ItemType.Raft || t == ItemType.Module || t == ItemType.Habitat || t == ItemType.Vessel;
                 case 3: return GearRules.IsGear(t);
                 case 4: return t == ItemType.Consumable;
                 case 5: return t == ItemType.Tool;

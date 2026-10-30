@@ -62,7 +62,7 @@ namespace BrineBattle.Hunting
             bobPhase = Random.value * 10f;
             name = $"Drift ({monster.displayName})";
             Tint.Apply(GetComponent<Renderer>(), monster.isFlotsam ? Raft.PartColor(monster.rarity) : Tint.Of(monster.element));
-            float s = 0.6f + 0.35f * monster.sizeClass;
+            float s = (0.6f + 0.35f * monster.sizeClass) * (monster.isBoss ? 1.8f : 1f);   // bosses loom large
             // Floating loot is a flat crate-like slab; creatures keep their capsule shape.
             transform.localScale = monster.isFlotsam ? new Vector3(s, s * 0.3f, s) : new Vector3(s, s * 0.5f, s * 1.4f);
         }
@@ -112,6 +112,8 @@ namespace BrineBattle.Hunting
             get
             {
                 var c = Rafts.AbsorbRules.Gorge(Combatant.FromMonster(Monster), GorgedParts);
+                // Each new sea and a harder difficulty make monsters stronger (Ed's ask).
+                if (HookController.CurrentVoyage != null) Rafts.Voyage.Scale(c, HookController.CurrentVoyage.EnemyScale);
                 WorldClock.Empower(c);   // Idea Round 4: sun/moon and weather
                 return c;
             }
