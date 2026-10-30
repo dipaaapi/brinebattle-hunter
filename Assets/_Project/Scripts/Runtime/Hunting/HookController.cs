@@ -80,6 +80,8 @@ namespace BrineBattle.Hunting
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
             if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
+            // Zoom and rotate the view (Ed's ask), likewise added at runtime.
+            if (Camera.main != null && !Camera.main.TryGetComponent<CameraRig>(out _)) Camera.main.gameObject.AddComponent<CameraRig>().raft = raft;
             // The hunter's idle, pulling and knocked-out motions (Ed's ask), likewise added at runtime.
             if (!TryGetComponent<HunterMotion>(out _)) gameObject.AddComponent<HunterMotion>().hook = this;
             // Companions on the raft (Phase 7), likewise added at runtime.

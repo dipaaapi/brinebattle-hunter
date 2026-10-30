@@ -20,6 +20,8 @@ namespace BrineBattle.Hunting
         public bool Active => state != null;
         /// <summary>True while any battle runs: the world around the raft holds still.</summary>
         public static bool InBattle { get; private set; }
+        /// <summary>True while the battle camera is still easing back; the camera rig waits for it.</summary>
+        public static bool CameraBusy { get; private set; }
 
         /// <summary>
         /// True for a battle an auto-loot module started (an aggressive live catch, owner's call):
@@ -115,6 +117,7 @@ namespace BrineBattle.Hunting
 
         void UpdateCamera()
         {
+            CameraBusy = cam != null;
             if (cam == null) return;
             var pos = Active ? battleCamPos : camPos;
             var rot = Active ? battleCamRot : camRot;
