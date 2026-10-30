@@ -85,6 +85,13 @@ namespace BrineBattle.Hunting
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
             if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
+            // Day, night and weather (Idea Round 4), likewise added at runtime.
+            if (FindFirstObjectByType<WorldClock>() == null)
+            {
+                var clock = new GameObject("World Clock").AddComponent<WorldClock>();
+                clock.raft = raft;
+                clock.hook = this;
+            }
             // Zoom and rotate the view (Ed's ask), likewise added at runtime.
             if (Camera.main != null && !Camera.main.TryGetComponent<CameraRig>(out _)) Camera.main.gameObject.AddComponent<CameraRig>().raft = raft;
             // The hunter's idle, pulling and knocked-out motions (Ed's ask), likewise added at runtime.
@@ -124,14 +131,23 @@ namespace BrineBattle.Hunting
         {
             Drift.Hunter = Fighter();
             Drift.Pet = Companions.Active != null ? Combatant.FromCompanion(Companions.Active) : null;
+            WorldClock.Empower(Drift.Pet);
             if (WorldPause.Open != Menu.None) return;
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.wasPressedThisFrame || Camera.main == null) return;
             if (RestLeft > 0f) { Log($"Still resting after that defeat: {Mathf.CeilToInt(RestLeft)} s."); return; }
             var ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());
             if (!Physics.Raycast(ray, out var hit, 200f)) return;
+            // A thunderstrike fire (U-15): click it to throw seawater on it.
+            var fire = hit.collider.GetComponent<RaftFire>();
+            if (fire != null)
+            {
+                Log(fire.Douse() ? "You put out the fire." : $"Splash! Once more to put it out.");
+                return;
+            }
             var drift = hit.collider.GetComponent<Drift>();
             if (drift == null) return;
+            if (WorldClock.Burning) { Log("Put out the fire on the raft first!"); return; }
 
             float dist = Vector3.Distance(Flat(drift.transform.position), Flat(raft.transform.position));
             if (dist > raft.HookReach)
@@ -163,7 +179,8 @@ namespace BrineBattle.Hunting
                 t = 0f;
                 reelFrom = target.transform.position;
                 int size = target.Monster.sizeClass;
-                tensionWidth = TensionRules.ZoneWidth(size);
+                // Rough seas and storms jerk the line about: a smaller sweet spot (U-15).
+                tensionWidth = TensionRules.ZoneWidth(size) * World.WorldRules.ReelZoneScale(WorldClock.Weather);
                 tensionSpeed = TensionRules.Speed(size);
                 tensionStart = TensionRules.RandomZoneStart(tensionWidth, rng);
                 tensionTime = 0f;
@@ -514,6 +531,8 @@ namespace BrineBattle.Hunting
             h.Hp = Mathf.Clamp(HunterBody.Hp, 0, h.MaxHp);
             h.Status = HunterBody.Status;
             h.StatusRounds = HunterBody.StatusRounds;
+            // Idea Round 4: gear with a sun or moon element makes the hunter stronger at that time.
+            WorldClock.Empower(h);
             return h;
         }
 
@@ -784,7 +803,7 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
             // at the top, menus as big picture tiles along the bottom.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 290));
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 330));
             GUILayout.BeginVertical(HuntStyles.Box);
             string ailing = HunterBody.Status != StatusEffect.None ? $" <color=#c9a0ff>{StatusRules.Tag(HunterBody.Status)}</color>" : "";
             StatusRow(HuntIcons.Paw, $"Hunter{ailing}", HunterBody.Hp / (float)Mathf.Max(1, HunterBody.MaxHp), $"{HunterBody.Hp}/{HunterBody.MaxHp} HP", new Color(0.4f, 0.85f, 0.45f));
@@ -803,6 +822,12 @@ namespace BrineBattle.Hunting
             GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}", Rich);
             GUILayout.EndHorizontal();
             if (RestLeft > 0f) GUILayout.Label($"<color=#ffb347>Resting… {Mathf.CeilToInt(RestLeft)} s</color>", Rich);
+            // Idea Round 4: time, weather and the forecast (C-12).
+            if (WorldClock.Now != null)
+            {
+                GUILayout.Label($"{WorldClock.Summary}  <size=11><color=#9fc7ff>Next: {WorldClock.Now.Forecast}</color></size>", Rich);
+                if (WorldClock.Burning) GUILayout.Label("<color=#ff9a3c><b>Raft on fire! Click the fire.</b></color>", Rich);
+            }
             GUILayout.EndVertical();
             GUILayout.EndArea();
 

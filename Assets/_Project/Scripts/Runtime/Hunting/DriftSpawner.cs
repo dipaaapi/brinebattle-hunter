@@ -68,8 +68,12 @@ namespace BrineBattle.Hunting
         /// </summary>
         MonsterDefinition PickFlotsam()
         {
-            if (flotsam.Count == 0 || rng.NextDouble() >= flotsamShare) return null;
+            if (flotsam.Count == 0) return null;
+            // Idea C-13: after a storm, wreckage one rarity higher drifts by.
+            bool wreck = WorldClock.Now != null && WorldClock.Now.TakeWreck();
+            if (!wreck && rng.NextDouble() >= flotsamShare + World.WorldRules.FlotsamBonus(WorldClock.Weather)) return null;
             var tier = raft != null ? raft.Tier : Items.Rarity.Common;
+            if (wreck && tier < Items.Rarity.Mythic) tier++;
             var fits = flotsam.FindAll(f => f.rarity <= tier + 1);
             if (fits.Count == 0) return null;
             float total = 0f;
@@ -83,12 +87,26 @@ namespace BrineBattle.Hunting
             return fits[fits.Count - 1];
         }
 
+        /// <summary>Sun creatures turn up more by day, Moon creatures by night (U-10).</summary>
+        MonsterDefinition PickCreature()
+        {
+            float total = 0f;
+            foreach (var m in monsters) total += World.WorldRules.SpawnWeight(World.WorldRules.AffinityOf(m.element), WorldClock.Time);
+            float roll = (float)rng.NextDouble() * total;
+            foreach (var m in monsters)
+            {
+                roll -= World.WorldRules.SpawnWeight(World.WorldRules.AffinityOf(m.element), WorldClock.Time);
+                if (roll <= 0f) return m;
+            }
+            return monsters[monsters.Count - 1];
+        }
+
         static float Weight(Items.Rarity r, Items.Rarity tier) => r == tier ? 3f : r > tier ? 0.5f : 1f;
 
         void Spawn(float alongCurrent)
         {
             if (monsters.Count == 0 || raft == null) return;
-            var monster = monsters[rng.Next(monsters.Count)];
+            var monster = PickCreature();
             var loot = PickFlotsam();
             if (loot != null) monster = loot;
             // Phase 8: a monster that ate raft parts comes back now and then (one at a time).
@@ -101,14 +119,17 @@ namespace BrineBattle.Hunting
             var pos = raft.transform.position + dir * alongCurrent + side * Random.Range(-9f, 9f);
             pos.y = 0.1f;
 
-            var state = monster.isFlotsam ? DriftState.Dead : EncounterRules.RollState(deadWeight, weakenedWeight, aliveWeight, rng);
-            var hint = monster.isFlotsam ? DriftState.Dead : EncounterRules.Hint(state, Accuracy, rng);
+            // Idea Round 4: night and storms stir creatures up, fog and night spoil hints.
+            var w = WorldClock.Weather;
+            var t = WorldClock.Time;
+            var state = monster.isFlotsam ? DriftState.Dead : EncounterRules.RollState(deadWeight * World.WorldRules.DeadScale(w, t), weakenedWeight, aliveWeight * World.WorldRules.AliveScale(w, t), rng);
+            var hint = monster.isFlotsam ? DriftState.Dead : EncounterRules.Hint(state, World.WorldRules.HintAccuracy(Accuracy, w, t), rng);
 
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.transform.SetParent(transform, true);
             go.transform.position = pos;
             var drift = go.AddComponent<Drift>();
-            drift.Init(monster, state, hint, dir * driftSpeed * Random.Range(0.7f, 1.3f));
+            drift.Init(monster, state, hint, dir * driftSpeed * World.WorldRules.DriftSpeedScale(w) * Random.Range(0.7f, 1.3f));
             drift.Aggression = Encounters.EncounterRules.RollAggression(monster.aggression, new System.Random(Random.Range(0, int.MaxValue)));
             if (back != null && monster.id == back.MonsterId) drift.MakeGorged(back.Parts);
             live.Add(drift);

@@ -10,7 +10,7 @@ Alchemy Mastery raises the accuracy of the Dead/Weakened/Alive hint (e.g. 50% �
 ### C-2 Line tension mini-step on reel-in — 2026-10-28 · ✅ Idea Round 1 · §4 · S · Phase 2
 Reeling an Alive creature is one short timing input; success = you act first in battle, fail = it does. Keeps the encounter launch from feeling random without adding real-time combat.
 
-### C-3 Weather and currents decide what drifts — 2026-10-28 · 💡 · §2, §4 · M · Phase 2–5
+### C-3 Weather and currents decide what drifts — 2026-10-28 · ✅ Idea Round 4 · §2, §4 · M · Phase 2–5
 Storm = bigger/Alive drifts, calm = more Dead loot, fog = hints unreliable. One system that gives the endless ocean variety and a reason to wait or move.
 
 ### C-4 Action resource = weapon durability + stamina (answer to U-7) — 2026-10-28 · ✅ Idea Round 2 · §5 · S · Phase 3
@@ -36,3 +36,9 @@ With pets on health instead of age (U-32), habitats do more than add room: each 
 
 ### C-11 The drift says what ailment it carries — 2026-10-30 · ✅ Phase 8 · §4, §5 · S · Phase 8
 Next to the Dead/Weakened/Alive hint, a drift shows the ailment its hits give (☠ Poison, ♦ Bleed, ◉ Blind), so the player can make or bring the right cure (U-33) before hooking it.
+
+### C-12 Weather forecast — 2026-10-30 · ✅ Idea Round 4 · §2 · S · Idea Round 4
+The HUD shows the next weather and when it comes ("Storm in 40 s"), and storms only grow out of rain or a rough sea. Weather becomes something to plan for (heal, get a Crew pet, reel in fast) instead of a random punishment.
+
+### C-13 Wreck field after a storm — 2026-10-30 · ✅ Idea Round 4 · §2, §11 · S · Idea Round 4
+When a storm clears, the next 3 drifts are floating loot one rarity higher. A reward for riding out the storm, and an answer to U-15's "do storms bring rarer drifts?".

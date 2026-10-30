@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 8 ✅ (merged). Next: Idea Round 4, then Phase 9 — Art pass |
-| **Next step** | Ed picks Idea Round 4 (or goes straight to Phase 9). Open: Sky raft real flight? Module battles eat parts? (defaults: no, no) |
+| **Current phase** | Idea Round 4 — World conditions 🟨 (built on `idea-round/4-world`, waiting for Ed's Unity test). Then Phase 9 — Art pass |
+| **Next step** | Ed tests day/night, weather, fog, lightning and the forecast in Unity (Test Runner, then Play), then merge. Open: Sky raft real flight? Module battles eat parts? (defaults: no, no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-30 |
@@ -148,6 +148,18 @@ Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 - [x] Ed's Unity test on the office desktop; Unity-generated data committed (68aac4a). Sky flight and module-battle absorption stay open questions (defaults kept)
 
 **Done when:** building with one kind of part changes the raft's type and its bonuses show in battle, and a monster that ate a part comes back gorged and gives the part back when beaten.
+
+### 🟨 Idea Round 4 (after Phase 8) — World conditions
+Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
+- [x] **U-10 Day/night** with Sun/Moon affinity for monsters, pets and the hunter (via gear element); sky and light follow the clock
+- [x] **U-15 Rough seas and thunderstrikes**: bigger waves, faster drifts, shorter throws, smaller reel sweet spot; lightning sets raft parts on fire (click to douse, Crew helps, Fortress resists)
+- [x] **C-3 Weather decides what drifts**: storms/night more alive and more floating loot, clear days more dead; Sun/Moon creatures by time
+- [x] **U-21 Fog**: far drifts show "???", scene fog, hints worse
+- [x] Claude's **C-12 Forecast** (next weather + countdown in the HUD) and **C-13 Wreck field** (rarer floating loot after a storm)
+- [x] Saved; FAQ topic "Day & weather"; rules tests (`WorldTests`)
+- [ ] Ed's Unity test, then merge
+
+**Done when:** the day turns to night and back, weather changes with a forecast, storms strike the raft, fog hides far drifts, and sun/moon creatures are stronger at their time.
 
 ### ⬜ Phase 9 — Art pass
 Blender pipeline (chibi hunter, raft part, monster), `_col` collision meshes, toon shader + inverted-hull outline.

@@ -42,6 +42,10 @@ namespace BrineBattle.Saving
         public List<int> raftPaths = new List<int>();
         /// <summary>Monsters that ate raft parts (Phase 8).</summary>
         public List<Gorge> gorged = new List<Gorge>();
+        /// <summary>Time of day, weather and forecast (Idea Round 4); false in older saves (they start in the morning).</summary>
+        public bool hasWorld;
+        public float worldTime, weatherLeft;
+        public int day = 1, weather, nextWeather, wrecks;
         public int habitats;
         public string collection;
         /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>

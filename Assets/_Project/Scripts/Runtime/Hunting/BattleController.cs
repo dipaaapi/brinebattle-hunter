@@ -58,6 +58,7 @@ namespace BrineBattle.Hunting
             state.Bag = hook?.Inventory;
             // A knocked-out pet (U-32: HP carries over) stays on the raft and rests.
             if (hook?.Companions.Active != null && !hook.Companions.Active.KnockedOut) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
+            WorldClock.Empower(state.Companion);
             fighter = state.Companion != null ? hook.Companions.Active : null;
             var crew = hook?.Companions.Best(Companions.CompanionRole.Crew);
             if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rarity);
@@ -74,6 +75,17 @@ namespace BrineBattle.Hunting
             }
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
             state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)Mode]}{(ForceAuto ? " (module catch)" : "")}.{first}");
+            // Idea Round 4: say who the time and weather favour (the stats were already changed).
+            if (WorldClock.Now != null)
+            {
+                string Note(Combatant c) => c == null ? "" : World.WorldRules.Note(c.Element, WorldClock.Time, WorldClock.Weather);
+                var notes = new System.Collections.Generic.List<string>();
+                void Add(string who, Combatant c) { var n = Note(c); if (n.Length > 0) notes.Add($"{who}: {n}"); }
+                Add(target.Monster.displayName, state.Monster);
+                Add("You", state.Hunter);
+                Add(state.Companion?.Name, state.Companion);
+                if (notes.Count > 0) state.Log.Add($"{WorldClock.Summary}. {string.Join("; ", notes)}.");
+            }
             timer = 0f;
             driftHome = target.transform.position;
 

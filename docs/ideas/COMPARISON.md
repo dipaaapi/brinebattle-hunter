@@ -34,7 +34,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 |---|---|---|---|
 | 1 | ✅ (Phase 7 part 2) **Companion growth:** evolution, old age and death, feeding with loot/potions, fusion that consumes the source but keeps one "echo" passive | U-23 (rest), U-4, U-8 + C-5 | Phase 7 (rest) |
 | 2 | ✅ (Idea Round 3) **Alchemy knowledge:** a Mastery level that grows by harvesting and crafting; it reveals new "???" recipes in the Book, makes the Dead/Weakened/Alive hint more accurate, and unlocks combining essence into higher rarity | U-14, C-1, U-6 | Idea Round 3 |
-| 3 | **World conditions:** day/night with sun/moon affinity, rough seas, thunderstrikes, weather deciding what drifts, fog | U-10, U-15, C-3, U-21 | Idea Round / own phase |
+| 3 | ✅ (Idea Round 4) **World conditions:** day/night with sun/moon affinity, rough seas, thunderstrikes, weather deciding what drifts, fog | U-10, U-15, C-3, U-21 | Idea Round / own phase |
 | 4 | **Gear slots and accessories:** skill slots as a hard limit by rarity, plus an accessory slot | U-12 (rest) | Idea Round |
 | 5 | **Manual harvest:** a timing input with a 30% miss, next to Auto | U-9 (rest) | Idea Round |
 | 6 | ✅ (Phase 8) **Raft types and absorption:** absorbed parts show on the monster | U-2, U-3, C-7 | Phase 8 |
@@ -50,6 +50,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`
 
 - (2026-10-30) Ed's U-29…U-33 → **built now in Phase 8** at Ed's ask ("isama mo na sa gagawin mo ngayon"), with Claude's **C-10** (habitats heal pets faster) and **C-11** (ailment sign over drifts), since Ed asked for Claude's ideas too. U-32 replaces the Phase 7 old-age rule (Ed's call).
+- (2026-10-30) Idea Round 4 → **World conditions** (row 3: U-10, U-15, C-3, U-21) as one system, Ed's pick on the decision card after Phase 8. Claude added C-12 Forecast and C-13 Wreck field (Ed asked for Claude's own ideas). Not picked: gear slots, manual harvest; Phase 9 art next.
 - (2026-10-29) Idea Round 3 → **U-14** Crafting knowledge + **C-1** Drift reading, with **U-6** essence combining, as one Alchemy Mastery system (row 2 of the combined plan). Ed asked to do the next step together with Phase 7. Picked because it is next in the combined plan, builds on the Phase 6 workbench and the Book, and is cheap (no new data assets). Not picked: world conditions (larger, own phase), gear slots, manual harvest.
 
 - (2026-10-28) Rule set by owner: every core phase is followed by an Idea Round of two ideas, one owner (top priority) + one Claude (top priority), picked by Claude.

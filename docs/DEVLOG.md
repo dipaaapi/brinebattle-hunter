@@ -2,6 +2,14 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-30 — Idea Round 4: World conditions
+- Ed picked World conditions after Phase 8 (row 3 of the combined plan: U-10, U-15, C-3, U-21). Branch `idea-round/4-world` from main d60cfa8.
+- `World/WorldRules` (plain C#): time of day (8-minute day), Sun/Moon affinity from the element (+20% ATK/+10% DEF at its time, −10% ATK against), weather effects (waves, drift speed, hook reach, reel sweet spot, alive/dead rolls, floating-loot share, hint accuracy, sight range), weather transitions (storms only after rain/rough seas), thunderstrike chance (Fortress ½, Sky ×1.5). `World/WorldState`: clock, weather, forecast, wreck field, events.
+- `Hunting/WorldClock` (added at runtime by `HookController`): runs the clock outside menus/battles, sky colour, sun angle/colour, ambient, scene fog from the sight range, `Waves.WeatherScale`, lightning bolts and `RaftFire` (click twice to douse, Crew douses after 5 s, burns the part away after 15 s via `RaftGrid.Burn`; the hook is jammed while a fire burns).
+- Hooked in: `DriftSpawner` (affinity-weighted creature pick, state roll, hints, speed, floating loot, wreck field), `Drift` (far drifts "???", `Fighter` empowered), `HookController.Fighter` and the pet (empowered), `BattleController` (pet empowered, a log line says who the time/weather favours), `Raft.HookReach`, reel sweet spot, HUD line with the forecast.
+- Claude's ideas, per Ed's ask to add my own: **C-12 Forecast** and **C-13 Wreck field**.
+- Save: time, day, weather, forecast, wrecks (`hasWorld`; older saves start in the morning). FAQ topic "Day & weather". No data/builder changes (DataVersion stays 11). +10 rules tests (226 in the cloud check); Runtime compiles. Unity test on Ed's PC next.
+
 ## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
 - Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).
 - Ed's playtest: the Familiar moved with the hunter while hooking, as if attached. Now it walks after the hunter at its own pace and stays put, hopping, while the hunter casts and reels (`RaftCompanions`).

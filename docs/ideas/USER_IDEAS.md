@@ -37,7 +37,7 @@ A toggle when harvesting a monster.
 
 Open: what Manual asks of the player (timing input? see C-2), and what a miss costs (lose the loot, or just less?).
 
-### U-10 Day/night cycle (sun & moon) that boosts or weakens — 2026-10-28 · 💡 · new system (GDD §4, §5, §10, §12)
+### U-10 Day/night cycle (sun & moon) that boosts or weakens — 2026-10-28 · ✅ Idea Round 4 · new system (GDD §4, §5, §10, §12)
 Add a day/night cycle as its own system. Some monsters, dead or alive, are tied to the sun or the moon, and the time of day boosts (or weakens) them. The same system also affects the hunter, the party, and companions/pets.
 
 Open: which stats it changes (attack, catch/tame chance, hint accuracy, drift spawns?), whether gear or alchemy can grant sun/moon affinity, and how long a full day lasts.
@@ -90,7 +90,7 @@ The book should also show **how to craft** things, but you only know a recipe on
 
 Open: is the skill the same as Alchemy Mastery (GDD §7) or separate per craft (smithing, raft-building, potions)? Do harvests of a monster type give knowledge of that monster's recipes?
 
-### U-15 Rough seas and thunderstrikes — 2026-10-28 · 💡 · GDD §2, §4, §6
+### U-15 Rough seas and thunderstrikes — 2026-10-28 · ✅ Idea Round 4 · GDD §2, §4, §6
 The ocean isn't always calm. Sometimes the sea gets rough, which makes hunting and looting harder. Sometimes the enemy is the weather itself: **thunderstrikes** hit the raft, damaging it or stopping the hunter from looting further until it's dealt with.
 
 Related: C-3 (weather and currents decide what drifts) and U-10 (day/night). These three could become one **World conditions** system.
@@ -117,7 +117,7 @@ Battles have no visual effects yet: no projectiles (thrown harpoon, spit, dive),
 ### U-20 Music and sound effects — 2026-10-29 · 💡 · new system
 No music or sound effects yet. Add ocean ambience, battle music and SFX (cast, reel, hit, loot, craft).
 
-### U-21 Fog and time-of-day look — 2026-10-29 · 💡 · GDD §2, Phase 9
+### U-21 Fog and time-of-day look — 2026-10-29 · ✅ Idea Round 4 · GDD §2, Phase 9
 No fog and no day/night look yet. Fog at night (and maybe in rough seas) that limits how far you can see drifts. Pairs with U-10 (day/night cycle) and U-15 (rough seas).
 
 ### U-22 Player manual — 2026-10-29 · 💡 · after the game is finalized

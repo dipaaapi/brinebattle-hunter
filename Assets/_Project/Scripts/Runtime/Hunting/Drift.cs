@@ -107,7 +107,15 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>How this drift fights: its monster's stats, grown by any raft parts it ate.</summary>
-        public Combatant Fighter => Rafts.AbsorbRules.Gorge(Combatant.FromMonster(Monster), GorgedParts);
+        public Combatant Fighter
+        {
+            get
+            {
+                var c = Rafts.AbsorbRules.Gorge(Combatant.FromMonster(Monster), GorgedParts);
+                WorldClock.Empower(c);   // Idea Round 4: sun/moon and weather
+                return c;
+            }
+        }
 
         /// <summary>After a successful sedate (GDD §4).</summary>
         public void MakeWeakened() => Actual = DriftState.Weakened;
@@ -195,6 +203,17 @@ namespace BrineBattle.Hunting
             Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(transform.position + Vector3.up));
             if (sp.z < 0) return;
             var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
+            // Fog and night (U-21): far drifts are only shapes; get closer to read them.
+            if (raft != null && WorldClock.Now != null)
+            {
+                var d = transform.position - raft.transform.position;
+                d.y = 0f;
+                if (d.magnitude > World.WorldRules.SightRange(WorldClock.Weather, WorldClock.Time))
+                {
+                    GUI.Label(rect, "???\n<i>Too far to see</i>", HuntStyles.WorldLabel);
+                    return;
+                }
+            }
             // "Danger!" before a fight (Ed's call): this monster would likely beat the hunter and pet.
             if (Monster.isFlotsam)
             {

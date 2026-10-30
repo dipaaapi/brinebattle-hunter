@@ -18,6 +18,28 @@ The world is an endless ocean full of monsters. Only a handful of humans remain,
 
 Hunters have **no magic**. Their strength comes from alchemy and gear made from monsters.
 
+### World conditions (Idea Round 4: U-10, U-15, U-21, C-3, C-12, C-13)
+
+Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown by the `WorldClock` in the Hook scene. Time stops in menus and battles.
+
+- **Day and night (U-10):** a full day is 8 minutes: dawn (8%), day, dusk (8%), night (42%). New games start in the morning. The sky, sun and ambient light follow the clock; night keeps a dim blue moonlight.
+- **Sun and Moon affinity (U-10):** taken from the element, so gear gives the hunter one too. Sun = fire, magma, sand, steam; Moon = water, ice, mud; earth, wind, lightning = neither. In their own time: +20% ATK, +10% DEF; in the opposite time: −10% ATK; dawn and dusk: nothing. Counts for monsters, pets and the hunter (and for the "Danger!" check). Sun creatures spawn ×2 by day and ×0.5 at night, Moon creatures the other way.
+- **Night:** alive rolls ×1.4, hints −10%, drift names readable only within 16 m.
+- **Weather (U-15, C-3):** Clear, Rain, Rough sea, Storm, Fog; each lasts 60–150 s. A storm only follows rain or a rough sea and never twice in a row; fog is likelier at night and dawn.
+
+| Weather | Waves | Drifts | Hunting | Fighters |
+|---|---|---|---|---|
+| Clear | ×1 | clear days: dead rolls ×1.3 | — | — |
+| Rain | ×1.15 | — | hints −5% | water +25% ATK |
+| Rough sea | ×1.5 | ×1.35 speed, alive ×1.3, +5% floating loot | hook reach −2 m, reel sweet spot ×0.75 | — |
+| Storm | ×1.8 | ×1.6 speed, alive ×1.6, +15% floating loot | reach −3 m, sweet spot ×0.6, hints −5%, sight 18 m, lightning | lightning +25% ATK |
+| Fog | ×0.6 | — | hints −25%, sight 10 m (8 m at night) | wind +25% ATK |
+
+- **Fog and sight (U-21):** beyond the sight range a drift shows only "???"; scene fog starts at the raft. Hints never drop below 34%.
+- **Thunderstrikes (U-15):** in a storm, every 20 s a 35% chance (Fortress raft half, Sky raft ×1.5) that lightning sets an edge raft part on fire. While any fire burns the hook is jammed. Click the fire twice to put it out; a Crew pet does it by itself after 5 s; after 15 s the part burns away (never one that would split the raft). Answers U-15's open questions: Fortress parts protect, storms bring more floating loot.
+- **Forecast (C-12):** the HUD shows the day, time, weather and the next weather with a countdown, so a storm is never a surprise.
+- **Wreck field (C-13):** when a storm clears, the next 3 drifts are floating loot one rarity higher.
+
 ## 3. Core Loop
 
 1. Drift brings objects near your raft: monster corpses and parts.
@@ -39,7 +61,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 | Weakened | Finish for loot, or **tame** it. |
 | Alive | Sudden battle launch (Pokémon-style). |
 
-- Hints (shadows, movement, alchemy readings) may suggest the state but are not always accurate.
+- Hints (shadows, movement, alchemy readings) may suggest the state but are not always accurate. Fog, rain and night make them worse (§2 World conditions).
 - **Raft size gate:** you can only fight once your raft is big and strong enough. If it isn't, cut the line, flee, or sedate the creature.
 - Formats: **1 vs 1**, **1 vs Many**, **Many vs Many** (player + companions + party).
 - **Line tension (C-2):** while reeling, one timing press in a sweet spot (smaller and faster for bigger monsters). No press → the catch slips away. Sloppy → normal result, and an Alive monster acts first. Clean → +1 per drop, and the hunter acts first against an Alive monster. In **Auto** mode the reel presses itself: 50% clean (from U-9), never slips; the bar is shown greyed out as AUTO. In **Semi-auto** the bar stays active and labelled SEMI-AUTO: the player may press first, otherwise it presses itself at 80% of the reel (50% clean).
@@ -234,7 +256,7 @@ Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status ca
 - **Pets:** the list of pets on the left, the picked pet on the right (life and growth bars, Feed, Fuse, Look, battle, Release) · Chores.
 - **Book:** tab labels show found/total; a progress bar.
 - **Settings:** Game · Save · Controls · **FAQ**.
-- **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
+- **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Day & weather, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
 
 ### Camera (Ed's ask)
 

@@ -24,7 +24,7 @@ namespace BrineBattle.Hunting
         public Rarity Tier => Grid.Tier;
         /// <summary>Distance from the centre to just past the outer parts.</summary>
         public float EdgeDistance => (Grid.Radius + 1.2f) * CellSize;
-        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach;
+        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach - World.WorldRules.ReachPenalty(WorldClock.Weather);
 
         readonly Dictionary<Cell, GameObject> tiles = new Dictionary<Cell, GameObject>();
 

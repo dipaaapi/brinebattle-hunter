@@ -345,6 +345,19 @@ namespace BrineBattle.Rafts
             return part;
         }
 
+        /// <summary>
+        /// A fire left burning takes this part (Idea Round 4, U-15). Only an edge part that can go without
+        /// splitting the raft; returns the part lost, or null if it can't burn away now.
+        /// </summary>
+        public ItemDefinition Burn(Cell c)
+        {
+            if (!EdibleParts().Contains(c)) return null;
+            var part = parts[c];
+            parts.Remove(c);
+            Changed?.Invoke();
+            return part;
+        }
+
         bool StaysConnectedWithout(Cell removed)
         {
             var rest = parts.Keys.Where(c => !c.Equals(removed)).ToList();
