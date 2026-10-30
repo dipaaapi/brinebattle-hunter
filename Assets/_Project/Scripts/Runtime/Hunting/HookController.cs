@@ -277,7 +277,7 @@ namespace BrineBattle.Hunting
                     // Auto mode: no prompt when there is nothing to choose (owner's call); the log says what happened.
                     if (BattleSettings.Mode == BattleMode.Auto && Companions.Full)
                     {
-                        KillWeakened("your pets are full (no room to tame)");
+                        KillWeakened("no room for another minion");
                         return;
                     }
                     resultTitle = $"{m.displayName} — Weakened, calm";
@@ -412,8 +412,7 @@ namespace BrineBattle.Hunting
                     if (HuntStyles.ColorButton("Harvest", HuntStyles.Go)) { Mastery.Add(AlchemyMastery.HarvestPoints); Finish($"Harvested {m.displayName}.", true, true); }
                     break;
                 case DriftState.Weakened when pendingPet != null:
-                    foreach (CompanionRole role in System.Enum.GetValues(typeof(CompanionRole)))
-                        if (HuntStyles.ColorButton(role.ToString(), HuntStyles.Other)) Adopt(role);
+                    if (HuntStyles.ColorButton("Welcome aboard", HuntStyles.Go)) Adopt();
                     break;
                 case DriftState.Weakened:
                     if (HuntStyles.ColorButton("Finish it", HuntStyles.Risky))
@@ -492,7 +491,7 @@ namespace BrineBattle.Hunting
             phase = Phase.Result;
             if (BattleSettings.Mode == BattleMode.Auto && Companions.Full)
             {
-                KillWeakened("your pets are full (no room to tame)");
+                KillWeakened("no room for another minion");
                 return true;
             }
             resultTitle = $"{m.displayName} — Weakened, calm";
@@ -754,28 +753,28 @@ namespace BrineBattle.Hunting
             }
             pendingPet = Companion.FromMonster(m);
             pendingPet.Look = rng.Next(CompanionGrowth.Looks.Length);   // a random variety (looks only)
-            resultTitle = $"Tamed {m.displayName}! Pick its role";
-            resultBody = $"{pendingPet.Stats}\n"
-                + $"Familiar: {CompanionRules.Describe(CompanionRole.Familiar)}.\n"
-                + $"Crew: {CompanionRules.Describe(CompanionRole.Crew)}.\n"
-                + $"Mystic: {CompanionRules.Describe(CompanionRole.Mystic)}.";
+            var next = MinionRules.NextSkill(pendingPet);
+            resultTitle = $"Tamed {m.displayName}! A new minion";
+            resultBody = $"Minion Lv {pendingPet.Level} · {pendingPet.Rarity} · {pendingPet.Element}\n{pendingPet.Stats}\n"
+                + $"Skills: {MinionRules.Skills(pendingPet)}"
+                + (next != null ? $"\nNext: {next} at Lv {MinionRules.NextLearnLevel(pendingPet)}" : "");
         }
 
-        void Adopt(CompanionRole role)
+        void Adopt()
         {
             var m = target.Monster;
-            pendingPet.Role = role;
-            Companions.Add(pendingPet);
+            var pet = pendingPet;
+            Companions.Add(pet);
             Mastery.Add(AlchemyMastery.TamePoints);
             pendingPet = null;
             MonsterTamed?.Invoke(m);
             ApplyCompanionBonuses();
-            Finish($"Tamed {m.displayName} as your {role}: it {CompanionRules.Describe(role)}.", false, true);
+            Finish($"{m.displayName} joined as a minion (Lv {pet.Level}): {MinionRules.Skills(pet)}.", false, true);
         }
 
-        /// <summary>Mystic: cheaper refines. Called when the roster changes.</summary>
+        /// <summary>Smith: cheaper refines. Called when the roster changes.</summary>
         public void ApplyCompanionBonuses() =>
-            Gear.RefineDiscount = Companions.Best(CompanionRole.Mystic) != null ? CompanionRules.MysticRefineDiscount : 0;
+            Gear.RefineDiscount = Companions.Best(MinionSkill.Smith) != null ? CompanionRules.MysticRefineDiscount : 0;
 
         /// <summary>Crew: between fights, +1 harpoon durability now and then (modules: see RaftCompanions).</summary>
         float fetchTimer;
@@ -787,31 +786,30 @@ namespace BrineBattle.Hunting
         void FamiliarFetch()
         {
             if (!CompanionSettings.FamiliarLoots || WorldPause.Active) return;
-            Companion best = null;
-            foreach (var c in Companions.All)
-                if (c.Role == CompanionRole.Familiar && !c.KnockedOut && (best == null || c.Rarity > best.Rarity)) best = c;
+            var best = Companions.Best(MinionSkill.Looter);
             if (best == null) return;
             fetchTimer += Time.deltaTime;
-            if (fetchTimer < CompanionRules.FetchSeconds(best.Rarity)) return;
+            if (fetchTimer < CompanionRules.FetchSeconds(best.Rank)) return;
             fetchTimer = 0f;
             float reach = raft.EdgeDistance + CompanionRules.FetchReach;
             var center = Flat(raft.transform.position);
             var d = FindObjectsByType<Drift>(FindObjectsSortMode.None)
                 .Where(x => x != null && !x.Hooked && x.Actual == DriftState.Dead && Vector3.Distance(Flat(x.transform.position), center) <= reach)
                 .OrderBy(x => Vector3.Distance(Flat(x.transform.position), center)).FirstOrDefault();
-            if (d != null) AutoLoot(d, $"{best.Name} (Familiar)", best);
+            if (d != null) { AutoLoot(d, $"{best.Name} (Looter)", best); MinionActivity.Did(best, $"fetched a {d.Monster.displayName}"); }
         }
 
         void CrewMend()
         {
-            var crew = Companions.Best(CompanionRole.Crew);
-            if (crew == null || WorldPause.Open != Menu.None || BattleController.InBattle) return;
+            var crew = Companions.Best(MinionSkill.Mender);
+            if (crew == null || !CompanionSettings.Mends || WorldPause.Open != Menu.None || BattleController.InBattle) return;
             crewTimer += Time.deltaTime;
             if (crewTimer < CompanionRules.CrewMendSeconds) return;
             crewTimer = 0f;
             if (Harpoon.Full) return;
             Harpoon.Repair(1);
-            Log($"{crew.Name} (Crew) mended the harpoon (+1).");
+            Log($"{crew.Name} (Mender) mended the harpoon (+1).");
+            MinionActivity.Did(crew, "mended the harpoon");
         }
 
         void Sedated()
@@ -835,7 +833,7 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
             // at the top, menus as big picture tiles along the bottom.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 330));
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 330 + 34 * Mathf.Min(4, Companions.All.Count)));
             GUILayout.BeginVertical(HuntStyles.Box);
             string ailing = HunterBody.Status != StatusEffect.None ? $" <color=#c9a0ff>{StatusRules.Tag(HunterBody.Status)}</color>" : "";
             StatusRow(HuntIcons.Paw, $"Hunter{ailing}", HunterBody.Hp / (float)Mathf.Max(1, HunterBody.MaxHp), $"{HunterBody.Hp}/{HunterBody.MaxHp} HP", new Color(0.4f, 0.85f, 0.45f));
@@ -849,10 +847,7 @@ namespace BrineBattle.Hunting
             GUILayout.EndHorizontal();
             StatusRow(HuntIcons.Book, $"Mastery Lv {Mastery.Level}", Mastery.Progress,
                 Mastery.Level >= AlchemyMastery.MaxLevel ? "max" : $"{Mastery.Points - AlchemyMastery.PointsFor(Mastery.Level)}/{AlchemyMastery.PointsToNext(Mastery.Level)}", new Color(0.75f, 0.5f, 1f));
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
-            GUILayout.Label($"Pets {Companions.All.Count}/{Companions.Capacity}", Rich);
-            GUILayout.EndHorizontal();
+            MinionRows();
             if (RestLeft > 0f) GUILayout.Label($"<color=#ffb347>Resting… {Mathf.CeilToInt(RestLeft)} s</color>", Rich);
             // Idea Round 4: time, weather and the forecast (C-12).
             if (WorldClock.Now != null)
@@ -871,13 +866,37 @@ namespace BrineBattle.Hunting
             float x = (HuntStyles.W - (5 * tile + 4 * gap)) / 2f, y = HuntStyles.H - tile - 10f;
             if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Bag, "Bag", "B", WorldPause.Open == Menu.Bag)) BagToggleRequested?.Invoke();
             x += tile + gap;
-            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Paw, "Pets", "P", WorldPause.Open == Menu.Pets)) PetsPanel.Toggle();
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Paw, "Minions", "P", WorldPause.Open == Menu.Pets)) PetsPanel.Toggle();
             x += tile + gap;
             if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Book", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
             x += tile + gap;
             if (builder != null && HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Hammer, "Build", "R", builder.Active)) builder.Toggle();
             x += tile + gap;
             if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Gear, "Settings", "Esc", WorldPause.Open == Menu.Settings)) WorldPause.Toggle(Menu.Settings);
+        }
+
+        /// <summary>
+        /// Ed's U-39 HUD: one line per minion (up to 4) with its level, an EXP bar and the job it is doing now,
+        /// instead of the old "Pets n/m" line.
+        /// </summary>
+        void MinionRows()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(HuntIcons.Paw, GUILayout.Width(22), GUILayout.Height(22));
+            GUILayout.Label($"<b>Minions</b> {Companions.All.Count}/{Companions.Capacity}", Rich);
+            GUILayout.EndHorizontal();
+            foreach (var c in Companions.All.Take(4))
+            {
+                int need = MinionRules.ExpToNext(c.Level);
+                string doing = c.KnockedOut ? $"<color={HuntStyles.BadHex}>knocked out</color>" : MinionActivity.Now(c);
+                string fight = Companions.Active == c ? " ⚔" : "";
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(26);
+                Meter($"<color={BagPanel.RarityColor(c.Rarity)}>{c.Name}</color> Lv {c.Level}{fight}  <size=10><color=#9fc7ff>{doing}</color></size>",
+                    need > 0 ? (float)c.Exp / need : 1f, need > 0 ? $"{c.Exp}/{need} EXP" : "max", new Color(0.55f, 0.8f, 1f));
+                GUILayout.EndHorizontal();
+            }
+            if (Companions.All.Count > 4) GUILayout.Label($"<size=11>+{Companions.All.Count - 4} more (P)</size>", Rich);
         }
 
         /// <summary>Icon, name and a bar: one line of the status card.</summary>

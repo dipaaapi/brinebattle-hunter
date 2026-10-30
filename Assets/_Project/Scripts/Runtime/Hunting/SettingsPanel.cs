@@ -126,7 +126,7 @@ namespace BrineBattle.Hunting
             ("Click a drift", "Cast the harpoon at it"),
             ("Space", "Reel in (press in the green zone)"),
             ("B", "Bag"),
-            ("P", "Pets"),
+            ("P", "Minions"),
             ("C", "Collection Book"),
             ("R", "Build the raft and the Workbench"),
             ("Esc", "Settings, or close a menu"),

@@ -38,12 +38,30 @@ namespace BrineBattle.Hunting
             get => PlayerPrefs.GetInt("brinebattle.mysticRefines", 1) == 1;
             set => PlayerPrefs.SetInt("brinebattle.mysticRefines", value ? 1 : 0);
         }
+
+        // Minion jobs added with U-39 (all on by default; Ed likes it automatic).
+        static bool Flag(string key) => PlayerPrefs.GetInt($"brinebattle.minion.{key}", 1) == 1;
+        static void Flag(string key, bool on) => PlayerPrefs.SetInt($"brinebattle.minion.{key}", on ? 1 : 0);
+        public static bool Mends { get => Flag("mends"); set => Flag("mends", value); }
+        public static bool AlchemistCrafts { get => Flag("alchemy"); set => Flag("alchemy", value); }
+        public static bool BuilderCrafts { get => Flag("builderCrafts"); set => Flag("builderCrafts", value); }
+        public static bool BuilderLevelsUp { get => Flag("builderLevels"); set => Flag("builderLevels", value); }
+        public static bool TinkerCrafts { get => Flag("tinker"); set => Flag("tinker", value); }
+        public static bool SalvagerSorts { get => Flag("salvager"); set => Flag("salvager", value); }
+        public static bool GluttonEats { get => Flag("glutton"); set => Flag("glutton", value); }
+
+        /// <summary>Junk at or under this rarity is taken apart (dismantle or salvage); rarer junk is eaten. Default Uncommon.</summary>
+        public static Rarity TakeApartUpTo
+        {
+            get => (Rarity)PlayerPrefs.GetInt("brinebattle.minion.takeApartUpTo", (int)Rarity.Uncommon);
+            set => PlayerPrefs.SetInt("brinebattle.minion.takeApartUpTo", (int)value);
+        }
     }
 
     /// <summary>
-    /// Shows companions on the raft and runs their chores (owner idea U-23): the Familiar waits
-    /// beside the hunter, the Mystic works at the storage box (crafting table) and refines gear, the Crew walks the raft
-    /// edge and builds raft parts from the bag. Placeholder spheres; added at runtime by HookController.
+    /// Shows minions on the raft and runs their jobs by skill (Ed's U-39): Fighters and Looters stay near the
+    /// hunter, Alchemists, Smiths and Tinkers work at the storage box, Crewmates and Builders walk the raft.
+    /// Each job is done by the best minion with that skill. Placeholder spheres; added at runtime by HookController.
     /// </summary>
     public class RaftCompanions : MonoBehaviour
     {
@@ -62,7 +80,9 @@ namespace BrineBattle.Hunting
         }
 
         readonly Dictionary<Companion, Body> bodies = new Dictionary<Companion, Body>();
-        float crewTimer, mysticTimer, repairTimer;
+        float crewTimer, repairTimer;
+        readonly Dictionary<MinionSkill, float> timers = new Dictionary<MinionSkill, float>();
+        BagPanel bagPanel;
         GUIStyle nameStyle;
 
         Raft Raft => hook.raft;
@@ -88,7 +108,7 @@ namespace BrineBattle.Hunting
             {
                 if (bodies.ContainsKey(c)) continue;
                 var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                go.name = $"{c.Role} ({c.Name})";
+                go.name = $"Minion ({c.Name})";
                 Destroy(go.GetComponent<Collider>());
                 go.transform.SetParent(Raft.transform, false);
                 go.transform.localScale = Vector3.one * 0.42f;
@@ -137,13 +157,13 @@ namespace BrineBattle.Hunting
                 if (b.Look != b.Pet.Look) Dress(b);
                 float hop = Mathf.Abs(Mathf.Sin(b.Phase * (b.Busy > 0f ? 12f : 3f))) * (b.Busy > 0f ? 0.35f : 0.08f);
                 Vector3 p;
-                switch (b.Pet.Role)
+                switch (Where(b.Pet))
                 {
-                    case CompanionRole.Mystic:
+                    case Spot.Box:
                         // Works beside the storage box (the crafting table), never inside it, and on a plank.
                         p = MysticSpot() + Vector3.up * 0.2f;
                         break;
-                    case CompanionRole.Crew:
+                    case Spot.Walk:
                         // Walks from plank to plank, always on the raft; with a job it goes to the spot and hammers.
                         var from = b.Go.transform.localPosition;
                         from.y = 0.5f;
@@ -167,6 +187,16 @@ namespace BrineBattle.Hunting
                 b.Go.transform.localPosition = p + Vector3.up * hop;
             }
             KeepApart(hunterLocal);
+        }
+
+        enum Spot { Follow, Box, Walk }
+
+        /// <summary>Where a minion hangs out, by its skills: building jobs walk the raft, crafting jobs stay at the box.</summary>
+        Spot Where(Companion c)
+        {
+            if ((job != null && job.Crew == c) || c.Has(MinionSkill.Crewmate) || c.Has(MinionSkill.Builder)) return Spot.Walk;
+            if (c.Has(MinionSkill.Alchemist) || c.Has(MinionSkill.Smith) || c.Has(MinionSkill.Tinker)) return Spot.Box;
+            return Spot.Follow;
         }
 
         /// <summary>Looks only (U-23 varieties): a scarf, a bandana or a little crown on the pet.</summary>
@@ -273,7 +303,7 @@ namespace BrineBattle.Hunting
 
         void Chores()
         {
-            var crew = hook.Companions.Best(CompanionRole.Crew);
+            var crew = hook.Companions.Best(MinionSkill.Crewmate);
             if (crew != null && CompanionSettings.CrewBuilds)
             {
                 crewTimer += Time.deltaTime;
@@ -287,7 +317,8 @@ namespace BrineBattle.Hunting
             Install();
             // Crew keeps auto-loot modules above the share set per module kind in Build (R), paying the usual cost.
             var modules = hook.builder != null ? hook.builder.modules : null;
-            if (crew != null && modules != null)
+            var mender = hook.Companions.Best(MinionSkill.Mender);
+            if (mender != null && CompanionSettings.Mends && modules != null)
             {
                 repairTimer += Time.deltaTime;
                 if (repairTimer >= 5f)
@@ -302,48 +333,174 @@ namespace BrineBattle.Hunting
                     {
                         int before = worst.Durability.Current;
                         string result = modules.Repair(worst);
-                        if (worst.Durability.Current > before) { Work(crew); hook.Log($"{crew.Name} (Crew): {result}"); }
+                        if (worst.Durability.Current > before) { Work(mender, "repaired a module"); hook.Log($"{mender.Name} (Mender): {result}"); }
                     }
                 }
             }
 
-            // Mystic: restock potions and oils first, otherwise refine gear.
-            var mystic = hook.Companions.Best(CompanionRole.Mystic);
-            if (mystic != null)
+            // Only recipes the hunter's Alchemy Mastery knows (Idea Round 3).
+            var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Knows(r)).ToList() : new List<RecipeDefinition>();
+
+            // Smith: the hammer first when the raft has outgrown it (Ed's ask), then refine gear (auto-upgrade).
+            if (Due(MinionSkill.Smith, out var smith))
             {
-                mysticTimer += Time.deltaTime;
-                if (mysticTimer >= CompanionWork.JobSeconds)
+                var hammer = CompanionWork.MysticHammerPick(known, hook.Inventory, Raft.Tier);
+                var slot = hammer == null && CompanionSettings.MysticRefines ? CompanionWork.MysticPick(hook.Gear, hook.Inventory) : null;
+                if (hammer != null) Crafted(smith, "Smith", hammer);
+                else if (slot != null && hook.Gear.Refine(slot.Value, hook.Inventory))
                 {
-                    mysticTimer = 0f;
-                    // The hammer comes first when the raft has outgrown it (Ed's ask), then potions and oils.
-                    // Only recipes the hunter's Alchemy Mastery knows (Idea Round 3).
-                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Knows(r)).ToList() : null;
-                    var recipe = known != null
-                        ? CompanionWork.MysticHammerPick(known, hook.Inventory, Raft.Tier)
-                          ?? CompanionWork.MysticCraftPick(known, hook.Inventory, CompanionSettings.MysticKeep)
-                        : null;
-                    var slot = recipe == null && CompanionSettings.MysticRefines ? CompanionWork.MysticPick(hook.Gear, hook.Inventory) : null;
-                    if (recipe != null && CraftRules.Craft(hook.Inventory, recipe))
-                    {
-                        Work(mystic);
-                        Incantation(mystic);
-                        hook.Log($"{mystic.Name} (Mystic) crafted {CraftRules.Describe(recipe.outputs)}.");
-                        StorageBox.Instance?.Crafted($"{CraftRules.Describe(recipe.outputs)} ({mystic.Name})");
-                    }
-                    else if (slot != null && hook.Gear.Refine(slot.Value, hook.Inventory))
-                    {
-                        Work(mystic);
-                        Incantation(mystic);
-                        hook.Log($"{mystic.Name} (Mystic) refined your {hook.Gear.Label(slot.Value)}.");
-                        StorageBox.Instance?.Crafted($"refined {hook.Gear.Label(slot.Value)} ({mystic.Name})");
-                    }
+                    Work(smith, $"refined the {hook.Gear.Label(slot.Value)}");
+                    Incantation(smith);
+                    hook.Log($"{smith.Name} (Smith) refined your {hook.Gear.Label(slot.Value)}.");
+                    StorageBox.Instance?.Crafted($"refined {hook.Gear.Label(slot.Value)} ({smith.Name})");
                 }
+            }
+
+            // Alchemist: keeps potions, oils and treats stocked (auto-craft).
+            if (CompanionSettings.AlchemistCrafts && Due(MinionSkill.Alchemist, out var alchemist))
+            {
+                var recipe = CompanionWork.MysticCraftPick(known, hook.Inventory, CompanionSettings.MysticKeep);
+                if (recipe != null) Crafted(alchemist, "Alchemist", recipe);
+            }
+
+            // Tinker: crafts better weapons, armor and accessories and equips them (auto-upgrade).
+            if (CompanionSettings.TinkerCrafts && Due(MinionSkill.Tinker, out var tinker))
+            {
+                var recipe = CompanionWork.TinkerPick(known, hook.Inventory, hook.Gear, TierOf);
+                if (recipe != null && Crafted(tinker, "Tinker", recipe))
+                {
+                    var made = recipe.outputs[0].item;
+                    if (hook.Gear.Equip(made, hook.Inventory, TierOf(made.type))) hook.Log($"{tinker.Name} (Tinker) equipped the {made.displayName} on you.");
+                }
+            }
+
+            // Builder: grows the raft toward the next level and the vehicle (Ed's ask: the auto-craft ladder).
+            if (Due(MinionSkill.Builder, out var builderPet)) BuilderJob(builderPet, known);
+
+            // Salvager and Glutton share the junk (Ed's ask): rarity at or under the Chores setting is taken apart, the rest is eaten.
+            if (CompanionSettings.SalvagerSorts && Due(MinionSkill.Salvager, out var salvager)) SalvageJob(salvager);
+            if (CompanionSettings.GluttonEats && Due(MinionSkill.Glutton, out var glutton)) EatJob(glutton);
+        }
+
+        /// <summary>True every <see cref="CompanionWork.JobSeconds"/> while some minion has the skill; gives that minion.</summary>
+        bool Due(MinionSkill skill, out Companion who)
+        {
+            who = hook.Companions.Best(skill);
+            if (who == null) return false;
+            timers.TryGetValue(skill, out var t);
+            t += Time.deltaTime;
+            if (t < CompanionWork.JobSeconds) { timers[skill] = t; return false; }
+            timers[skill] = 0f;
+            return true;
+        }
+
+        bool Crafted(Companion who, string skill, RecipeDefinition recipe)
+        {
+            if (recipe == null || !CraftRules.Craft(hook.Inventory, recipe)) return false;
+            string what = CraftRules.Describe(recipe.outputs);
+            Work(who, $"crafted {what}");
+            Incantation(who);
+            hook.Log($"{who.Name} ({skill}) crafted {what}.");
+            StorageBox.Instance?.Crafted($"{what} ({who.Name})");
+            return true;
+        }
+
+        Rarity TierOf(ItemType t)
+        {
+            if (bagPanel == null) bagPanel = FindFirstObjectByType<BagPanel>();
+            return bagPanel != null ? bagPanel.TierOf(t) : t == ItemType.Raft ? Raft.Tier : Rarity.Common;
+        }
+
+        bool IsIngredient(ItemDefinition item) =>
+            hook.builder != null && hook.builder.recipes.Any(r => r != null && r.kind != RecipeKind.Dismantle && r.inputs.Any(x => x.item == item));
+
+        bool IsJunk(ItemDefinition item) =>
+            MinionRules.IsJunk(item, TierOf, Raft.Tier, Rafts.RaftRules.BestHammer(hook.Inventory)?.rarity, IsIngredient);
+
+        RecipeDefinition DismantleFor(ItemDefinition item) =>
+            hook.builder?.recipes.FirstOrDefault(r => r != null && r.kind == RecipeKind.Dismantle && r.inputs.Any(x => x.item == item) && CraftRules.CanCraft(hook.Inventory, r));
+
+        MinionRules.JunkAction ActionFor(ItemDefinition item) =>
+            MinionRules.ForJunk(item, CompanionSettings.TakeApartUpTo, DismantleFor(item) != null);
+
+        void BuilderJob(Companion who, List<RecipeDefinition> known)
+        {
+            var g = Raft.Grid;
+            var vessel = CompanionWork.BuilderVesselPick(g, hook.Inventory);
+            if (vessel != null && g.InstallVessel(vessel, hook.Inventory))
+            {
+                Work(who, $"put on the {vessel.displayName}");
+                hook.Log($"{who.Name} (Builder) put the {vessel.displayName} on the raft.");
+                return;
+            }
+            if (CompanionSettings.BuilderLevelsUp)
+            {
+                var path = CompanionWork.BuilderLevelUp(g, hook.Inventory);
+                if (path != null && g.TryUpgrade(hook.Inventory, path.Value))
+                {
+                    Work(who, $"leveled the raft to Lv {(int)g.Tier + 1}");
+                    hook.Log($"{who.Name} (Builder) leveled the raft up to Lv {(int)g.Tier + 1}!");
+                    return;
+                }
+            }
+            if (CompanionSettings.BuilderCrafts) Crafted(who, "Builder", CompanionWork.BuilderCraftPick(known, hook.Inventory, g));
+        }
+
+        void SalvageJob(Companion who)
+        {
+            var item = CompanionWork.JunkPick(hook.Inventory, IsJunk);
+            if (item == null) return;
+            var action = ActionFor(item);
+            if (action == MinionRules.JunkAction.Eat) return;   // rarer junk is the Glutton's
+            if (action == MinionRules.JunkAction.Dismantle)
+            {
+                var r = DismantleFor(item);
+                if (r == null || !CraftRules.Craft(hook.Inventory, r)) return;
+                Work(who, $"dismantled a {item.displayName}");
+                hook.Log($"{who.Name} (Salvager) dismantled a {item.displayName}: {CraftRules.Describe(r.outputs)}.");
+                SalvageBin.Instance?.Took($"{item.displayName} → {CraftRules.Describe(r.outputs)}", 3, new Color(0.8f, 0.45f, 1f));
+            }
+            else
+            {
+                int essence = hook.Inventory.Salvage(item, 1);
+                if (essence <= 0) return;
+                Work(who, $"salvaged a {item.displayName}");
+                hook.Log($"{who.Name} (Salvager) salvaged a {item.displayName} into {essence} essence.");
+                SalvageBin.Instance?.Took($"{item.displayName} → {essence} essence", essence, new Color(0.6f, 0.85f, 1f));
             }
         }
 
-        void Work(Companion c)
+        void EatJob(Companion who)
+        {
+            bool salvagerOn = CompanionSettings.SalvagerSorts && hook.Companions.Best(MinionSkill.Salvager) != null;
+            // With a Salvager at work, the Glutton only eats what's above the take-apart rarity.
+            var item = CompanionWork.JunkPick(hook.Inventory, i => IsJunk(i) && (!salvagerOn || ActionFor(i) == MinionRules.JunkAction.Eat));
+            var eater = CompanionWork.Hungriest(hook.Companions.All);
+            if (item == null || eater == null) return;
+            var learned = new List<MinionSkill>();
+            int before = eater.Level;
+            var r = CompanionGrowth.Feed(eater, item, learned);
+            if (r == FeedResult.CantEat || r == FeedResult.Full) return;
+            hook.Inventory.Remove(item, 1);
+            Work(who, eater == who ? $"ate a {item.displayName}" : $"fed {eater.Name}");
+            hook.Log(FeedLine(eater, item, r, before, learned) + (eater != who ? $" ({who.Name} shared it)" : ""));
+            if (learned.Count > 0) hook.Companions.Refresh();
+        }
+
+        /// <summary>One log line for a meal: EXP, level-ups, evolutions and new skills.</summary>
+        public static string FeedLine(Companion c, ItemDefinition item, FeedResult r, int levelBefore, List<MinionSkill> learned)
+        {
+            string line = $"{c.Name} ate the {item.displayName} (+{CompanionGrowth.FeedPoints(item, c)} EXP).";
+            if (c.Level > levelBefore) line += $" Lv {c.Level}!";
+            if (r == FeedResult.Evolved) line += $" Evolved into an {c.StageName}!";
+            if (learned != null && learned.Count > 0) line += $" Learned {string.Join(", ", learned)}.";
+            return line;
+        }
+
+        void Work(Companion c, string what = null)
         {
             if (bodies.TryGetValue(c, out var b)) b.Busy = 1.5f;
+            if (what != null) MinionActivity.Did(c, what);
         }
 
         // ---- Crew installs take time (Ed's ask): walk over, hammer with a progress bar, then the part is on ----
@@ -374,7 +531,8 @@ namespace BrineBattle.Hunting
             ghost.transform.localScale = new Vector3(0.95f, 0.06f, 0.95f);
             Tint.Apply(ghost.GetComponent<Renderer>(), Raft.PartColor(part) * 0.6f);
             job = new Job { Crew = crew, Cell = cell, Part = part, Stand = stand, Ghost = ghost };
-            hook.Log($"{crew.Name} (Crew) is going to {(part.type == ItemType.Module ? "install" : "build")} a {part.displayName}.");
+            hook.Log($"{crew.Name} (Crewmate) is going to {(part.type == ItemType.Module ? "install" : "build")} a {part.displayName}.");
+            MinionActivity.Did(crew, $"{(part.type == ItemType.Module ? "installing" : "building")} a {part.displayName}");
         }
 
         void Install()
@@ -413,8 +571,8 @@ namespace BrineBattle.Hunting
             var crew = job.Crew;
             EndJob();
             if (ok) hook.Log(part.type == ItemType.Module
-                ? $"{crew.Name} (Crew) installed a {part.displayName} on the upstream side."
-                : $"{crew.Name} (Crew) built a {part.displayName} onto the raft.");
+                ? $"{crew.Name} (Crewmate) installed a {part.displayName} on the upstream side."
+                : $"{crew.Name} (Crewmate) built a {part.displayName} onto the raft.");
         }
 
         void EndJob()
@@ -496,7 +654,7 @@ namespace BrineBattle.Hunting
                 var sp = HuntStyles.Ui(cam.WorldToScreenPoint(b.Go.transform.position + Vector3.up * 0.45f));
                 if (sp.z < 0f) continue;
                 string tag = b.Busy > 0f ? " <color=#ffd866>working!</color>" : "";
-                GUI.Label(new Rect(sp.x - 70, HuntStyles.H - sp.y - 10, 140, 20), $"<b>{b.Pet.Role}</b>{tag}", nameStyle);
+                GUI.Label(new Rect(sp.x - 70, HuntStyles.H - sp.y - 10, 140, 20), $"<b>Lv {b.Pet.Level}</b>{tag}", nameStyle);
             }
             // The Crew's install progress over the spot (Ed's ask: a loading bar, not instant).
             if (job != null && job.Ghost != null)

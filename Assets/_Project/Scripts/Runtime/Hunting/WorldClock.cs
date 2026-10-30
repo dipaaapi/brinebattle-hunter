@@ -317,8 +317,8 @@ namespace BrineBattle.Hunting
             Place();
             if (WorldPause.Active) return;
             burned += Time.deltaTime;
-            // Crew pets keep the raft safe (Ed likes it automatic).
-            var crew = clock.hook != null ? clock.hook.Companions.Best(Companions.CompanionRole.Crew) : null;
+            // Crewmate minions keep the raft safe (Ed likes it automatic).
+            var crew = clock.hook != null ? clock.hook.Companions.Best(Companions.MinionSkill.Crewmate) : null;
             if (crew != null && !crew.KnockedOut && burned >= WorldRules.CrewDousesAfter)
             {
                 clock.hook.Log($"{crew.Name} put out the fire.");

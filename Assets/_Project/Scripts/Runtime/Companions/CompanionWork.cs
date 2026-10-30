@@ -100,6 +100,70 @@ namespace BrineBattle.Companions
                 .FirstOrDefault();
         }
 
+        // ---- Minion jobs added with U-39 (Builder, Tinker, junk) ----
+
+        /// <summary>A vehicle part in the bag that can go on the raft now (Builder), or null.</summary>
+        public static ItemDefinition BuilderVesselPick(RaftGrid raft, Inventory bag) =>
+            bag.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.Vessel).OrderBy(i => i.vesselSlot)
+                .FirstOrDefault(i => raft.VesselBlocker(i, bag) == null);
+
+        /// <summary>
+        /// What the Builder crafts next to grow the raft (Ed's ask: the auto-craft ladder): the next vehicle part
+        /// the raft is missing, an auto-loot module while the left edge needs more, then a raft part of the raft's
+        /// level (reinforce) while the bag has fewer than <paramref name="keepParts"/> that fit. Null if none.
+        /// </summary>
+        public static RecipeDefinition BuilderCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, RaftGrid raft, int keepParts = 2)
+        {
+            var ready = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && r.outputs.Count > 0 && r.outputs[0].item != null
+                && CraftRules.CanCraft(bag, r)).ToList();
+            var vessel = ready.Where(r => r.outputs[0].item.type == ItemType.Vessel)
+                .Where(r => { var o = r.outputs[0].item; return o.raftKind == raft.Chosen && raft.Chosen != RaftKind.Plain && !raft.HasVessel(o.vesselSlot) && bag.Count(o) == 0
+                    && (int)raft.Tier + 1 >= VesselRules.UnlockLevel(o.vesselSlot); })
+                .OrderBy(r => r.outputs[0].item.vesselSlot).FirstOrDefault();
+            if (vessel != null) return vessel;
+            bool moduleInBag = bag.Items.Any(kv => kv.Key.type == ItemType.Module);
+            if (!raft.ModulesReady && !moduleInBag)
+            {
+                var module = ready.Where(r => r.outputs[0].item.type == ItemType.Module).OrderByDescending(r => r.outputs[0].item.moduleLevel).FirstOrDefault();
+                if (module != null) return module;
+            }
+            int fitting = bag.Items.Where(kv => kv.Key.type == ItemType.Raft && kv.Key.rarity >= raft.Tier && raft.FitsType(kv.Key)).Sum(kv => kv.Value);
+            if (fitting >= keepParts || !raft.OpenCells().Any()) return null;
+            return ready.Where(r => { var o = r.outputs[0].item; return o.type == ItemType.Raft && o.rarity >= raft.Tier && raft.FitsType(o); })
+                .OrderBy(r => r.outputs[0].item.rarity).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// The raft type the Builder levels up toward, or null when it shouldn't: only once the type is picked
+        /// (the pick is the player's) and when nothing blocks the level-up.
+        /// </summary>
+        public static RaftKind? BuilderLevelUp(RaftGrid raft, Inventory bag) =>
+            raft.Chosen != RaftKind.Plain && raft.UpgradeBlocker(bag) == null ? raft.Chosen : (RaftKind?)null;
+
+        /// <summary>
+        /// A weapon, armor or accessory recipe whose result beats what's equipped in that slot and fits its tier
+        /// (Tinker), strongest first. Null if none.
+        /// </summary>
+        public static RecipeDefinition TinkerPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, Equipment gear, System.Func<ItemType, Rarity> tierOf)
+        {
+            return recipes
+                .Where(r => r != null && r.kind == RecipeKind.Craft && r.outputs.Count > 0 && r.outputs[0].item != null && GearRules.IsGear(r.outputs[0].item.type))
+                .Where(r => { var o = r.outputs[0].item; return SalvageRules.IsCompatible(o.type, o.rarity, tierOf(o.type))
+                    && o.gearPower > gear.PowerOf(GearRules.SlotOf(o.type)) && bag.Count(o) == 0 && CraftRules.CanCraft(bag, r); })
+                .OrderByDescending(r => r.outputs[0].item.gearPower).FirstOrDefault();
+        }
+
+        /// <summary>The next junk item to deal with, lowest rarity first, or null.</summary>
+        public static ItemDefinition JunkPick(Inventory bag, System.Func<ItemDefinition, bool> isJunk, MinionRules.JunkAction? only = null,
+            System.Func<ItemDefinition, MinionRules.JunkAction> actionOf = null) =>
+            bag.Items.Select(kv => kv.Key).Where(isJunk)
+                .Where(i => only == null || actionOf == null || actionOf(i) == only.Value)
+                .OrderBy(i => i.rarity).ThenBy(i => i.displayName).FirstOrDefault();
+
+        /// <summary>The minion that should eat next: the lowest level that isn't maxed (Glutton shares food).</summary>
+        public static Companion Hungriest(IEnumerable<Companion> minions) =>
+            minions.Where(c => c.Level < MinionRules.MaxLevel).OrderBy(c => c.Level).ThenBy(c => c.Exp).FirstOrDefault();
+
         /// <summary>The equipped slot the Mystic would refine next: the lower + that the bag can pay for. Null if none.</summary>
         public static GearSlot? MysticPick(Equipment gear, Inventory bag)
         {

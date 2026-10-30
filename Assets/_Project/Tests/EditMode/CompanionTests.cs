@@ -52,31 +52,36 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void OnlyAFamiliarCanBeTheBattleCompanion()
+        public void OnlyAFighterCanBeTheBattleMinion()
         {
             var roster = new CompanionRoster();
-            var crew = Companion.FromMonster(Monster("crab"), CompanionRole.Crew);
-            var fam = Companion.FromMonster(Monster("gull"), CompanionRole.Familiar);
+            var crew = new Companion { Id = "crab", Name = "crab", MaxHp = 10, Hp = 10, Skills = { MinionSkill.Crewmate } };
+            var fam = Companion.FromMonster(Monster("gull"));
+            Assert.IsTrue(fam.Has(MinionSkill.Fighter), "every minion starts with Fighter");
             roster.Add(crew);
-            Assert.IsNull(roster.Active, "crew doesn't fight");
+            Assert.IsNull(roster.Active, "a crewmate alone doesn't fight");
             Assert.IsFalse(roster.SetActive(crew));
             roster.Add(fam);
             Assert.AreEqual(fam, roster.Active);
             Assert.IsTrue(roster.Release(fam));
-            Assert.IsNull(roster.Active, "no Familiar left");
-            Assert.AreEqual(crew, roster.Best(CompanionRole.Crew));
-            Assert.IsNull(roster.Best(CompanionRole.Mystic));
+            Assert.IsNull(roster.Active, "no Fighter left");
+            Assert.AreEqual(crew, roster.Best(MinionSkill.Crewmate));
+            Assert.IsNull(roster.Best(MinionSkill.Alchemist));
         }
 
         [Test]
-        public void BestPicksTheRarestInARole()
+        public void BestPicksTheHighestRankWithTheSkill()
         {
             var roster = new CompanionRoster();
-            var common = Companion.FromMonster(Monster("a"), CompanionRole.Mystic);
-            var rare = Companion.FromMonster(Monster("b", Rarity.Rare), CompanionRole.Mystic);
+            var common = Companion.FromMonster(Monster("a"));
+            var rare = Companion.FromMonster(Monster("b", Rarity.Rare));
+            common.Learn(MinionSkill.Alchemist);
+            rare.Learn(MinionSkill.Alchemist);
             roster.Add(common);
             roster.Add(rare);
-            Assert.AreEqual(rare, roster.Best(CompanionRole.Mystic));
+            Assert.AreEqual(rare, roster.Best(MinionSkill.Alchemist));
+            rare.Hp = 0;
+            Assert.AreEqual(common, roster.Best(MinionSkill.Alchemist), "a knocked-out minion doesn't work");
             Assert.Greater(CompanionRules.MysticExtraChance(Rarity.Rare), CompanionRules.MysticExtraChance(Rarity.Common));
         }
 
@@ -86,7 +91,7 @@ namespace BrineBattle.Tests
             var s = new BattleState(Combatant.Hunter(), Target(atk: 20), 100, new System.Random(1));
             s.CrewRepair = CompanionRules.CrewRaftRepair(Rarity.Common);
             for (int i = 0; i < 10 && s.Outcome == BattleOutcome.Ongoing; i++) s.PlayRound(BattleAction.Brace);
-            Assert.IsTrue(s.Log.Any(l => l.StartsWith("Your crew patches the raft")));
+            Assert.IsTrue(s.Log.Any(l => l.StartsWith("Your crewmate patches the raft")));
             Assert.IsTrue(s.Events.Any(e => e.Kind == BattleEventKind.Heal && e.To == BattleActor.Raft));
         }
 

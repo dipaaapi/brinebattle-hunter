@@ -28,7 +28,7 @@ namespace BrineBattle.Hunting
         Vector2 scroll;
         string selected;
 
-        static readonly string[] Tabs = { "Monsters", "Items", "Pets" };
+        static readonly string[] Tabs = { "Monsters", "Items", "Minions" };
 
         void Awake()
         {
@@ -240,7 +240,7 @@ namespace BrineBattle.Hunting
                 GUILayout.Label(m.description, GUI.skin.textArea);
                 if (page == CollectionPage.Pets)
                     foreach (var g in hook.Companions.Memorials.Where(x => x.Id == m.id))
-                        GUILayout.Label($"In memory of {g.Name}, your {g.Role}: lived {g.Age} battles.");
+                        GUILayout.Label($"In memory of {g.Name}: lived {g.Age} battles.");
             }
         }
 

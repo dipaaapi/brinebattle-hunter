@@ -130,8 +130,8 @@ namespace BrineBattle.Tests
             s.Hunter.Hp = 30;
             s.Companion.Hp = 5;
             s.PlayRound(BattleAction.Brace);
-            Assert.IsTrue(s.Log.Any(l => l.StartsWith("Your mystic heals Pet")), "the pet is lower (25% vs 50%)");
-            Assert.IsTrue(s.Events.Any(e => e.Kind == BattleEventKind.Heal && e.To == BattleActor.Companion && e.Text == "Mystic"));
+            Assert.IsTrue(s.Log.Any(l => l.StartsWith("Your alchemist heals Pet")), "the pet is lower (25% vs 50%)");
+            Assert.IsTrue(s.Events.Any(e => e.Kind == BattleEventKind.Heal && e.To == BattleActor.Companion && e.Text == "Alchemist"));
         }
     }
 }

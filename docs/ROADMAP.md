@@ -158,6 +158,8 @@ Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 - [x] Claude's **C-12 Forecast** (next weather + countdown in the HUD) and **C-13 Wreck field** (rarer floating loot after a storm)
 - [x] Saved; FAQ topic "Day & weather"; rules tests (`WorldTests`)
 - [x] Ed's asks while testing: hunter faces the monster in battle; sun and moon on screen (sky strip, shadows)
+- [x] Ed's U-39 **Minions** (laptop): one kind of minion, levels from eating loot, 12 skills in four branches, auto jobs with Chores switches, skill tree page, HUD minion list
+- [ ] Ed's asks queued: Quest tab (what's missing for the next upgrade), grand boss fights
 - [x] Ed's raft/workbench batch (U-34): workbench sub-tabs, accessories, Salvage Bin, planks-only walking, raft looks by type, one raft skill tree with a single type pick, Mystic circle, Crew hammering
 - [ ] Ed's Unity test, then merge
 

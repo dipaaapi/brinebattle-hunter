@@ -97,7 +97,7 @@ namespace BrineBattle.Hunting
             else
                 GUILayout.Label($"Finish {v.TypesToWin - done} more raft type{(v.TypesToWin - done == 1 ? "" : "s")} to win.", HuntStyles.Text);
             GUILayout.Space(6);
-            GUILayout.Label($"Next: Sea {v.Sea}. The raft starts again at Lv 1; your pets, gear and bag come along. "
+            GUILayout.Label($"Next: Sea {v.Sea}. The raft starts again at Lv 1; your minions, gear and bag come along. "
                 + $"Monsters there are ×{v.EnemyScale:0.##} as strong.", HuntStyles.Text);
             GUILayout.FlexibleSpace();
             if (HuntStyles.ColorButton($"Sail on to Sea {v.Sea}", HuntStyles.Go)) NextSea();

@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-30 — Minions (Ed's U-39), on the laptop
+- Laptop is now Ed's main machine. Pulled `idea-round/4-world` (16b0e66), committed Unity's missing metas (e780813, pushed on Ed's OK).
+- Pets became **minions**: `Companions/Minion.cs` (plain C#: `MinionSkill`, `MinionRules` levels/EXP/skill order/gates/room/junk/tree states). `Companion` has Level, Exp, Skills, `GainExp`, `CatchUp`, `Learn`; `CompanionRoster.Best(MinionSkill)`; Fighter-only battle minion. Feeding gives EXP; fusion keeps the higher level and passes a skill. `CompanionWork`: Builder (vehicle parts, modules, reinforce, level-up), Tinker, junk picks, Hungriest.
+- `RaftCompanions`: jobs by skill with Chores switches (Mender, Alchemist, Smith, Tinker, Builder, Salvager, Glutton); taming has no role pick. `PetsPanel` is the Minions menu (My minions / Skill tree / Chores); HUD lists minions with level, EXP and current job (`MinionActivity`). Wording "Pets" → "Minions" in menus and FAQ (new Minions topic).
+- Save: level, exp, skills; older saves turn roles into skills (Familiar → Fighter + Looter, Crew → Crewmate + Mender, Mystic → Alchemist + Smith) and stage into a level.
+- Tests: new `MinionTests` (12), updated companion/save tests. Compiled with Unity's Roslyn while the Editor was open; Ed runs the Test Runner.
+
 ## 2026-10-30 — Idea Round 4: World conditions
 - Ed picked World conditions after Phase 8 (row 3 of the combined plan: U-10, U-15, C-3, U-21). Branch `idea-round/4-world` from main d60cfa8.
 - `World/WorldRules` (plain C#): time of day (8-minute day), Sun/Moon affinity from the element (+20% ATK/+10% DEF at its time, −10% ATK against), weather effects (waves, drift speed, hook reach, reel sweet spot, alive/dead rolls, floating-loot share, hint accuracy, sight range), weather transitions (storms only after rain/rough seas), thunderstrike chance (Fortress ½, Sky ×1.5). `World/WorldState`: clock, weather, forecast, wreck field, events.

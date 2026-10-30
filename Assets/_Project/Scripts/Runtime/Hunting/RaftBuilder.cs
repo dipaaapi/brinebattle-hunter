@@ -608,14 +608,14 @@ namespace BrineBattle.Hunting
             // Taking apart goes through the Salvage Bin (Ed's ask); making pops out of the storage box.
             if (r.kind == RecipeKind.Dismantle) SalvageBin.Instance?.Took($"{CraftRules.Describe(r.inputs)} → {CraftRules.Describe(r.outputs)}", 3, new Color(0.8f, 0.45f, 1f));
             else StorageBox.Instance?.Crafted(CraftRules.Describe(r.outputs));
-            // A Mystic companion (Phase 7) sometimes makes one more of a gear, potion or oil.
-            var mystic = hook.Companions.Best(Companions.CompanionRole.Mystic);
+            // An Alchemist minion (Phase 7, U-39) sometimes makes one more of a gear, potion or oil.
+            var mystic = hook.Companions.Best(Companions.MinionSkill.Alchemist);
             var cat = CraftRules.CategoryOf(r);
             if (mystic != null && r.kind == RecipeKind.Craft && cat != RecipeCategory.Raft && cat != RecipeCategory.Dismantle && cat != RecipeCategory.Pet
-                && Random.value < Companions.CompanionRules.MysticExtraChance(mystic.Rarity))
+                && Random.value < Companions.CompanionRules.MysticExtraChance(mystic.Rank))
             {
                 foreach (var o in r.outputs) hook.Inventory.Add(o.item, o.count);
-                message += $" {mystic.Name} (Mystic) made an extra one!";
+                message += $" {mystic.Name} (Alchemist) made an extra one!";
                 if (hook.TryGetComponent<RaftCompanions>(out var pets)) pets.Incantation(mystic);
             }
             hook.Log(message);
@@ -647,10 +647,10 @@ namespace BrineBattle.Hunting
                 if (s.Durability.Broken) GUILayout.Label($"<color={HuntStyles.BadHex}>Broken</color>", HuntStyles.Hint);
                 GUILayout.EndVertical();
             }
-            if (hook.Companions.Best(Companions.CompanionRole.Crew) != null)
+            if (hook.Companions.Best(Companions.MinionSkill.Mender) != null)
             {
-                // One slider per module kind, not per module (owner idea U-25: less clutter). The Crew repairs at or below it.
-                GUILayout.Label("<b>Crew auto-repair</b>", HuntStyles.Text);
+                // One slider per module kind, not per module (owner idea U-25: less clutter). The Mender repairs at or below it.
+                GUILayout.Label("<b>Mender auto-repair</b>", HuntStyles.Text);
                 foreach (var kind in modules.Slots.Values.Select(x => x.Item).Distinct())
                 {
                     float at = CompanionSettings.CrewRepairAt(kind.id);

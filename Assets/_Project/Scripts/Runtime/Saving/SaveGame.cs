@@ -94,6 +94,9 @@ namespace BrineBattle.Saving
             public string echo;
             /// <summary>HP now and ailment (U-32/U-33); -1 in older saves = full HP.</summary>
             public int hp = -1, status, statusRounds;
+            /// <summary>Minion level, EXP and skills (U-39). Level 0 = an older save: <see cref="role"/> and stage turn into skills and a level.</summary>
+            public int level, exp;
+            public List<int> skills = new List<int>();
         }
         [Serializable] public class Gorge { public string monster; public List<string> parts = new List<string>(); }
         [Serializable] public class Grave { public string id, name; public int rarity, role, age; }
@@ -129,10 +132,11 @@ namespace BrineBattle.Saving
                 d.companions.Add(new SaveData.Pet
                 {
                     id = c.Id, name = c.Name, element = (int)c.Element, habitat = (int)c.Habitat, rarity = (int)c.Rarity,
-                    role = (int)c.Role, maxHp = c.MaxHp, attack = c.Attack, defense = c.Defense, speed = c.Speed,
+                    maxHp = c.MaxHp, attack = c.Attack, defense = c.Defense, speed = c.Speed,
                     age = c.Age, stage = (int)c.Stage, growth = c.Growth, infusions = c.Infusions, look = c.Look,
                     echo = string.IsNullOrEmpty(c.Echo) ? null : c.Echo,
                     hp = c.Hp, status = (int)c.Status, statusRounds = c.StatusRounds,
+                    level = c.Level, exp = c.Exp, skills = c.Skills.Select(s => (int)s).ToList(),
                 });
             foreach (var m in pets.Memorials)
                 d.memorials.Add(new SaveData.Grave { id = m.Id, name = m.Name, rarity = (int)m.Rarity, role = (int)m.Role, age = m.Age });
@@ -173,18 +177,41 @@ namespace BrineBattle.Saving
                 ? (d.bosses ?? new List<int>()).Select(b => (Rarity)b)
                 : Enumerable.Range(0, (int)raft.Tier).Select(b => (Rarity)b));
             moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
-            pets.Restore(d.companions.Select(p => new Companion
+            pets.Restore(d.companions.Select(LoadPet), d.activeCompanion, d.habitats);
+            pets.RestoreMemorials(d.memorials.Select(m => new Memorial
+                { Id = m.id, Name = m.name, Rarity = (Rarity)m.rarity, Role = (CompanionRole)m.role, Age = m.age }));
+            return missing;
+        }
+
+        /// <summary>
+        /// One saved minion. Older saves (no level) become minions here (U-39): the old role gives two skills
+        /// (Familiar → Fighter + Looter, Crew → Crewmate + Mender, Mystic → Alchemist + Smith) and the stage a level
+        /// (Young 1, Adult 10, Elder 20); then it learns whatever else its level and room allow.
+        /// </summary>
+        public static Companion LoadPet(SaveData.Pet p)
+        {
+            var c = new Companion
             {
                 Id = p.id, Name = p.name, Element = (Element)p.element, Habitat = (Habitat)p.habitat, Rarity = (Rarity)p.rarity,
-                Role = (CompanionRole)p.role, MaxHp = p.maxHp, Attack = p.attack, Defense = p.defense, Speed = p.speed,
+                MaxHp = p.maxHp, Attack = p.attack, Defense = p.defense, Speed = p.speed,
                 Age = p.age, Stage = (GrowthStage)p.stage, Growth = p.growth, Infusions = p.infusions, Look = p.look,
                 Echo = string.IsNullOrEmpty(p.echo) ? null : p.echo,
                 Hp = p.hp < 0 ? p.maxHp : Math.Min(p.hp, p.maxHp),
                 Status = (Battle.StatusEffect)p.status, StatusRounds = p.statusRounds,
-            }), d.activeCompanion, d.habitats);
-            pets.RestoreMemorials(d.memorials.Select(m => new Memorial
-                { Id = m.id, Name = m.name, Rarity = (Rarity)m.rarity, Role = (CompanionRole)m.role, Age = m.age }));
-            return missing;
+            };
+            if (p.level > 0)
+            {
+                c.Level = p.level;
+                c.Exp = p.exp;
+                c.Skills = (p.skills ?? new List<int>()).Select(s => (MinionSkill)s).ToList();
+            }
+            else
+            {
+                c.Level = c.Stage == GrowthStage.Elder ? 20 : c.Stage == GrowthStage.Adult ? 10 : 1;
+                c.Skills = CompanionRules.SkillsOf((CompanionRole)p.role).ToList();
+                c.CatchUp();
+            }
+            return c;
         }
     }
 }

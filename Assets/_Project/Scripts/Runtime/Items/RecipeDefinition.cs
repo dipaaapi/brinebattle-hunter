@@ -63,14 +63,14 @@ namespace BrineBattle.Items
             return true;
         }
 
-        public static readonly string[] CategoryLabels = { "Gear", "Player", "Pet", "Raft", "Dismantle" };
+        public static readonly string[] CategoryLabels = { "Gear", "Player", "Minion", "Raft", "Dismantle" };
 
         /// <summary>What each workbench tab is for.</summary>
         public static readonly string[] CategoryHints =
         {
             "Weapons, armor and accessories. Equip them from the Bag (B).",
             "Potions for you and the raft, and oils for your weapon.",
-            "Treats for your pets and habitats where they live.",
+            "Treats for your minions and habitats where they live.",
             "Planks and parts, auto-loot modules, hammers, and the vehicle parts of your raft type.",
             "Take crafted things apart to get materials back (Salvage Bin).",
         };

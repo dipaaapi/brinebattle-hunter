@@ -63,10 +63,10 @@ namespace BrineBattle.Hunting
             if (hook?.Companions.Active != null && !hook.Companions.Active.KnockedOut) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
             WorldClock.Empower(state.Companion);
             fighter = state.Companion != null ? hook.Companions.Active : null;
-            var crew = hook?.Companions.Best(Companions.CompanionRole.Crew);
-            if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rarity);
-            var mystic = hook?.Companions.Best(Companions.CompanionRole.Mystic);
-            if (mystic != null) state.SupportHeal = Companions.CompanionRules.MysticBattleHeal(mystic.Rarity);
+            var crew = hook?.Companions.Best(Companions.MinionSkill.Crewmate);
+            if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rank);
+            var mystic = hook?.Companions.Best(Companions.MinionSkill.Alchemist);
+            if (mystic != null) state.SupportHeal = Companions.CompanionRules.MysticBattleHeal(mystic.Rank);
             // Battle visuals (idea U-19): created here so older Hook scenes get them without a rebuild.
             if (stage == null && !TryGetComponent(out stage)) stage = gameObject.AddComponent<BattleStage>();
             stage.Begin(raft, target, state.Companion);
@@ -263,7 +263,7 @@ namespace BrineBattle.Hunting
                     var item = kv.Key;
                     string what = item.effect == ConsumableEffect.HealHunter ? $"+{item.effectAmount} HP"
                         : item.effect == ConsumableEffect.RepairRaft ? $"+{item.effectAmount} raft"
-                        : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} pet"
+                        : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} minion"
                         : $"{item.element}, {item.effectAmount} rounds";
                     GUI.enabled = waiting && state.CanUseItem(item);
                     if (GUILayout.Button($"{item.displayName} ×{kv.Value} ({what})")) UseItem(item);

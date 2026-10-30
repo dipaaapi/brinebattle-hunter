@@ -132,8 +132,8 @@ namespace BrineBattle.Battle
             {
                 int fixedHp = Math.Min(CrewRepair, RaftMaxHp - RaftHp);
                 RaftHp += fixedHp;
-                Add($"Your crew patches the raft: +{fixedHp} HP.");
-                Emit(BattleEventKind.Heal, BattleActor.Raft, BattleActor.Raft, fixedHp, "Crew");
+                Add($"Your crewmate patches the raft: +{fixedHp} HP.");
+                Emit(BattleEventKind.Heal, BattleActor.Raft, BattleActor.Raft, fixedHp, "Crewmate");
             }
             if (Outcome == BattleOutcome.Ongoing) TickAilments();
             if (CoatingRounds > 0 && --CoatingRounds == 0) Add($"The {Coating} oil wears off.");
@@ -194,8 +194,8 @@ namespace BrineBattle.Battle
             if (target.Hp >= target.MaxHp) return;
             int heal = Math.Min(SupportHeal, target.MaxHp - target.Hp);
             target.Hp += heal;
-            Add(pet ? $"Your mystic heals {Companion.Name}: +{heal} HP." : $"Your mystic heals you: +{heal} HP.");
-            Emit(BattleEventKind.Heal, BattleActor.Raft, pet ? BattleActor.Companion : BattleActor.Hunter, heal, "Mystic");
+            Add(pet ? $"Your alchemist heals {Companion.Name}: +{heal} HP." : $"Your alchemist heals you: +{heal} HP.");
+            Emit(BattleEventKind.Heal, BattleActor.Raft, pet ? BattleActor.Companion : BattleActor.Hunter, heal, "Alchemist");
         }
 
         void CompanionTurn()

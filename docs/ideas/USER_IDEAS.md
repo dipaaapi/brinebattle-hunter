@@ -185,3 +185,6 @@ The raft type's parts are modules that build into a whole vehicle: Sky a plane, 
 
 ### U-38 Difficulty by raft types — 2026-10-30 · ✅ Idea Round 4 · GDD §6
 Easy: unlock (finish) 1 raft type; Normal: 2 types; Hard: all 3. Harder means less loot and tougher monsters in battle.
+
+### U-39 Minions instead of pets — 2026-10-30 · 🟨 Idea Round 4 · GDD §10
+A tamed monster becomes a minion, one kind, no Mystic/Crew/Familiar split. It levels up by eating loot, mostly the low-quality stuff that would be thrown away or dismantled, and gains new skills as it levels: alchemy, battle companion, crewmate, looter and more, depending on rarity, fusion, evolution and level. Skills include auto-repair, auto-upgrade, auto-craft and auto-install on the raft and on equipment (the hammer, its own food, the player's gear, weapons and accessories). On auto, minions also take junk apart by the Bag's rarity settings and use what comes out to craft higher-rarity raft parts, gear and consumables, toward leaving the sea. A new UI goes with it: a skill tree page, the HUD showing minions and what they do, and "Minions" instead of "Pets".
