@@ -16,7 +16,7 @@
   - `SalvageBin`: its own box next to the storage box; `Inventory.Salvaged` and dismantle crafts fly essence orbs into it; click to open (essence + dismantle).
   - Planks only: `RaftGrid.Walkable`, `Raft.WalkableAt`; hunter and pets never step on modules or habitats.
   - Raft looks by type (`RaftDecor`): sea train, winged plane, pirate ship.
-  - Raft tree: Level up + Tree in one page; type picked once (`RaftGrid.Chosen/CanChoose/Choose`, `RaftTree.PickLevel` = 2 until Ed decides on Lv 10); unpicked types lock.
+  - Raft tree: Level up + Tree in one page; type picked once (`RaftGrid.Chosen/CanChoose/Choose`, `RaftTree.PickLevel` = 2: Ed picked one choice at the first level-up, since raft levels stop at 6); unpicked types lock.
   - Mystic: incantation circle when it crafts/refines. Crew: walks over and hammers for 4 s with a progress bar (`CompanionWork.CrewInstall`).
   - FAQ updated. +5 rules tests (232 in the cloud check).
 

@@ -11,7 +11,7 @@ namespace BrineBattle.Rafts
     /// </summary>
     public static class RaftTree
     {
-        /// <summary>The raft level at which the type is picked (Ed asked for Lv 10 once the raft has that many levels).</summary>
+        /// <summary>The raft level at which the type is picked, once: the first level-up (Ed's call; raft levels stop at 6).</summary>
         public const int PickLevel = 2;
 
         /// <summary>STR/INT/DEX tag and look for each type (Ed's ask).</summary>

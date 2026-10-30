@@ -172,4 +172,4 @@ Consumable potions in variants: HP, toxic relief (poison), confusion relief, a b
 - Raft looks by type: Fortress (STR tank) = sea train, Sky (INT) = winged plane, Beast (DEX) = pirate ship.
 - Raft skill tree: Level up and Tree in one page; pick the type once (Ed: at Lv 10, after the 10 levels of basics); the picked type's tab is the default, the others lock and don't branch out.
 - Mystic crafting shows a glowing incantation circle; the Crew hammers each install with a loading bar, never instant.
-Open: raft levels stop at 6, so the Lv 10 pick waits on Ed's answer (Lv 2 for now).
+Ed's call: the raft levels stop at 6, so the type is picked once at the first level-up (Lv 2).
