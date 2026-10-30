@@ -37,7 +37,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 | 3 | **World conditions:** day/night with sun/moon affinity, rough seas, thunderstrikes, weather deciding what drifts, fog | U-10, U-15, C-3, U-21 | Idea Round / own phase |
 | 4 | **Gear slots and accessories:** skill slots as a hard limit by rarity, plus an accessory slot | U-12 (rest) | Idea Round |
 | 5 | **Manual harvest:** a timing input with a 30% miss, next to Auto | U-9 (rest) | Idea Round |
-| 6 | 🟨 (Phase 8, built, waiting for Ed's test) **Raft types and absorption:** absorbed parts show on the monster | U-2, U-3, C-7 | Phase 8 |
+| 6 | ✅ (Phase 8) **Raft types and absorption:** absorbed parts show on the monster | U-2, U-3, C-7 | Phase 8 |
 | 7 | **Art and sound pass:** models, music/SFX | U-18, U-20, U-24 | Phase 9 |
 | 8 | **Other hunters:** NPC/ghost rafts before real party play | U-5, C-8 | Phase 10 |
 | 9 | **Player manual:** in-game How to Play + PDF | U-22 | after the game is done |

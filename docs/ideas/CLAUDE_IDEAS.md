@@ -22,7 +22,7 @@ Sources are consumed, but the result inherits one passive from the consumed one.
 ### C-6 Bestiary / Hunter's Journal — 2026-10-28 · 🔀 merged into U-11 · §4, §11 · S · Phase 4
 Each monster entry fills in as you harvest/fight it: weakness, loot table, tame chance. Cheap to build on the Phase 1 data, rewards repeat hunts.
 
-### C-7 Absorbed parts are visible on the monster — 2026-10-28 · 🟨 built in Phase 8 (eaten parts stick out of the gorged drift) · §6 · M · Phase 8
+### C-7 Absorbed parts are visible on the monster — 2026-10-28 · ✅ Phase 8 (eaten parts stick out of the gorged drift) · §6 · M · Phase 8
 A monster that ate your Fortress shell shows it and gains armor; you see what you'll get back. Makes U-3 readable and personal ("that one has my mast").
 
 ### C-8 Asynchronous hunters before real multiplayer — 2026-10-28 · 💡 · §12 · M · Phase 10
@@ -31,8 +31,8 @@ Other hunters first appear as NPC/ghost rafts (trade, message-in-a-bottle) befor
 ### C-9 Type chart: RO-style cycle, secondaries multiply their parts — 2026-10-28 · 💡 · §8 · S · Phase 1
 Main cycle Water > Fire > Earth > Wind > Water: strong ×1.5, weak ×0.75, otherwise ×1. A secondary element counts as both of its parts and the multipliers are multiplied (Steam vs Earth = 1 × 1.5 = 1.5), clamped to 0.5–2. None is neutral. Implemented in Phase 1 as a **tunable default** (`ElementChart` asset), so changing the cycle or numbers later costs nothing.
 
-### C-10 Habitats are where pets heal — 2026-10-30 · 🟨 built in Phase 8 · §10 · S · Phase 8
+### C-10 Habitats are where pets heal — 2026-10-30 · ✅ Phase 8 · §10 · S · Phase 8
 With pets on health instead of age (U-32), habitats do more than add room: each Tide Pool or Sky Perch on the raft makes pets heal 50% faster. Gives a reason to build habitats even with free room.
 
-### C-11 The drift says what ailment it carries — 2026-10-30 · 🟨 built in Phase 8 · §4, §5 · S · Phase 8
+### C-11 The drift says what ailment it carries — 2026-10-30 · ✅ Phase 8 · §4, §5 · S · Phase 8
 Next to the Dead/Weakened/Alive hint, a drift shows the ailment its hits give (☠ Poison, ♦ Bleed, ◉ Blind), so the player can make or bring the right cure (U-33) before hooking it.

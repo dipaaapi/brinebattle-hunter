@@ -20,6 +20,7 @@
   - U-30: five more modules by rarity (Tarred Net … Abyssal Maw) and six kinds of floating loot (`MonsterDefinition.isFlotsam`, `DriftSpawner.PickFlotsam`, `ModuleRules.CatchesFlotsam`).
   - U-29: `HookController.FamiliarFetch` (+ Pets → Chores toggle).
   - Save: hunter HP/ailment, pet HP/ailment, raft paths. DataVersion 11. FAQ updated. +23 rules tests (216 in the wider cloud check).
+- Ed tested on the office desktop and said proceed. Unity-generated data, scenes and metas committed from the desktop (68aac4a). PR into main: **Phase 8 done.** Next: Idea Round 4 or Phase 9 on Ed's pick.
 
 ## 2026-10-29 — Phase 7 part 2 (companion growth: evolution and old age)
 - Branch `phase/7-growth` from main after PR #4. Ideas merged into one plan in `ideas/COMPARISON.md` (U-25 and C-9 kept on their own).

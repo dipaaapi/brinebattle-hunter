@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 8 — Raft types & absorption (🟨 built on `phase/8-raft-types`, waiting for Ed's Unity test) |
-| **Next step** | Ed tests in Unity (Test Runner Run All, then Play), including the new health/ailments, raft tree and modules; answers the two open questions (Sky flight, module battles eating parts); then PR and merge |
+| **Current phase** | Phase 8 ✅ (merged). Next: Idea Round 4, then Phase 9 — Art pass |
+| **Next step** | Ed picks Idea Round 4 (or goes straight to Phase 9). Open: Sky raft real flight? Module battles eat parts? (defaults: no, no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-30 |
@@ -136,7 +136,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 **Done when:** mastery grows from hunting and crafting, reveals recipes, makes hints more accurate, and essence can be combined. (Built on `phase/7-growth` at Ed's ask; merged with Phase 7 in PR #5.)
 
-### 🟨 Phase 8 — Raft types & absorption
+### ✅ Phase 8 — Raft types & absorption
 Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 - [x] Raft kind per part; type from the parts (Fortress / Sky / Beast / Hybrid / Plain) with battle, HP and reach bonuses (`RaftTypeRules`)
 - [x] Typed parts at every raft level: Shell Plating, Wing Sail, Beast Harness (+ recipes); parts tinted by kind; Build and HUD show the type
@@ -145,7 +145,7 @@ Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 - [x] FAQ entries; rules tests (raft types, absorption, camera)
 - [x] Owner's asks: Familiar no longer glued to the hunter while hooking; camera zoom and rotate
 - [x] Ed's ideas added at his ask (2026-10-30): pets have health instead of aging, ambush and outburst hazards (U-32); ailments + cure potions (U-33); raft tree by type (U-31); modules by rarity + floating loot (U-30); Familiar fetches loot (U-29); Claude's C-10 (habitats heal pets faster) and C-11 (ailment sign over drifts)
-- [ ] Ed's Unity test; answers on Sky flight and module battles
+- [x] Ed's Unity test on the office desktop; Unity-generated data committed (68aac4a). Sky flight and module-battle absorption stay open questions (defaults kept)
 
 **Done when:** building with one kind of part changes the raft's type and its bonuses show in battle, and a monster that ate a part comes back gorged and gives the part back when beaten.
 
