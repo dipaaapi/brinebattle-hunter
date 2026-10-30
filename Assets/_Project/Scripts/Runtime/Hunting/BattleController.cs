@@ -20,6 +20,8 @@ namespace BrineBattle.Hunting
         public bool Active => state != null;
         /// <summary>True while any battle runs: the world around the raft holds still.</summary>
         public static bool InBattle { get; private set; }
+        /// <summary>The monster being fought, so the hunter can face it (Ed's ask).</summary>
+        public static Drift Foe { get; private set; }
         /// <summary>True while the battle camera is still easing back; the camera rig waits for it.</summary>
         public static bool CameraBusy { get; private set; }
 
@@ -50,6 +52,7 @@ namespace BrineBattle.Hunting
             drift = target;
             onEnd = onFinished;
             InBattle = true;
+            Foe = target;
             endTimer = 0f;
             var hook = FindFirstObjectByType<HookController>();
             state = new BattleState(hook != null ? hook.Fighter() : Combatant.Hunter(), target.Fighter, raft.MaxHp, new System.Random());
@@ -185,6 +188,7 @@ namespace BrineBattle.Hunting
             stage.Clear();
             state = null;
             InBattle = false;
+            Foe = null;
             ForceAuto = false;
             drift = null;
             onEnd?.Invoke(outcome);

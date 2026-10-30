@@ -21,6 +21,19 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void SunCrossesByDayMoonByNight()
+        {
+            Assert.AreEqual(0f, WorldRules.SkyArc(0f, out bool moon), 1e-5f);
+            Assert.IsFalse(moon);
+            Assert.AreEqual(0.5f, WorldRules.SkyArc(WorldRules.NightStarts / 2f, out moon), 1e-5f);
+            Assert.IsFalse(moon);
+            Assert.AreEqual(0f, WorldRules.SkyArc(WorldRules.NightStarts, out moon), 1e-5f);
+            Assert.IsTrue(moon);
+            Assert.Greater(WorldRules.SkyArc(0.95f, out moon), 0.8f);
+            Assert.IsTrue(moon);
+        }
+
+        [Test]
         public void SunAndMoonCreaturesPeakAtTheirTime()
         {
             Assert.AreEqual(Affinity.Sun, WorldRules.AffinityOf(Element.Fire));

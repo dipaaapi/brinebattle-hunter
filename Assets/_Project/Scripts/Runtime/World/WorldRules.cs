@@ -55,6 +55,17 @@ namespace BrineBattle.World
             return (float)Math.Sin(Math.PI * t / NightStarts);
         }
 
+        /// <summary>
+        /// Where the sun (or, at night, the moon) is on its arc across the sky: 0 rising in the east,
+        /// 0.5 overhead, 1 setting. The sun crosses from dawn to nightfall, the moon through the night.
+        /// </summary>
+        public static float SkyArc(float day01, out bool moon)
+        {
+            float t = Wrap01(day01);
+            moon = t >= NightStarts;
+            return moon ? (t - NightStarts) / (1f - NightStarts) : t / NightStarts;
+        }
+
         public static float Wrap01(float v)
         {
             v %= 1f;

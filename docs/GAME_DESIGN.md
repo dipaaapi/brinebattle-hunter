@@ -37,6 +37,7 @@ Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown b
 
 - **Fog and sight (U-21):** beyond the sight range a drift shows only "???"; scene fog starts at the raft. Hints never drop below 34%.
 - **Thunderstrikes (U-15):** in a storm, every 20 s a 35% chance (Fortress raft half, Sky raft ×1.5) that lightning sets an edge raft part on fire. While any fire burns the hook is jammed. Click the fire twice to put it out; a Crew pet does it by itself after 5 s; after 15 s the part burns away (never one that would split the raft). Answers U-15's open questions: Fortress parts protect, storms bring more floating loot.
+- **Sun and moon on screen:** the camera looks down at the sea, so a small sky strip (top-right) shows the sun by day and a crescent moon at night moving along their arc, behind clouds in rain, storms and fog. The sun light casts soft shadows that swing round as it moves (Ed: he couldn't see a sun or moon).
 - **Forecast (C-12):** the HUD shows the day, time, weather and the next weather with a countdown, so a storm is never a surprise.
 - **Wreck field (C-13):** when a storm clears, the next 3 drifts are floating loot one rarity higher.
 
@@ -264,7 +265,7 @@ The view orbits the raft: mouse wheel or + / − zooms (8–45 m), right-drag or
 
 ### Hunter on the raft (Ed's ask)
 
-Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces. The Familiar walks after the hunter at its own pace and stays where it is, hopping, while the hunter hooks (Ed: it used to move as if stuck to the hunter).
+Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces. In battle the hunter turns to face the monster (Ed's ask). The Familiar walks after the hunter at its own pace and stays where it is, hopping, while the hunter hooks (Ed: it used to move as if stuck to the hunter).
 
 ### Away pause (Ed's call)
 

@@ -9,6 +9,7 @@
 - Hooked in: `DriftSpawner` (affinity-weighted creature pick, state roll, hints, speed, floating loot, wreck field), `Drift` (far drifts "???", `Fighter` empowered), `HookController.Fighter` and the pet (empowered), `BattleController` (pet empowered, a log line says who the time/weather favours), `Raft.HookReach`, reel sweet spot, HUD line with the forecast.
 - Claude's ideas, per Ed's ask to add my own: **C-12 Forecast** and **C-13 Wreck field**.
 - Save: time, day, weather, forecast, wrecks (`hasWorld`; older saves start in the morning). FAQ topic "Day & weather". No data/builder changes (DataVersion stays 11). +10 rules tests (226 in the cloud check); Runtime compiles. Unity test on Ed's PC next.
+- Ed's Unity test: the hunter didn't face the monster in battle, and no sun or moon could be seen. Fixes: `HunterMotion` turns the hunter toward `BattleController.Foe` during battles; `WorldClock` draws a sky strip (top-right) with the sun or a crescent moon on its arc (`WorldRules.SkyArc`), clouds in bad weather, and turns on soft sun shadows. +1 test (227).
 
 ## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
 - Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).

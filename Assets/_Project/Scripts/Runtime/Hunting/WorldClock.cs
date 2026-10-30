@@ -54,6 +54,8 @@ namespace BrineBattle.Hunting
             foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
                 if (l.type == LightType.Directional) { sun = l; break; }
             Waves.WeatherScale = WorldRules.WaveScale(Now.Weather);
+            // Shadows swing round as the sun crosses the sky, so the time of day shows on the raft too.
+            if (sun != null && sun.shadows == LightShadows.None) sun.shadows = LightShadows.Soft;
         }
 
         /// <summary>A loaded save puts the clock back where it was.</summary>
@@ -202,6 +204,67 @@ namespace BrineBattle.Hunting
                 RenderSettings.fogEndDistance = camDist + sight * 1.8f;
             }
         }
+
+        // ---- Sun and moon in the sky (Ed: "sun and moon wala naman ako nakikita") ----
+
+        /// <summary>
+        /// The camera looks down at the sea, so the sky itself is never on screen. A small sky strip at
+        /// the top-right shows the sun (by day) or the moon (at night) moving along its arc, dimmed by clouds.
+        /// </summary>
+        void OnGUI()
+        {
+            if (Now == null || WorldPause.Open != Menu.None || WorldPause.Asleep) return;
+            HuntStyles.Begin();
+            const float w = 200f, h = 74f;
+            var box = new Rect(HuntStyles.W - w - 12f, 30f, w, h);
+            var sky = cam != null ? cam.backgroundColor : Color.gray;
+            GUI.DrawTexture(box, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(sky.r, sky.g, sky.b, 0.92f), 0, 10);
+            GUI.DrawTexture(box, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 1f, 1f, 0.35f), 2, 10);
+            // Sea line along the bottom.
+            GUI.DrawTexture(new Rect(box.x + 8f, box.yMax - 18f, w - 16f, 2f), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.2f, 0.45f, 0.7f, 0.9f), 0, 0);
+
+            float u = WorldRules.SkyArc(Now.Time01, out bool moon);
+            float cx = box.center.x, baseY = box.yMax - 18f, rx = w / 2f - 22f, ry = h - 32f;
+            // The path, as faint dots.
+            for (int i = 0; i <= 12; i++)
+            {
+                var p = Arc(i / 12f, cx, baseY, rx, ry);
+                GUI.DrawTexture(new Rect(p.x - 1.5f, p.y - 1.5f, 3f, 3f), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 1f, 1f, 0.3f), 0, 1.5f);
+            }
+            var at = Arc(u, cx, baseY, rx, ry);
+            bool cloudy = Now.Weather == Weather.Storm || Now.Weather == Weather.Rain || Now.Weather == Weather.Fog;
+            float alpha = cloudy ? 0.55f : 1f;
+            const float r = 11f;
+            var disc = new Rect(at.x - r, at.y - r, 2f * r, 2f * r);
+            if (!moon)
+            {
+                // Glow, then the sun.
+                GUI.DrawTexture(new Rect(at.x - r * 1.7f, at.y - r * 1.7f, r * 3.4f, r * 3.4f), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.85f, 0.3f, 0.25f * alpha), 0, r * 1.7f);
+                GUI.DrawTexture(disc, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.82f, 0.25f, alpha), 0, r);
+            }
+            else
+            {
+                // A crescent: a pale disc with the night sky taking a bite out of it.
+                GUI.DrawTexture(disc, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.92f, 0.94f, 1f, alpha), 0, r);
+                GUI.DrawTexture(new Rect(disc.x + r * 0.7f, disc.y - r * 0.25f, 2f * r, 2f * r), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(sky.r, sky.g, sky.b, 1f), 0, r);
+            }
+            if (cloudy)
+            {
+                var cloud = new Color(0.75f, 0.78f, 0.82f, 0.85f);
+                GUI.DrawTexture(new Rect(at.x - 16f, at.y + 2f, 22f, 10f), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, cloud, 0, 5f);
+                GUI.DrawTexture(new Rect(at.x - 4f, at.y - 2f, 22f, 12f), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, cloud, 0, 6f);
+            }
+            GUI.Label(new Rect(box.x, box.yMax - 17f, w, 16f), $"<size=11><b>{(moon ? "Moon" : "Sun")}</b> · {WorldRules.Name(Now.Time)} · {WorldRules.Name(Now.Weather)}</size>", SkyLabel);
+        }
+
+        static Vector2 Arc(float u, float cx, float baseY, float rx, float ry)
+        {
+            float a = Mathf.PI * (1f - Mathf.Clamp01(u));
+            return new Vector2(cx + Mathf.Cos(a) * rx, baseY - Mathf.Sin(a) * ry);
+        }
+
+        static GUIStyle skyLabel;
+        static GUIStyle SkyLabel => skyLabel ??= new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter, normal = { textColor = Color.white } };
 
         /// <summary>Applies time and weather to a fighter (in place); returns a note like "Moon power" or "".</summary>
         public static string Empower(Combatant c) => Now == null ? "" : WorldRules.Apply(c, Now.Time, Now.Weather);

@@ -42,8 +42,20 @@ namespace BrineBattle.Hunting
 
         void Update()
         {
-            if (hunter == null || BattleController.InBattle) return;
+            if (hunter == null) return;
             float dt = Time.deltaTime;
+            if (BattleController.InBattle)
+            {
+                // The battle stage moves the hunter; here it only turns to face the monster (Ed's ask).
+                var foe = BattleController.Foe;
+                if (foe == null) return;
+                var to = Raft.transform.InverseTransformDirection(foe.transform.position - hunter.position);
+                to.y = 0f;
+                if (to.sqrMagnitude < 0.01f) return;
+                yaw = Mathf.MoveTowardsAngle(yaw, Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, 540f * dt);
+                hunter.localRotation = Quaternion.Slerp(hunter.localRotation, Quaternion.Euler(0f, yaw, 0f), 12f * dt);
+                return;
+            }
             Vector3 goal = Home, offset = Vector3.zero;
             float pitch = 0f, roll = 0f, stretch = 1f, speed = 2.2f, wantYaw = yaw;
 
