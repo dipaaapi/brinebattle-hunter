@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9cc78fe654aae14a8b5e8209fa6e95b, type: 3}
+  m_Name: StormwingRoc
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Monsters.MonsterDefinition
+  isFlotsam: 0
+  isBoss: 1
+  id: stormwing_roc
+  displayName: Stormwing Roc
+  element: 14
+  habitat: 1
+  rarity: 2
+  sizeClass: 1
+  aggression: 1
+  stats:
+    hp: 170
+    attack: 20
+    defense: 10
+    speed: 11
+  inflicts: 4
+  inflictChance: 0.3
+  loot: {fileID: 11400000, guid: a25e2296c5146a5479257068b9819d41, type: 2}
+  description: A giant bird wreathed in lightning. The Lv 3 boss.

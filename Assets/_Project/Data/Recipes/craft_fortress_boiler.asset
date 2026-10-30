@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c19311c7eb565342b4cdf910b850294, type: 3}
+  m_Name: craft_fortress_boiler
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
+  id: craft_fortress_boiler
+  displayName: Boiler
+  kind: 0
+  inputs:
+  - item: {fileID: 11400000, guid: 3408150fdaf8a8345af3877d72da3edc, type: 2}
+    count: 2
+  - item: {fileID: 11400000, guid: 2a761acbec59fca4984d1e39b4b7857e, type: 2}
+    count: 1
+  outputs:
+  - item: {fileID: 11400000, guid: 57d0d692492ac2740bc66f01311849c9, type: 2}
+    count: 1
