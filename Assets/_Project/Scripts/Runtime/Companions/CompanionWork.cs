@@ -87,7 +87,7 @@ namespace BrineBattle.Companions
 
         /// <summary>
         /// The consumable the Mystic would craft to keep the bag stocked: a potion or oil recipe the bag
-        /// can pay for whose output is below <paramref name="keep"/>. Potions before oils, emptiest first. Null if none.
+        /// can pay for whose output is below <paramref name="keep"/>. Potions before oils, rarest first, then emptiest. Null if none.
         /// </summary>
         public static RecipeDefinition MysticCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, int keep)
         {
@@ -96,6 +96,7 @@ namespace BrineBattle.Companions
                 .Where(r => { var s = CraftRules.SubOf(r); return s == RecipeSub.Potions || s == RecipeSub.Oils || s == RecipeSub.Treats; })
                 .Where(r => bag.Count(r.outputs[0].item) < keep && CraftRules.CanCraft(bag, r))
                 .OrderBy(r => CraftRules.SubOf(r) == RecipeSub.Oils ? 1 : 0)
+                .ThenByDescending(r => r.outputs[0].item.rarity)   // U-39: climb the ladder, the rarest it can pay for first
                 .ThenBy(r => bag.Count(r.outputs[0].item))
                 .FirstOrDefault();
         }
