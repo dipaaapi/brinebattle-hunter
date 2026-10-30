@@ -148,3 +148,18 @@ Can the game be a standalone app and also run in a browser (WebGL)? If yes, do b
 ### U-28 Free on itch.io with microtransactions and small ads — 2026-10-29 · 💡 · after the game is finished
 Release the game free on itch.io, with microtransactions and small ads, to earn back what making it cost.
 - Claude's notes (to check before building anything): itch.io hosts both the WebGL (play in browser) and downloadable builds and supports "pay what you want" and paid add-ons, but it has no in-game purchase system, so microtransactions need an outside payment service. Many ad networks don't serve inside itch.io's embedded page. The game targets kids, so ads and purchases aimed at children fall under child-privacy rules (e.g. COPPA) and ad networks' child-directed settings. Cosmetic-only purchases (pet looks, raft skins) fit the design best.
+
+### U-29 Familiar helps with looting — 2026-10-30 · ✅ Phase 8 · GDD §10
+Some pets, especially the Familiar, can join in on looting.
+
+### U-30 More loot modules, by rarity, that catch raft materials — 2026-10-30 · ✅ Phase 8 · GDD §6
+More kinds of looting modules, in rarity tiers, that can be crafted. Better modules widen what can be looted, even planks and other things the raft needs.
+
+### U-31 Material tree by raft type, not a skill tree — 2026-10-30 · ✅ Phase 8 · GDD §6, Phase 8
+The further you upgrade, the more variants you choose from. You simply pick which raft type you're upgrading toward, and that unlocks a tree of materials instead of a skill tree.
+
+### U-32 Pets don't age; they have health instead — 2026-10-30 · ✅ Phase 8 · GDD §10 (would replace Phase 7 old age)
+No more aging for pets. Instead, pets have health that drops when the enemy attacks them in battle, in a random attack before a battle, or in a sudden outburst after the enemy is beaten that can hurt the player or the pet.
+
+### U-33 Status-curing potions — 2026-10-30 · ✅ Phase 8 · GDD §11 Consumables
+Consumable potions in variants: HP, toxic relief (poison), confusion relief, a blood-clotting patch (bleeding) and an eye cleanser (for silence/blindness). Needs status effects in battle first.

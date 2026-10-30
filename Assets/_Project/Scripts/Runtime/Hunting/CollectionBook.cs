@@ -30,7 +30,12 @@ namespace BrineBattle.Hunting
 
         static readonly string[] Tabs = { "Monsters", "Items", "Pets" };
 
-        void Awake() => Log = CollectionLog.Deserialize(PlayerPrefs.GetString(SaveKey, ""));
+        void Awake()
+        {
+            Log = CollectionLog.Deserialize(PlayerPrefs.GetString(SaveKey, ""));
+            // Floating loot (U-30) isn't a creature: keep it out of the monster pages.
+            monsters = monsters.Where(m => m != null && !m.isFlotsam).ToList();
+        }
 
         void OnEnable()
         {
@@ -108,7 +113,7 @@ namespace BrineBattle.Hunting
                 labels[i] = $"{Tabs[i]} {all.Count(x => Log.Has((CollectionPage)i, x))}/{all.Count}";
             }
             var recipes = hook != null && hook.builder != null ? hook.builder.recipes.Where(r => r != null).ToList() : new List<RecipeDefinition>();
-            labels[Tabs.Length] = $"Recipes {recipes.Count(r => hook.Mastery.Knows(r))}/{recipes.Count}";
+            labels[Tabs.Length] = $"Recipes {recipes.Count(r => hook.Knows(r))}/{recipes.Count}";
             int newTab = HuntStyles.Tabs(recipesTab ? Tabs.Length : (int)page, labels);
             if (newTab == Tabs.Length) { if (!recipesTab) scroll = Vector2.zero; recipesTab = true; }
             else if (recipesTab || (CollectionPage)newTab != page) { recipesTab = false; page = (CollectionPage)newTab; selected = null; scroll = Vector2.zero; }
@@ -156,7 +161,7 @@ namespace BrineBattle.Hunting
             foreach (var r in recipes.OrderBy(AlchemyMastery.Needed).ThenBy(r => (int)CraftRules.CategoryOf(r)))
             {
                 GUILayout.BeginVertical(HuntStyles.Card);
-                if (m.Knows(r))
+                if (hook.Knows(r))
                 {
                     var main = r.outputs.FirstOrDefault(o => o.item != null);
                     string name = r.kind == RecipeKind.Dismantle ? $"Take apart: {CraftRules.Describe(r.inputs)}"
@@ -164,7 +169,7 @@ namespace BrineBattle.Hunting
                     GUILayout.Label($"<b>{name}</b>  <size=11>{CraftRules.CategoryLabels[(int)CraftRules.CategoryOf(r)]}</size>", HuntStyles.Text);
                     GUILayout.Label(r.kind == RecipeKind.Dismantle ? $"Gives {CraftRules.Describe(r.outputs)}" : CraftRules.Describe(r.inputs), HuntStyles.Hint);
                 }
-                else GUILayout.Label($"<b>???</b>  <color={HuntStyles.BadHex}>Alchemy Mastery Lv {AlchemyMastery.Needed(r)}</color>", HuntStyles.Text);
+                else GUILayout.Label($"<b>???</b>  <color={HuntStyles.BadHex}>{RaftBuilder.LockReason(hook, r)}</color>", HuntStyles.Text);
                 GUILayout.EndVertical();
             }
             GUILayout.EndScrollView();

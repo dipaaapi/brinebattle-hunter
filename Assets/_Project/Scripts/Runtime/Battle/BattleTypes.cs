@@ -58,6 +58,8 @@ namespace BrineBattle.Battle
         /// <summary>A non-damage action worth a label (brace, guard, oil).</summary>
         Buff = 6,
         KnockedOut = 7,
+        /// <summary>An ailment: given, hurting (Amount), missing or confused (Text) (U-33).</summary>
+        Ailment = 8,
     }
 
     /// <summary>

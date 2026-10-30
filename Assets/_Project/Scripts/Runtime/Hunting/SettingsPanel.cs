@@ -91,6 +91,9 @@ namespace BrineBattle.Hunting
             ("C", "Collection Book"),
             ("R", "Build the raft and the Workbench"),
             ("Esc", "Settings, or close a menu"),
+            ("Mouse wheel  or  + / -", "Zoom in and out"),
+            ("Right-drag  or  Q / E", "Turn the view around the raft"),
+            ("F", "Put the view back"),
         };
 
         void Controls()

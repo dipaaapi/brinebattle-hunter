@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b334df3d988672843a4c075a146b9e52, type: 3}
+  m_Name: CoralChunk_Loot
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Loot.LootTable
+  entries:
+  - item: {fileID: 11400000, guid: b6b93255d758d6e47ba61457013be568, type: 2}
+    chance: 1
+    minQuantity: 1
+    maxQuantity: 1
+  - item: {fileID: 11400000, guid: 83e224ed00c44d245b0145dda4380bd9, type: 2}
+    chance: 0.5
+    minQuantity: 1
+    maxQuantity: 2

@@ -36,6 +36,12 @@ namespace BrineBattle.Saving
         public int activeCompanion = -1;
         /// <summary>Companions that died of old age (Book).</summary>
         public List<Grave> memorials = new List<Grave>();
+        /// <summary>The hunter's HP and ailment between battles (U-32); -1 = full (older saves).</summary>
+        public int hunterHp = -1, hunterStatus, hunterStatusRounds;
+        /// <summary>Raft type picked at each raft level-up (U-31), from Lv 2 up.</summary>
+        public List<int> raftPaths = new List<int>();
+        /// <summary>Monsters that ate raft parts (Phase 8).</summary>
+        public List<Gorge> gorged = new List<Gorge>();
         public int habitats;
         public string collection;
         /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>
@@ -74,7 +80,10 @@ namespace BrineBattle.Saving
             /// <summary>Feeding points, potions infused, the fusion echo and the look (0 / null in older saves).</summary>
             public int growth, infusions, look;
             public string echo;
+            /// <summary>HP now and ailment (U-32/U-33); -1 in older saves = full HP.</summary>
+            public int hp = -1, status, statusRounds;
         }
+        [Serializable] public class Gorge { public string monster; public List<string> parts = new List<string>(); }
         [Serializable] public class Grave { public string id, name; public int rarity, role, age; }
     }
 
@@ -96,6 +105,7 @@ namespace BrineBattle.Saving
             d.harpoon = harpoon?.Current ?? -1;
             d.raftTier = (int)raft.Tier;
             d.raftKills = raft.Kills;
+            d.raftPaths = raft.Paths.Select(p => (int)p).ToList();
             foreach (var kv in raft.Parts) d.parts.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, id = kv.Value.id });
             if (moduleDurability != null)
                 foreach (var kv in moduleDurability) d.modules.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, count = kv.Value });
@@ -106,6 +116,7 @@ namespace BrineBattle.Saving
                     role = (int)c.Role, maxHp = c.MaxHp, attack = c.Attack, defense = c.Defense, speed = c.Speed,
                     age = c.Age, stage = (int)c.Stage, growth = c.Growth, infusions = c.Infusions, look = c.Look,
                     echo = string.IsNullOrEmpty(c.Echo) ? null : c.Echo,
+                    hp = c.Hp, status = (int)c.Status, statusRounds = c.StatusRounds,
                 });
             foreach (var m in pets.Memorials)
                 d.memorials.Add(new SaveData.Grave { id = m.Id, name = m.Name, rarity = (int)m.Rarity, role = (int)m.Role, age = m.Age });
@@ -140,6 +151,7 @@ namespace BrineBattle.Saving
             if (d.parts.Count > 0)
                 raft.Restore(d.parts.Select(p => new KeyValuePair<Cell, ItemDefinition>(new Cell(p.x, p.z), Find(p.id))), (Rarity)d.raftTier);
             raft.Kills = d.raftKills;
+            raft.RestorePaths((d.raftPaths ?? new List<int>()).Select(p => (RaftKind)p));
             moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
             pets.Restore(d.companions.Select(p => new Companion
             {
@@ -147,6 +159,8 @@ namespace BrineBattle.Saving
                 Role = (CompanionRole)p.role, MaxHp = p.maxHp, Attack = p.attack, Defense = p.defense, Speed = p.speed,
                 Age = p.age, Stage = (GrowthStage)p.stage, Growth = p.growth, Infusions = p.infusions, Look = p.look,
                 Echo = string.IsNullOrEmpty(p.echo) ? null : p.echo,
+                Hp = p.hp < 0 ? p.maxHp : Math.Min(p.hp, p.maxHp),
+                Status = (Battle.StatusEffect)p.status, StatusRounds = p.statusRounds,
             }), d.activeCompanion, d.habitats);
             pets.RestoreMemorials(d.memorials.Select(m => new Memorial
                 { Id = m.id, Name = m.name, Rarity = (Rarity)m.rarity, Role = (CompanionRole)m.role, Age = m.age }));

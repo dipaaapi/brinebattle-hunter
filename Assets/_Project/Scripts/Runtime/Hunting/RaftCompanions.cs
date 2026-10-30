@@ -26,6 +26,13 @@ namespace BrineBattle.Hunting
             set => PlayerPrefs.SetInt("brinebattle.mysticKeep", Mathf.Clamp(value, 0, 10));
         }
 
+        /// <summary>Familiars swim out for dead drifts and floating loot (Ed's U-29). Default on.</summary>
+        public static bool FamiliarLoots
+        {
+            get => PlayerPrefs.GetInt("brinebattle.familiarLoots", 1) == 1;
+            set => PlayerPrefs.SetInt("brinebattle.familiarLoots", value ? 1 : 0);
+        }
+
         public static bool MysticRefines
         {
             get => PlayerPrefs.GetInt("brinebattle.mysticRefines", 1) == 1;
@@ -144,7 +151,15 @@ namespace BrineBattle.Hunting
                         p = OnRaft(from) ? Vector3.MoveTowards(from, b.Walk, Time.deltaTime * 1.2f) : b.Walk;
                         break;
                     default:
-                        p = hunterLocal + new Vector3(0.6f, -0.3f, -0.2f);
+                        // Walks after the hunter at its own pace. While the hunter hooks and reels at
+                        // the edge it stays where it is and cheers (Ed: it was glued to the hunter).
+                        var at = b.Go.transform.localPosition;
+                        at.y = 0.5f;
+                        var side = new Vector3(hunterLocal.x + 0.6f, 0.5f, hunterLocal.z - 0.2f);
+                        if (!OnRaft(side)) side = new Vector3(hunterLocal.x - 0.6f, 0.5f, hunterLocal.z - 0.2f);
+                        if (!OnRaft(at)) p = side;
+                        else if (hook.HookTarget != null) { p = at; hop = Mathf.Abs(Mathf.Sin(b.Phase * 7f)) * 0.15f; }
+                        else p = Vector3.MoveTowards(at, side, Time.deltaTime * 1.4f);
                         break;
                 }
                 b.Go.transform.localPosition = p + Vector3.up * hop;
@@ -289,7 +304,7 @@ namespace BrineBattle.Hunting
                     mysticTimer = 0f;
                     // The hammer comes first when the raft has outgrown it (Ed's ask), then potions and oils.
                     // Only recipes the hunter's Alchemy Mastery knows (Idea Round 3).
-                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Mastery.Knows(r)).ToList() : null;
+                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Knows(r)).ToList() : null;
                     var recipe = known != null
                         ? CompanionWork.MysticHammerPick(known, hook.Inventory, Raft.Tier)
                           ?? CompanionWork.MysticCraftPick(known, hook.Inventory, CompanionSettings.MysticKeep)

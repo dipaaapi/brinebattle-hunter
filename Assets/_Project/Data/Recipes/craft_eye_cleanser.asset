@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c19311c7eb565342b4cdf910b850294, type: 3}
+  m_Name: craft_eye_cleanser
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
+  id: craft_eye_cleanser
+  displayName: Eye Cleanser
+  kind: 0
+  inputs:
+  - item: {fileID: 11400000, guid: 83e224ed00c44d245b0145dda4380bd9, type: 2}
+    count: 1
+  - item: {fileID: 11400000, guid: 5ecfa7dce8e187b4d90a4934eecc863a, type: 2}
+    count: 1
+  outputs:
+  - item: {fileID: 11400000, guid: 9c3b4a346d0a6424784cf329c4dc01e3, type: 2}
+    count: 1

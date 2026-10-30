@@ -12,5 +12,7 @@ namespace BrineBattle.Items
         CoatWeapon = 3,
         /// <summary>Companion treat: heals the battle companion, or wakes it up if it was knocked out.</summary>
         HealCompanion = 4,
+        /// <summary>Cures the item's ailment (U-33): the hunter first, otherwise the battle companion.</summary>
+        CureStatus = 5,
     }
 }

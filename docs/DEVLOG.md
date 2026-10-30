@@ -2,6 +2,26 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
+- Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).
+- Ed's playtest: the Familiar moved with the hunter while hooking, as if attached. Now it walks after the hunter at its own pace and stays put, hopping, while the hunter casts and reels (`RaftCompanions`).
+- Ed: zoom and rotate. `CameraRig` (added to the main camera at runtime): wheel or +/− zoom, right-drag or Q/E turn, F reset; waits for the battle camera (`BattleController.CameraBusy`). `CameraRules` limits. Settings → Controls and the FAQ list the keys.
+- Ed: do the next phase together. **Phase 8** on `phase/8-raft-types`:
+  - `RaftKind` on raft parts; `RaftTypeRules.Classify` (≥ 3 parts and ≥ 50% → type; two kinds ≥ 30% → Hybrid at half bonuses), `RaftBonus` (Fortress +40% raft HP/+3 DEF/−1 SPD, Sky +3 SPD/+4 m reach/−10% HP, Beast +4 ATK/+1 SPD). `RaftGrid.Type`, `MaxHp` includes the bonus; the hunter's battle stats (`HookController.Fighter`) and the danger check use it; `Raft.HookReach` adds the reach.
+  - Typed parts per raft level: Shell Plating, Wing Sail, Beast Harness (`SampleDataBuilder.TypedParts`, 18 items + recipes; Shellback Plate and Coralbound Plank count as Fortress). DataVersion 10. Parts tinted by kind; Build shows the type, kind counts, and parts held by gorged monsters; HUD shows the type.
+  - Absorption: a lost battle (not a module battle) or Flee eats one edge raft part (`RaftGrid.EdibleParts`/`Absorb`; never modules/habitats, never splits, never at 5 parts or fewer). `GorgedLog` (saved as `gorged`) and `AbsorbRules`: the monster returns (30% per spawn, one at a time) alive, bigger, "Gorged!", +20% stats per part; beating it returns the parts plus one extra loot roll each.
+  - Sky = bonus only and module battles don't eat parts: Claude's defaults, asked Ed (GDD Open Questions).
+  - FAQ: raft types, typed parts, gorged monsters; flee and loss answers updated. +21 tests (171/171 rules tests in the cloud check). Runtime compiles; Editor and Unity test still on Ed's PC.
+
+- Ed's new ideas U-29…U-33; Ed: build them now, not just list them, and asked for Claude's ideas too (added C-10, C-11). All on `phase/8-raft-types`:
+  - U-32 health instead of aging: `Companion.Hp/Status`, `KnockedOut`; aging no longer called (`CountKill`). Hunter HP carries over (`HookController.HunterBody`, `Fighter`, `TakeVitals`), resets after a defeat. `HazardRules`: ambush while reeling a live catch, outburst after a kill, regen (hunter 3 s/HP, pets 6 s/HP faster per habitat = C-10), `Treat` outside battle (Bag → Use, Pets → pet). HUD shows Hunter HP; Pets shows HP/ailment instead of Life.
+  - U-33 ailments: `StatusRules` (Poison, Confusion, Bleed, Blind), `Combatant.Status/Inflicts`, monster hits inflict, end-of-round ticks, confusion self-hits, blind misses and blocks skills; `ConsumableEffect.CureStatus` + `ItemDefinition.cures`; Toxic Relief, Confusion Relief, Clotting Patch, Eye Cleanser, Big Brine Tonic; Auto/Semi-auto cure. `BattleEventKind.Ailment` popups. C-11: ailment tag over drifts.
+  - U-31 raft tree: `RaftTree`, `RaftGrid.Paths/PathLevel/TryUpgrade(inv, path)`, Level up picks Fortress/Sky/Beast, Build → Tree tab, locked recipes say why. 15 tree materials; typed parts Lv 2+ = last part + tree material. Tree materials aren't spent as monster materials.
+  - U-30: five more modules by rarity (Tarred Net … Abyssal Maw) and six kinds of floating loot (`MonsterDefinition.isFlotsam`, `DriftSpawner.PickFlotsam`, `ModuleRules.CatchesFlotsam`).
+  - U-29: `HookController.FamiliarFetch` (+ Pets → Chores toggle).
+  - Save: hunter HP/ailment, pet HP/ailment, raft paths. DataVersion 11. FAQ updated. +23 rules tests (216 in the wider cloud check).
+- Ed tested on the office desktop and said proceed. Unity-generated data, scenes and metas committed from the desktop (68aac4a). PR into main: **Phase 8 done.** Next: Idea Round 4 or Phase 9 on Ed's pick.
+
 ## 2026-10-29 — Phase 7 part 2 (companion growth: evolution and old age)
 - Branch `phase/7-growth` from main after PR #4. Ideas merged into one plan in `ideas/COMPARISON.md` (U-25 and C-9 kept on their own).
 - `Companion.Age`/`Stage`/`GrowOlder()`/`Evolve()`, `CompanionRules.Lifespan`/`AgeFor`/`EvolveBoost`/`EssenceLeft`, `CompanionRoster.GrowOlder()` and `Memorials`. `HookController.CountKill()` (every beaten monster): raft kill count + every companion ages; evolutions and deaths go to the log, the dead leave essence. Bag shows stage and battles left; Book Pets page shows memorials. Save keeps age, stage and memorials (older saves load as Young, age 0).

@@ -15,6 +15,8 @@ namespace BrineBattle.Items
         [Min(1)] public int maxStack = 99;
         [Tooltip("Modules only: level 1-5 (idea U-13).")]
         [Range(1, 5)] public int moduleLevel = 1;
+        [Tooltip("Raft parts only: the raft type this part builds toward (Phase 8). Plain counts toward none.")]
+        public Rafts.RaftKind raftKind;
         [Tooltip("Gear only: attack (weapon) or defense (armor) added to the hunter. Refine (+) raises it.")]
         [Min(0)] public int gearPower;
         [Tooltip("Gear only: passive skills. Only as many count as the rarity allows (Rare 1, Legendary 2, Mythic 3).")]
@@ -23,6 +25,8 @@ namespace BrineBattle.Items
         public GearActive[] actives = new GearActive[0];
         [Tooltip("Consumables only: what using it does (Phase 6).")]
         public ConsumableEffect effect;
+        [Tooltip("Cure potions only: the ailment it cures (U-33).")]
+        public Battle.StatusEffect cures;
         [Tooltip("Consumables only: HP restored to the hunter or the raft, or rounds an elemental oil lasts.")]
         [Min(0)] public int effectAmount;
         public Sprite icon;

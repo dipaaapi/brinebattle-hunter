@@ -19,6 +19,7 @@ MonoBehaviour:
   element: 3
   maxStack: 99
   moduleLevel: 1
+  raftKind: 1
   gearPower: 0
   passives: 
   actives: 

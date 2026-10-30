@@ -1,8 +1,10 @@
 using System.Linq;
+using BrineBattle.Battle;
 using BrineBattle.Elements;
 using BrineBattle.Items;
 using BrineBattle.Loot;
 using BrineBattle.Monsters;
+using BrineBattle.Rafts;
 using UnityEditor;
 using UnityEngine;
 
@@ -167,6 +169,21 @@ namespace BrineBattle.Editor
             Recipe("reinforce_coralbound_plank", "Coralbound Plank", RecipeKind.Upgrade, new[] { (shell, 2), (scale, 2) }, new[] { (coral, 1) });
             Recipe("reinforce_leviathan_beam", "Leviathan Beam", RecipeKind.Upgrade, new[] { (coral, 2), (fang, 3) }, new[] { (leviathan, 1) });
             Recipe("reinforce_abyssal_keel", "Abyssal Keel", RecipeKind.Upgrade, new[] { (leviathan, 2), (shell, 3) }, new[] { (abyssal, 1) });
+            // Phase 8: raft types. Typed parts at every raft level; most parts of one kind set the raft's type.
+            SetRaftKind(shell, RaftKind.Fortress);
+            SetRaftKind(coral, RaftKind.Fortress);
+            // Ed's U-31: each level of a type also has its own refined material (the tree's node), opened by
+            // picking that type at a raft level-up. Bases per level: Tarred, Shellback, Coralbound, Leviathan, Abyssal.
+            var bases = new[] { tarred, shell, coral, leviathan, abyssal };
+            TypedParts(RaftKind.Fortress, "ShellPlating", "shell_plating", "Shell Plating", Element.Earth, plank, scale, bases,
+                new[] { "Hardened Scale", "Shell Weave", "Coral Bulwark", "Leviathan Hide", "Abyssal Carapace" },
+                "Scales riveted over planks. Fortress part: slow but sturdy.");
+            TypedParts(RaftKind.Sky, "WingSail", "wing_sail", "Wing Sail", Element.Wind, plank, feather, bases,
+                new[] { "Gale Down", "Storm Silk", "Cloud Bladder", "Tempest Plume", "Aether Membrane" },
+                "A feathered sail on a frame. Sky part: quick, with a longer hook reach.");
+            TypedParts(RaftKind.Beast, "BeastHarness", "beast_harness", "Beast Harness", Element.Water, plank, fang, bases,
+                new[] { "Fang Rope", "Sinew Strap", "Bone Yoke", "Leviathan Tendon", "Abyssal Chain" },
+                "Fang-studded straps for a monster to pull the raft. Beast part: hits harder and moves faster.");
             // Ed's ask: building needs a hammer of the raft's level or better; each hammer upgrades from the last.
             var hammers = new[]
             {
@@ -260,6 +277,58 @@ namespace BrineBattle.Editor
             SetAggression("GaleGull", 0.3f);
             SetAggression("ShellbackCrab", 0.45f);
 
+            // Ed's U-30: a module line by rarity (each upgrades from the last) and floating loot that only
+            // modules of its rarity or better catch, so better modules gather more of what the raft needs.
+            var nets = new[]
+            {
+                Module("TarredNet", "tarred_net", "Tarred Net", Rarity.Uncommon, 2, "A tar-soaked net on a pole. Catches floating loot up to Uncommon."),
+                Module("ShellTrap", "shell_trap", "Shell Trap", Rarity.Rare, 3, "Crab-shell jaws that snap shut. Catches floating loot up to Rare."),
+                Module("CoralSnare", "coral_snare", "Coral Snare", Rarity.Epic, 4, "Living coral loops that grab and hold. Catches floating loot up to Epic."),
+                Module("LeviathanGrapple", "leviathan_grapple", "Leviathan Grapple", Rarity.Legendary, 5, "A great fang on a long chain. Catches floating loot up to Legendary."),
+                Module("AbyssalMaw", "abyssal_maw", "Abyssal Maw", Rarity.Mythic, 5, "Deep-wood jaws that never let go. Catches any floating loot."),
+            };
+            var netBases = new[] { tarred, shell, coral, leviathan, abyssal };
+            var netExtra = new[] { (fang, 1), (fang, 2), (scale, 2), (fang, 3), (shell, 2) };
+            ItemDefinition prevNet = hookArm;
+            for (int n = 0; n < nets.Length; n++)
+            {
+                Recipe($"upgrade_{nets[n].id}", nets[n].displayName, RecipeKind.Upgrade, new[] { (prevNet, 1), (netBases[n], 2), netExtra[n] }, new[] { (nets[n], 1) });
+                Recipe($"dismantle_{nets[n].id}", nets[n].displayName, RecipeKind.Dismantle, new[] { (nets[n], 1) }, new[] { (prevNet, 1), (netBases[n], 1) });
+                prevNet = nets[n];
+            }
+            Flotsam("DriftwoodBundle", "driftwood_bundle", "Driftwood Bundle", Rarity.Common, (plank, 1f, 2, 3), (patch, 0.4f, 1, 1));
+            Flotsam("TarBarrel", "tar_barrel", "Tar Barrel", Rarity.Uncommon, (tarred, 1f, 1, 2), (patch, 0.6f, 1, 2));
+            Flotsam("ShellWreck", "shell_wreck", "Shell Wreck", Rarity.Rare, (shell, 1f, 1, 2), (scale, 0.6f, 1, 2));
+            Flotsam("CoralChunk", "coral_chunk", "Coral Chunk", Rarity.Epic, (coral, 1f, 1, 1), (scale, 0.5f, 1, 2));
+            Flotsam("LeviathanBones", "leviathan_bones", "Leviathan Bones", Rarity.Legendary, (leviathan, 1f, 1, 1), (fang, 0.8f, 2, 3));
+            Flotsam("AbyssalDriftwood", "abyssal_driftwood", "Abyssal Driftwood", Rarity.Mythic, (abyssal, 1f, 1, 1));
+
+            // Ed's U-33: ailments from monster hits (shown over drifts, C-11), and potions that cure them.
+            SetInflicts("BrinefangEel", StatusEffect.Poison, 0.25f);
+            SetInflicts("GaleGull", StatusEffect.Blind, 0.25f);
+            SetInflicts("ShellbackCrab", StatusEffect.Bleed, 0.3f);
+            var antidote = Cure("ToxicRelief", "toxic_relief", "Toxic Relief", StatusEffect.Poison,
+                "Eel venom, boiled down and turned against itself. Cures poison.");
+            var calm = Cure("ConfusionRelief", "confusion_relief", "Confusion Relief", StatusEffect.Confusion,
+                "Sharp-smelling feather salts. Clears a dazed head.");
+            var clot = Cure("ClottingPatch", "clotting_patch", "Clotting Patch", StatusEffect.Bleed,
+                "An eel-skin patch packed with crushed scale. Stops bleeding.");
+            var eyes = Cure("EyeCleanser", "eye_cleanser", "Eye Cleanser", StatusEffect.Blind,
+                "Fresh water filtered through planks. Clears blinded eyes, so skills work again.");
+            Recipe("craft_toxic_relief", "Toxic Relief", RecipeKind.Craft, new[] { (fang, 1), (feather, 1) }, new[] { (antidote, 1) });
+            Recipe("craft_confusion_relief", "Confusion Relief", RecipeKind.Craft, new[] { (feather, 2), (fang, 1) }, new[] { (calm, 1) });
+            Recipe("craft_clotting_patch", "Clotting Patch", RecipeKind.Craft, new[] { (patch, 1), (scale, 1) }, new[] { (clot, 1) });
+            Recipe("craft_eye_cleanser", "Eye Cleanser", RecipeKind.Craft, new[] { (scale, 1), (plank, 1) }, new[] { (eyes, 1) });
+            var bigTonic = LoadOrCreate<ItemDefinition>($"{Root}/Items/BigBrineTonic.asset", i =>
+            {
+                i.id = "big_brine_tonic"; i.displayName = "Big Brine Tonic"; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Uncommon; i.element = Element.Water;
+                i.effect = ConsumableEffect.HealHunter; i.effectAmount = 60;
+                i.description = "Two tonics and a fang, steeped overnight. Restores 60 HP.";
+            });
+            Recipe("craft_big_brine_tonic", "Big Brine Tonic", RecipeKind.Craft, new[] { (tonic, 2), (fang, 1) }, new[] { (bigTonic, 1) });
+            EnsureEntry(gullLoot, antidote, 0.1f, 1, 1);
+
             AssetDatabase.SaveAssets();
             Debug.Log($"[SampleDataBuilder] done, chart strong={chart.strong}");
         }
@@ -279,6 +348,49 @@ namespace BrineBattle.Editor
                 i.rarity = rarity; i.element = element;
                 i.description = description;
             });
+
+        static void SetRaftKind(ItemDefinition part, RaftKind kind)
+        {
+            if (part.raftKind == kind) return;
+            part.raftKind = kind;
+            EditorUtility.SetDirty(part);
+        }
+
+        /// <summary>
+        /// One typed part per raft level (Phase 8) and the material tree behind it (U-31). Lv 1: 1 plank +
+        /// 2 of the kind's raw material. From Lv 2 the level's refined material (node) = the level's base part
+        /// + level × raw material, and the part = the last level's part + that node. Names say the level.
+        /// </summary>
+        static void TypedParts(RaftKind kind, string file, string id, string name, Element element,
+            ItemDefinition plank, ItemDefinition material, ItemDefinition[] bases, string[] nodeNames, string description)
+        {
+            ItemDefinition last = null;
+            for (var r = Rarity.Common; r <= Rarity.Mythic; r++)
+            {
+                int lv = (int)r + 1;
+                string suffix = lv == 1 ? "" : $" Lv {lv}";
+                var part = RaftPart($"{file}{(lv == 1 ? "" : lv.ToString())}", $"{id}{(lv == 1 ? "" : "_" + lv)}", name + suffix, r, element,
+                    $"{description} Fits a raft up to Lv {lv}.");
+                SetRaftKind(part, kind);
+                if (last == null)
+                    Recipe($"craft_{id}", name, RecipeKind.Craft, new[] { (plank, 1), (material, 2) }, new[] { (part, 1) });
+                else
+                {
+                    string nodeName = nodeNames[lv - 2];
+                    string nodeFile = nodeName.Replace(" ", "");
+                    var node = LoadOrCreate<ItemDefinition>($"{Root}/Items/{nodeFile}.asset", i =>
+                    {
+                        i.id = nodeName.ToLowerInvariant().Replace(" ", "_"); i.displayName = nodeName; i.type = ItemType.Material;
+                        i.rarity = r; i.element = element;
+                        i.description = $"{kind} material for a Lv {lv} raft (raft tree).";
+                    });
+                    SetRaftKind(node, kind);
+                    Recipe($"refine_{node.id}", nodeName, RecipeKind.Craft, new[] { (bases[lv - 2], 1), (material, lv) }, new[] { (node, 1) });
+                    Recipe($"reinforce_{id}_{lv}", name + suffix, RecipeKind.Upgrade, new[] { (last, 1), (node, 1) }, new[] { (part, 1) });
+                }
+                last = part;
+            }
+        }
 
         static ItemDefinition Oil(string file, string id, string name, Element element, string description) =>
             LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
@@ -305,6 +417,50 @@ namespace BrineBattle.Editor
             item.gearPower = power;
             EditorUtility.SetDirty(item);
         }
+
+        static ItemDefinition Module(string file, string id, string name, Rarity rarity, int level, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Module;
+                i.rarity = rarity; i.element = Element.None; i.moduleLevel = level;
+                i.description = description;
+            });
+
+        /// <summary>Floating loot (U-30): a "monster" that is always dead and only carries loot.</summary>
+        static void Flotsam(string file, string id, string name, Rarity rarity, params (ItemDefinition item, float chance, int min, int max)[] drops)
+        {
+            EnsureFolder(Root, "Flotsam");
+            var table = LoadOrCreate<LootTable>($"{Root}/Flotsam/{file}_Loot.asset", t =>
+            {
+                foreach (var d in drops) t.entries.Add(new LootEntry { item = d.item, chance = d.chance, minQuantity = d.min, maxQuantity = d.max });
+            });
+            LoadOrCreate<MonsterDefinition>($"{Root}/Flotsam/{file}.asset", m =>
+            {
+                m.id = id; m.displayName = name; m.isFlotsam = true; m.element = Element.None;
+                m.habitat = Habitat.Sea; m.rarity = rarity; m.sizeClass = 1; m.aggression = 0f;
+                m.stats = new MonsterStats { hp = 1, attack = 0, defense = 0, speed = 0 };
+                m.loot = table;
+                m.description = "Floating loot. Hook it, or let a module of its rarity or better catch it.";
+            });
+        }
+
+        static void SetInflicts(string asset, StatusEffect status, float chance)
+        {
+            var m = AssetDatabase.LoadAssetAtPath<MonsterDefinition>($"{Root}/Monsters/{asset}.asset");
+            if (m == null || (m.inflicts == status && Mathf.Approximately(m.inflictChance, chance))) return;
+            m.inflicts = status;
+            m.inflictChance = chance;
+            EditorUtility.SetDirty(m);
+        }
+
+        static ItemDefinition Cure(string file, string id, string name, StatusEffect status, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Consumable;
+                i.rarity = Rarity.Common; i.element = Element.None;
+                i.effect = ConsumableEffect.CureStatus; i.cures = status; i.effectAmount = 1;
+                i.description = description;
+            });
 
         static void SetAggression(string asset, float value)
         {

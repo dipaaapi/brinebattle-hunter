@@ -29,6 +29,12 @@ namespace BrineBattle.Battle
                 var item = s.Bag.Items.Select(kv => kv.Key).FirstOrDefault(i => i.effect == effect && s.CanUseItem(i));
                 if (item != null) return item;
             }
+            // Ailments (U-33): cure the hunter's, then the companion's, if the bag has the right potion.
+            var cure = s.Bag.Items.Select(kv => kv.Key).FirstOrDefault(i => i.effect == ConsumableEffect.CureStatus && i.cures == s.Hunter.Status && s.CanUseItem(i))
+                ?? (s.Companion != null && s.Companion.Alive
+                    ? s.Bag.Items.Select(kv => kv.Key).FirstOrDefault(i => i.effect == ConsumableEffect.CureStatus && i.cures == s.Companion.Status && s.CanUseItem(i))
+                    : null);
+            if (cure != null) return cure;
             // Companion treats: when the battle companion is low or knocked out (after the hunter and raft).
             if (s.Companion != null && s.Companion.Hp <= s.Companion.MaxHp * LowHp)
             {

@@ -104,7 +104,9 @@ namespace BrineBattle.Hunting
                 // Measured to the drift's edge, so a big crab counts as touching when it looks like it.
                 // Everything that touches is hooked (Ed's ask); a calm weakened one is brought in for the hunter to tame or finish.
                 // A drift pressed against the raft next to this module counts too, even in a notch between parts.
-                var inReach = drifts.Where(x => x != null && !x.Hooked && Flat(x.transform.position - at).magnitude
+                var inReach = drifts.Where(x => x != null && !x.Hooked
+                        && (!x.Monster.isFlotsam || ModuleRules.CatchesFlotsam(s.Item.rarity, x.Monster.rarity))
+                        && Flat(x.transform.position - at).magnitude
                     <= reach + 0.5f * x.transform.localScale.x + (x.TouchingRaft ? Raft.CellSize : 0f)).ToList();
                 // Say once per drift why the module leaves it alone, so a skipped drift doesn't look like a bug.
                 foreach (var x in inReach)

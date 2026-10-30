@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9cc78fe654aae14a8b5e8209fa6e95b, type: 3}
+  m_Name: TarBarrel
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Monsters.MonsterDefinition
+  isFlotsam: 1
+  id: tar_barrel
+  displayName: Tar Barrel
+  element: 0
+  habitat: 0
+  rarity: 1
+  sizeClass: 1
+  aggression: 0
+  stats:
+    hp: 1
+    attack: 0
+    defense: 0
+    speed: 0
+  inflicts: 0
+  inflictChance: 0.25
+  loot: {fileID: 11400000, guid: 940f758bcbb46394eb13ac415328aeb7, type: 2}
+  description: Floating loot. Hook it, or let a module of its rarity or better catch
+    it.

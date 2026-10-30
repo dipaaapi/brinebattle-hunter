@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cc78fe654aae14a8b5e8209fa6e95b, type: 3}
   m_Name: BrinefangEel
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Monsters.MonsterDefinition
+  isFlotsam: 0
   id: brinefang_eel
   displayName: Brinefang Eel
   element: 1
@@ -24,5 +25,7 @@ MonoBehaviour:
     attack: 6
     defense: 2
     speed: 5
+  inflicts: 1
+  inflictChance: 0.25
   loot: {fileID: 11400000, guid: f17e00ac27ebbea4483bdfa3461a2540, type: 2}
   description: A small eel that drifts belly-up to lure hunters close.

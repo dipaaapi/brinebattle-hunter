@@ -18,5 +18,12 @@ MonoBehaviour:
   rarity: 2
   element: 3
   maxStack: 99
+  moduleLevel: 1
+  raftKind: 1
+  gearPower: 0
+  passives: 
+  actives: 
+  effect: 0
+  effectAmount: 0
   icon: {fileID: 0}
   description: A slab of crab shell. Fortress-raft part.

@@ -135,7 +135,10 @@ namespace BrineBattle.Rafts
         public IReadOnlyDictionary<Cell, ItemDefinition> Parts => parts;
         public int Count => parts.Count;
         public int Size => RaftRules.SizeFor(parts.Count);
-        public int MaxHp => parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier));
+        /// <summary>Battle HP: every part's HP, with the raft type's bonus (Phase 8).</summary>
+        public int MaxHp => parts.Count == 0 ? 0 : RaftTypeRules.WithHpBonus(parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier)), Type.Bonus);
+        /// <summary>Fortress, Sky, Beast, a hybrid or Plain, from the raft parts (Phase 8).</summary>
+        public RaftType Type => RaftTypeRules.Classify(parts.Values);
         /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
         public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));
@@ -281,15 +284,65 @@ namespace BrineBattle.Rafts
         /// Raise the tier one step: needs <see cref="RaftRules.KillsToUpgrade"/> kills since the last upgrade,
         /// and spends the materials and essence. Lower-rarity parts already placed stay.
         /// </summary>
-        public bool TryUpgrade(Inventory inv)
+        public bool TryUpgrade(Inventory inv) => TryUpgrade(inv, RaftKind.Plain);
+
+        /// <summary>Levels up and records the raft type picked for the new level (U-31's material tree).</summary>
+        public bool TryUpgrade(Inventory inv, RaftKind path)
         {
             if (UpgradeBlocker(inv) != null) return false;
             inv.SpendMaterials(RaftRules.MaterialsToUpgrade(Tier));
             inv.SpendEssence(Tier, RaftRules.UpgradeCost(Tier));
             Kills = 0;
             Tier++;
+            paths.Add(path);
             Changed?.Invoke();
             return true;
+        }
+
+        readonly List<RaftKind> paths = new List<RaftKind>();
+        /// <summary>The type picked at each level-up: [0] for Lv 2, [1] for Lv 3 … (U-31).</summary>
+        public IReadOnlyList<RaftKind> Paths => paths;
+
+        /// <summary>The highest raft level at which <paramref name="kind"/> was picked; 1 if never.</summary>
+        public int PathLevel(RaftKind kind)
+        {
+            for (int i = paths.Count - 1; i >= 0; i--) if (paths[i] == kind) return i + 2;
+            return 1;
+        }
+
+        /// <summary>Loading a save. Missing entries (older saves) are Plain.</summary>
+        public void RestorePaths(IEnumerable<RaftKind> saved)
+        {
+            paths.Clear();
+            if (saved != null) paths.AddRange(saved);
+            while (paths.Count < (int)Tier) paths.Add(RaftKind.Plain);
+        }
+
+        /// <summary>
+        /// Raft parts a monster could eat (Phase 8): plain raft parts (not modules or habitats) on the
+        /// edge, whose loss doesn't split the raft. None while the raft has <see cref="AbsorbRules.MinParts"/> parts or fewer.
+        /// </summary>
+        public List<Cell> EdibleParts()
+        {
+            if (parts.Count <= AbsorbRules.MinParts) return new List<Cell>();
+            return parts.Where(kv => kv.Value.type == ItemType.Raft && kv.Key.Neighbours().Any(n => !parts.ContainsKey(n)))
+                .Select(kv => kv.Key)
+                .Where(StaysConnectedWithout)
+                .OrderBy(c => c.X).ThenBy(c => c.Z)
+                .ToList();
+        }
+
+        /// <summary>A monster eats one edge part (no hammer needed). Null if nothing can be eaten.</summary>
+        public ItemDefinition Absorb(Random rng, out Cell eaten)
+        {
+            eaten = default;
+            var options = EdibleParts();
+            if (options.Count == 0) return null;
+            eaten = options[rng.Next(options.Count)];
+            var part = parts[eaten];
+            parts.Remove(eaten);
+            Changed?.Invoke();
+            return part;
         }
 
         bool StaysConnectedWithout(Cell removed)

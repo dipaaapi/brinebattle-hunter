@@ -1,4 +1,5 @@
 using System.Linq;
+using BrineBattle.Battle;
 using BrineBattle.Companions;
 using BrineBattle.Items;
 using UnityEngine;
@@ -58,7 +59,9 @@ namespace BrineBattle.Hunting
                 var old = GUI.backgroundColor;
                 if (c == picked) GUI.backgroundColor = HuntStyles.Go;
                 string battle = roster.Active == c ? " ⚔" : "";
-                if (GUILayout.Button($"<color={BagPanel.RarityColor(c.Rarity)}><b>{c.Name}</b></color>{battle}\n<size=11>{c.Role} · {c.StageName}</size>", HuntStyles.RichButton, GUILayout.Height(44)))
+                string hp = c.KnockedOut ? $"<color={HuntStyles.BadHex}>KO</color>" : $"{c.Hp}/{c.MaxHp} HP";
+                string ail = c.Status != StatusEffect.None ? $" <color=#c9a0ff>{StatusRules.Tag(c.Status)}</color>" : "";
+                if (GUILayout.Button($"<color={BagPanel.RarityColor(c.Rarity)}><b>{c.Name}</b></color>{battle}\n<size=11>{c.Role} · {hp}{ail}</size>", HuntStyles.RichButton, GUILayout.Height(44)))
                 { picked = c; feeding = fusing = null; releasing = null; }
                 GUI.backgroundColor = old;
             }
@@ -79,8 +82,18 @@ namespace BrineBattle.Hunting
             GUILayout.Label($"<b>{c.Role}</b>{(active ? " · in battle" : "")}", HuntStyles.Text);
             GUILayout.Label(c.Stats, HuntStyles.Text);
 
-            GUILayout.Label($"Life: {c.AgeLeft} battles left", HuntStyles.Text);
-            HuntStyles.Bar((float)c.AgeLeft / Mathf.Max(1, c.Lifespan), c.AgeLeft < 10 ? new Color(0.95f, 0.45f, 0.4f) : new Color(0.5f, 0.8f, 1f));
+            // Health (Ed's U-32): no more aging. HP carries over between battles and heals on the raft.
+            string ail = c.Status != StatusEffect.None ? $"  <color=#c9a0ff>{StatusRules.Tag(c.Status)} ({c.StatusRounds})</color>" : "";
+            GUILayout.Label(c.KnockedOut ? $"<color={HuntStyles.BadHex}>Knocked out</color> · resting{ail}" : $"Health: {c.Hp}/{c.MaxHp}{ail}", HuntStyles.Text);
+            HuntStyles.Bar((float)c.Hp / Mathf.Max(1, c.MaxHp), c.Hp <= c.MaxHp * 0.35f ? new Color(0.95f, 0.45f, 0.4f) : new Color(0.4f, 0.85f, 0.45f));
+            var treats = hook.TreatsFor(c);
+            if (treats.Count > 0)
+            {
+                GUILayout.BeginHorizontal();
+                foreach (var t in treats.Take(3))
+                    if (GUILayout.Button($"{t.displayName} ({hook.Inventory.Count(t)})", GUILayout.Height(26))) hook.Treat(t, c);
+                GUILayout.EndHorizontal();
+            }
             if (c.Stage < GrowthStage.Elder)
             {
                 int need = CompanionGrowth.GrowthToEvolve(c.Stage);
@@ -118,9 +131,14 @@ namespace BrineBattle.Hunting
         void DrawChores()
         {
             var roster = hook.Companions;
+            if (roster.Best(CompanionRole.Familiar) != null)
+            {
+                GUILayout.Label("Familiar", HuntStyles.Heading);
+                CompanionSettings.FamiliarLoots = GUILayout.Toggle(CompanionSettings.FamiliarLoots, " Fetch dead drifts and floating loot near the raft");
+            }
             if (roster.Best(CompanionRole.Crew) == null && roster.Best(CompanionRole.Mystic) == null)
             {
-                GUILayout.Label("No Crew or Mystic pet yet.", HuntStyles.Text);
+                if (roster.Best(CompanionRole.Familiar) == null) GUILayout.Label("No pets with chores yet.", HuntStyles.Text);
                 return;
             }
             if (roster.Best(CompanionRole.Crew) != null)

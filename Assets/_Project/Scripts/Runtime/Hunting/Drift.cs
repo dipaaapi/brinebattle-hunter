@@ -61,9 +61,10 @@ namespace BrineBattle.Hunting
             this.velocity = current = velocity;
             bobPhase = Random.value * 10f;
             name = $"Drift ({monster.displayName})";
-            Tint.Apply(GetComponent<Renderer>(), Tint.Of(monster.element));
+            Tint.Apply(GetComponent<Renderer>(), monster.isFlotsam ? Raft.PartColor(monster.rarity) : Tint.Of(monster.element));
             float s = 0.6f + 0.35f * monster.sizeClass;
-            transform.localScale = new Vector3(s, s * 0.5f, s * 1.4f);
+            // Floating loot is a flat crate-like slab; creatures keep their capsule shape.
+            transform.localScale = monster.isFlotsam ? new Vector3(s, s * 0.3f, s) : new Vector3(s, s * 0.5f, s * 1.4f);
         }
 
         /// <summary>An alive drift that bit a raft module swims away from it, faster.</summary>
@@ -76,6 +77,37 @@ namespace BrineBattle.Hunting
             side.y = 0f;
             velocity = down * Mathf.Max(2f, current.magnitude * 1.5f) + (side.sqrMagnitude > 0.0001f ? side.normalized * 1.2f : Vector3.zero);
         }
+
+        /// <summary>Raft parts this monster ate (Phase 8). It comes back alive and stronger; 0 for a normal drift.</summary>
+        public int GorgedParts { get; private set; }
+
+        /// <summary>
+        /// A monster that ate raft parts comes back: always alive, bigger, the hint says so, and the eaten
+        /// parts stick out of its back (idea C-7).
+        /// </summary>
+        public void MakeGorged(System.Collections.Generic.IReadOnlyList<Items.ItemDefinition> parts)
+        {
+            GorgedParts = parts.Count;
+            Actual = Hint = DriftState.Alive;
+            Aggression = 1f;
+            name = $"Drift (Gorged {Monster.displayName})";
+            transform.localScale *= 1.25f;
+            for (int i = 0; i < Mathf.Min(parts.Count, Rafts.AbsorbRules.MaxStackedParts); i++)
+            {
+                var chunk = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                chunk.name = $"Eaten {parts[i].displayName}";
+                Destroy(chunk.GetComponent<Collider>());
+                chunk.transform.SetParent(transform, false);
+                // Sizes are in the drift's own (stretched) space.
+                chunk.transform.localPosition = new Vector3((i % 2 == 0 ? -0.18f : 0.18f), 0.45f, 0.3f - 0.2f * i);
+                chunk.transform.localRotation = Quaternion.Euler(20f * (i % 2 == 0 ? 1 : -1), 15f * i, 25f);
+                chunk.transform.localScale = new Vector3(0.35f, 0.5f, 0.2f);
+                Tint.Apply(chunk.GetComponent<Renderer>(), Raft.PartColor(parts[i]));
+            }
+        }
+
+        /// <summary>How this drift fights: its monster's stats, grown by any raft parts it ate.</summary>
+        public Combatant Fighter => Rafts.AbsorbRules.Gorge(Combatant.FromMonster(Monster), GorgedParts);
 
         /// <summary>After a successful sedate (GDD §4).</summary>
         public void MakeWeakened() => Actual = DriftState.Weakened;
@@ -164,8 +196,16 @@ namespace BrineBattle.Hunting
             if (sp.z < 0) return;
             var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
             // "Danger!" before a fight (Ed's call): this monster would likely beat the hunter and pet.
-            bool danger = Hunter != null && DefeatRules.Danger(Hunter, Combatant.FromMonster(Monster), Pet);
-            GUI.Label(rect, $"{(danger ? "<color=#ff6b6b><b>⚠ Danger!</b></color> " : "")}{Monster.displayName}\n<i>{HintText(Hint)}</i>", HuntStyles.WorldLabel);
+            if (Monster.isFlotsam)
+            {
+                GUI.Label(rect, $"{Monster.displayName}\n<i>Floating loot · {Monster.rarity}</i>", HuntStyles.WorldLabel);
+                return;
+            }
+            bool danger = Hunter != null && DefeatRules.Danger(Hunter, Fighter, Pet);
+            string hint = GorgedParts > 0 ? $"<color=#ffb36b>Gorged! Ate {GorgedParts} raft part{(GorgedParts == 1 ? "" : "s")}</color>" : HintText(Hint);
+            // Idea C-11: what ailment its hits carry, so the right potion can be ready.
+            if (Monster.inflicts != StatusEffect.None) hint += $"  <color=#c9a0ff>{StatusRules.Tag(Monster.inflicts)}</color>";
+            GUI.Label(rect, $"{(danger ? "<color=#ff6b6b><b>⚠ Danger!</b></color> " : "")}{Monster.displayName}\n<i>{hint}</i>", HuntStyles.WorldLabel);
         }
     }
 }

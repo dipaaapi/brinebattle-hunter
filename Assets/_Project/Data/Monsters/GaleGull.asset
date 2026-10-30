@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cc78fe654aae14a8b5e8209fa6e95b, type: 3}
   m_Name: GaleGull
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Monsters.MonsterDefinition
+  isFlotsam: 0
   id: gale_gull
   displayName: Gale Gull
   element: 4
@@ -24,5 +25,7 @@ MonoBehaviour:
     attack: 5
     defense: 1
     speed: 9
+  inflicts: 4
+  inflictChance: 0.25
   loot: {fileID: 11400000, guid: 5d5da66945ae1c646a8184e171f947a4, type: 2}
   description: A storm gull that dives at anything shiny on a raft.
