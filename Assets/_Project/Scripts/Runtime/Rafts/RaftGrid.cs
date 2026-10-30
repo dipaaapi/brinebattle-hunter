@@ -284,15 +284,38 @@ namespace BrineBattle.Rafts
         /// Raise the tier one step: needs <see cref="RaftRules.KillsToUpgrade"/> kills since the last upgrade,
         /// and spends the materials and essence. Lower-rarity parts already placed stay.
         /// </summary>
-        public bool TryUpgrade(Inventory inv)
+        public bool TryUpgrade(Inventory inv) => TryUpgrade(inv, RaftKind.Plain);
+
+        /// <summary>Levels up and records the raft type picked for the new level (U-31's material tree).</summary>
+        public bool TryUpgrade(Inventory inv, RaftKind path)
         {
             if (UpgradeBlocker(inv) != null) return false;
             inv.SpendMaterials(RaftRules.MaterialsToUpgrade(Tier));
             inv.SpendEssence(Tier, RaftRules.UpgradeCost(Tier));
             Kills = 0;
             Tier++;
+            paths.Add(path);
             Changed?.Invoke();
             return true;
+        }
+
+        readonly List<RaftKind> paths = new List<RaftKind>();
+        /// <summary>The type picked at each level-up: [0] for Lv 2, [1] for Lv 3 … (U-31).</summary>
+        public IReadOnlyList<RaftKind> Paths => paths;
+
+        /// <summary>The highest raft level at which <paramref name="kind"/> was picked; 1 if never.</summary>
+        public int PathLevel(RaftKind kind)
+        {
+            for (int i = paths.Count - 1; i >= 0; i--) if (paths[i] == kind) return i + 2;
+            return 1;
+        }
+
+        /// <summary>Loading a save. Missing entries (older saves) are Plain.</summary>
+        public void RestorePaths(IEnumerable<RaftKind> saved)
+        {
+            paths.Clear();
+            if (saved != null) paths.AddRange(saved);
+            while (paths.Count < (int)Tier) paths.Add(RaftKind.Plain);
         }
 
         /// <summary>

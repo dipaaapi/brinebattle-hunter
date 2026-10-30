@@ -122,6 +122,7 @@ namespace BrineBattle.Hunting
             filter = GUILayout.Toolbar(filter, Filters, GUILayout.Height(26));
             var list = inv.Items.Where(kv => InFilter(kv.Key.type, filter)).OrderBy(kv => kv.Key.type).ThenBy(kv => kv.Key.rarity).ToList();
             if (list.Count == 0) { GUILayout.Label(filter == 0 ? "The bag is empty." : "Nothing of this kind yet.", HuntStyles.Text); return; }
+            var hookTreats = hook.TreatsFor(null);
             foreach (var kv in list)
             {
                 var item = kv.Key;
@@ -138,6 +139,9 @@ namespace BrineBattle.Hunting
                         hook.Log($"Equipped {hook.Gear.Label(GearRules.SlotOf(item.type))}.");
                     GUI.enabled = true;
                 }
+                // U-32/U-33: drink a potion on the raft (heal or cure the hunter).
+                if (item.type == ItemType.Consumable && hookTreats.Contains(item)
+                    && GUILayout.Button("Use", GUILayout.Width(50), GUILayout.Height(26))) hook.Treat(item, null);
                 int yield = SalvageRules.EssenceYield(item.type, item.rarity);
                 if (yield > 0)
                 {

@@ -61,9 +61,10 @@ namespace BrineBattle.Hunting
             this.velocity = current = velocity;
             bobPhase = Random.value * 10f;
             name = $"Drift ({monster.displayName})";
-            Tint.Apply(GetComponent<Renderer>(), Tint.Of(monster.element));
+            Tint.Apply(GetComponent<Renderer>(), monster.isFlotsam ? Raft.PartColor(monster.rarity) : Tint.Of(monster.element));
             float s = 0.6f + 0.35f * monster.sizeClass;
-            transform.localScale = new Vector3(s, s * 0.5f, s * 1.4f);
+            // Floating loot is a flat crate-like slab; creatures keep their capsule shape.
+            transform.localScale = monster.isFlotsam ? new Vector3(s, s * 0.3f, s) : new Vector3(s, s * 0.5f, s * 1.4f);
         }
 
         /// <summary>An alive drift that bit a raft module swims away from it, faster.</summary>
@@ -195,8 +196,15 @@ namespace BrineBattle.Hunting
             if (sp.z < 0) return;
             var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
             // "Danger!" before a fight (Ed's call): this monster would likely beat the hunter and pet.
+            if (Monster.isFlotsam)
+            {
+                GUI.Label(rect, $"{Monster.displayName}\n<i>Floating loot · {Monster.rarity}</i>", HuntStyles.WorldLabel);
+                return;
+            }
             bool danger = Hunter != null && DefeatRules.Danger(Hunter, Fighter, Pet);
             string hint = GorgedParts > 0 ? $"<color=#ffb36b>Gorged! Ate {GorgedParts} raft part{(GorgedParts == 1 ? "" : "s")}</color>" : HintText(Hint);
+            // Idea C-11: what ailment its hits carry, so the right potion can be ready.
+            if (Monster.inflicts != StatusEffect.None) hint += $"  <color=#c9a0ff>{StatusRules.Tag(Monster.inflicts)}</color>";
             GUI.Label(rect, $"{(danger ? "<color=#ff6b6b><b>⚠ Danger!</b></color> " : "")}{Monster.displayName}\n<i>{hint}</i>", HuntStyles.WorldLabel);
         }
     }

@@ -36,8 +36,15 @@ namespace BrineBattle.Hunting
         /// <summary>Idea Round 3 (C-1): Alchemy Mastery makes the hints more accurate.</summary>
         float Accuracy => hook != null ? Items.AlchemyMastery.HintAccuracy(hook.Mastery.Level) : hintAccuracy;
 
+        /// <summary>Floating loot (Ed's U-30), split from the creature list at start.</summary>
+        readonly List<MonsterDefinition> flotsam = new List<MonsterDefinition>();
+        [Tooltip("Share of new drifts that are floating loot instead of creatures.")]
+        [Range(0f, 1f)] public float flotsamShare = 0.3f;
+
         void Start()
         {
+            flotsam.AddRange(monsters.FindAll(m => m != null && m.isFlotsam));
+            monsters.RemoveAll(m => m == null || m.isFlotsam);
             hook = FindFirstObjectByType<HookController>();
             // A few drifts already in reach so there is something to hook right away.
             for (int i = 0; i < 3; i++) Spawn(Random.Range(-8f, 4f));
@@ -55,10 +62,35 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>
+        /// Now and then floating loot instead of a creature (U-30): rarities up to one above the raft's level,
+        /// the raft's own level most often.
+        /// </summary>
+        MonsterDefinition PickFlotsam()
+        {
+            if (flotsam.Count == 0 || rng.NextDouble() >= flotsamShare) return null;
+            var tier = raft != null ? raft.Tier : Items.Rarity.Common;
+            var fits = flotsam.FindAll(f => f.rarity <= tier + 1);
+            if (fits.Count == 0) return null;
+            float total = 0f;
+            foreach (var f in fits) total += Weight(f.rarity, tier);
+            float roll = (float)rng.NextDouble() * total;
+            foreach (var f in fits)
+            {
+                roll -= Weight(f.rarity, tier);
+                if (roll <= 0f) return f;
+            }
+            return fits[fits.Count - 1];
+        }
+
+        static float Weight(Items.Rarity r, Items.Rarity tier) => r == tier ? 3f : r > tier ? 0.5f : 1f;
+
         void Spawn(float alongCurrent)
         {
             if (monsters.Count == 0 || raft == null) return;
             var monster = monsters[rng.Next(monsters.Count)];
+            var loot = PickFlotsam();
+            if (loot != null) monster = loot;
             // Phase 8: a monster that ate raft parts comes back now and then (one at a time).
             var back = hook != null && !live.Exists(d => d != null && d.GorgedParts > 0) ? hook.Gorged.PickReturning(rng) : null;
             if (back != null) monster = monsters.Find(m => m != null && m.id == back.MonsterId) ?? monster;
@@ -69,8 +101,8 @@ namespace BrineBattle.Hunting
             var pos = raft.transform.position + dir * alongCurrent + side * Random.Range(-9f, 9f);
             pos.y = 0.1f;
 
-            var state = EncounterRules.RollState(deadWeight, weakenedWeight, aliveWeight, rng);
-            var hint = EncounterRules.Hint(state, Accuracy, rng);
+            var state = monster.isFlotsam ? DriftState.Dead : EncounterRules.RollState(deadWeight, weakenedWeight, aliveWeight, rng);
+            var hint = monster.isFlotsam ? DriftState.Dead : EncounterRules.Hint(state, Accuracy, rng);
 
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.transform.SetParent(transform, true);

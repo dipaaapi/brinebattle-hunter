@@ -171,6 +171,12 @@ namespace BrineBattle.Hunting
                     Pop(to, e.Text, to != null ? to.FlashColor : Color.white, 22);
                     yield return new WaitForSeconds(0.35f);
                     break;
+                case BattleEventKind.Ailment:
+                    if (e.Amount > 0) Impact(to, e);
+                    else if (to != null) { to.Flash = 1f; to.FlashColor = new Color(0.75f, 0.45f, 1f); }
+                    Pop(to, e.Text, new Color(0.8f, 0.55f, 1f), 20, 0.6f);
+                    yield return new WaitForSeconds(0.3f);
+                    break;
                 case BattleEventKind.KnockedOut:
                     Pop(to, e.To == BattleActor.Raft ? "Broken!" : "KO!", new Color(1f, 0.35f, 0.3f), 30);
                     for (float t = 0; t < 0.7f; t += Time.deltaTime)

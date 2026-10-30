@@ -33,6 +33,12 @@ namespace BrineBattle.Rafts
         /// <summary>Cost per <see cref="RepairChunk"/> durability: level × (rarity + 1).</summary>
         public static int RepairCost(int level, Rarity rarity) => L(level) * ((int)rarity + 1);
 
+        /// <summary>
+        /// Floating loot (Ed's U-30): a module only catches flotsam up to its own rarity, so better modules
+        /// widen what the raft gathers by itself. Creatures are caught whatever the module's rarity.
+        /// </summary>
+        public static bool CatchesFlotsam(Rarity module, Rarity flotsam) => flotsam <= module;
+
         /// <summary>Lv 1–3 repair with materials; Lv 3–5 with essence (Lv 3 needs both).</summary>
         public static bool RepairUsesMaterials(int level) => L(level) <= 3;
         public static bool RepairUsesEssence(int level) => L(level) >= 3;

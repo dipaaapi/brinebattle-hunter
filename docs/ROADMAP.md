@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 8 — Raft types & absorption (🟨 built on `phase/8-raft-types`, waiting for Ed's Unity test) |
-| **Next step** | Ed tests in Unity (Test Runner Run All, then Play) and answers the two open questions (Sky flight, module battles eating parts); then PR and merge |
+| **Next step** | Ed tests in Unity (Test Runner Run All, then Play), including the new health/ailments, raft tree and modules; answers the two open questions (Sky flight, module battles eating parts); then PR and merge |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-30 |
@@ -144,6 +144,7 @@ Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 - [x] Recovery: beating a gorged monster returns the parts plus extra loot
 - [x] FAQ entries; rules tests (raft types, absorption, camera)
 - [x] Owner's asks: Familiar no longer glued to the hunter while hooking; camera zoom and rotate
+- [x] Ed's ideas added at his ask (2026-10-30): pets have health instead of aging, ambush and outburst hazards (U-32); ailments + cure potions (U-33); raft tree by type (U-31); modules by rarity + floating loot (U-30); Familiar fetches loot (U-29); Claude's C-10 (habitats heal pets faster) and C-11 (ailment sign over drifts)
 - [ ] Ed's Unity test; answers on Sky flight and module battles
 
 **Done when:** building with one kind of part changes the raft's type and its bonuses show in battle, and a monster that ate a part comes back gorged and gives the part back when beaten.

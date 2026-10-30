@@ -64,7 +64,10 @@ namespace BrineBattle.Battle
         /// <summary>A consumable in the bag whose effect would do something right now (no potions at full HP).</summary>
         public bool CanUseItem(ItemDefinition item)
         {
-            if (item == null || Bag == null || Bag.Count(item) <= 0 || item.effectAmount <= 0) return false;
+            if (item == null || Bag == null || Bag.Count(item) <= 0) return false;
+            if (item.effect == ConsumableEffect.CureStatus)
+                return item.cures != StatusEffect.None && (Hunter.Status == item.cures || (Companion != null && Companion.Status == item.cures));
+            if (item.effectAmount <= 0) return false;
             switch (item.effect)
             {
                 case ConsumableEffect.HealHunter: return Hunter.Hp < Hunter.MaxHp;
@@ -86,7 +89,7 @@ namespace BrineBattle.Battle
         }
 
         public bool CanUseSkill(GearActive skill) =>
-            skill != GearActive.None && Actives.Contains(skill) && Stamina >= GearSkillRules.Cost(skill);
+            skill != GearActive.None && Actives.Contains(skill) && Stamina >= GearSkillRules.Cost(skill) && Hunter.Status != StatusEffect.Blind;
 
         /// <summary>Plays one round where the hunter uses an active gear skill. Returns false (and plays nothing) if it can't.</summary>
         public bool PlaySkill(GearActive skill)
@@ -132,6 +135,7 @@ namespace BrineBattle.Battle
                 Add($"Your crew patches the raft: +{fixedHp} HP.");
                 Emit(BattleEventKind.Heal, BattleActor.Raft, BattleActor.Raft, fixedHp, "Crew");
             }
+            if (Outcome == BattleOutcome.Ongoing) TickAilments();
             if (CoatingRounds > 0 && --CoatingRounds == 0) Add($"The {Coating} oil wears off.");
             int regen = BattleRules.StaminaPerRound + (Passives.Contains(GearPassive.SecondWind) ? GearSkillRules.SecondWindStamina : 0);
             Stamina = Math.Min(BattleRules.MaxStamina, Stamina + regen);
@@ -140,6 +144,15 @@ namespace BrineBattle.Battle
 
         void HunterTurn(BattleAction action)
         {
+            bool attacking = action == BattleAction.Attack || action == BattleAction.Harpoon || action == BattleAction.Skill;
+            if (attacking && Hunter.Status == StatusEffect.Confusion && rng.NextDouble() < StatusRules.ConfusionSelfHit)
+            {
+                int self = HurtSelf(Hunter);
+                Add($"You're confused and hit yourself: {self} damage.");
+                Emit(BattleEventKind.Ailment, BattleActor.Hunter, BattleActor.Hunter, self, "Confused!");
+                if (!Hunter.Alive) HunterDown();
+                return;
+            }
             switch (action)
             {
                 case BattleAction.Brace:
@@ -188,6 +201,20 @@ namespace BrineBattle.Battle
         void CompanionTurn()
         {
             if (Companion == null || !Companion.Alive) return;
+            if (Companion.Status == StatusEffect.Confusion && rng.NextDouble() < StatusRules.ConfusionSelfHit)
+            {
+                int self = HurtSelf(Companion);
+                Add($"{Companion.Name} is confused and hurts itself: {self} damage.");
+                Emit(BattleEventKind.Ailment, BattleActor.Companion, BattleActor.Companion, self, "Confused!");
+                if (!Companion.Alive) PetDown();
+                return;
+            }
+            if (Companion.Status == StatusEffect.Blind && rng.NextDouble() < StatusRules.BlindMiss)
+            {
+                Add($"{Companion.Name} can't see and misses.");
+                Emit(BattleEventKind.Ailment, BattleActor.Companion, BattleActor.Monster, 0, "Miss!");
+                return;
+            }
             int dmg = BattleRules.Damage(Companion.Attack, Monster.Defense, 1f, Companion.Element, Monster.Element, false, rng);
             Monster.Hp = Math.Max(0, Monster.Hp - dmg);
             Add($"{Companion.Name} attacks: {dmg} damage to {Monster.Name}.");
@@ -202,6 +229,12 @@ namespace BrineBattle.Battle
 
         void Hit(float power, string label, BattleEventKind kind)
         {
+            if (Hunter.Status == StatusEffect.Blind && rng.NextDouble() < StatusRules.BlindMiss)
+            {
+                Add($"{label}: you can't see and miss.");
+                Emit(BattleEventKind.Ailment, BattleActor.Hunter, BattleActor.Monster, 0, "Miss!");
+                return;
+            }
             int dmg = BattleRules.Damage(Hunter.Attack, Monster.Defense, power, AttackElement, Monster.Element, false, rng);
             Monster.Hp = Math.Max(0, Monster.Hp - dmg);
             Add($"{label}: {dmg} damage to {Monster.Name}.");
@@ -225,7 +258,14 @@ namespace BrineBattle.Battle
         {
             if (!CanUseItem(item)) { Add("Nothing happens."); return; }
             Bag.Remove(item, 1);
-            if (item.effect == ConsumableEffect.HealHunter)
+            if (item.effect == ConsumableEffect.CureStatus)
+            {
+                bool hunter = StatusRules.Cure(Hunter, item.cures);
+                if (!hunter) StatusRules.Cure(Companion, item.cures);
+                Add($"{item.displayName}: {(hunter ? "you are" : Companion.Name + " is")} no longer {StatusRules.Name(item.cures).ToLowerInvariant()}.");
+                Emit(BattleEventKind.Heal, BattleActor.Hunter, hunter ? BattleActor.Hunter : BattleActor.Companion, 0, item.displayName);
+            }
+            else if (item.effect == ConsumableEffect.HealHunter)
             {
                 int gained = Math.Min(item.effectAmount, Hunter.MaxHp - Hunter.Hp);
                 Hunter.Hp += gained;
@@ -265,11 +305,8 @@ namespace BrineBattle.Battle
                 Companion.Hp = Math.Max(0, Companion.Hp - hurt);
                 Add($"{Monster.Name} attacks {Companion.Name}: {hurt} damage.");
                 Emit(BattleEventKind.Strike, BattleActor.Monster, BattleActor.Companion, hurt, element: Monster.Element);
-                if (!Companion.Alive)
-                {
-                    Add($"{Companion.Name} is knocked out and swims back to the raft.");
-                    Emit(BattleEventKind.KnockedOut, BattleActor.Monster, BattleActor.Companion, 0);
-                }
+                if (!Companion.Alive) PetDown();
+                else TryInflict(Companion, BattleActor.Companion);
                 return;
             }
             float raftChance = Monster.Habitat == Habitat.Sea ? BattleRules.SeaHitsRaftChance : 1f - BattleRules.SeaHitsRaftChance;
@@ -302,11 +339,10 @@ namespace BrineBattle.Battle
                 Emit(BattleEventKind.Strike, BattleActor.Monster, BattleActor.Hunter, dmg, element: Monster.Element);
                 if (!Hunter.Alive)
                 {
-                    Outcome = BattleOutcome.LostHunter;
-                    Add("You are knocked out!");
-                    Emit(BattleEventKind.KnockedOut, BattleActor.Monster, BattleActor.Hunter, 0);
+                    HunterDown();
                     return;
                 }
+                TryInflict(Hunter, BattleActor.Hunter);
                 if (Passives.Contains(GearPassive.Thorns))
                 {
                     int back = Math.Max(1, (int)Math.Round(dmg * GearSkillRules.ThornsShare));
@@ -321,6 +357,58 @@ namespace BrineBattle.Battle
                     }
                 }
             }
+        }
+
+        /// <summary>The monster's hit may give its ailment (U-33).</summary>
+        void TryInflict(Combatant target, BattleActor who)
+        {
+            if (Monster.Inflicts == StatusEffect.None || rng.NextDouble() >= Monster.InflictChance) return;
+            StatusRules.Inflict(target, Monster.Inflicts);
+            Add($"{(who == BattleActor.Hunter ? "You are" : target.Name + " is")} {StatusRules.Name(Monster.Inflicts).ToLowerInvariant()}!");
+            Emit(BattleEventKind.Ailment, BattleActor.Monster, who, 0, StatusRules.Name(Monster.Inflicts) + "!");
+        }
+
+        /// <summary>End of a round: poison and bleed hurt the hunter and the companion, then count down.</summary>
+        void TickAilments()
+        {
+            foreach (var (c, who) in new[] { (Hunter, BattleActor.Hunter), (Companion, BattleActor.Companion) })
+            {
+                if (c == null || !c.Alive || c.Status == StatusEffect.None) continue;
+                var status = c.Status;
+                int dmg = StatusRules.Tick(c);
+                if (dmg > 0)
+                {
+                    Add($"{(who == BattleActor.Hunter ? "You lose" : c.Name + " loses")} {dmg} HP ({StatusRules.Name(status).ToLowerInvariant()}).");
+                    Emit(BattleEventKind.Ailment, BattleActor.Monster, who, dmg, StatusRules.Name(status));
+                }
+                if (c.Status == StatusEffect.None) Add($"{(who == BattleActor.Hunter ? "You are" : c.Name + " is")} no longer {StatusRules.Name(status).ToLowerInvariant()}.");
+                if (!c.Alive)
+                {
+                    if (who == BattleActor.Hunter) { HunterDown(); return; }
+                    PetDown();
+                }
+            }
+        }
+
+        /// <summary>A confused hit on oneself: half a normal hit, no element.</summary>
+        int HurtSelf(Combatant c)
+        {
+            int dmg = Math.Max(1, BattleRules.Damage(c.Attack, c.Defense, 0.5f, Element.None, Element.None, false, rng));
+            c.Hp = Math.Max(0, c.Hp - dmg);
+            return dmg;
+        }
+
+        void HunterDown()
+        {
+            Outcome = BattleOutcome.LostHunter;
+            Add("You are knocked out!");
+            Emit(BattleEventKind.KnockedOut, BattleActor.Monster, BattleActor.Hunter, 0);
+        }
+
+        void PetDown()
+        {
+            Add($"{Companion.Name} is knocked out and swims back to the raft.");
+            Emit(BattleEventKind.KnockedOut, BattleActor.Monster, BattleActor.Companion, 0);
         }
 
         void Add(string line) => Log.Add(line);

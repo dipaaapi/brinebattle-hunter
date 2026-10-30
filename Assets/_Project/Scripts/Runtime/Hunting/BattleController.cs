@@ -56,7 +56,9 @@ namespace BrineBattle.Hunting
             state.FirstRound = firstRound;
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
-            if (hook?.Companions.Active != null) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
+            // A knocked-out pet (U-32: HP carries over) stays on the raft and rests.
+            if (hook?.Companions.Active != null && !hook.Companions.Active.KnockedOut) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
+            fighter = state.Companion != null ? hook.Companions.Active : null;
             var crew = hook?.Companions.Best(Companions.CompanionRole.Crew);
             if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rarity);
             var mystic = hook?.Companions.Best(Companions.CompanionRole.Mystic);
@@ -160,9 +162,14 @@ namespace BrineBattle.Hunting
             timer = 0f;
         }
 
+        /// <summary>The pet fighting in this battle, so its HP and ailment can be kept afterwards (U-32).</summary>
+        Companions.Companion fighter;
+
         void End()
         {
             var outcome = state.Outcome;
+            FindFirstObjectByType<HookController>()?.TakeVitals(state.Hunter, fighter, state.Companion);
+            fighter = null;
             stage.Clear();
             state = null;
             InBattle = false;

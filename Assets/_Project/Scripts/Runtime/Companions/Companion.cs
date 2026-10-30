@@ -52,6 +52,11 @@ namespace BrineBattle.Companions
         /// <summary>HP a Mystic heals the most-hurt ally (hunter or Familiar) at the end of each battle round: Common 3, +2 per rarity step.</summary>
         public static int MysticBattleHeal(Rarity r) => 3 + 2 * (int)r;
 
+        /// <summary>Seconds between a Familiar's loot fetches (Ed's U-29): Common 20 s, 2 s less per rarity step (at least 8 s).</summary>
+        public static float FetchSeconds(Rarity r) => Math.Max(8f, 20f - 2f * (int)r);
+        /// <summary>How far past the raft's edge a Familiar swims to fetch floating loot, in metres.</summary>
+        public const float FetchReach = 4f;
+
         /// <summary>Essence a Mystic saves on each refine (never below 1).</summary>
         public const int MysticRefineDiscount = 1;
 
@@ -67,6 +72,7 @@ namespace BrineBattle.Companions
 
         public static int Share(int wild) => Math.Max(1, (int)Math.Round(wild * StatShare));
 
+        // Old age (U-23) is switched off: Ed's U-32 replaced it with health. The numbers stay for older saves and tests.
         // Growth and old age (owner idea U-23, GDD §10). Age counts battles won until day/night exists (U-10).
 
         /// <summary>Battles a companion lives through before it dies of old age: Common 40, +20 per rarity step.</summary>
@@ -102,9 +108,17 @@ namespace BrineBattle.Companions
         public int Age;
     }
 
-    /// <summary>A tamed monster. HP is refilled before each battle (it rests on the raft).</summary>
+    /// <summary>
+    /// A tamed monster. It doesn't age (Ed's U-32): its HP and ailment carry over between battles,
+    /// and it heals slowly on the raft (faster with habitats, C-10). At 0 HP it's knocked out until it heals.
+    /// </summary>
     public class Companion
     {
+        /// <summary>HP now (U-32). 0 = knocked out.</summary>
+        public int Hp;
+        public Battle.StatusEffect Status;
+        public int StatusRounds;
+        public bool KnockedOut => Hp <= 0;
         public string Id;
         public string Name;
         public Element Element;
@@ -146,7 +160,9 @@ namespace BrineBattle.Companions
         {
             if (Stage >= GrowthStage.Elder) return false;
             Stage++;
+            int before = MaxHp;
             MaxHp = Boost(MaxHp);
+            Hp = Math.Min(MaxHp, Hp + (MaxHp - before));
             Attack = Boost(Attack);
             Defense = Boost(Defense);
             Speed += 1;
@@ -164,6 +180,7 @@ namespace BrineBattle.Companions
             Habitat = m.habitat,
             Rarity = m.rarity,
             MaxHp = CompanionRules.Share(m.stats.hp),
+            Hp = CompanionRules.Share(m.stats.hp),
             Attack = CompanionRules.Share(m.stats.attack),
             Defense = CompanionRules.Share(m.stats.defense),
             Speed = m.stats.speed,

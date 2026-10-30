@@ -79,14 +79,17 @@ namespace BrineBattle.Items
         }
 
         /// <summary>Total count of Material items (any rarity).</summary>
-        public int MaterialCount() => items.Where(kv => kv.Key.type == ItemType.Material).Sum(kv => kv.Value);
+        public int MaterialCount() => items.Where(kv => IsMonsterMaterial(kv.Key)).Sum(kv => kv.Value);
+
+        /// <summary>Raw monster materials; refined raft-tree materials (U-31) are kept for their recipes.</summary>
+        static bool IsMonsterMaterial(ItemDefinition i) => i.type == ItemType.Material && i.raftKind == Rafts.RaftKind.Plain;
 
         /// <summary>Spends materials, lowest rarity first. All or nothing.</summary>
         public bool SpendMaterials(int amount)
         {
             if (amount <= 0) return true;
             if (MaterialCount() < amount) return false;
-            foreach (var item in items.Keys.Where(i => i.type == ItemType.Material).OrderBy(i => i.rarity).ThenBy(i => i.displayName).ToList())
+            foreach (var item in items.Keys.Where(IsMonsterMaterial).OrderBy(i => i.rarity).ThenBy(i => i.displayName).ToList())
             {
                 int take = Math.Min(amount, items[item]);
                 if (take == items[item]) items.Remove(item);

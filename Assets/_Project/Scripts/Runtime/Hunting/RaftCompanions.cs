@@ -26,6 +26,13 @@ namespace BrineBattle.Hunting
             set => PlayerPrefs.SetInt("brinebattle.mysticKeep", Mathf.Clamp(value, 0, 10));
         }
 
+        /// <summary>Familiars swim out for dead drifts and floating loot (Ed's U-29). Default on.</summary>
+        public static bool FamiliarLoots
+        {
+            get => PlayerPrefs.GetInt("brinebattle.familiarLoots", 1) == 1;
+            set => PlayerPrefs.SetInt("brinebattle.familiarLoots", value ? 1 : 0);
+        }
+
         public static bool MysticRefines
         {
             get => PlayerPrefs.GetInt("brinebattle.mysticRefines", 1) == 1;
@@ -297,7 +304,7 @@ namespace BrineBattle.Hunting
                     mysticTimer = 0f;
                     // The hammer comes first when the raft has outgrown it (Ed's ask), then potions and oils.
                     // Only recipes the hunter's Alchemy Mastery knows (Idea Round 3).
-                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Mastery.Knows(r)).ToList() : null;
+                    var known = hook.builder != null ? hook.builder.recipes.Where(r => hook.Knows(r)).ToList() : null;
                     var recipe = known != null
                         ? CompanionWork.MysticHammerPick(known, hook.Inventory, Raft.Tier)
                           ?? CompanionWork.MysticCraftPick(known, hook.Inventory, CompanionSettings.MysticKeep)

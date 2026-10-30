@@ -35,6 +35,9 @@ namespace BrineBattle.Hunting
         public CompanionRoster Companions { get; } = new CompanionRoster();
         /// <summary>Alchemy Mastery (Idea Round 3): better hints, more recipes, essence combining.</summary>
         public AlchemyMastery Mastery { get; } = new AlchemyMastery();
+        /// <summary>The hunter's HP and ailment between battles (U-32): they carry into the next fight.</summary>
+        public Combatant HunterBody { get; } = Combatant.Hunter();
+        float hunterRegen, petRegen, ailmentTick;
         /// <summary>Monsters that ate raft parts and will come back for them (Phase 8).</summary>
         public Rafts.GorgedLog Gorged { get; } = new Rafts.GorgedLog();
         /// <summary>Raised when a monster is tamed (collection book Pets page).</summary>
@@ -103,6 +106,8 @@ namespace BrineBattle.Hunting
         {
             WorldPause.Prompt = phase == Phase.Result;
             CrewMend();
+            Rest();
+            FamiliarFetch();
             switch (phase)
             {
                 case Phase.Idle: UpdateIdle(); break;
@@ -239,6 +244,7 @@ namespace BrineBattle.Hunting
                     resultBody = $"{hintNote}\nIt can barely move and isn't hostile. Finish it for loot, or tame it.";
                     break;
                 default:
+                    Ambush(target);
                     if (EncounterRules.IsGated(target.Actual, raft.size, m.sizeClass))
                     {
                         resultTitle = $"{m.displayName} — ALIVE and too big!";
@@ -371,6 +377,7 @@ namespace BrineBattle.Hunting
                     {
                         pendingLoot = RollLoot(m);
                         CountKill();
+                        Thrash(target);
                         Finish($"Finished {m.displayName}: {string.Join(", ", pendingLoot.Select(d => $"{d.Quantity} {d.Item.displayName}"))}", true, true);
                     }
                     GUI.enabled = !Companions.Full;
@@ -475,6 +482,7 @@ namespace BrineBattle.Hunting
                     pendingLoot = RollLoot(m);
                     string back = gorged > 0 ? Recover(m) : "";
                     CountKill();
+                    Thrash(target);
                     Finish($"Victory! Defeated {(gorged > 0 ? "the gorged " : "")}{m.displayName}: {Brief(pendingLoot)}{back}", true, true);
                 }
                 else
@@ -496,8 +504,138 @@ namespace BrineBattle.Hunting
                 + (level == AlchemyMastery.CombineLevel ? " You can now combine essence (Bag → Essence)." : ""));
         }
 
+        /// <summary>A recipe the hunter can see: Alchemy Mastery high enough and, for typed raft items, its tree branch open (U-31).</summary>
+        public bool Knows(RecipeDefinition r) => Mastery.Knows(r) && (raft == null || Rafts.RaftTree.Knows(raft.Grid, r));
+
         /// <summary>The hunter in battle: gear plus the raft type's bonus (Phase 8).</summary>
-        public Combatant Fighter() => Rafts.RaftTypeRules.Apply(Combatant.Hunter(Gear), raft != null ? raft.Grid.Type.Bonus : default);
+        public Combatant Fighter()
+        {
+            var h = Rafts.RaftTypeRules.Apply(Combatant.Hunter(Gear), raft != null ? raft.Grid.Type.Bonus : default);
+            h.Hp = Mathf.Clamp(HunterBody.Hp, 0, h.MaxHp);
+            h.Status = HunterBody.Status;
+            h.StatusRounds = HunterBody.StatusRounds;
+            return h;
+        }
+
+        /// <summary>After a battle: the hunter and the pet that fought keep their HP and ailments (U-32).</summary>
+        public void TakeVitals(Combatant hunter, Companion pet, Combatant petBody)
+        {
+            if (hunter != null)
+            {
+                HunterBody.Hp = hunter.Hp;
+                HunterBody.Status = hunter.Status;
+                HunterBody.StatusRounds = hunter.StatusRounds;
+            }
+            if (pet != null && petBody != null)
+            {
+                pet.Hp = petBody.Hp;
+                pet.Status = petBody.Status;
+                pet.StatusRounds = petBody.StatusRounds;
+            }
+        }
+
+        /// <summary>
+        /// Outside battle (U-32, C-10): the hunter and pets heal a little at a time, faster for pets with
+        /// habitats on the raft; ailments keep ticking every few seconds but never take the last HP.
+        /// </summary>
+        void Rest()
+        {
+            if (BattleController.InBattle || WorldPause.Asleep) return;
+            float dt = Time.deltaTime;
+            hunterRegen += dt;
+            if (hunterRegen >= HazardRules.HunterRegenSeconds)
+            {
+                hunterRegen = 0f;
+                if (HunterBody.Hp < HunterBody.MaxHp && HunterBody.Status == StatusEffect.None) HunterBody.Hp++;
+            }
+            petRegen += dt;
+            if (petRegen >= HazardRules.PetRegenSeconds(raft.Grid.HabitatCount))
+            {
+                petRegen = 0f;
+                foreach (var c in Companions.All)
+                {
+                    bool wasOut = c.KnockedOut;
+                    if (c.Hp < c.MaxHp && c.Status == StatusEffect.None) c.Hp++;
+                    if (wasOut && !c.KnockedOut) Log($"{c.Name} is back on its feet.");
+                }
+            }
+            ailmentTick += dt;
+            if (ailmentTick < StatusRules.OutsideRoundSeconds) return;
+            ailmentTick = 0f;
+            var before = HunterBody.Status;
+            StatusRules.Tick(HunterBody, 1);
+            if (before != StatusEffect.None && HunterBody.Status == StatusEffect.None) Log($"You are no longer {StatusRules.Name(before).ToLowerInvariant()}.");
+            foreach (var c in Companions.All)
+            {
+                if (c.Status == StatusEffect.None) continue;
+                var was = c.Status;
+                int hp = c.Hp, rounds = c.StatusRounds;
+                var s = c.Status;
+                StatusRules.Tick(ref hp, c.MaxHp, ref s, ref rounds, Mathf.Min(1, c.Hp));
+                c.Hp = hp; c.Status = s; c.StatusRounds = rounds;
+                if (s == StatusEffect.None) Log($"{c.Name} is no longer {StatusRules.Name(was).ToLowerInvariant()}.");
+            }
+        }
+
+        /// <summary>Potions that would help the hunter (null pet) or a pet right now, outside battle.</summary>
+        public List<ItemDefinition> TreatsFor(Companion pet)
+        {
+            var body = pet != null ? Combatant.FromCompanion(pet) : Fighter();
+            return Inventory.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.Consumable && Inventory.Count(i) > 0)
+                .Where(i => WouldHelp(i, body, pet != null)).ToList();
+        }
+
+        static bool WouldHelp(ItemDefinition i, Combatant body, bool isPet)
+        {
+            var copy = new Combatant { MaxHp = body.MaxHp, Hp = body.Hp, Status = body.Status, StatusRounds = body.StatusRounds };
+            return HazardRules.Treat(i, copy, isPet);
+        }
+
+        /// <summary>Uses a potion on the hunter (null) or a pet outside battle. True if it did something.</summary>
+        public bool Treat(ItemDefinition item, Companion pet)
+        {
+            if (BattleController.InBattle || Inventory.Count(item) <= 0) return false;
+            var body = pet != null ? Combatant.FromCompanion(pet) : HunterBody;
+            bool wasOut = pet != null && pet.KnockedOut;
+            if (!HazardRules.Treat(item, body, pet != null)) return false;
+            Inventory.Remove(item, 1);
+            if (pet != null) TakeVitals(null, pet, body);
+            Log($"{item.displayName}: {(pet != null ? pet.Name : "you")} {(item.effect == ConsumableEffect.CureStatus ? "feel" + (pet != null ? "s" : "") + " better" : $"now {(pet != null ? "has" : "have")} {body.Hp} HP")}.{(wasOut && !pet.KnockedOut ? $" {pet.Name} is back on its feet." : "")}");
+            return true;
+        }
+
+        /// <summary>A random pet on the raft that can still be hurt, or null.</summary>
+        Companion RandomPet()
+        {
+            var up = Companions.All.Where(c => !c.KnockedOut).ToList();
+            return up.Count == 0 ? null : up[rng.Next(up.Count)];
+        }
+
+        /// <summary>U-32: a live catch may lash out at the hunter or a pet while being reeled in.</summary>
+        void Ambush(Drift d) =>
+            Hurt(d, (pet, body) => HazardRules.Ambush(d.Fighter, HunterBody, body, d.Aggression, rng), "lashes out as you reel it in");
+
+        /// <summary>U-32: a monster that was just beaten may thrash in its last moment.</summary>
+        void Thrash(Drift d)
+        {
+            if (d != null) Hurt(d, (pet, body) => HazardRules.Outburst(d.Fighter, HunterBody, body, d.Aggression, d.GorgedParts > 0, rng), "thrashes one last time");
+        }
+
+        void Hurt(Drift d, System.Func<Companion, Combatant, Hazard> roll, string what)
+        {
+            if (d == null || d.Monster == null) return;
+            var pet = RandomPet();
+            var body = pet != null ? Combatant.FromCompanion(pet) : null;
+            var h = roll(pet, body);
+            if (h.Target == HazardTarget.None) return;
+            bool onPet = h.Target == HazardTarget.Pet;
+            int lost = HazardRules.Apply(h, onPet ? body : HunterBody);
+            if (onPet) TakeVitals(null, pet, body);
+            string who = onPet ? pet.Name : "you";
+            string ail = h.Status != StatusEffect.None ? $" and {(onPet ? "it is" : "you are")} {StatusRules.Name(h.Status).ToLowerInvariant()}" : "";
+            string ko = onPet && pet.KnockedOut ? $" {pet.Name} is knocked out and needs rest." : "";
+            Log($"{d.Monster.displayName} {what}: {lost} damage to {who}{ail}!{ko}");
+        }
 
         /// <summary>
         /// Phase 8 absorption: after a lost battle or a flee the monster eats one edge part and swims off
@@ -526,6 +664,10 @@ namespace BrineBattle.Hunting
         void Defeated()
         {
             restUntil = Time.unscaledTime + DefeatRules.RestSeconds;
+            // The rest brings the hunter back to full HP and clears ailments (the next fight starts fresh).
+            HunterBody.Hp = HunterBody.MaxHp;
+            HunterBody.Status = StatusEffect.None;
+            HunterBody.StatusRounds = 0;
             var lost = DefeatRules.WashAway(Inventory, rng);
             Log(lost.Count > 0
                 ? $"The waves washed away {string.Join(", ", lost.Select(l => $"{l.count} {l.item.displayName}"))}. Resting {DefeatRules.RestSeconds:0} s."
@@ -538,6 +680,7 @@ namespace BrineBattle.Hunting
             var m = target.Monster;
             pendingLoot = RollLoot(m);
             CountKill();
+            Thrash(target);
             Finish($"{m.displayName} was weakened but {why}, so you finished it: {Brief(pendingLoot)}", true, true);
         }
 
@@ -546,18 +689,7 @@ namespace BrineBattle.Hunting
         {
             raft.Grid.Kills++;
             Mastery.Add(AlchemyMastery.HarvestPoints);
-            foreach (var kv in Companions.GrowOlder())
-            {
-                var c = kv.Key;
-                if (kv.Value == AgeResult.Evolved)
-                    Log($"{c.Name} evolved into an {c.StageName}! {c.Stats}");
-                else
-                {
-                    int left = CompanionRules.EssenceLeft(c.Rarity);
-                    Inventory.AddEssence(new EssenceKey(c.Rarity, c.Element), left);
-                    Log($"{c.Name} died of old age after {c.Age} battles. It left {left} {new EssenceKey(c.Rarity, c.Element)}. It is remembered in the Book.");
-                }
-            }
+            // Pets no longer age or die of old age (Ed's U-32); they grow by feeding and fusion.
             ApplyCompanionBonuses();
         }
 
@@ -595,6 +727,30 @@ namespace BrineBattle.Hunting
             Gear.RefineDiscount = Companions.Best(CompanionRole.Mystic) != null ? CompanionRules.MysticRefineDiscount : 0;
 
         /// <summary>Crew: between fights, +1 harpoon durability now and then (modules: see RaftCompanions).</summary>
+        float fetchTimer;
+
+        /// <summary>
+        /// Ed's U-29: the best Familiar that isn't knocked out swims out now and then and brings back the
+        /// nearest dead drift or floating loot near the raft, like a module would.
+        /// </summary>
+        void FamiliarFetch()
+        {
+            if (!CompanionSettings.FamiliarLoots || WorldPause.Active) return;
+            Companion best = null;
+            foreach (var c in Companions.All)
+                if (c.Role == CompanionRole.Familiar && !c.KnockedOut && (best == null || c.Rarity > best.Rarity)) best = c;
+            if (best == null) return;
+            fetchTimer += Time.deltaTime;
+            if (fetchTimer < CompanionRules.FetchSeconds(best.Rarity)) return;
+            fetchTimer = 0f;
+            float reach = raft.EdgeDistance + CompanionRules.FetchReach;
+            var center = Flat(raft.transform.position);
+            var d = FindObjectsByType<Drift>(FindObjectsSortMode.None)
+                .Where(x => x != null && !x.Hooked && x.Actual == DriftState.Dead && Vector3.Distance(Flat(x.transform.position), center) <= reach)
+                .OrderBy(x => Vector3.Distance(Flat(x.transform.position), center)).FirstOrDefault();
+            if (d != null) AutoLoot(d, $"{best.Name} (Familiar)", best);
+        }
+
         void CrewMend()
         {
             var crew = Companions.Best(CompanionRole.Crew);
@@ -628,8 +784,10 @@ namespace BrineBattle.Hunting
             if (BattleController.InBattle) return;
             // Owner idea U-25, second pass: pictures first, few words. Status card top-left, what to do
             // at the top, menus as big picture tiles along the bottom.
-            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 250));
+            GUILayout.BeginArea(new Rect(10, 10, HudRight - 10, 290));
             GUILayout.BeginVertical(HuntStyles.Box);
+            string ailing = HunterBody.Status != StatusEffect.None ? $" <color=#c9a0ff>{StatusRules.Tag(HunterBody.Status)}</color>" : "";
+            StatusRow(HuntIcons.Paw, $"Hunter{ailing}", HunterBody.Hp / (float)Mathf.Max(1, HunterBody.MaxHp), $"{HunterBody.Hp}/{HunterBody.MaxHp} HP", new Color(0.4f, 0.85f, 0.45f));
             StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size} · {raft.Grid.Type}", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
             StatusRow(HuntIcons.Harpoon, Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon",

@@ -25,6 +25,8 @@ namespace BrineBattle.Items
         public GearActive[] actives = new GearActive[0];
         [Tooltip("Consumables only: what using it does (Phase 6).")]
         public ConsumableEffect effect;
+        [Tooltip("Cure potions only: the ailment it cures (U-33).")]
+        public Battle.StatusEffect cures;
         [Tooltip("Consumables only: HP restored to the hunter or the raft, or rounds an elemental oil lasts.")]
         [Min(0)] public int effectAmount;
         public Sprite icon;

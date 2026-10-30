@@ -49,6 +49,7 @@ Scoring 1–5: **Fit** (pillars) · **Fun** · **Cost** (5 = cheap) · **Risk** 
 ## Decision log
 *Newest first:* `- (YYYY-MM-DD) Topic → chosen option (U-n / C-n / mix) — reason`
 
+- (2026-10-30) Ed's U-29…U-33 → **built now in Phase 8** at Ed's ask ("isama mo na sa gagawin mo ngayon"), with Claude's **C-10** (habitats heal pets faster) and **C-11** (ailment sign over drifts), since Ed asked for Claude's ideas too. U-32 replaces the Phase 7 old-age rule (Ed's call).
 - (2026-10-29) Idea Round 3 → **U-14** Crafting knowledge + **C-1** Drift reading, with **U-6** essence combining, as one Alchemy Mastery system (row 2 of the combined plan). Ed asked to do the next step together with Phase 7. Picked because it is next in the combined plan, builds on the Phase 6 workbench and the Book, and is cheap (no new data assets). Not picked: world conditions (larger, own phase), gear slots, manual harvest.
 
 - (2026-10-28) Rule set by owner: every core phase is followed by an Idea Round of two ideas, one owner (top priority) + one Claude (top priority), picked by Claude.
