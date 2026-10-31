@@ -2,6 +2,15 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Idea Round 4 fixes from Ed's Unity test (office desktop)
+- Desktop synced to `idea-round/4-world` 2b3a5cd; its old local changes are in `git stash` (nothing pushed from the desktop before this).
+- **Reset raft:** the ~20% the sea takes now float off as "Your lost raft part!" drifts (`DriftSpawner.WashOff`, `Drift.CarryPart`), slow and on the water 120 s. Hooking one, a module or a Looter gives that exact part back (`HookController.LootOf`).
+- **Looter minion:** you see it work: it throws a net, casts its hook or fires a harpoon from its body, pulls the catch to the edge, then loots it (`HookController.Fetch`). Reach past the edge 4 → 8 m; it waits for a target instead of losing its turn.
+- **Incantation circle:** it was drawn inside the planks (y 0.2 < deck 0.3); now just above the deck, lasts 2.4 s, waits while a menu is open, and shows for every craft you make at the Workbench while an Alchemist is aboard.
+- **Sea edge on clear days:** a light horizon haze always on (`WorldClock.NearestSeaEdge`): fog ends just before the nearest on-screen edge of the ocean plane, in the sky's colour.
+- **Raft type look:** once the type is picked the vehicle's frame shows right away (low hull sides / stub wings / bare rails) instead of the katig; each vehicle part (Workbench → Vehicle, then Build) adds its full piece.
+- 268/268 EditMode tests pass (headless).
+
 ## 2026-10-30 — Minions (Ed's U-39), on the laptop
 - Laptop is now Ed's main machine. Pulled `idea-round/4-world` (16b0e66), committed Unity's missing metas (e780813, pushed on Ed's OK).
 - Pets became **minions**: `Companions/Minion.cs` (plain C#: `MinionSkill`, `MinionRules` levels/EXP/skill order/gates/room/junk/tree states). `Companion` has Level, Exp, Skills, `GainExp`, `CatchUp`, `Learn`; `CompanionRoster.Best(MinionSkill)`; Fighter-only battle minion. Feeding gives EXP; fusion keeps the higher level and passes a skill. `CompanionWork`: Builder (vehicle parts, modules, reinforce, level-up), Tinker, junk picks, Hungriest.

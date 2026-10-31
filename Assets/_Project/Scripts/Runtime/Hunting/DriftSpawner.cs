@@ -136,6 +136,31 @@ namespace BrineBattle.Hunting
 
         static float Weight(Items.Rarity r, Items.Rarity tier) => r == tier ? 3f : r > tier ? 0.5f : 1f;
 
+        /// <summary>
+        /// Reset raft (Ed's ask): the parts the sea takes don't vanish. Each floats off the raft's edge as
+        /// slow floating loot, so the hunter, a module or a Looter minion can still catch it back.
+        /// </summary>
+        public void WashOff(IReadOnlyList<Items.ItemDefinition> parts)
+        {
+            if (raft == null || parts == null) return;
+            var dir = currentDirection.normalized;
+            foreach (var part in parts)
+            {
+                var basis = flotsam.Find(f => f.rarity == part.rarity) ?? (flotsam.Count > 0 ? flotsam[0] : null);
+                if (basis == null) return;
+                // Off the downstream half of the raft's edge, so it drifts away from the raft, not into it.
+                var pos = raft.transform.position + Quaternion.Euler(0f, Random.Range(-70f, 70f), 0f) * dir * (raft.EdgeDistance + 0.8f);
+                pos.y = 0.1f;
+                var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                go.transform.SetParent(transform, true);
+                go.transform.position = pos;
+                var drift = go.AddComponent<Drift>();
+                drift.Init(basis, DriftState.Dead, DriftState.Dead, dir * driftSpeed * 0.45f);
+                drift.CarryPart(part);
+                live.Add(drift);
+            }
+        }
+
         void Spawn(float alongCurrent)
         {
             if (monsters.Count == 0 || raft == null) return;

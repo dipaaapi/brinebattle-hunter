@@ -66,8 +66,9 @@ namespace BrineBattle.Hunting
             int row = cells.Select(c => c.Z).OrderBy(z => Mathf.Abs(z)).First();
             b.Row = row * s;
             look = Look;
-            // The vehicle builds up part by part (Ed's ask); until its first part is on, the raft keeps its katig.
-            switch (raft.Grid.VesselCount == 0 ? RaftKind.Plain : look)
+            // The vehicle builds up part by part (Ed's ask). Once the type is picked its frame shows right away
+            // (Ed: "hindi pa rin siya nagmumukhang pirate ship"); each vehicle part then adds its full piece.
+            switch (raft.Grid.VesselCount == 0 && raft.Grid.Chosen == RaftKind.Plain ? RaftKind.Plain : look)
             {
                 case RaftKind.Fortress: SeaTrain(b); break;
                 case RaftKind.Sky: Plane(b); break;
@@ -140,6 +141,7 @@ namespace BrineBattle.Hunting
             {
                 float z = side < 0 ? b.Z0 - 0.25f : b.Z1 + 0.25f;
                 if (Has(1)) Piece(PrimitiveType.Cube, new Vector3((b.X0 + front + 1.3f) / 2f, raft.WaterLine + 0.15f, z), new Vector3(front + 1.3f - b.X0, 0.08f, 0.12f), Iron);
+                else Piece(PrimitiveType.Cube, new Vector3(b.MidX, raft.WaterLine + 0.15f, z), new Vector3(b.Length, 0.06f, 0.08f), Iron);   // frame: a bare rail
                 if (!Has(2)) continue;
                 for (float x = b.X0 + 0.5f; x < front + 1f; x += 1.1f)
                 {
@@ -163,6 +165,10 @@ namespace BrineBattle.Hunting
         {
             float y = 0.32f;
             float span = Mathf.Max(2.5f, b.Width * 0.9f), chord = Mathf.Min(2.2f, b.Length * 0.45f);
+            // Frame before the Wings are on: short stub wings.
+            if (!Has(1))
+                foreach (int side in new[] { -1, 1 })
+                    Piece(PrimitiveType.Cube, new Vector3(b.MidX + 0.3f, y + 0.1f, (side < 0 ? b.Z0 : b.Z1) + side * 0.4f), new Vector3(chord * 0.7f, 0.06f, 0.8f), Wing);
             foreach (int side in Has(1) ? new[] { -1, 1 } : new int[0])
             {
                 float edge = side < 0 ? b.Z0 : b.Z1;
@@ -232,6 +238,7 @@ namespace BrineBattle.Hunting
                     Piece(PrimitiveType.Cube, new Vector3(b.MidX, wl + 0.35f, z), new Vector3(b.Length + 0.3f, 0.75f, 0.18f), Hull);
                     Piece(PrimitiveType.Cube, new Vector3(b.MidX, wl + 0.75f, z), new Vector3(b.Length + 0.3f, 0.08f, 0.24f), DarkWood);   // rail
                 }
+                else Piece(PrimitiveType.Cube, new Vector3(b.MidX, wl + 0.2f, z), new Vector3(b.Length + 0.3f, 0.4f, 0.14f), Hull);   // frame: low hull sides
                 // Cannons poking out.
                 if (Has(2))
                 for (float x = b.X0 + 1f; x < b.X1 - 0.5f; x += 1.6f)

@@ -96,7 +96,7 @@ namespace BrineBattle.Hunting
             GUILayout.Space(10);
             GUILayout.Label("Reset raft", HuntStyles.Heading);
             GUILayout.Label($"<size=11>Takes the raft back to the starter 3x3 so you can build it again. Level and type stay. "
-                + $"About {Mathf.RoundToInt(Rafts.RaftGrid.WashAwayShare * 100)}% of the parts that come off float away; the rest go to the Bag. Habitats are kept.</size>", Rich);
+                + $"About {Mathf.RoundToInt(Rafts.RaftGrid.WashAwayShare * 100)}% of the parts that come off float away (catch them back before the current takes them); the rest go to the Bag. Habitats are kept.</size>", Rich);
             GUI.enabled = !BattleController.InBattle;
             if (!confirmReset)
             {
@@ -110,10 +110,11 @@ namespace BrineBattle.Hunting
                     confirmReset = false;
                     var lost = hook.raft.Grid.ResetRaft(hook.raft.starterPart, hook.Inventory, new System.Random());
                     hook.SyncHabitats();
+                    FindFirstObjectByType<DriftSpawner>()?.WashOff(lost);
                     hook.Log(lost.Count == 0 ? "The raft is back to its starter square. Every part is in the Bag."
-                        : $"The raft is back to its starter square. The sea took {lost.Count} part(s): "
+                        : $"The raft is back to its starter square. {lost.Count} part(s) float away: "
                           + string.Join(", ", lost.GroupBy(p => p.displayName).Select(x => x.Count() > 1 ? $"{x.Count()}× {x.Key}" : x.Key))
-                          + ". The rest are in the Bag.");
+                          + ". Catch them before the current takes them! The rest are in the Bag.");
                 }
                 if (GUILayout.Button("Cancel", GUILayout.Height(30))) confirmReset = false;
                 GUILayout.EndHorizontal();

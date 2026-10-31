@@ -62,7 +62,7 @@ namespace BrineBattle.Companions
         public static float FetchSeconds(Rarity r) => FetchSeconds((int)r);
         public static float FetchSeconds(int rank) => Math.Max(6f, 20f - 2f * rank);
         /// <summary>How far past the raft's edge a Familiar swims to fetch floating loot, in metres.</summary>
-        public const float FetchReach = 4f;
+        public const float FetchReach = 8f;
 
         /// <summary>Essence a Mystic saves on each refine (never below 1).</summary>
         public const int MysticRefineDiscount = 1;

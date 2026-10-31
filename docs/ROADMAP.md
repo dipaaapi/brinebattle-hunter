@@ -7,10 +7,10 @@
 | | |
 |---|---|
 | **Current phase** | Idea Round 4 — World conditions 🟨 (built on `idea-round/4-world`, waiting for Ed's Unity test). Then Phase 9 — Art pass |
-| **Next step** | Ed tests in Unity (Test Runner, then Play): day/night and weather, workbench tabs, Salvage Bin, raft tree, off-type reset, Reset raft, bosses, vehicles, leaving the sea, difficulty. Then merge PR #7. Open: module battles eat parts? (default: no) |
+| **Next step** | Ed passed the Round 4 test (2026-10-31) except five bugs, fixed the same day: lost parts float after Reset raft, Looter shows net/hook/harpoon, incantation circle above the deck, horizon haze hides the sea edge, vehicle frame after the type pick. Ed re-checks those in Play, then merge PR #7 and start Phase 9 (Blender, then BGM/SFX). Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
-| **Last updated** | 2026-10-30 |
+| **Last updated** | 2026-10-31 |
 
 > Start every session by reading this box. Finish every session by updating it.
 
@@ -162,7 +162,8 @@ Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 - [x] Ed's U-40 **Quest tab**: right-edge tab (J), quests from game state with ✔/✘ have/need and a Go button
 - [x] Ed's U-41 **grand boss fights**: warning + rise + aura, top HP bar, enrage and tidal waves, all minions help, slow-mo finish, treasure burst + BOSS DEFEATED card
 - [x] Ed's ask: new HUD and UI everywhere (deep-sea theme on every menu, HUD in sections)
-- [ ] Ed's Unity test of U-39/40/41 (Test Runner, then Play)
+- [x] Ed's Unity test of U-39/40/41 (Test Runner, then Play)
+- [x] Fixes from Ed's test: lost parts float after Reset raft, Looter net/hook/harpoon, incantation circle visible, horizon haze, vehicle frame after the pick
 - [x] Ed's raft/workbench batch (U-34): workbench sub-tabs, accessories, Salvage Bin, planks-only walking, raft looks by type, one raft skill tree with a single type pick, Mystic circle, Crew hammering
 - [ ] Ed's Unity test, then merge
 

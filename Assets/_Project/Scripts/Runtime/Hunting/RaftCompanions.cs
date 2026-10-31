@@ -117,6 +117,9 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>A minion's body on the raft, or null when it has none (or is hidden).</summary>
+        public Transform BodyOf(Companion c) => c != null && bodies.TryGetValue(c, out var b) && b.Go.activeInHierarchy ? b.Go.transform : null;
+
         /// <summary>After a lost battle the pets hide in the storage box until the hunter is up again (Ed's ask).</summary>
         bool Scared => hook.RestLeft > 0f && !BattleController.InBattle;
 
@@ -597,7 +600,8 @@ namespace BrineBattle.Hunting
             var root = new GameObject("Incantation").transform;
             root.SetParent(Raft.transform, false);
             var at = pet.localPosition;
-            root.localPosition = new Vector3(at.x, 0.2f, at.z);
+            // Just above the deck (its top is at 0.3): lower, the planks hid the circle (Ed: "wala din yun").
+            root.localPosition = new Vector3(at.x, 0.33f, at.z);
             var glow = new Color(0.75f, 0.45f, 1f);
             var ring = Disc(root, 1.4f, 0.02f, glow);
             var inner = Disc(root, 1.0f, 0.025f, new Color(0.25f, 0.1f, 0.4f));
@@ -612,8 +616,9 @@ namespace BrineBattle.Hunting
                 Tint.Apply(r.GetComponent<Renderer>(), new Color(1f, 0.9f, 0.5f));
                 runes[i] = r.transform;
             }
-            const float life = 1.6f;
-            for (float t = 0f; t < life; t += Time.deltaTime)
+            const float life = 2.4f;
+            // Waits while a menu is open, so a craft made at the Workbench still shows its circle after.
+            for (float t = 0f; t < life; t += WorldPause.Active ? 0f : Time.deltaTime)
             {
                 if (root == null || pet == null) break;
                 float open = Mathf.Clamp01(t / 0.25f) * Mathf.Clamp01((life - t) / 0.35f);

@@ -192,17 +192,59 @@ namespace BrineBattle.Hunting
             RenderSettings.ambientLight = Color.Lerp(new Color(0.18f, 0.2f, 0.32f), new Color(0.55f, 0.6f, 0.7f), light) * Mathf.Lerp(0.8f, 1f, gloom) + Color.white * flash * 0.4f;
 
             // Fog limits sight; the camera sits far above the raft, so the fog starts at the raft.
+            // On clear days a light haze still melts the far sea into the sky, so its edge never shows (Ed's ask).
             float sight = WorldRules.SightRange(w, Now.Time);
-            bool fogOn = !float.IsInfinity(sight) && cam != null && raft != null;
+            bool fogOn = cam != null && raft != null;
             RenderSettings.fog = fogOn;
             if (fogOn)
             {
                 float camDist = Vector3.Distance(cam.transform.position, raft.transform.position);
+                float start = float.PositiveInfinity, end = float.PositiveInfinity;
+                if (!float.IsInfinity(sight)) { start = camDist + sight * 0.4f; end = camDist + sight * 1.8f; }
+                float edge = NearestSeaEdge();
+                if (edge < end)
+                {
+                    end = edge;
+                    start = Mathf.Min(start, Mathf.Max(camDist + 6f, edge * 0.55f));
+                }
+                RenderSettings.fog = !float.IsInfinity(end);
                 RenderSettings.fogMode = FogMode.Linear;
                 RenderSettings.fogColor = sky;
-                RenderSettings.fogStartDistance = camDist + sight * 0.4f;
-                RenderSettings.fogEndDistance = camDist + sight * 1.8f;
+                RenderSettings.fogStartDistance = Mathf.Min(start, end - 1f);
+                RenderSettings.fogEndDistance = end;
             }
+        }
+
+        Renderer ocean;
+
+        /// <summary>
+        /// How far (in view depth) the nearest on-screen point of the sea's edge is, a little short of it so
+        /// the haze is full there; infinity when no edge is on screen.
+        /// </summary>
+        float NearestSeaEdge()
+        {
+            if (ocean == null)
+            {
+                var go = GameObject.Find("Ocean");
+                if (go == null || !go.TryGetComponent(out ocean)) return float.PositiveInfinity;
+            }
+            var b = ocean.bounds;
+            float y = ocean.transform.position.y, best = float.PositiveInfinity;
+            var fwd = cam.transform.forward;
+            const int n = 32;
+            for (int side = 0; side < 4; side++)
+                for (int i = 0; i <= n; i++)
+                {
+                    float k = i / (float)n;
+                    var p = side == 0 ? new Vector3(Mathf.Lerp(b.min.x, b.max.x, k), y, b.min.z)
+                        : side == 1 ? new Vector3(Mathf.Lerp(b.min.x, b.max.x, k), y, b.max.z)
+                        : side == 2 ? new Vector3(b.min.x, y, Mathf.Lerp(b.min.z, b.max.z, k))
+                        : new Vector3(b.max.x, y, Mathf.Lerp(b.min.z, b.max.z, k));
+                    var vp = cam.WorldToViewportPoint(p);
+                    if (vp.z <= 0f || vp.x < -0.2f || vp.x > 1.2f || vp.y < -0.2f || vp.y > 1.2f) continue;
+                    best = Mathf.Min(best, Vector3.Dot(p - cam.transform.position, fwd));
+                }
+            return best * 0.92f;
         }
 
         // ---- Sun and moon in the sky (Ed: "sun and moon wala naman ako nakikita") ----

@@ -613,12 +613,13 @@ namespace BrineBattle.Hunting
             // An Alchemist minion (Phase 7, U-39) sometimes makes one more of a gear, potion or oil.
             var mystic = hook.Companions.Best(Companions.MinionSkill.Alchemist);
             var cat = CraftRules.CategoryOf(r);
+            // The Alchemist's incantation circle shows for every craft you make while it is aboard (it plays once the Workbench closes).
+            if (mystic != null && r.kind != RecipeKind.Dismantle && hook.TryGetComponent<RaftCompanions>(out var circle)) circle.Incantation(mystic);
             if (mystic != null && r.kind == RecipeKind.Craft && cat != RecipeCategory.Raft && cat != RecipeCategory.Dismantle && cat != RecipeCategory.Pet
                 && Random.value < Companions.CompanionRules.MysticExtraChance(mystic.Rank))
             {
                 foreach (var o in r.outputs) hook.Inventory.Add(o.item, o.count);
                 message += $" {mystic.Name} (Alchemist) made an extra one!";
-                if (hook.TryGetComponent<RaftCompanions>(out var pets)) pets.Incantation(mystic);
             }
             hook.Log(message);
         }

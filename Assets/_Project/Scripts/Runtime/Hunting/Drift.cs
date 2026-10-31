@@ -119,6 +119,19 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>A raft part the sea took on Reset raft (Ed's ask): it floats off and can still be caught back.</summary>
+        public Items.ItemDefinition Carried { get; private set; }
+
+        /// <summary>Turns this floating loot into a lost raft part: its colour and name, slower, and it stays longer.</summary>
+        public void CarryPart(Items.ItemDefinition part)
+        {
+            Carried = part;
+            name = $"Drift (Lost {part.displayName})";
+            Tint.Apply(GetComponent<Renderer>(), Raft.PartColor(part));
+            transform.localScale = new Vector3(0.9f, 0.3f, 0.9f);
+            lifetime = -60f;   // 120 s on the water instead of 60, so the hunter or a minion can chase it
+        }
+
         /// <summary>After a successful sedate (GDD §4).</summary>
         public void MakeWeakened() => Actual = DriftState.Weakened;
 
@@ -217,6 +230,11 @@ namespace BrineBattle.Hunting
                 }
             }
             // "Danger!" before a fight (Ed's call): this monster would likely beat the hunter and pet.
+            if (Carried != null)
+            {
+                GUI.Label(rect, $"{Carried.displayName}\n<i><color=#ffd866>Your lost raft part!</color></i>", HuntStyles.WorldLabel);
+                return;
+            }
             if (Monster.isFlotsam)
             {
                 GUI.Label(rect, $"{Monster.displayName}\n<i>Floating loot · {Monster.rarity}</i>", HuntStyles.WorldLabel);

@@ -112,7 +112,7 @@ namespace BrineBattle.Hunting
                 new Entry("Why can't I build?",
                     "You need a hammer of the raft's level or better. Make or upgrade it in Workbench → Raft → Hammers. A Smith minion makes it for you too."),
                 new Entry("How do I start the raft over?",
-                    "Settings → Game → Reset raft. The raft goes back to the starter 3x3 so you can build it again; its level and type stay. The sea takes about 1 in 5 of the parts that come off, the rest go to the Bag. Habitats are never lost."),
+                    "Settings → Game → Reset raft. The raft goes back to the starter 3x3 so you can build it again; its level and type stay. About 1 in 5 of the parts that come off float away (\"Your lost raft part!\" over them): hook them, or let a module or Looter minion catch them, before the current takes them. The rest go to the Bag. Habitats are never lost."),
                 new Entry("Why is a part \"not for\" my raft?",
                     "It belongs to a raft type you didn't pick. Once you pick a type, those parts come off by themselves, wait in the Bag and can't be placed again."),
                 new Entry("Why is a part \"too weak\"?",

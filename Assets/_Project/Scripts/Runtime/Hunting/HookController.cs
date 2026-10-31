@@ -266,7 +266,7 @@ namespace BrineBattle.Hunting
             {
                 case DriftState.Dead:
                     resultTitle = $"{m.displayName} — Dead";
-                    pendingLoot = RollLoot(m, tensionHit);
+                    pendingLoot = LootOf(target, tensionHit);
                     Mastery.Add(AlchemyMastery.HarvestPoints);
                     Finish($"Harvested {m.displayName}{(tensionHit ? " (clean reel)" : "")}: {Brief(pendingLoot)}", true, true);
                     return;
@@ -307,6 +307,10 @@ namespace BrineBattle.Hunting
 
         List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m) => RollLoot(m, tensionHit);
 
+        /// <summary>A lost raft part gives just that part back; any other drift rolls its loot table.</summary>
+        List<Drop<ItemDefinition>> LootOf(Drift d, bool clean) =>
+            d.Carried != null ? new List<Drop<ItemDefinition>> { new Drop<ItemDefinition>(d.Carried, 1) } : RollLoot(d.Monster, clean);
+
         List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m, bool clean)
         {
             var drops = m.loot != null ? m.loot.Roll(rng) : new List<Drop<ItemDefinition>>();
@@ -327,7 +331,7 @@ namespace BrineBattle.Hunting
         public void AutoLoot(Drift d, string source, object claimer)
         {
             if (d == null || !d.TryClaim(claimer)) return;
-            var drops = RollLoot(d.Monster, false);
+            var drops = LootOf(d, false);
             MonsterAcquired?.Invoke(d.Monster);
             foreach (var x in drops) Inventory.Add(x.Item, x.Quantity);
             string got = drops.Count == 0 ? "nothing" : string.Join(", ", drops.Select(x => $"{x.Quantity} {x.Item.displayName}"));
@@ -801,23 +805,89 @@ namespace BrineBattle.Hunting
         float fetchTimer;
 
         /// <summary>
-        /// Ed's U-29: the best Familiar that isn't knocked out swims out now and then and brings back the
-        /// nearest dead drift or floating loot near the raft, like a module would.
+        /// Ed's U-29: the best Looter minion now and then catches the nearest dead drift or floating loot
+        /// near the raft. Ed's ask: you see it work, throwing a net, casting its own hook or firing a harpoon,
+        /// then pulling the catch in, instead of the loot just landing in the Bag.
         /// </summary>
         void FamiliarFetch()
         {
-            if (!CompanionSettings.FamiliarLoots || WorldPause.Active) return;
+            if (!CompanionSettings.FamiliarLoots || WorldPause.Active || fetching) return;
             var best = Companions.Best(MinionSkill.Looter);
             if (best == null) return;
             fetchTimer += Time.deltaTime;
             if (fetchTimer < CompanionRules.FetchSeconds(best.Rank)) return;
-            fetchTimer = 0f;
             float reach = raft.EdgeDistance + CompanionRules.FetchReach;
             var center = Flat(raft.transform.position);
             var d = FindObjectsByType<Drift>(FindObjectsSortMode.None)
                 .Where(x => x != null && !x.Hooked && x.Actual == DriftState.Dead && Vector3.Distance(Flat(x.transform.position), center) <= reach)
                 .OrderBy(x => Vector3.Distance(Flat(x.transform.position), center)).FirstOrDefault();
-            if (d != null) { AutoLoot(d, $"{best.Name} (Looter)", best); MinionActivity.Did(best, $"fetched a {d.Monster.displayName}"); }
+            // Nothing in reach: keep watching, so it acts as soon as something drifts close.
+            if (d == null || !d.TryClaim(best)) return;
+            fetchTimer = 0f;
+            var minion = GetComponent<RaftCompanions>()?.BodyOf(best);
+            StartCoroutine(Fetch(best, d, minion != null ? minion : raft.transform.Find("Hunter")));
+        }
+
+        bool fetching;
+
+        enum FetchTool { Net, Hook, Harpoon }
+
+        /// <summary>The Looter's catch: the tool flies out to the drift, then it is pulled to the raft's edge and looted.</summary>
+        System.Collections.IEnumerator Fetch(Companion who, Drift d, Transform from)
+        {
+            fetching = true;
+            var tool = (FetchTool)UnityEngine.Random.Range(0, 3);
+            var go = new GameObject("Minion fetch");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.startColor = lr.endColor = tool == FetchTool.Net ? new Color(0.7f, 1f, 0.8f) : new Color(0.95f, 0.95f, 0.85f);
+            lr.startWidth = lr.endWidth = 0.04f;
+            lr.positionCount = 2;
+            // The thing it throws: a flat net, a hook, or a harpoon spear, flying ahead of the line.
+            var head = GameObject.CreatePrimitive(tool == FetchTool.Net ? PrimitiveType.Cylinder : tool == FetchTool.Hook ? PrimitiveType.Sphere : PrimitiveType.Capsule);
+            Destroy(head.GetComponent<Collider>());
+            head.transform.SetParent(go.transform, true);
+            head.transform.localScale = tool == FetchTool.Net ? new Vector3(0.9f, 0.02f, 0.9f) : tool == FetchTool.Hook ? Vector3.one * 0.18f : new Vector3(0.07f, 0.35f, 0.07f);
+            Tint.Apply(head.GetComponent<Renderer>(), tool == FetchTool.Net ? new Color(0.45f, 0.8f, 0.55f) : tool == FetchTool.Hook ? new Color(0.8f, 0.8f, 0.85f) : new Color(0.55f, 0.4f, 0.25f));
+            string verb = tool == FetchTool.Net ? "threw its net at" : tool == FetchTool.Hook ? "cast its hook at" : "fired its harpoon at";
+            Log($"{who.Name} (Looter) {verb} the {(d.Carried != null ? d.Carried.displayName : d.Monster.displayName)}.");
+
+            Vector3 Origin() => from != null ? from.position + Vector3.up * 0.2f : raft.transform.position + Vector3.up;
+            const float throwTime = 0.5f, pullTime = 1.2f;
+            for (float t = 0f; t < throwTime && d != null; )
+            {
+                if (!WorldPause.Active) t += Time.deltaTime;
+                float k = t / throwTime;
+                // A little arc for the net and the hook; the harpoon flies straight.
+                var p = Vector3.Lerp(Origin(), d.transform.position, k) + Vector3.up * (tool == FetchTool.Harpoon ? 0f : Mathf.Sin(k * Mathf.PI) * 1.2f);
+                head.transform.position = p;
+                if (tool == FetchTool.Harpoon) head.transform.rotation = Quaternion.FromToRotation(Vector3.up, d.transform.position - Origin());
+                lr.SetPosition(0, Origin());
+                lr.SetPosition(1, p);
+                yield return null;
+            }
+            if (d != null)
+            {
+                var start = d.transform.position;
+                var edge = raft.transform.position + Flat(start - raft.transform.position).normalized * raft.EdgeDistance * 0.8f;
+                for (float t = 0f; t < pullTime && d != null; )
+                {
+                    if (!WorldPause.Active) t += Time.deltaTime;
+                    var p = Vector3.Lerp(start, edge, t / pullTime);
+                    p.y = 0.1f + Waves.Height(p.x, p.z) + Mathf.Sin(t * 12f) * 0.05f;
+                    d.transform.position = p;
+                    head.transform.position = p + Vector3.up * 0.15f;
+                    lr.SetPosition(0, Origin());
+                    lr.SetPosition(1, p);
+                    yield return null;
+                }
+            }
+            Destroy(go);
+            fetching = false;
+            if (d == null) yield break;
+            string what = d.Carried != null ? d.Carried.displayName : d.Monster.displayName;
+            AutoLoot(d, $"{who.Name} (Looter)", who);
+            MinionActivity.Did(who, $"fetched a {what}");
         }
 
         void CrewMend()
