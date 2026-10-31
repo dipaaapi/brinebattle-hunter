@@ -32,6 +32,8 @@ namespace BrineBattle.Hunting
         static readonly Color Iron = new Color(0.22f, 0.24f, 0.27f), Brass = new Color(0.85f, 0.65f, 0.25f), Red = new Color(0.7f, 0.15f, 0.12f);
         static readonly Color Wing = new Color(0.9f, 0.93f, 0.97f), Sky = new Color(0.35f, 0.6f, 0.95f);
         static readonly Color Hull = new Color(0.42f, 0.27f, 0.15f), DarkWood = new Color(0.28f, 0.18f, 0.1f), Black = new Color(0.08f, 0.08f, 0.09f);
+        /// <summary>The raft-to-boat stages use light wood (Ed: the dark wood looked black at night).</summary>
+        static readonly Color Wood = new Color(0.72f, 0.55f, 0.36f), Trim = new Color(0.55f, 0.4f, 0.25f);
 
         /// <summary>The look follows the ship line once it is picked; before that it's the raft.</summary>
         RaftKind Look => raft.Grid.Chosen;
@@ -103,10 +105,13 @@ namespace BrineBattle.Hunting
             // Main mast and sail at the front of the middle row; both grow with every level.
             int row = cells.Select(c => c.Z).OrderBy(z => Mathf.Abs(z)).First();
             int mastX = cells.Where(c => c.Z == row).Max(c => c.X);
-            var foot = new Vector3(mastX * s, 0.3f, row * s);
-            float mastH = 1.3f + 1.4f * grow;
-            Piece(PrimitiveType.Cylinder, foot + Vector3.up * mastH, new Vector3(0.08f + 0.05f * grow, mastH, 0.08f + 0.05f * grow), lv >= 30 ? DarkWood : Bamboo);
-            sails.Add(Piece(PrimitiveType.Cube, foot + Vector3.up * (0.6f + mastH * 0.75f), new Vector3(1.3f + 1.2f * grow, 1.4f + 1.4f * grow, 0.03f), Cloth).transform);
+            // On the outer half of the front edge cell, away from where anyone stands (cells are walked at their centre).
+            var foot = new Vector3(mastX * s + s * 0.42f, 0.3f, row * s);
+            float mastH = 1.5f + 0.8f * grow;
+            float sailH = 1.3f + 0.9f * grow;
+            Piece(PrimitiveType.Cylinder, foot + Vector3.up * mastH, new Vector3(0.08f + 0.05f * grow, mastH, 0.08f + 0.05f * grow), lv >= 30 ? Trim : Bamboo);
+            // The sail's bottom stays 1.5 m above the deck, over everyone's heads.
+            sails.Add(Piece(PrimitiveType.Cube, new Vector3(foot.x, deck + 1.5f + sailH / 2f, foot.z), new Vector3(1.2f + 0.8f * grow, sailH, 0.03f), Cloth).transform);
 
             // Every level: rope lashings across the deck (one more pair every 2 levels) and cargo along the edges.
             int lashings = Mathf.Min(8, 1 + lv / 2 / 2);
@@ -115,14 +120,15 @@ namespace BrineBattle.Hunting
                 float x = Mathf.Lerp(x0 + 0.15f, x1 - 0.15f, lashings == 1 ? 0f : i / (float)(lashings - 1));
                 Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.01f, midZ), new Vector3(0.05f, 0.03f, width), new Color(0.45f, 0.32f, 0.18f));
             }
+            // Cargo lashed to the OUTSIDE of the raft's sides (never on a cell anyone walks on).
             int cargo = Mathf.Min(14, lv / 3);
             for (int i = 0; i < cargo; i++)
             {
                 bool left = i % 2 == 0;
                 float x = Mathf.Lerp(x0 + 0.35f, x1 - 0.6f, (i / 2) / 7f);
-                float z = left ? b.Z0 + 0.3f : b.Z1 - 0.3f;
-                if (i % 3 == 2) Piece(PrimitiveType.Cylinder, new Vector3(x, deck + 0.18f, z), new Vector3(0.28f, 0.18f, 0.28f), new Color(0.5f, 0.32f, 0.16f));   // barrel
-                else Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.15f, z), Vector3.one * 0.3f, new Color(0.62f, 0.45f, 0.25f));   // crate
+                float z = left ? b.Z0 - 0.32f : b.Z1 + 0.32f;
+                if (i % 3 == 2) Piece(PrimitiveType.Cylinder, new Vector3(x, wl + 0.18f, z), new Vector3(0.26f, 0.16f, 0.26f), new Color(0.6f, 0.42f, 0.24f));   // barrel
+                else Piece(PrimitiveType.Cube, new Vector3(x, wl + 0.16f, z), Vector3.one * 0.28f, new Color(0.7f, 0.53f, 0.32f));   // crate
             }
 
             // Lv 10-29: outriggers (katig) on bamboo arms. From Lv 30 a real hull replaces them.
@@ -136,77 +142,89 @@ namespace BrineBattle.Hunting
                 }
                 float armZ = (b.MaxZ - b.MinZ + 2.8f) * s;
                 foreach (float x in new[] { x0 + length * 0.2f, x1 - length * 0.2f })
-                    Piece(PrimitiveType.Cylinder, new Vector3(x, 0.38f, midZ), new Vector3(0.09f, armZ / 2f, 0.09f), Bamboo)
+                    Piece(PrimitiveType.Cylinder, new Vector3(x, wl + 0.08f, midZ), new Vector3(0.09f, armZ / 2f, 0.09f), Bamboo)   // under the deck planks
                         .transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             }
 
             // Lv 15+: a dark trim band around the deck.
             if (lv >= 15)
             {
-                foreach (float z in new[] { b.Z0, b.Z1 }) Piece(PrimitiveType.Cube, new Vector3(midX, deck + 0.02f, z), new Vector3(length, 0.06f, 0.12f), DarkWood);
-                foreach (float x in new[] { x0, x1 }) Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.02f, midZ), new Vector3(0.12f, 0.06f, width), DarkWood);
+                foreach (float z in new[] { b.Z0, b.Z1 }) Piece(PrimitiveType.Cube, new Vector3(midX, deck + 0.02f, z), new Vector3(length, 0.06f, 0.12f), Trim);
+                foreach (float x in new[] { x0, x1 }) Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.02f, midZ), new Vector3(0.12f, 0.06f, width), Trim);
             }
 
-            // Lv 20+: raised gunwale walls on both long sides and a pointed bow at the front (+X).
+            // Ed: at Lv 33 a dark wedge covered the whole deck. Rule from here on: nothing stands over the deck
+            // where the hunter and minions walk. Walls and rails sit on the edges, the hull is under the deck,
+            // the stern deck and cabin hang off the back edge, all in light wood.
+            float bowW = Mathf.Min(width, 3f);
+
+            // Lv 20+: raised side walls (gunwales) on the edges and a low pointed bow just past the front edge.
             if (lv >= 20)
             {
-                float wall = 0.25f + 0.35f * grow;
-                foreach (float z in new[] { b.Z0 - 0.06f, b.Z1 + 0.06f })
-                    Piece(PrimitiveType.Cube, new Vector3(midX, deck + wall / 2f - 0.1f, z), new Vector3(length, wall + 0.3f, 0.12f), Hull);
-                float d = width / 1.414f;
-                var bow = Piece(PrimitiveType.Cube, new Vector3(x1, deck - 0.1f, midZ), new Vector3(d, 0.5f + wall, d), Hull);
+                float wall = 0.2f + 0.25f * grow;
+                foreach (float z in new[] { b.Z0 - 0.08f, b.Z1 + 0.08f })
+                    Piece(PrimitiveType.Cube, new Vector3(midX, deck + wall / 2f - 0.15f, z), new Vector3(length, wall + 0.3f, 0.12f), Wood);
+                float d = bowW / 1.414f;
+                var bow = Piece(PrimitiveType.Cube, new Vector3(x1 + bowW / 2f, deck - 0.12f, midZ), new Vector3(d, 0.35f, d), Wood);   // its back corner at the front edge
                 bow.transform.localRotation = Quaternion.Euler(0f, 45f, 0f);
             }
-            // Lv 25+: rails on top of the gunwales.
+            // Lv 25+: rails on top of the side walls.
             if (lv >= 25)
-                foreach (float z in new[] { b.Z0 - 0.06f, b.Z1 + 0.06f })
+                foreach (float z in new[] { b.Z0 - 0.08f, b.Z1 + 0.08f })
                 {
-                    for (float x = x0 + 0.2f; x <= x1 - 0.1f; x += s) Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.55f, z), new Vector3(0.06f, 0.45f, 0.06f), DarkWood);
-                    Piece(PrimitiveType.Cube, new Vector3(midX, deck + 0.78f, z), new Vector3(length, 0.06f, 0.08f), DarkWood);
+                    for (float x = x0 + 0.2f; x <= x1 - 0.1f; x += s) Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.4f, z), new Vector3(0.06f, 0.35f, 0.06f), Trim);
+                    Piece(PrimitiveType.Cube, new Vector3(midX, deck + 0.58f, z), new Vector3(length, 0.05f, 0.07f), Trim);
                 }
 
-            // Lv 30+: a real hull under the deck (a V shape with a keel) and a second mast at the back.
+            // Lv 30+: a real hull UNDER the deck: two sloped planks from the deck's sides down to a keel, and a
+            // second mast on the back edge.
             if (lv >= 30)
             {
-                float d = width / 1.414f;
-                var hull = Piece(PrimitiveType.Cube, new Vector3(midX, wl - 0.15f, midZ), new Vector3(length, d, d), Hull);
-                hull.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
-                Piece(PrimitiveType.Cube, new Vector3(midX, wl - 0.15f - width / 2f, midZ), new Vector3(length * 0.9f, 0.2f, 0.12f), DarkWood);   // keel
-                var back = new Vector3(x0 + 0.7f, 0.3f, row * s);
-                float h2 = mastH * 0.8f;
-                Piece(PrimitiveType.Cylinder, back + Vector3.up * h2, new Vector3(0.09f, h2, 0.09f), DarkWood);
-                sails.Add(Piece(PrimitiveType.Cube, back + Vector3.up * (0.5f + h2 * 0.75f), new Vector3(1.1f + 0.8f * grow, 1.2f + 1f * grow, 0.03f), Cloth).transform);
+                float top = wl - 0.1f, depth = Mathf.Min(1f, 0.35f + width * 0.08f);
+                float half = width / 2f, slope = Mathf.Sqrt(half * half + depth * depth);
+                float angle = Mathf.Atan2(depth, half) * Mathf.Rad2Deg;
+                foreach (int side in new[] { -1, 1 })
+                {
+                    var plank = Piece(PrimitiveType.Cube, new Vector3(midX, top - depth / 2f, midZ + side * half / 2f), new Vector3(length, 0.08f, slope), Wood);
+                    plank.transform.localRotation = Quaternion.Euler(-side * angle, 0f, 0f);   // outer edge up at the deck, inner edge down at the keel
+                }
+                Piece(PrimitiveType.Cube, new Vector3(midX, top - depth - 0.08f, midZ), new Vector3(length * 0.9f, 0.16f, 0.12f), Trim);   // keel
+                var back = new Vector3(x0 - 0.15f, 0.3f, row * s);
+                float h2 = mastH * 0.9f, sail2 = 1.0f + 0.7f * grow;
+                Piece(PrimitiveType.Cylinder, back + Vector3.up * h2, new Vector3(0.08f, h2, 0.08f), Trim);
+                sails.Add(Piece(PrimitiveType.Cube, new Vector3(back.x, deck + 1.5f + sail2 / 2f, back.z), new Vector3(0.9f + 0.6f * grow, sail2, 0.03f), Cloth).transform);
             }
 
-            // Lv 35+: a raised stern deck at the back.
+            // Lv 35+: a low stern platform hanging off the back edge (not over the deck).
+            float sternX = x0 - s * 0.55f;
             if (lv >= 35)
-                Piece(PrimitiveType.Cube, new Vector3(x0 + s * 0.75f, deck + 0.2f, midZ), new Vector3(s * 1.5f, 0.4f, width), DarkWood);
+                Piece(PrimitiveType.Cube, new Vector3(sternX, deck - 0.05f, midZ), new Vector3(s, 0.25f, Mathf.Min(width, 3.2f)), Wood);
 
-            // Lv 40+: a cabin on the stern deck, flags on the masts and lanterns at the corners.
+            // Lv 40+: a small cabin on that platform (one cell deep), a flag on the main mast and lanterns on the corners.
             if (lv >= 40)
             {
-                var cabin = new Vector3(x0 + s * 0.75f, deck + 0.85f, midZ);
-                Piece(PrimitiveType.Cube, cabin, new Vector3(s * 1.2f, 0.9f, Mathf.Min(width - 0.4f, 2.2f)), Hull);
-                Piece(PrimitiveType.Cube, cabin + Vector3.up * 0.5f, new Vector3(s * 1.35f, 0.12f, Mathf.Min(width - 0.2f, 2.4f)), Red);   // roof
+                var cabin = new Vector3(sternX, deck + 0.4f, midZ);
+                Piece(PrimitiveType.Cube, cabin, new Vector3(s * 0.85f, 0.7f, Mathf.Min(width - 0.4f, 1.8f)), Wood);
+                Piece(PrimitiveType.Cube, cabin + Vector3.up * 0.4f, new Vector3(s * 0.95f, 0.1f, Mathf.Min(width - 0.2f, 2f)), Red);   // its roof, off the deck
                 Piece(PrimitiveType.Cube, foot + Vector3.up * (mastH * 2f + 0.15f), new Vector3(0.5f, 0.3f, 0.02f), Red);   // flag
-                foreach (var corner in new[] { new Vector3(x0, 0, b.Z0), new Vector3(x0, 0, b.Z1), new Vector3(x1, 0, b.Z0), new Vector3(x1, 0, b.Z1) })
-                    Piece(PrimitiveType.Sphere, corner + Vector3.up * (deck + 0.95f), Vector3.one * 0.22f, new Color(1f, 0.85f, 0.4f));
+                foreach (var corner in new[] { new Vector3(x0, 0, b.Z0 - 0.08f), new Vector3(x0, 0, b.Z1 + 0.08f), new Vector3(x1, 0, b.Z0 - 0.08f), new Vector3(x1, 0, b.Z1 + 0.08f) })
+                    Piece(PrimitiveType.Sphere, corner + Vector3.up * (deck + 0.75f), Vector3.one * 0.18f, new Color(1f, 0.85f, 0.4f));
             }
 
-            // Lv 45+: a crow's nest on the main mast and a figurehead at the bow.
+            // Lv 45+: a crow's nest high on the main mast and a figurehead at the bow.
             if (lv >= 45)
             {
-                Piece(PrimitiveType.Cylinder, foot + Vector3.up * (mastH * 1.6f), new Vector3(0.6f, 0.08f, 0.6f), DarkWood);
-                Piece(PrimitiveType.Sphere, new Vector3(x1 + width * 0.45f, deck + 0.3f, midZ), Vector3.one * 0.35f, Brass);
+                Piece(PrimitiveType.Cylinder, foot + Vector3.up * (mastH * 1.6f), new Vector3(0.45f, 0.06f, 0.45f), Trim);
+                Piece(PrimitiveType.Sphere, new Vector3(x1 + bowW * 0.95f, deck + 0.15f, midZ), Vector3.one * 0.3f, Brass);
             }
 
-            // Lv 50: a finished simple boat: a closed stern, a painted stripe and a bowsprit.
+            // Lv 50: a finished simple boat: a low closed stern, a painted stripe and a bowsprit.
             if (lv >= EvolutionRules.RaftMax)
             {
-                Piece(PrimitiveType.Cube, new Vector3(x0 - 0.06f, deck + 0.2f, midZ), new Vector3(0.12f, 0.9f, width + 0.12f), Hull);
-                foreach (float z in new[] { b.Z0 - 0.13f, b.Z1 + 0.13f })
-                    Piece(PrimitiveType.Cube, new Vector3(midX, deck + 0.1f, z), new Vector3(length, 0.08f, 0.02f), Red);
-                var sprit = Piece(PrimitiveType.Cylinder, new Vector3(x1 + width * 0.6f, deck + 0.5f, midZ), new Vector3(0.07f, 0.9f, 0.07f), DarkWood);
+                Piece(PrimitiveType.Cube, new Vector3(sternX - s * 0.5f, deck, midZ), new Vector3(0.12f, 0.5f, Mathf.Min(width, 3.2f)), Wood);
+                foreach (float z in new[] { b.Z0 - 0.15f, b.Z1 + 0.15f })
+                    Piece(PrimitiveType.Cube, new Vector3(midX, deck - 0.05f, z), new Vector3(length, 0.07f, 0.02f), Red);
+                var sprit = Piece(PrimitiveType.Cylinder, new Vector3(x1 + bowW * 1.2f, deck + 0.35f, midZ), new Vector3(0.06f, 0.8f, 0.06f), Trim);
                 sprit.transform.localRotation = Quaternion.Euler(0f, 0f, -70f);
             }
         }
