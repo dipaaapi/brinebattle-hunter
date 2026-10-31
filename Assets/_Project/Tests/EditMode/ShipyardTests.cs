@@ -39,14 +39,17 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void PanningStaysNearTheRaftAndDragsDropOnlyOnACell()
+        public void ThePointUnderTheMouseGivesTheRightCell()
         {
-            Assert.AreEqual(ShipyardRules.PanLimit, ShipyardRules.ClampPan(50f));
-            Assert.AreEqual(-ShipyardRules.PanLimit, ShipyardRules.ClampPan(-50f));
-            Assert.AreEqual(2f, ShipyardRules.ClampPan(2f));
-            Assert.IsTrue(ShipyardRules.Drops(false, true), "released over a cell of the raft");
-            Assert.IsFalse(ShipyardRules.Drops(true, true), "released over the list: cancelled");
-            Assert.IsFalse(ShipyardRules.Drops(false, false), "released off the raft: cancelled");
+            const float s = 1.05f;
+            // The model is centred on the raft's middle (here the 3×3 square around 0,0).
+            Assert.AreEqual(new Cell(0, 0), ShipyardRules.CellAt(0.1f, -0.2f, 0f, 0f, s));
+            Assert.AreEqual(new Cell(2, 0), ShipyardRules.CellAt(2.1f, 0.3f, 0f, 0f, s), "an empty cell beside the raft");
+            Assert.AreEqual(new Cell(-1, 1), ShipyardRules.CellAt(-1.0f, 1.0f, 0f, 0f, s));
+            // A raft whose middle is at (1, 0.5): the model was shifted by that, so add it back.
+            Assert.AreEqual(new Cell(1, 1), ShipyardRules.CellAt(0f, 0.3f, 1f, 0.5f, s));
+            Assert.IsTrue(ShipyardRules.OnGrid(new Cell(4, -4)));
+            Assert.IsFalse(ShipyardRules.OnGrid(new Cell(5, 0)), "off the 9×9 grid");
         }
 
         [Test]

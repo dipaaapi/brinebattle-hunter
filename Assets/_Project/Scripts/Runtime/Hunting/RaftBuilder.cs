@@ -36,7 +36,7 @@ namespace BrineBattle.Hunting
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb != null && kb.rKey.wasPressedThisFrame) Toggle();
+            if (kb != null && kb.rKey.wasPressedThisFrame && !Shipyard.IsOpen) Toggle();   // R turns a kit in the Shipyard
             if (kb != null && Active && kb.escapeKey.wasPressedThisFrame) Toggle();
             if (!Active || raft == null) return;
 

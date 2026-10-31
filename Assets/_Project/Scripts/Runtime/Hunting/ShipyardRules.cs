@@ -21,15 +21,17 @@ namespace BrineBattle.Hunting
         public static float WrapYaw(float y) => ((y % 360f) + 360f) % 360f;
         public static bool IsClick(float movedPixels) => movedPixels < ClickSlop;
 
-        /// <summary>How far the view may pan from the raft's middle, in metres (WASD / arrows, middle-drag).</summary>
-        public const float PanLimit = 7f;
-        public static float ClampPan(float v) => Math.Max(-PanLimit, Math.Min(PanLimit, v));
-
         /// <summary>
-        /// A part dragged from the list drops on release only over the raft view and a cell; anywhere else
-        /// (over the list or bars, or off the raft) the drag is cancelled.
+        /// The cell under the mouse (Ed: clicks over the raft must hit the right cell at any turn and zoom). The
+        /// mouse ray meets the raft's deck plane at <paramref name="localX"/>, <paramref name="localZ"/> in the
+        /// raft model's own frame, which is centred on the raft's middle cell (<paramref name="centerX"/>,
+        /// <paramref name="centerZ"/>). Pure maths, no physics, so it works while the game is halted.
         /// </summary>
-        public static bool Drops(bool overUi, bool overCell) => !overUi && overCell;
+        public static Cell CellAt(float localX, float localZ, float centerX, float centerZ, float cellSize) =>
+            new Cell((int)Math.Round(localX / cellSize + centerX, MidpointRounding.AwayFromZero), (int)Math.Round(localZ / cellSize + centerZ, MidpointRounding.AwayFromZero));
+
+        /// <summary>True when the cell is on the 9×9 building grid.</summary>
+        public static bool OnGrid(Cell c) => Math.Abs(c.X) <= RaftRules.MaxRadius && Math.Abs(c.Z) <= RaftRules.MaxRadius;
 
         /// <summary>
         /// Ed's ask: the whole game is halted while the Shipyard is open (no battles, looting, waves, drifts,
