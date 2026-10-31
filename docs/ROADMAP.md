@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Idea Round 4 — World conditions 🟨 (built on `idea-round/4-world`, waiting for Ed's Unity test). Then Phase 9 — Art pass |
-| **Next step** | Ed passed the Round 4 test (2026-10-31) except five bugs, fixed the same day: lost parts float after Reset raft, Looter shows net/hook/harpoon, incantation circle above the deck, horizon haze hides the sea edge, vehicle frame after the type pick. Ed re-checks those in Play, then merge PR #7 and start Phase 9 (Blender, then BGM/SFX). Open: module battles eat parts? (default: no) |
+| **Current phase** | Phase 9 — Art pass ⬜ (Idea Round 4 merged into `main`, 2026-10-31) |
+| **Next step** | Start Phase 9 on `phase/9-art`: Blender pipeline and a first model (pirate ship suggested), toon shader + outline, then BGM/SFX (U-20, C-20 layered audio, C-21 sounds). Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-31 |
@@ -149,7 +149,7 @@ Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 
 **Done when:** building with one kind of part changes the raft's type and its bonuses show in battle, and a monster that ate a part comes back gorged and gives the part back when beaten.
 
-### 🟨 Idea Round 4 (after Phase 8) — World conditions
+### ✅ Idea Round 4 (after Phase 8) — World conditions
 Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 - [x] **U-10 Day/night** with Sun/Moon affinity for monsters, pets and the hunter (via gear element); sky and light follow the clock
 - [x] **U-15 Rough seas and thunderstrikes**: bigger waves, faster drifts, shorter throws, smaller reel sweet spot; lightning sets raft parts on fire (click to douse, Crew helps, Fortress resists)
@@ -165,7 +165,8 @@ Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 - [x] Ed's Unity test of U-39/40/41 (Test Runner, then Play)
 - [x] Fixes from Ed's test: lost parts float after Reset raft, Looter net/hook/harpoon, incantation circle visible, horizon haze, vehicle frame after the pick
 - [x] Ed's raft/workbench batch (U-34): workbench sub-tabs, accessories, Salvage Bin, planks-only walking, raft looks by type, one raft skill tree with a single type pick, Mystic circle, Crew hammering
-- [ ] Ed's Unity test, then merge
+- [x] Ed's Unity test, then merge (2026-10-31, 281/281 tests)
+- [x] Also in this round: U-42 reel minigame, smaller boss, battles follow the Settings mode, Claude's C-14…C-19, C-21, C-23, refreshed Build/Book/Bag, knocked-out countdown
 
 **Done when:** the day turns to night and back, weather changes with a forecast, storms strike the raft, fog hides far drifts, and sun/moon creatures are stronger at their time.
 

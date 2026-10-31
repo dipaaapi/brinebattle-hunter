@@ -2,6 +2,10 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Knocked-out countdown; Idea Round 4 merged
+- Knocked out: a "KNOCKED OUT · back on your feet in N s" banner with a bar mid-screen and "Zzz… N" over the hunter (`HookController.DrawRespawn`). Ed: 281/281 tests pass.
+- PR #7 merged into `main` on Ed's word. Next: Phase 9.
+
 ## 2026-10-31 — Menus refreshed (Ed: Build scrolled sideways, Book and Bag looked outdated)
 - Build panel 460 → 640 wide, vertical scrolling only, content kept to the panel width.
 - `HuntStyles.TileGrid` / `GridTile` (rounded tiles with a swatch, rarity rim and a count badge) and `HuntStyles.Chip`.

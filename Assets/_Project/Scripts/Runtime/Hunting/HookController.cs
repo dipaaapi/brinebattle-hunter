@@ -420,6 +420,36 @@ namespace BrineBattle.Hunting
                 Juice.Pop($"+{drops[i].Quantity} {drops[i].Item.displayName}", at + Vector3.up * (0.35f * i), Raft.PartColor(drops[i].Item.rarity));
         }
 
+        /// <summary>
+        /// Knocked out (Ed's ask): a big countdown in the middle of the screen and over the hunter, so you know
+        /// when you're back up.
+        /// </summary>
+        void DrawRespawn()
+        {
+            float left = RestLeft;
+            if (left <= 0f || BattleController.InBattle) return;
+            float w = 340, h = 74;
+            var r = new Rect((HuntStyles.W - w) / 2f, HuntStyles.H * 0.22f, w, h);
+            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.05f, 0.08f, 0.13f, 0.88f), 0, 14);
+            GUI.DrawTexture(new Rect(r.x, r.y, r.width, 3), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.45f, 0.4f), 0, 2);
+            GUI.Label(new Rect(r.x, r.y + 6, w, 26), "<size=18><b><color=#ff8a80>KNOCKED OUT</color></b></size>", RespawnStyle);
+            GUI.Label(new Rect(r.x, r.y + 30, w, 20), $"Back on your feet in <b>{Mathf.CeilToInt(left)} s</b>", RespawnStyle);
+            float share = 1f - left / Mathf.Max(1f, Battle.DefeatRules.RestSeconds);
+            var bar = new Rect(r.x + 20, r.yMax - 16, w - 40, 8);
+            GUI.DrawTexture(bar, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.6f), 0, 4);
+            GUI.DrawTexture(new Rect(bar.x, bar.y, bar.width * share, bar.height), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.7f, 0.3f), 0, 4);
+            // The same count over the hunter.
+            if (hunterTf == null) hunterTf = raft.transform.Find("Hunter");
+            if (hunterTf != null && Camera.main != null)
+            {
+                var sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(hunterTf.position + Vector3.up * 1.1f));
+                if (sp.z > 0f) GUI.Label(new Rect(sp.x - 60, HuntStyles.H - sp.y - 12, 120, 24), $"<b>Zzz… {Mathf.CeilToInt(left)}</b>", RespawnStyle);
+            }
+        }
+
+        static GUIStyle respawnStyle;
+        static GUIStyle RespawnStyle => respawnStyle ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, richText = true, fontSize = 14 };
+
         bool HeldReel()
         {
             var kb = Keyboard.current;
@@ -469,6 +499,7 @@ namespace BrineBattle.Hunting
             HuntStyles.Begin();
             DrawHud();
             if (phase == Phase.Reeling && target != null) DrawTension();
+            DrawRespawn();
             if (phase != Phase.Result || target == null) return;
 
             var m = target.Monster;
