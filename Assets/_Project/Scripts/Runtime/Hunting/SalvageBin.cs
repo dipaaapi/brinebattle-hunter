@@ -36,6 +36,8 @@ namespace BrineBattle.Hunting
         public bool Open => WorldPause.Open == Menu.Bin;
         public Rafts.Cell Cell => cell;
         public bool Placed => placed;
+        /// <summary>Minions are hiding inside (Ed's ask): the bin rattles like the storage box.</summary>
+        public bool Scared { get; set; }
         /// <summary>Where the bin stands, in the raft's local space (pets keep clear of it).</summary>
         public Vector3 LocalPosition => new Vector3(cell.X * Raft.CellSize, 0.3f, cell.Z * Raft.CellSize);
 
@@ -159,6 +161,14 @@ namespace BrineBattle.Hunting
             float k = pulse > 0f ? Mathf.Sin((1.2f - pulse) * 14f) * pulse * 0.12f : 0f;
             root.localScale = new Vector3(1f - k, 1f + k, 1f - k);
             float openAngle = pulse > 0f ? -70f * Mathf.Clamp01(pulse) : Open ? -50f : 0f;
+            // Minions hiding inside after a lost battle (Ed's ask): it rattles too, and the lid peeks now and then.
+            if (Scared)
+            {
+                float t = Time.time;
+                root.localRotation = Quaternion.Euler(Mathf.Sin(t * 43f) * 4f, Mathf.Sin(t * 29f) * 3f, Mathf.Sin(t * 51f) * 5f);
+                if (pulse <= 0f && !Open && Mathf.Repeat(t, 2f) < 0.35f) openAngle = -20f;
+            }
+            else root.localRotation = Quaternion.identity;
             lid.localRotation = Quaternion.Slerp(lid.localRotation, Quaternion.Euler(openAngle, 0f, 0f), 12f * Time.unscaledDeltaTime);
             for (int i = labels.Count - 1; i >= 0; i--)
             {

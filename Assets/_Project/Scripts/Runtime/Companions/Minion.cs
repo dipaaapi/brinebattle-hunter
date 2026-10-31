@@ -174,6 +174,25 @@ namespace BrineBattle.Companions
             return (h & 0x7fffffff) % 4;
         }
 
+        // ---- Auto-feed (Ed's ask: in Auto, minions feed themselves, with a cooldown so they don't overeat) ----
+
+        /// <summary>Seconds between one minion's snacks.</summary>
+        public const float AutoFeedSeconds = 45f;
+
+        /// <summary>
+        /// What a minion eats on its own: food only (never hammers), of a rarity that's ticked, and only while
+        /// <paramref name="share"/> of the stack is more than one item (so it never eats the last of something you
+        /// keep). Its favourite food first, then the commonest rarity, then the biggest stack. Null when nothing fits.
+        /// </summary>
+        public static ItemDefinition AutoFeedPick(IEnumerable<KeyValuePair<ItemDefinition, int>> bag, Companion c, Func<Rarity, bool> tierOn, float share)
+        {
+            if (c == null || c.Level >= MaxLevel) return null;
+            return bag.Where(kv => kv.Key != null && IsFood(kv.Key) && kv.Key.type != ItemType.Tool && tierOn(kv.Key.rarity)
+                    && Math.Floor(kv.Value * Math.Max(0f, Math.Min(1f, share))) >= 1)
+                .OrderByDescending(kv => IsFavourite(kv.Key, c)).ThenBy(kv => kv.Key.rarity).ThenByDescending(kv => kv.Value)
+                .Select(kv => kv.Key).FirstOrDefault();
+        }
+
         /// <summary>Job speed: 0.8 while sulking, else 1.</summary>
         public static float WorkSpeed(Companion c) => c != null && c.Sulking ? 0.8f : 1f;
 

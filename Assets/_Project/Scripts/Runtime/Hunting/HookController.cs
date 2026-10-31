@@ -131,6 +131,8 @@ namespace BrineBattle.Hunting
             if (Camera.main != null && !Camera.main.TryGetComponent<CameraRig>(out _)) Camera.main.gameObject.AddComponent<CameraRig>().raft = raft;
             // The hunter's idle, pulling and knocked-out motions (Ed's ask), likewise added at runtime.
             if (!TryGetComponent<HunterMotion>(out _)) gameObject.AddComponent<HunterMotion>().hook = this;
+            // Layered BGM made in code (Phase 9), likewise added at runtime.
+            if (!TryGetComponent<MusicPlayer>(out _)) gameObject.AddComponent<MusicPlayer>().hook = this;
             // Arrows to off-screen bosses, gorged monsters and lost parts (C-23), likewise added at runtime.
             if (!TryGetComponent<EdgeArrows>(out _)) gameObject.AddComponent<EdgeArrows>();
             // Companions on the raft (Phase 7), likewise added at runtime.
@@ -1085,7 +1087,7 @@ namespace BrineBattle.Hunting
             x += tile + gap;
             if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Paw, "Minions", "P", WorldPause.Open == Menu.Pets)) PetsPanel.Toggle();
             x += tile + gap;
-            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Book", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Journal", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
             x += tile + gap;
             if (builder != null && HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Hammer, "Build", "R", builder.Active)) builder.Toggle();
             x += tile + gap;

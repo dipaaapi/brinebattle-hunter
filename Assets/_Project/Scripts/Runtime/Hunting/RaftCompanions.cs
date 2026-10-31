@@ -50,6 +50,20 @@ namespace BrineBattle.Hunting
         public static bool SalvagerSorts { get => Flag("salvager"); set => Flag("salvager", value); }
         public static bool GluttonEats { get => Flag("glutton"); set => Flag("glutton", value); }
 
+        /// <summary>Auto-feed (Ed's ask): in Auto battle mode minions snack from the Bag on their own. Default on.</summary>
+        public static bool AutoFeed { get => Flag("autoFeed"); set => Flag("autoFeed", value); }
+
+        /// <summary>Which rarities auto-feed may eat. Default Common and Uncommon.</summary>
+        public static bool FeedTier(Rarity r) => PlayerPrefs.GetInt($"brinebattle.minion.feedTier.{(int)r}", r <= Rarity.Uncommon ? 1 : 0) == 1;
+        public static void SetFeedTier(Rarity r, bool on) => PlayerPrefs.SetInt($"brinebattle.minion.feedTier.{(int)r}", on ? 1 : 0);
+
+        /// <summary>The most of one stack auto-feed may eat, 0-1. Default half.</summary>
+        public static float FeedShare
+        {
+            get => PlayerPrefs.GetFloat("brinebattle.minion.feedShare", 0.5f);
+            set => PlayerPrefs.SetFloat("brinebattle.minion.feedShare", Mathf.Clamp01(value));
+        }
+
         /// <summary>Junk at or under this rarity is taken apart (dismantle or salvage); rarer junk is eaten. Default Uncommon.</summary>
         public static Rarity TakeApartUpTo
         {
@@ -76,6 +90,9 @@ namespace BrineBattle.Hunting
             public Vector3 Walk;   // Crew: local spot on the raft it is walking to
             public float NextWalk;
             public int Look = -1;   // the look its attire was built for
+            public int HideIn = -1;   // after a lost battle: 0 storage box, 1 Salvage Bin
+            public float HopT = -1f;   // the hop into the lid: -1 still walking over
+            public Vector3 HopFrom;
             public GameObject Attire;
         }
 
@@ -137,7 +154,9 @@ namespace BrineBattle.Hunting
             if (hook == null || Raft == null) return;
             Place();
             foreach (var c in hook.Companions.All) c.SinceFavourite += Time.deltaTime;   // C-16 mood clock
-            if (StorageBox.Instance != null) StorageBox.Instance.Scared = Scared && bodies.Count > 0;
+            // Each container rattles while minions are inside it (Ed's ask: the bin too, not just the box).
+            if (StorageBox.Instance != null) StorageBox.Instance.Scared = Scared && bodies.Values.Any(b => b.HideIn == 0 && !b.Go.activeSelf);
+            if (SalvageBin.Instance != null) SalvageBin.Instance.Scared = Scared && bodies.Values.Any(b => b.HideIn == 1 && !b.Go.activeSelf);
             if (WorldPause.Open != Menu.None || BattleController.InBattle || Scared) return;
             Chores();
         }
@@ -153,19 +172,38 @@ namespace BrineBattle.Hunting
                 // In battle the stage shows the fighting Familiar; hide the idle one.
                 if (Scared)
                 {
-                    // Scurry into the box in a little arc, then vanish inside it.
+                    // Ed's ask: run along the planks to the box or the Salvage Bin (they share), then one clean hop
+                    // into the lid, and vanish inside.
                     if (!b.Go.activeSelf) continue;
-                    var inBox = Box + Vector3.up * 0.3f;
+                    if (b.HideIn < 0) b.HideIn = SalvageBin.Instance != null && SalvageBin.Instance.Placed && HiddenCount(0) > HiddenCount(1) ? 1 : 0;
+                    var home = HideSpot(b.HideIn);
                     var cur = b.Go.transform.localPosition;
-                    var next = Vector3.MoveTowards(cur, inBox, Time.deltaTime * 3f);
-                    float left = Vector3.Distance(next, inBox);
-                    b.Go.transform.localPosition = next + Vector3.up * Mathf.Min(0.4f, left * 0.5f);
-                    if (left < 0.08f) b.Go.SetActive(false);
+                    if (b.HopT < 0f)
+                    {
+                        var ground = new Vector3(cur.x, 0.5f, cur.z);
+                        var toward = new Vector3(home.x, 0.5f, home.z);
+                        var next = Vector3.MoveTowards(ground, toward, Time.deltaTime * 3.2f);
+                        b.Go.transform.localPosition = next + Vector3.up * Mathf.Abs(Mathf.Sin(b.Phase * 16f)) * 0.06f;   // scurrying
+                        if (Vector3.Distance(next, toward) < 0.75f) { b.HopT = 0f; b.HopFrom = next; }
+                        continue;
+                    }
+                    b.HopT += Time.deltaTime / 0.45f;
+                    float k = Mathf.Clamp01(b.HopT);
+                    var top = home + Vector3.up * 0.35f;
+                    b.Go.transform.localPosition = Vector3.Lerp(b.HopFrom, top, k) + Vector3.up * Mathf.Sin(k * Mathf.PI) * 0.7f;
+                    b.Go.transform.localScale = Vector3.one * 0.42f * Mathf.Lerp(1f, 0.6f, Mathf.Clamp01((k - 0.7f) / 0.3f));
+                    if (k >= 1f) b.Go.SetActive(false);
                     continue;
                 }
                 bool show = !(BattleController.InBattle && b.Pet == hook.Companions.Active);
-                // Back out of the box after the rest: pop out of the lid.
-                if (show && !b.Go.activeSelf && !BattleController.InBattle) b.Go.transform.localPosition = Box + Vector3.up * 0.8f;
+                // Back out after the rest: pop out of the lid it hid in.
+                if (show && !b.Go.activeSelf && !BattleController.InBattle)
+                {
+                    b.Go.transform.localPosition = HideSpot(Mathf.Max(0, b.HideIn)) + Vector3.up * 0.8f;
+                    b.Go.transform.localScale = Vector3.one * 0.42f;
+                }
+                b.HideIn = -1;
+                b.HopT = -1f;
                 b.Go.SetActive(show);
                 if (b.Look != b.Pet.Look) Dress(b);
                 float hop = Mathf.Abs(Mathf.Sin(b.Phase * (b.Busy > 0f ? 12f : 3f))) * (b.Busy > 0f ? 0.35f : 0.08f);
@@ -232,12 +270,19 @@ namespace BrineBattle.Hunting
             b.Attire = go;
         }
 
-        const float PetRadius = 0.21f, HunterRadius = 0.3f, BoxRadius = 0.55f;
+        // Ed: a minion pressed against the box looked stuck to it, so the box and bin keep a wider berth.
+        const float PetRadius = 0.21f, HunterRadius = 0.3f, BoxRadius = 0.72f;
+
+        int HiddenCount(int where) => bodies.Values.Count(x => x.HideIn == where);
+
+        /// <summary>Where a minion hides: 0 the storage box, 1 the Salvage Bin.</summary>
+        Vector3 HideSpot(int where) =>
+            where == 1 && SalvageBin.Instance != null && SalvageBin.Instance.Placed ? SalvageBin.Instance.LocalPosition : Box;
 
         /// <summary>Pets never stand inside the hunter, the storage box or each other (owner's ask).</summary>
         void KeepApart(Vector3 hunter)
         {
-            var shown = bodies.Values.Where(b => b.Go.activeSelf).ToList();
+            var shown = bodies.Values.Where(b => b.Go.activeSelf && b.HopT < 0f).ToList();   // not mid-hop into a hiding place
             foreach (var b in shown)
             {
                 var p = b.Go.transform.localPosition;
@@ -298,12 +343,12 @@ namespace BrineBattle.Hunting
         /// <summary>A plank beside the storage box for the Mystic: right of it if that's a plank, else the nearest plank next to it.</summary>
         Vector3 MysticSpot()
         {
-            var want = Box + new Vector3(0.8f, 0f, 0f);
+            var want = Box + new Vector3(1f, 0f, 0f);
             want.y = 0.5f;
             if (OnRaft(want)) return want;
             var box = Raft.LocalToCell(Box);
             foreach (var n in box.Neighbours())
-                if (Raft.Grid.Walkable(n) && !(SalvageBin.Instance != null && SalvageBin.Instance.Cell.Equals(n))) return (Local(n) + Box) / 2f + Vector3.up * 0.2f;
+                if (Raft.Grid.Walkable(n) && !(SalvageBin.Instance != null && SalvageBin.Instance.Cell.Equals(n))) return Local(n);   // the next plank's middle, clear of the box
             return want;
         }
 
@@ -393,6 +438,7 @@ namespace BrineBattle.Hunting
             // Salvager and Glutton share the junk (Ed's ask): rarity at or under the Chores setting is taken apart, the rest is eaten.
             if (CompanionSettings.SalvagerSorts && Due(MinionSkill.Salvager, out var salvager)) SalvageJob(salvager);
             if (CompanionSettings.GluttonEats && Due(MinionSkill.Glutton, out var glutton)) EatJob(glutton);
+            AutoFeed();
         }
 
         /// <summary>True every <see cref="CompanionWork.JobSeconds"/> while some minion has the skill; gives that minion.</summary>
@@ -480,6 +526,37 @@ namespace BrineBattle.Hunting
                 Work(who, $"salvaged a {item.displayName}");
                 hook.Log($"{who.Name} (Salvager) salvaged a {item.displayName} into {essence} essence.");
                 SalvageBin.Instance?.Took($"{item.displayName} → {essence} essence", essence, new Color(0.6f, 0.85f, 1f));
+            }
+        }
+
+        readonly Dictionary<Companion, float> snackTimers = new Dictionary<Companion, float>();
+
+        /// <summary>
+        /// Ed's ask: in Auto, each minion snacks on its own every <see cref="MinionRules.AutoFeedSeconds"/>, only
+        /// from the ticked rarities and never more than the set share of a stack.
+        /// </summary>
+        void AutoFeed()
+        {
+            if (Battle.BattleSettings.Mode != Battle.BattleMode.Auto || !CompanionSettings.AutoFeed) return;
+            foreach (var c in hook.Companions.All)
+            {
+                if (c.KnockedOut) continue;
+                snackTimers.TryGetValue(c, out var t);
+                t += Time.deltaTime;
+                if (t < MinionRules.AutoFeedSeconds) { snackTimers[c] = t; continue; }
+                snackTimers[c] = 0f;
+                var item = MinionRules.AutoFeedPick(hook.Inventory.Items, c, CompanionSettings.FeedTier, CompanionSettings.FeedShare);
+                if (item == null) continue;
+                var learned = new List<MinionSkill>();
+                int before = c.Level;
+                var r = CompanionGrowth.Feed(c, item, learned);
+                if (r == FeedResult.CantEat || r == FeedResult.Full) continue;
+                hook.Inventory.Remove(item, 1);
+                Work(c, $"snacked on a {item.displayName}");
+                hook.Log(FeedLine(c, item, r, before, learned) + " (auto-feed)");
+                Yum(c, item);
+                if (learned.Count > 0) hook.Companions.Refresh();
+                return;   // one snack a frame
             }
         }
 

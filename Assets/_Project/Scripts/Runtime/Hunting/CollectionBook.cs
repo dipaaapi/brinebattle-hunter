@@ -9,7 +9,8 @@ using UnityEngine.InputSystem;
 namespace BrineBattle.Hunting
 {
     /// <summary>
-    /// Collection book (idea U-11): monsters, items and pets, shown as silhouettes until acquired.
+    /// The Journal (was the Collection Book, idea U-11): monsters, items and pets, shown as silhouettes until
+    /// acquired, recipes, and the soundtrack to play piece by piece (Ed's ask).
     /// A monster counts once harvested, finished or defeated; an item once it is in the bag; a pet
     /// once tamed (Phase 7). Saved in PlayerPrefs. Placeholder IMGUI; press C or the HUD button.
     /// </summary>
@@ -105,10 +106,10 @@ namespace BrineBattle.Hunting
             // Wide and centred (Ed: the book looked outdated): a tile grid on the left, the picked entry on the right.
             float w = Mathf.Min(860, HuntStyles.W - HookController.HudRight - 24), h = Mathf.Min(600, HuntStyles.H - 80);
             float left = Mathf.Max(HookController.HudRight + 10, (HuntStyles.W - w) / 2f);
-            GUILayout.BeginArea(new Rect(left, Mathf.Max(20, (HuntStyles.H - h) / 2f), w, h), "Collection Book", HuntStyles.Window);
+            GUILayout.BeginArea(new Rect(left, Mathf.Max(20, (HuntStyles.H - h) / 2f), w, h), "Journal", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Book); GUILayout.EndArea(); return; }
 
-            var labels = new string[Tabs.Length + 1];
+            var labels = new string[Tabs.Length + 2];
             for (int i = 0; i < Tabs.Length; i++)
             {
                 var all = IdsOf((CollectionPage)i);
@@ -116,9 +117,13 @@ namespace BrineBattle.Hunting
             }
             var recipes = hook != null && hook.builder != null ? hook.builder.recipes.Where(r => r != null).ToList() : new List<RecipeDefinition>();
             labels[Tabs.Length] = $"Recipes {recipes.Count(r => hook.Knows(r))}/{recipes.Count}";
-            int newTab = HuntStyles.Tabs(recipesTab ? Tabs.Length : (int)page, labels);
-            if (newTab == Tabs.Length) { if (!recipesTab) scroll = Vector2.zero; recipesTab = true; }
-            else if (recipesTab || (CollectionPage)newTab != page) { recipesTab = false; page = (CollectionPage)newTab; selected = null; scroll = Vector2.zero; }
+            labels[Tabs.Length + 1] = "Music";
+            int newTab = HuntStyles.Tabs(musicTab ? Tabs.Length + 1 : recipesTab ? Tabs.Length : (int)page, labels);
+            if (newTab == Tabs.Length + 1) { musicTab = true; recipesTab = false; }
+            else if (newTab == Tabs.Length) { if (!recipesTab) scroll = Vector2.zero; recipesTab = true; musicTab = false; }
+            else if (recipesTab || musicTab || (CollectionPage)newTab != page) { recipesTab = musicTab = false; page = (CollectionPage)newTab; selected = null; scroll = Vector2.zero; }
+            if (!musicTab) MusicPlayer.Instance?.StopPreview();
+            if (musicTab) { DrawMusic(w); GUILayout.EndArea(); return; }
             if (recipesTab) { DrawRecipes(recipes, w); GUILayout.EndArea(); return; }
 
             var ids = IdsOf(page);
@@ -159,8 +164,81 @@ namespace BrineBattle.Hunting
             GUILayout.EndArea();
         }
 
-        bool recipesTab;
+        bool recipesTab, musicTab;
         Vector2 detailScroll;
+
+        // ---- Music (Ed's ask: the soundtrack is part of the collection; play each piece on its own) ----
+
+        static readonly (string name, string what)[] Layers =
+        {
+            ("Open Sea", "The bed under everything: soft chords and the swell of the waves."),
+            ("Morning Shanty", "The day tune, a marimba melody over the chords."),
+            ("Moonlit Bells", "Glassy bells that take over at night."),
+            ("Something Stirs", "Low drums when a drift near the raft looks alive."),
+            ("Battle Stations", "Driving bass and drums for fights."),
+            ("Leviathan Rising", "Brass and timpani on top of the battle for bosses."),
+            ("Squall", "Rain and rolling thunder in rough seas and storms."),
+        };
+
+        static readonly (string name, string what, Audio.MusicMoment mix)[] Mixes =
+        {
+            ("Calm day", "What a quiet day at sea sounds like.", new Audio.MusicMoment { Daylight = 1f }),
+            ("Night watch", "The sea after dark.", new Audio.MusicMoment { Daylight = 0f }),
+            ("Danger near", "Something alive is close.", new Audio.MusicMoment { Daylight = 1f, Danger = true }),
+            ("Storm", "Rough seas and lightning.", new Audio.MusicMoment { Daylight = 0.4f, Storm = true }),
+            ("Battle", "A fight on the raft.", new Audio.MusicMoment { Daylight = 1f, InBattle = true }),
+            ("Boss fight", "A raft-level boss.", new Audio.MusicMoment { Daylight = 1f, InBattle = true, BossBattle = true }),
+        };
+
+        int playingMix = -1;
+
+        void DrawMusic(float w)
+        {
+            var player = MusicPlayer.Instance;
+            GUILayout.Label("Soundtrack", HuntStyles.Heading);
+            GUILayout.Label("The music is made of layers that mix by what's happening. Play each one on its own, or a whole scene. Sound effects come here next.", HuntStyles.Hint);
+            if (player == null || !player.Ready) { GUILayout.Label("The music is still tuning up…", HuntStyles.Text); return; }
+            scroll = GUILayout.BeginScrollView(scroll, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+            float half = (w - 70) / 2f;
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(GUILayout.Width(half));
+            GUILayout.Label("<b>Pieces</b>", HuntStyles.Text);
+            for (int i = 0; i < Layers.Length; i++)
+            {
+                bool on = player.Solo == i;
+                if (Track(Layers[i].name, Layers[i].what, on, half)) { if (on) player.StopPreview(); else { player.StopPreview(); player.Solo = i; playingMix = -1; } }
+            }
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(GUILayout.Width(half));
+            GUILayout.Label("<b>Scenes</b>", HuntStyles.Text);
+            for (int i = 0; i < Mixes.Length; i++)
+            {
+                bool on = player.PreviewMix.HasValue && playingMix == i;
+                if (Track(Mixes[i].name, Mixes[i].what, on, half)) { player.StopPreview(); if (!on) { player.PreviewMix = Mixes[i].mix; playingMix = i; } else playingMix = -1; }
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.EndScrollView();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Volume {Mathf.RoundToInt(MusicSettings.Volume * 100)}%", HuntStyles.Text, GUILayout.Width(110));
+            MusicSettings.Volume = GUILayout.HorizontalSlider(MusicSettings.Volume, 0f, 1f, GUILayout.Width(200));
+            GUILayout.FlexibleSpace();
+            if (player.Previewing && GUILayout.Button("Stop", GUILayout.Width(80))) { player.StopPreview(); playingMix = -1; }
+            GUILayout.EndHorizontal();
+        }
+
+        /// <summary>One track card with a play / stop button. True when the button was pressed.</summary>
+        static bool Track(string name, string what, bool playing, float width)
+        {
+            GUILayout.BeginHorizontal(HuntStyles.Card, GUILayout.Width(width));
+            bool hit = HuntStyles.ColorButton(playing ? "Stop" : "Play", playing ? HuntStyles.Risky : HuntStyles.Go, GUILayout.Width(64), GUILayout.Height(40));
+            GUILayout.BeginVertical();
+            GUILayout.Label($"<b>{name}</b>{(playing ? "  <color=#7CFC9A>playing</color>" : "")}", HuntStyles.Text);
+            GUILayout.Label(what, HuntStyles.Hint);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            return hit;
+        }
         int itemFilter;
         static readonly string[] ItemFilters = { "All", "Materials", "Raft", "Gear", "Potions", "Minion", "Tools" };
 

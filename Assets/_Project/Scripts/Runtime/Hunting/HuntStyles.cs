@@ -117,7 +117,8 @@ namespace BrineBattle.Hunting
                     window.normal.background = window.onNormal.background = WindowTex();
                     window.border = new RectOffset(10, 10, 30, 10);
                     window.padding = new RectOffset(12, 12, 36, 10);
-                    window.contentOffset = new Vector2(14, 0);
+                    // The title sits in the teal bar; lower, the page's tabs covered it and only stray letters showed (Ed).
+                    window.contentOffset = new Vector2(14, -29);
                     window.normal.textColor = window.onNormal.textColor = new Color(0.85f, 1f, 0.98f);
                 }
                 return window;
@@ -339,7 +340,8 @@ namespace BrineBattle.Hunting
         static GUIStyle Key => key ??= Make(10, FontStyle.Normal, Muted);
         static GUIStyle DarkKey => darkKey ??= Make(10, FontStyle.Normal, new Color(0.25f, 0.25f, 0.28f));
         static GUIStyle DarkCaptionBig => darkCaptionBig ??= Make(18, FontStyle.Bold, Color.white);
-        public static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 16, fontStyle = FontStyle.Bold, richText = true, fixedHeight = 42 };
+        // Wraps long text onto a second line instead of running off the panel (Ed: the raft tree was cut off).
+        public static GUIStyle BigButton => bigButton ??= new GUIStyle(GUI.skin.button) { fontSize = 16, fontStyle = FontStyle.Bold, richText = true, wordWrap = true, padding = new RectOffset(10, 10, 10, 10) };
 
         static GUIStyle Make(int size, FontStyle style, Color color)
         {
