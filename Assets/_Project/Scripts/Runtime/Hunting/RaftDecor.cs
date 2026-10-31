@@ -58,6 +58,7 @@ namespace BrineBattle.Hunting
             parts.Clear();
             byPiece.Clear();
             growing.Clear();
+            scaffoldSize.Clear();
             sails.Clear();
             wheels.Clear();
             propeller = stack = null;
@@ -303,6 +304,23 @@ namespace BrineBattle.Hunting
         float growAt;
         const float GrowSeconds = 0.6f;
         static readonly Color Scaffold = new Color(0.92f, 0.88f, 0.75f);
+        const float ScaffoldStart = 0.3f;
+        readonly Dictionary<Transform, Vector3> scaffoldSize = new Dictionary<Transform, Vector3>();
+        string buildingId;
+        float buildK;
+
+        /// <summary>
+        /// A minion is building this piece (0 → 1): its scaffold grows from a small frame to full size, then the
+        /// finished piece replaces it (Ed: the raft turns into a ship little by little).
+        /// </summary>
+        public void ShowProgress(string id, float k)
+        {
+            buildingId = k > 0f ? id : null;
+            buildK = Mathf.Clamp01(k);
+            if (id == null || !byPiece.TryGetValue(id, out var list)) return;
+            foreach (var t in list)
+                if (t != null && scaffoldSize.TryGetValue(t, out var size)) t.localScale = size * Mathf.Lerp(ScaffoldStart, 1f, buildK);
+        }
 
         /// <summary>
         /// Starts drawing a piece: true when it's installed, or when it is the next one the raft needs (then it is
@@ -546,8 +564,13 @@ namespace BrineBattle.Hunting
             go.transform.SetParent(raft.transform, false);
             go.transform.localPosition = local;
             go.transform.localScale = scale;
-            // A piece the raft doesn't have yet is a pale scaffold.
+            // A piece the raft doesn't have yet is a pale scaffold, small until a minion builds it up.
             Tint.Apply(go.GetComponent<Renderer>(), scaffold ? Color.Lerp(color, Scaffold, 0.7f) : color);
+            if (scaffold && current != null)
+            {
+                scaffoldSize[go.transform] = scale;
+                go.transform.localScale = scale * Mathf.Lerp(ScaffoldStart, 1f, current == buildingId ? buildK : 0f);
+            }
             parts.Add(go);
             if (current != null)
             {

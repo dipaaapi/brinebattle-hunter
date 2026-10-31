@@ -45,6 +45,8 @@ namespace BrineBattle.Companions
 
         /// <summary>Seconds the Crew hammers to install one part or module (Ed's ask: never instant).</summary>
         public const float InstallSeconds = 4f;
+        /// <summary>Seconds a Builder or Crewmate hammers on a ship piece; its scaffold grows on the raft meanwhile (Ed: little by little).</summary>
+        public const float PieceSeconds = 6f;
 
         /// <summary>
         /// Finishes an install the Crew started: the part must still be in the bag and the cell still fit

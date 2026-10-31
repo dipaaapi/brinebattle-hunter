@@ -489,14 +489,24 @@ namespace BrineBattle.Hunting
         MinionRules.JunkAction ActionFor(ItemDefinition item) =>
             MinionRules.ForJunk(item, CompanionSettings.TakeApartUpTo, DismantleFor(item) != null);
 
-        /// <summary>Puts the lowest ship piece from the bag on the raft (it grows in with sparks); false if none can go on.</summary>
+        /// <summary>
+        /// Ed: the minion turns the raft into a ship little by little. It walks to the edge where the lowest ship
+        /// piece from the bag goes and hammers for a few seconds while the piece's scaffold grows on the raft; then
+        /// the finished piece grows in with sparks. False if no piece can go on (or a job is already running).
+        /// </summary>
         bool InstalledPiece(Companion who, string role)
         {
+            if (job != null) return false;
             var piece = CompanionWork.BuilderPiecePick(Raft.Grid, hook.Inventory);
-            if (piece == null || !Raft.Grid.InstallPiece(piece, hook.Inventory)) return false;
-            Work(who, $"installed the {piece.displayName}");
-            SfxPlayer.Play(Sfx.Hammer);
-            hook.Log($"{who.Name} ({role}) installed the {piece.displayName} on the raft.");
+            var def = piece != null ? Rafts.ShipPieceRules.Find(piece.id) : null;
+            var walk = Raft.Grid.Parts.Keys.Where(Raft.Grid.Walkable).ToList();
+            if (def == null || walk.Count == 0) return false;
+            var (dx, dz) = ShipyardRules.Direction(ShipyardRules.EdgesOf(def.Slot)[0]);
+            // The plank on that edge nearest the middle line; it faces out toward the spot.
+            var at = walk.OrderByDescending(c => c.X * dx + c.Z * dz).ThenBy(c => Mathf.Abs(c.X * dz) + Mathf.Abs(c.Z * dx)).First();
+            job = new Job { Crew = who, Cell = new Rafts.Cell(at.X + dx, at.Z + dz), Stand = Local(at), Piece = piece, Role = role };
+            hook.Log($"{who.Name} ({role}) is building the {piece.displayName} ({Rafts.ShipPieceRules.SlotText(def.Slot)}).");
+            MinionActivity.Did(who, $"building the {piece.displayName}");
             return true;
         }
 
@@ -628,6 +638,9 @@ namespace BrineBattle.Hunting
             public bool Working;       // standing there and hammering
             public float Progress;     // 0..1
             public GameObject Ghost, Hammer;
+            public ItemDefinition Piece;   // a ship piece being built at the edge (no ghost: the raft shows its scaffold)
+            public string Role;
+            public float LastSwing;
         }
 
         Job job;
@@ -652,7 +665,7 @@ namespace BrineBattle.Hunting
         void Install()
         {
             if (job == null) return;
-            if (!bodies.TryGetValue(job.Crew, out var b) || !hook.Companions.All.Contains(job.Crew) || !CompanionSettings.CrewBuilds) { EndJob(); return; }
+            if (!bodies.TryGetValue(job.Crew, out var b) || !hook.Companions.All.Contains(job.Crew) || (job.Piece == null && !CompanionSettings.CrewBuilds)) { EndJob(); return; }
             if (!job.Working) return;
             if (job.Hammer == null)
             {
@@ -677,6 +690,25 @@ namespace BrineBattle.Hunting
             job.Hammer.transform.localRotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(-angle, 0f, 0f);
             job.Hammer.transform.localPosition = Quaternion.Euler(0f, yaw, 0f) * new Vector3(0f, 0.6f, 0.6f);
             b.Busy = 0.3f;
+            if (job.Piece != null)
+            {
+                // Each blow lands with a knock, and the scaffold on the raft grows a little more.
+                if (swing < job.LastSwing) SfxPlayer.Play(Sfx.Hammer);
+                job.LastSwing = swing;
+                job.Progress += Time.deltaTime / CompanionWork.PieceSeconds;
+                Raft.GetComponent<RaftDecor>()?.ShowProgress(job.Piece.id, job.Progress);
+                if (job.Progress < 1f) return;
+                var piece = job.Piece;
+                var builder = job.Crew;
+                string role = job.Role;
+                EndJob();
+                if (Raft.Grid.InstallPiece(piece, hook.Inventory))
+                {
+                    Work(builder, $"installed the {piece.displayName}");
+                    hook.Log($"{builder.Name} ({role}) finished the {piece.displayName}: the raft looks a bit more like a ship!");
+                }
+                return;
+            }
             job.Progress += Time.deltaTime / CompanionWork.InstallSeconds;
             job.Ghost.transform.localScale = new Vector3(0.95f, Mathf.Lerp(0.06f, 0.3f, job.Progress), 0.95f);
             if (job.Progress < 1f) return;
@@ -694,6 +726,7 @@ namespace BrineBattle.Hunting
             if (job == null) return;
             if (job.Ghost != null) Destroy(job.Ghost);
             if (job.Hammer != null) Destroy(job.Hammer);
+            if (job.Piece != null && job.Progress < 1f) Raft.GetComponent<RaftDecor>()?.ShowProgress(job.Piece.id, 0f);
             job = null;
         }
 
