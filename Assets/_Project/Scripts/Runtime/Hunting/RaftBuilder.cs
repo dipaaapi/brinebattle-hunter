@@ -486,7 +486,14 @@ namespace BrineBattle.Hunting
 
             // Ed's pick: the hunter makes Common things alone; anything rarer (and every shaped kit) is minion alchemy.
             var maker = Companions.WhoCrafts.Maker(r, hook.Companions, out bool allowed);
-            if (!allowed)
+            string locked = PieceLock(r);
+            if (locked != null)
+            {
+                GUI.enabled = false;
+                GUILayout.Button(locked, GUILayout.Height(28));
+                GUI.enabled = true;
+            }
+            else if (!allowed)
             {
                 GUI.enabled = false;
                 GUILayout.Button(Companions.WhoCrafts.NeedText(r), GUILayout.Height(28));
@@ -506,8 +513,18 @@ namespace BrineBattle.Hunting
             GUILayout.EndVertical();
         }
 
+        /// <summary>Ship piece recipes unlock little by little with the raft's level (Ed's ask), or null.</summary>
+        string PieceLock(RecipeDefinition r)
+        {
+            var item = r != null && r.kind != RecipeKind.Dismantle ? r.outputs.FirstOrDefault(o => o.item != null)?.item : null;
+            if (item == null || item.type != ItemType.ShipPiece || hook.raft == null) return null;
+            var g = hook.raft.Grid;
+            return ShipPieceRules.MakeBlocker(ShipPieceRules.Find(item.id), g.PieceLevel, g.Pieces);
+        }
+
         void Craft(RecipeDefinition r, string verb)
         {
+            if (PieceLock(r) is string locked) { message = locked + "."; return; }
             var maker = Companions.WhoCrafts.Maker(r, hook.Companions, out bool allowed);
             if (!allowed) { message = Companions.WhoCrafts.NeedText(r) + "."; return; }
             CraftRules.Craft(hook.Inventory, r);

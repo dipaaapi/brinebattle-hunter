@@ -133,7 +133,7 @@ namespace BrineBattle.Companions
             // The next ship piece the raft is missing (from 2 levels before it opens).
             var piece = ready.Where(r => r.outputs[0].item.type == ItemType.ShipPiece)
                 .Select(r => (r, p: ShipPieceRules.Find(r.outputs[0].item.id)))
-                .Where(x => x.p != null && !raft.HasPiece(x.p.Id) && bag.Count(x.r.outputs[0].item) == 0 && raft.PieceLevel >= x.p.Level - 2)
+                .Where(x => x.p != null && !raft.HasPiece(x.p.Id) && bag.Count(x.r.outputs[0].item) == 0 && ShipPieceRules.MakeBlocker(x.p, raft.PieceLevel, raft.Pieces) == null)
                 .OrderBy(x => x.p.Level).Select(x => x.r).FirstOrDefault();
             if (piece != null) return piece;
             var vessel = ready.Where(r => r.outputs[0].item.type == ItemType.Vessel)

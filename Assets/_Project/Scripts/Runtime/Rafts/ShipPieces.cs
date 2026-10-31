@@ -92,6 +92,21 @@ namespace BrineBattle.Rafts
         public static ShipPiece Next(int raftLevel, IEnumerable<string> installed) =>
             All.FirstOrDefault(p => !installed.Contains(p.Id));
 
+        /// <summary>A piece's recipe opens this many levels before the piece itself, so it can be ready in time.</summary>
+        public const int CraftAhead = 2;
+
+        /// <summary>
+        /// Why a piece can't be made yet, or null (Ed: the pieces unlock little by little): it opens
+        /// <see cref="CraftAhead"/> levels before it's needed, and a piece already on the raft isn't made again.
+        /// </summary>
+        public static string MakeBlocker(ShipPiece piece, int raftLevel, IEnumerable<string> installed)
+        {
+            if (piece == null) return null;
+            if (installed != null && installed.Contains(piece.Id)) return "Already on the raft";
+            if (raftLevel < piece.Level - CraftAhead) return $"🔒 Opens at raft Lv {piece.Level - CraftAhead} (needed at Lv {piece.Level})";
+            return null;
+        }
+
         /// <summary>Why this piece can't go on now, or null when it can (the bag and hammer are checked by the raft).</summary>
         public static string InstallBlocker(ShipPiece piece, int raftLevel, IEnumerable<string> installed)
         {

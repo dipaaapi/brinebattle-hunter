@@ -85,6 +85,16 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void RecipesUnlockLittleByLittle()
+        {
+            var keel = ShipPieceRules.Find("piece_keel");
+            StringAssert.Contains("Opens at raft Lv 18", ShipPieceRules.MakeBlocker(keel, 10, new string[0]));
+            Assert.IsNull(ShipPieceRules.MakeBlocker(keel, 18, new string[0]), "2 levels early, so it's ready in time");
+            StringAssert.Contains("Already", ShipPieceRules.MakeBlocker(keel, 30, new[] { keel.Id }));
+            Assert.AreEqual(1, ShipPieceRules.All.Count(p => ShipPieceRules.MakeBlocker(p, 1, new string[0]) == null), "at Lv 1 only the first piece can be made");
+        }
+
+        [Test]
         public void TheRaftWaitsForItsPiecesAndInstallsThem()
         {
             var plank = ScriptableObject.CreateInstance<ItemDefinition>();
