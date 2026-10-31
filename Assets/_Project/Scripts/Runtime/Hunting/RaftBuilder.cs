@@ -483,12 +483,12 @@ namespace BrineBattle.Hunting
                     + (enough ? "" : $"  <color={HuntStyles.BadHex}>need {i.count - have} more</color>"), HuntStyles.Text);
             }
 
-            // Shaped module kits are alchemy (Ed's ask: the hunter is an ordinary person; minions do it).
-            var maker = main != null && ShapeRules.IsKit(main.item) ? MinionMaker() : null;
-            if (main != null && ShapeRules.IsKit(main.item) && maker == null)
+            // Ed's pick: the hunter makes Common things alone; anything rarer (and every shaped kit) is minion alchemy.
+            var maker = Companions.WhoCrafts.Maker(r, hook.Companions, out bool allowed);
+            if (!allowed)
             {
                 GUI.enabled = false;
-                GUILayout.Button("Needs a Builder or Alchemist minion", GUILayout.Height(28));
+                GUILayout.Button(Companions.WhoCrafts.NeedText(r), GUILayout.Height(28));
                 GUI.enabled = true;
             }
             else if (ok)
@@ -505,12 +505,12 @@ namespace BrineBattle.Hunting
             GUILayout.EndVertical();
         }
 
-        /// <summary>The minion that does alchemy for shaped kits: a Builder, else an Alchemist; null if none.</summary>
-        Companions.Companion MinionMaker() => hook.Companions.Best(Companions.MinionSkill.Builder) ?? hook.Companions.Best(Companions.MinionSkill.Alchemist);
-
         void Craft(RecipeDefinition r, string verb)
         {
+            var maker = Companions.WhoCrafts.Maker(r, hook.Companions, out bool allowed);
+            if (!allowed) { message = Companions.WhoCrafts.NeedText(r) + "."; return; }
             CraftRules.Craft(hook.Inventory, r);
+            if (maker != null) MinionActivity.Did(maker, $"made {CraftRules.Describe(r.outputs)}");
             if (r.kind != RecipeKind.Dismantle) { hook.Mastery.Add(AlchemyMastery.CraftPoints); hook.Fame.Craft(hook.Voyage.Difficulty); }
             message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
             // Taking apart goes through the Salvage Bin (Ed's ask); making pops out of the storage box.
