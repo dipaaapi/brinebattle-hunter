@@ -194,3 +194,6 @@ A separate Quest UI, apart from the workbench: a slim tab at the screen edge ope
 
 ### U-41 Grand boss fights — 2026-10-30 · 🟨 Idea Round 4 · GDD §6
 Boss fights grand from start to loot: a warning (dim, rumble, red BOSS banner with name and level), the boss rising big with a splash, camera shake and an aura in its element colour; a boss HP bar, phases (enraged at half HP, a special move like a tidal wave), every minion helping with its own skill; a slow-motion last hit, then a treasure burst onto the raft with a BOSS DEFEATED card listing the drops.
+
+### U-42 Reel minigame like a fishing game — 2026-10-31 · 💡 · Encounters
+From Ed's co-worker. Reeling in a drift should feel like a classic fishing minigame instead of one timed press: the catch moves up and down a vertical bar and the player keeps a green catch zone on it (hold to lift, let go to drop) while a progress meter fills; outside the zone it drains. Manual: full control. Semi-auto: the same minigame, but assisted (the zone nudges toward the catch). Auto: still shown, computer-played, no input needed. The green zone's width depends on the loot's rarity and how it is handled (size, clean handling, gear, Alchemy Mastery, minions): rarer and bigger means narrower.
