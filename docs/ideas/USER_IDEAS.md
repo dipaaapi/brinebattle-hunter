@@ -209,3 +209,6 @@ Fame and achievements on an online leaderboard (Steam leaderboards and achieveme
 
 ### U-46 Shipyard (customise the raft in its own view) — 2026-10-31 · 🟨 Phase 10 · GDD §6
 The Build menu covered the raft, so customising at sea didn't work. A separate mode where only the raft or ship is shown, turnable left/right/up/down, modified from the loot you have; minions don't help there; and the whole game is halted while it's open. Claude named it the Shipyard.
+
+### U-47 Customizable shortcut keys — 2026-10-31 · 💡 Next patch, not now
+Shortcut keys for every menu (Bag, Journal, Settings, Build, Shipyard, Minions, Quests, …) with defaults 1, 2, 3, 4, 5, 6, 7, 8, 9, 0. Settings gets a "Shortcut keys" section to rebind them, with Reset to defaults. The same section lists Controllers as "Coming soon": keyboard only for now, gamepad / Joy-Con later.
