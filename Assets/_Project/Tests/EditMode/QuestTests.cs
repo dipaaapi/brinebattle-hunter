@@ -80,6 +80,7 @@ namespace BrineBattle.Tests
             Assert.IsFalse(QuestRules.Build(raft, bag, null).Any(q => q.Id == "boss"), "bosses off");
             raft.BossesNeeded = true;
             Assert.IsTrue(QuestRules.Build(raft, bag, null).Any(q => q.Id == "boss"));
+            Assert.AreEqual(QuestTarget.Boss, QuestRules.Build(raft, bag, null).First(q => q.Id == "boss").Target, "summon it from the Quest tab");
             Assert.IsFalse(QuestRules.Build(raft, bag, null).Any(q => q.Id == "vessel" || q.Id == "leave"), "no type picked yet");
         }
 

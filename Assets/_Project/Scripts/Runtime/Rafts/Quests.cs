@@ -5,7 +5,7 @@ using BrineBattle.Items;
 namespace BrineBattle.Rafts
 {
     /// <summary>Where a quest's "Go" button leads.</summary>
-    public enum QuestTarget { None, RaftTree, Build, Workbench, Leave }
+    public enum QuestTarget { None, RaftTree, Build, Workbench, Leave, Boss }
 
     /// <summary>One requirement line: what it is, have/need, and whether it is met.</summary>
     public class QuestLine
@@ -59,7 +59,8 @@ namespace BrineBattle.Rafts
             }
 
             if (raft.BossesNeeded && !raft.BossBeaten(raft.Tier))
-                list.Add(new Quest { Id = "boss", Title = $"Beat the Lv {level} boss", Summary = "It shows up once the level's monsters are beaten",
+                list.Add(new Quest { Id = "boss", Title = $"Beat the Lv {level} boss", Target = QuestTarget.Boss,
+                    Summary = "Once the level's monsters are beaten it shows up on its own, or summon it from here when you're ready",
                     Lines = { new QuestLine("Monsters beaten", raft.Kills, RaftRules.KillsToUpgrade(raft.Tier)), new QuestLine("Boss beaten", 0, 1) } });
 
             if (!raft.ModulesReady)
