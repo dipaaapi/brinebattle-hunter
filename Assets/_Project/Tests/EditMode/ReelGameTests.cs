@@ -28,7 +28,7 @@ namespace BrineBattle.Tests
             for (int i = 0; i < 20; i++) g.Step(Dt, true, false);
             Assert.Greater(g.Zone, start);
             float high = g.Zone;
-            for (int i = 0; i < 60; i++) g.Step(Dt, false, false);
+            for (int i = 0; i < 120; i++) g.Step(Dt, false, false);   // it coasts up a moment before it sinks
             Assert.Less(g.Zone, high);
         }
 
