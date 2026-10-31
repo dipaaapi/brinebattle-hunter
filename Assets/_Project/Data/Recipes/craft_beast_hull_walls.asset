@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_beast_hull_walls
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_beast_hull_walls
-  displayName: Hull Walls
+  displayName: Pressure Hull
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: baaf10a3056d8ae4abfb4be2197229e6, type: 2}

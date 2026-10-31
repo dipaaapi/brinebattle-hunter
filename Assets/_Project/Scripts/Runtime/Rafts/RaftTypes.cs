@@ -6,16 +6,19 @@ using BrineBattle.Items;
 
 namespace BrineBattle.Rafts
 {
-    /// <summary>What kind of raft a part builds (GDD §6). Plain parts (planks) count toward none.</summary>
+    /// <summary>
+    /// The ship line a raft becomes at Lv 50 (Ed's ask, 2026-10-31; replaces Fortress/Sky/Beast, same saved
+    /// numbers). Typed parts and recipes carry it. Plain = the raft before the pick, and planks.
+    /// </summary>
     public enum RaftKind
     {
         Plain = 0,
-        /// <summary>Shells and scales: slow but sturdy.</summary>
-        Fortress = 1,
-        /// <summary>Wings and sails: quick, with a longer reach.</summary>
-        Sky = 2,
-        /// <summary>Harnessed monster parts: hits harder and moves faster.</summary>
-        Beast = 3,
+        /// <summary>Sea-level ship, STR: tough and strong (was Fortress).</summary>
+        Sea = 1,
+        /// <summary>Aerial ship, INT: reaches far and sees the sea from above (was Sky).</summary>
+        Aerial = 2,
+        /// <summary>Undersea ship, DEX: the fastest (was Beast).</summary>
+        Undersea = 3,
     }
 
     /// <summary>What a raft type adds in battle and when hooking (Phase 8, tunable).</summary>
@@ -67,12 +70,14 @@ namespace BrineBattle.Rafts
     public readonly struct RaftType
     {
         public readonly RaftKind Main, Second;
-        public RaftType(RaftKind main, RaftKind second = RaftKind.Plain) { Main = main; Second = second; }
+        /// <summary>The ship's level when this is a picked ship line (its bonus grows with it), else 0.</summary>
+        public readonly int Level;
+        public RaftType(RaftKind main, RaftKind second = RaftKind.Plain, int level = 0) { Main = main; Second = second; Level = level; }
         public bool IsHybrid => Main != RaftKind.Plain && Second != RaftKind.Plain;
         public RaftBonus Bonus => IsHybrid
             ? RaftTypeRules.BonusOf(Main).Half() + RaftTypeRules.BonusOf(Second).Half()
-            : RaftTypeRules.BonusOf(Main);
-        public string Name => IsHybrid ? $"Hybrid ({Main}–{Second})" : Main == RaftKind.Plain ? "Plain" : Main.ToString();
+            : Level > 0 ? EvolutionRules.Bonus(Main, Level) : RaftTypeRules.BonusOf(Main);
+        public string Name => IsHybrid ? $"Hybrid ({Main}–{Second})" : Main == RaftKind.Plain ? "Raft" : $"{EvolutionRules.LineName(Main)} ({EvolutionRules.Stat(Main)})";
         public override string ToString() => Name;
     }
 
@@ -94,9 +99,10 @@ namespace BrineBattle.Rafts
         {
             switch (kind)
             {
-                case RaftKind.Fortress: return new RaftBonus { RaftHpPercent = 40, Defense = 3, Speed = -1 };
-                case RaftKind.Sky: return new RaftBonus { Speed = 3, Reach = 4f, RaftHpPercent = -10 };
-                case RaftKind.Beast: return new RaftBonus { Attack = 4, Speed = 1 };
+                // Ship lines (Ed's ask): Sea STR tough and strong, Aerial INT far-reaching, Undersea DEX fastest.
+                case RaftKind.Sea: return new RaftBonus { RaftHpPercent = 30, Attack = 2, Defense = 2 };
+                case RaftKind.Aerial: return new RaftBonus { Reach = 4f, Attack = 1, Speed = 1 };
+                case RaftKind.Undersea: return new RaftBonus { Speed = 3, Attack = 1, RaftHpPercent = -10 };
                 default: return default;
             }
         }

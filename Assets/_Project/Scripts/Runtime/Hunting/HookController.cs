@@ -39,6 +39,8 @@ namespace BrineBattle.Hunting
         public CompanionRoster Companions { get; } = new CompanionRoster();
         /// <summary>Alchemy Mastery (Idea Round 3): better hints, more recipes, essence combining.</summary>
         public AlchemyMastery Mastery { get; } = new AlchemyMastery();
+        /// <summary>Fame and achievements: the game's goal (Ed's ask, 2026-10-31).</summary>
+        public Rafts.FameBook Fame { get; } = new Rafts.FameBook();
         /// <summary>The sea journal of firsts (Claude's C-15).</summary>
         public World.Firsts Firsts { get; } = new World.Firsts();
 
@@ -104,6 +106,9 @@ namespace BrineBattle.Hunting
             raft.Grid.Tools = Inventory;
             // Each raft level has a boss to beat before the next (Ed's ask).
             raft.Grid.BossesNeeded = true;
+            // Fame for every new best raft or ship level, and a log line for each achievement.
+            raft.Grid.Changed += () => { int f = Fame.Reached(raft.Grid.Chosen, raft.Grid.Level, Voyage.Difficulty); if (f > 0) Log($"{raft.Grid.LevelName}: +{f} fame."); };
+            Fame.Earned += a => Log($"🏆 Achievement: {a.Title} ({a.Goal}) +{a.Fame} fame!");
             CurrentVoyage = Voyage;
             Voyage.Difficulty = GameStart.Difficulty;
             // Leaving the sea and the ending screen (Ed's ask), likewise added at runtime.
@@ -117,6 +122,12 @@ namespace BrineBattle.Hunting
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
             if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Developer mode (Ed's ask): F1 panel, Editor and development builds only.
+            if (FindFirstObjectByType<DevPanel>() == null) new GameObject("Developer").AddComponent<DevPanel>().hook = this;
+#endif
+            // Shipyard (Ed's ask): the raft is customised in its own view, not on the sea.
+            if (FindFirstObjectByType<Shipyard>() == null) new GameObject("Shipyard").AddComponent<Shipyard>().hook = this;
             // Quest tab (Ed's ask), likewise.
             if (FindFirstObjectByType<QuestPanel>() == null) new GameObject("Quests").AddComponent<QuestPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
@@ -584,13 +595,20 @@ namespace BrineBattle.Hunting
         /// Ed's ask: the Quest tab's "Summon the boss now!" calls the raft level's boss (once its monsters are
         /// beaten) and the fight starts at once. You chose the moment, so you strike first.
         /// </summary>
-        public void SummonBoss()
+        public void SummonBoss() => SummonBoss(false);
+
+        /// <summary>Summons the boss; <paramref name="dev"/> (developer mode) skips the "is it due" check.</summary>
+        public void SummonBoss(bool dev)
         {
             var spawner = FindFirstObjectByType<DriftSpawner>();
             if (BattleController.InBattle) { Log("Finish this battle first."); return; }
             if (RestLeft > 0f) { Log($"You're still knocked out: {Mathf.CeilToInt(RestLeft)} s."); return; }
             if (phase != Phase.Idle) { Log("Finish what you're hooking first."); return; }
-            var d = spawner != null ? spawner.SummonBoss() : null;
+            Drift d = null;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (dev && spawner != null) d = spawner.DevSummonBoss();
+#endif
+            if (d == null && spawner != null) d = spawner.SummonBoss();
             if (d == null) { Log("The boss isn't ready yet: beat more of this level's monsters first."); return; }
             if (!d.TryClaim(this)) { Log("Something else has hold of the boss right now."); return; }
             Log($"You call out across the waves... {d.Monster.displayName} answers!");
@@ -882,9 +900,10 @@ namespace BrineBattle.Hunting
             if (target != null && target.Monster != null && target.Monster.isBoss)
             {
                 raft.Grid.MarkBoss(target.Monster.rarity);
-                Log($"You beat the Lv {(int)target.Monster.rarity + 1} boss, {target.Monster.displayName}!"
-                    + (target.Monster.rarity == raft.Tier && raft.Tier < Rarity.Mythic ? " The raft can level up now." : ""));
+                Log($"You beat the {target.Monster.rarity} boss, {target.Monster.displayName}!"
+                    + (target.Monster.rarity == raft.Tier && !raft.Grid.BossPending ? " The way to the next level is open." : ""));
             }
+            if (target != null && target.Monster != null) Fame.Kill(target.Monster.rarity, target.Monster.isBoss, Voyage.Difficulty);
             Mastery.Add(AlchemyMastery.HarvestPoints);
             // Pets no longer age or die of old age (Ed's U-32); they grow by feeding and fusion.
             ApplyCompanionBonuses();
@@ -914,6 +933,7 @@ namespace BrineBattle.Hunting
             var pet = pendingPet;
             Companions.Add(pet);
             Mastery.Add(AlchemyMastery.TamePoints);
+            Fame.Tame(m.rarity, Voyage.Difficulty);
             First("tame");
             pendingPet = null;
             MonsterTamed?.Invoke(m);
@@ -1053,7 +1073,7 @@ namespace BrineBattle.Hunting
             HuntStyles.Section("Hunter & raft");
             string ailing = HunterBody.Status != StatusEffect.None ? $" <color=#c9a0ff>{StatusRules.Tag(HunterBody.Status)}</color>" : "";
             StatusRow(HuntIcons.Paw, $"Hunter{ailing}", HunterBody.Hp / (float)Mathf.Max(1, HunterBody.MaxHp), $"{HunterBody.Hp}/{HunterBody.MaxHp} HP", new Color(0.4f, 0.85f, 0.45f));
-            StatusRow(HuntIcons.Raft, $"Raft Lv {(int)raft.Tier + 1}", 1f, $"{raft.MaxHp} HP · size {raft.size} · {raft.Grid.Type}", new Color(0.85f, 0.75f, 0.5f));
+            StatusRow(HuntIcons.Raft, $"{raft.Grid.LevelName} <size=11>{raft.Grid.FormName}</size>", raft.Grid.AtMax ? 1f : raft.Grid.Kills / (float)Mathf.Max(1, raft.Grid.KillsNeeded), $"{raft.MaxHp} HP · size {raft.size}{(raft.Grid.IsShip ? " · " + Rafts.EvolutionRules.Stat(raft.Grid.Chosen) : "")}", new Color(0.85f, 0.75f, 0.5f));
             GUILayout.BeginHorizontal();
             StatusRow(HuntIcons.Harpoon, Harpoon.Broken ? "Harpoon <color=#f77>BROKEN</color>" : "Harpoon",
                 Harpoon.Current / (float)Mathf.Max(1, Harpoon.Max), $"{Harpoon.Current}/{Harpoon.Max}", new Color(0.4f, 0.65f, 1f));
@@ -1064,6 +1084,7 @@ namespace BrineBattle.Hunting
             StatusRow(HuntIcons.Book, $"Mastery Lv {Mastery.Level}", Mastery.Progress,
                 Mastery.Level >= AlchemyMastery.MaxLevel ? "max" : $"{Mastery.Points - AlchemyMastery.PointsFor(Mastery.Level)}/{AlchemyMastery.PointsToNext(Mastery.Level)}", new Color(0.75f, 0.5f, 1f));
             GUILayout.Space(4);
+            GUILayout.Label($"<color=#ffd866>★ Fame {Fame.Points}</color>  <size=11>{Fame.Rank} · {Fame.Unlocked.Count()}/{Rafts.FameBook.All.Length} achievements</size>", Rich);
             MinionRows();
             if (RestLeft > 0f) GUILayout.Label($"<color=#ffb347>Resting… {Mathf.CeilToInt(RestLeft)} s</color>", Rich);
             // Idea Round 4: time, weather and the forecast (C-12).

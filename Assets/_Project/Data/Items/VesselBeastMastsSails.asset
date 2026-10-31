@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VesselBeastMastsSails
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.ItemDefinition
   id: beast_masts_sails
-  displayName: Masts & Sails
+  displayName: Periscope
   type: 11
   rarity: 4
   element: 1
@@ -21,6 +21,8 @@ MonoBehaviour:
   moduleLevel: 1
   raftKind: 3
   vesselSlot: 4
+  shape: 0
+  segment: {fileID: 0}
   gearPower: 0
   passives: 
   actives: 
@@ -28,5 +30,5 @@ MonoBehaviour:
   cures: 0
   effectAmount: 0
   icon: {fileID: 0}
-  description: "Part 4 of 5 of the pirate ship. Opens at raft Lv 5. Put it on in
-    Build \u2192 Raft tree."
+  description: "Part 4 of 5 of a Undersea ship (DEX). Needed to go past ship Lv 80.
+    Put it on in Build \u2192 Raft tree."

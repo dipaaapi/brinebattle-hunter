@@ -112,9 +112,47 @@ namespace BrineBattle.Rafts
     {
         readonly Dictionary<Cell, ItemDefinition> parts = new Dictionary<Cell, ItemDefinition>();
 
+        /// <summary>The tier of the current level (<see cref="EvolutionRules.TierOf"/>): what parts, hammers, essence and the boss must be.</summary>
         public Rarity Tier { get; private set; } = Rarity.Common;
 
-        /// <summary>Monsters killed since the last tier upgrade; the scene counts them.</summary>
+        /// <summary>Raft Lv 1-50, then (after the ship pick) ship Lv 1-100 (Ed's ask).</summary>
+        public int Level { get; private set; } = 1;
+        RaftKind line;
+        /// <summary>The picked ship line, or Plain while it is still a raft.</summary>
+        public RaftKind Chosen => line;
+        public bool IsShip => line != RaftKind.Plain;
+        public int MaxLevel => EvolutionRules.MaxLevel(line);
+        public bool AtMax => Level >= MaxLevel;
+        /// <summary>"Raft Lv 12" or "Aerial ship Lv 3".</summary>
+        public string LevelName => EvolutionRules.Label(line, Level);
+        public string FormName => EvolutionRules.FormName(line, Level);
+
+        public int KillsNeeded => EvolutionRules.Kills(Tier);
+        public int MaterialsNeeded => EvolutionRules.Materials(Tier);
+        public int EssenceNeeded => EvolutionRules.Essence(Tier);
+        /// <summary>True when this level's boss must be beaten before going on (and isn't yet).</summary>
+        public bool BossPending => BossesNeeded && EvolutionRules.BossGate(line, Level) && !BossBeaten(Tier);
+        /// <summary>The ship part (1-5) that must be on before the next level-up, or 0.</summary>
+        public int PartPending
+        {
+            get { int p = EvolutionRules.PartNeeded(line, Level); return p > 0 && !HasVessel(p) ? p : 0; }
+        }
+
+        void SetLevel(RaftKind newLine, int level)
+        {
+            line = newLine;
+            Level = Math.Max(1, Math.Min(EvolutionRules.MaxLevel(newLine), level));
+            Tier = EvolutionRules.TierOf(line, Level);
+        }
+
+        /// <summary>Loads the line and level from a save.</summary>
+        public void RestoreEvolution(RaftKind savedLine, int level)
+        {
+            SetLevel(savedLine, level);
+            Changed?.Invoke();
+        }
+
+        /// <summary>Monsters killed since the last level-up; the scene counts them.</summary>
         public int Kills { get; set; }
 
         /// <summary>
@@ -144,7 +182,7 @@ namespace BrineBattle.Rafts
         /// The type picked in the raft tree wins (Ed: a Sky raft must look and fight like Sky even with
         /// Fortress planks on it). Before a pick, the parts decide (Phase 8).
         /// </summary>
-        public RaftType Type => Chosen != RaftKind.Plain ? new RaftType(Chosen) : RaftTypeRules.Classify(parts.Values);
+        public RaftType Type => Chosen != RaftKind.Plain ? new RaftType(Chosen, level: Level) : RaftTypeRules.Classify(parts.Values);
         /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
         public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));
@@ -193,11 +231,15 @@ namespace BrineBattle.Rafts
         /// <summary>True when enough of the upstream edge holds modules to add raft parts or upgrade.</summary>
         public bool ModulesReady => UpstreamModules().guarded >= ModulesNeeded;
 
-        /// <summary>Replaces every part and the tier at once (loading a save); skips placement rules.</summary>
+        /// <summary>
+        /// Replaces every part at once (loading a save); skips placement rules. <paramref name="tier"/> sets the
+        /// level to the first one of that tier on the current line (older saves and tests).
+        /// </summary>
         public void Restore(IEnumerable<KeyValuePair<Cell, ItemDefinition>> saved, Rarity tier)
         {
             parts.Clear();
             foreach (var kv in saved) if (kv.Value != null) parts[kv.Key] = kv.Value;
+            SetLevel(line, EvolutionRules.FirstLevelOf(line, tier));
             Tier = tier;
             Changed?.Invoke();
         }
@@ -275,68 +317,64 @@ namespace BrineBattle.Rafts
                 .Where(c => !parts.ContainsKey(c) && Math.Abs(c.X) <= RaftRules.MaxRadius && Math.Abs(c.Z) <= RaftRules.MaxRadius)
                 .Distinct();
 
-        /// <summary>Why the tier can't go up yet, or null when it can (kills, materials, essence, modules).</summary>
+        /// <summary>
+        /// Why the next level-up can't happen yet, or null when it can: kills, materials, essence, modules on the
+        /// left edge, the hammer, the band's boss and the ship part the level needs. At raft Lv 50 the next step
+        /// is the ship pick instead; at ship Lv 100 the next evolution is coming soon.
+        /// </summary>
         public string UpgradeBlocker(Inventory inv)
         {
-            int cost = RaftRules.UpgradeCost(Tier);
-            if (cost == 0) return "The raft is already Mythic.";
+            if (!IsShip && AtMax) return "The raft is a boat now: pick its ship line in the Raft tree.";
+            if (IsShip && AtMax) return $"Lv {EvolutionRules.ShipMax}: the next evolution is {EvolutionRules.NextEvolution.ToLowerInvariant()}.";
             var missing = new List<string>();
-            int kills = RaftRules.KillsToUpgrade(Tier), mats = RaftRules.MaterialsToUpgrade(Tier);
+            int kills = KillsNeeded, mats = MaterialsNeeded, cost = EssenceNeeded;
             if (Kills < kills) missing.Add($"kill {kills - Kills} more monster{(kills - Kills == 1 ? "" : "s")}");
             if (inv.MaterialCount() < mats) missing.Add($"{mats - inv.MaterialCount()} more monster materials");
             if (inv.EssenceAtLeast(Tier) < cost) missing.Add($"{cost - inv.EssenceAtLeast(Tier)} more {Tier}+ essence");
             var (guarded, _) = UpstreamModules();
             if (guarded < ModulesNeeded) missing.Add($"{ModulesNeeded - guarded} more auto-loot module{(ModulesNeeded - guarded == 1 ? "" : "s")} on the left edge");
             if (!HammerReady) missing.Add($"a {Tier} hammer or better");
-            if (BossesNeeded && !BossBeaten(Tier)) missing.Add($"beat the Lv {(int)Tier + 1} boss");
+            if (BossPending) missing.Add($"beat the {Tier} boss");
+            if (PartPending > 0) missing.Add($"put on the {VesselRules.PartName(line, PartPending)}");
             return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
         }
 
-        /// <summary>
-        /// Raise the tier one step: needs <see cref="RaftRules.KillsToUpgrade"/> kills since the last upgrade,
-        /// and spends the materials and essence. Lower-rarity parts already placed stay.
-        /// </summary>
-        public bool TryUpgrade(Inventory inv) => TryUpgrade(inv, RaftKind.Plain);
+        public bool TryUpgrade(Inventory inv) => TryUpgrade(inv, line);
 
-        /// <summary>
-        /// Levels up (U-31's material tree). The raft type is picked once (Ed's ask): before
-        /// <see cref="RaftTree.PickLevel"/> every level is Plain; the level-up that reaches it records
-        /// <paramref name="path"/> as the raft's type, and after that every level goes to that type.
-        /// </summary>
+        /// <summary>One level up: spends the materials and essence; parts already placed stay. <paramref name="path"/> is ignored (older callers).</summary>
         public bool TryUpgrade(Inventory inv, RaftKind path)
         {
             if (UpgradeBlocker(inv) != null) return false;
-            inv.SpendMaterials(RaftRules.MaterialsToUpgrade(Tier));
-            inv.SpendEssence(Tier, RaftRules.UpgradeCost(Tier));
+            inv.SpendMaterials(MaterialsNeeded);
+            inv.SpendEssence(Tier, EssenceNeeded);
             Kills = 0;
-            Tier++;
-            int level = (int)Tier + 1;
-            paths.Add(Chosen != RaftKind.Plain ? Chosen : level >= RaftTree.PickLevel ? path : RaftKind.Plain);
+            SetLevel(line, Level + 1);
             Changed?.Invoke();
             return true;
         }
 
-        /// <summary>The raft type picked once in the raft tree (Ed's ask), or Plain before it's picked.</summary>
-        public RaftKind Chosen
+        /// <summary>Why the ship line can't be picked yet, or null: the raft must be Lv 50 and the Rare boss beaten.</summary>
+        public string ChooseBlocker()
         {
-            get
-            {
-                for (int i = paths.Count - 1; i >= 0; i--) if (paths[i] != RaftKind.Plain) return paths[i];
-                return RaftKind.Plain;
-            }
+            if (IsShip) return $"Already a {EvolutionRules.LineName(line)}.";
+            if (Level < EvolutionRules.RaftMax) return $"The ship line opens at raft Lv {EvolutionRules.RaftMax}.";
+            if (BossPending) return $"Beat the {Tier} boss first.";
+            return null;
         }
 
-        /// <summary>True when the raft is at the pick level or past it and no type is picked yet.</summary>
-        public bool CanChoose => Chosen == RaftKind.Plain && (int)Tier + 1 >= RaftTree.PickLevel;
+        /// <summary>True when the raft is a Lv 50 boat with its boss beaten and no ship line yet.</summary>
+        public bool CanChoose => ChooseBlocker() == null;
 
         /// <summary>
-        /// Picks the raft type now, without a level-up (for a raft already at the pick level). It counts
-        /// from the pick level up to the current level, so that branch opens that far. Once only.
+        /// Picks the ship line (Ed's ask): Sea level (STR), Aerial (INT) or Undersea (DEX). The ship starts again
+        /// at Lv 1 and evolves to Lv 100. Once only.
         /// </summary>
         public bool Choose(RaftKind kind)
         {
             if (!CanChoose || kind == RaftKind.Plain) return false;
-            for (int i = 0; i < paths.Count; i++) if (i + 2 >= RaftTree.PickLevel) paths[i] = kind;
+            SetLevel(kind, 1);
+            Kills = 0;
+            vessel.Clear();
             Changed?.Invoke();
             return true;
         }
@@ -428,6 +466,17 @@ namespace BrineBattle.Rafts
 
         /// <summary>Bosses gate the level-ups. Off for bare grids in tests; the game turns it on.</summary>
         public bool BossesNeeded { get; set; }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>Developer mode only: sets the line and level directly (raft 1-50, ship 1-100).</summary>
+        public void DevSetLevel(RaftKind devLine, int level)
+        {
+            if (devLine != line) vessel.Clear();
+            SetLevel(devLine, level);
+            Kills = 0;
+            Changed?.Invoke();
+        }
+#endif
         readonly HashSet<Rarity> bosses = new HashSet<Rarity>();
         /// <summary>Raft levels whose boss is beaten (by the level's rarity).</summary>
         public IEnumerable<Rarity> BossesBeaten => bosses;
@@ -451,8 +500,8 @@ namespace BrineBattle.Rafts
             if (Chosen == RaftKind.Plain) return "Pick the raft's type first.";
             if (part.raftKind != Chosen) return $"That part is for a {VesselRules.Vehicle(part.raftKind)}.";
             if (vessel.Contains(part.vesselSlot)) return "It's already on.";
-            int need = VesselRules.UnlockLevel(part.vesselSlot);
-            if ((int)Tier + 1 < need) return $"Opens at raft Lv {need}.";
+            int need = EvolutionRules.PartOpensAt(part.vesselSlot);
+            if (Level < need) return $"Opens at ship Lv {need}.";
             if (bag != null && bag.Count(part) <= 0) return "Make it at the Workbench first.";
             if (!HammerReady) return $"Needs a {Tier} hammer or better.";
             return null;
@@ -487,7 +536,7 @@ namespace BrineBattle.Rafts
         public void NewSea(ItemDefinition basic, Inventory bag)
         {
             Strip(basic, bag, new Random(0), 0f);
-            Tier = Rarity.Common;
+            SetLevel(RaftKind.Plain, 1);
             Kills = 0;
             paths.Clear();
             vessel.Clear();
@@ -509,19 +558,11 @@ namespace BrineBattle.Rafts
         /// <summary>The type picked at each level-up: [0] for Lv 2, [1] for Lv 3 … (U-31).</summary>
         public IReadOnlyList<RaftKind> Paths => paths;
 
-        /// <summary>The highest raft level at which <paramref name="kind"/> was picked; 1 if never.</summary>
-        public int PathLevel(RaftKind kind)
-        {
-            for (int i = paths.Count - 1; i >= 0; i--) if (paths[i] == kind) return i + 2;
-            return 1;
-        }
-
-        /// <summary>Loading a save. Missing entries (older saves) are Plain.</summary>
+        /// <summary>Older saves only (the per-level type picks before ship lines); kept so they still load.</summary>
         public void RestorePaths(IEnumerable<RaftKind> saved)
         {
             paths.Clear();
             if (saved != null) paths.AddRange(saved);
-            while (paths.Count < (int)Tier) paths.Add(RaftKind.Plain);
         }
 
         /// <summary>

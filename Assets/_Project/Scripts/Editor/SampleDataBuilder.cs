@@ -170,25 +170,25 @@ namespace BrineBattle.Editor
             Recipe("reinforce_leviathan_beam", "Leviathan Beam", RecipeKind.Upgrade, new[] { (coral, 2), (fang, 3) }, new[] { (leviathan, 1) });
             Recipe("reinforce_abyssal_keel", "Abyssal Keel", RecipeKind.Upgrade, new[] { (leviathan, 2), (shell, 3) }, new[] { (abyssal, 1) });
             // Phase 8: raft types. Typed parts at every raft level; most parts of one kind set the raft's type.
-            SetRaftKind(shell, RaftKind.Fortress);
-            SetRaftKind(coral, RaftKind.Fortress);
+            SetRaftKind(shell, RaftKind.Sea);
+            SetRaftKind(coral, RaftKind.Sea);
             // Ed's U-31: each level of a type also has its own refined material (the tree's node), opened by
             // picking that type at a raft level-up. Bases per level: Tarred, Shellback, Coralbound, Leviathan, Abyssal.
             var bases = new[] { tarred, shell, coral, leviathan, abyssal };
-            var fortressParts = TypedParts(RaftKind.Fortress, "ShellPlating", "shell_plating", "Shell Plating", Element.Earth, plank, scale, bases,
+            var fortressParts = TypedParts(RaftKind.Sea, "ShellPlating", "shell_plating", "Shell Plating", Element.Earth, plank, scale, bases,
                 new[] { "Hardened Scale", "Shell Weave", "Coral Bulwark", "Leviathan Hide", "Abyssal Carapace" },
                 "Scales riveted over planks. Fortress part: slow but sturdy.");
-            var skyParts = TypedParts(RaftKind.Sky, "WingSail", "wing_sail", "Wing Sail", Element.Wind, plank, feather, bases,
+            var skyParts = TypedParts(RaftKind.Aerial, "WingSail", "wing_sail", "Wing Sail", Element.Wind, plank, feather, bases,
                 new[] { "Gale Down", "Storm Silk", "Cloud Bladder", "Tempest Plume", "Aether Membrane" },
                 "A feathered sail on a frame. Sky part: quick, with a longer hook reach.");
-            var beastParts = TypedParts(RaftKind.Beast, "BeastHarness", "beast_harness", "Beast Harness", Element.Water, plank, fang, bases,
+            var beastParts = TypedParts(RaftKind.Undersea, "BeastHarness", "beast_harness", "Beast Harness", Element.Water, plank, fang, bases,
                 new[] { "Fang Rope", "Sinew Strap", "Bone Yoke", "Leviathan Tendon", "Abyssal Chain" },
                 "Fang-studded straps for a monster to pull the raft. Beast part: hits harder and moves faster.");
             // Ed's ask: a boss per raft level, and the vehicle of each type (five parts, one per level from Lv 2).
             var cores = Bosses();
-            VesselParts(RaftKind.Fortress, fortressParts, cores);
-            VesselParts(RaftKind.Sky, skyParts, cores);
-            VesselParts(RaftKind.Beast, beastParts, cores);
+            VesselParts(RaftKind.Sea, fortressParts, cores);
+            VesselParts(RaftKind.Aerial, skyParts, cores);
+            VesselParts(RaftKind.Undersea, beastParts, cores);
             // Ed's ask: building needs a hammer of the raft's level or better; each hammer upgrades from the last.
             var hammers = new[]
             {
@@ -317,6 +317,11 @@ namespace BrineBattle.Editor
                 Recipe($"dismantle_{nets[n].id}", nets[n].displayName, RecipeKind.Dismantle, new[] { (nets[n], 1) }, new[] { (prevNet, 1), (netBases[n], 1) });
                 prevNet = nets[n];
             }
+            // Ed's ask: bigger module shapes. A kit per module and shape: one module per cell plus a fang as the
+            // alchemy binder, made by a Builder or Alchemist minion; the shapes open with the raft's growth.
+            foreach (var m in new[] { net, hookArm }.Concat(nets))
+                foreach (ModuleShape shape in new[] { ModuleShape.Bar2, ModuleShape.Square, ModuleShape.L, ModuleShape.T, ModuleShape.Bar3 })
+                    ShapedKit(m, shape, fang);
             Flotsam("DriftwoodBundle", "driftwood_bundle", "Driftwood Bundle", Rarity.Common, (plank, 1f, 2, 3), (patch, 0.4f, 1, 1));
             Flotsam("TarBarrel", "tar_barrel", "Tar Barrel", Rarity.Uncommon, (tarred, 1f, 1, 2), (patch, 0.6f, 1, 2));
             Flotsam("ShellWreck", "shell_wreck", "Shell Wreck", Rarity.Rare, (shell, 1f, 1, 2), (scale, 0.6f, 1, 2));
@@ -467,25 +472,31 @@ namespace BrineBattle.Editor
         }
 
         /// <summary>
-        /// The vehicle of a raft type (Ed's ask): five parts, slot n opening at raft Lv n+1. Each takes two
-        /// typed parts of its level and the core of the boss before it.
+        /// The ship parts of a ship line (Ed's ask, 2026-10-31): five, opening at ship Lv 20, 40, 60, 80 and 99.
+        /// Each takes two typed parts of its rarity and the core of the boss before it. The asset files and ids
+        /// keep the old vehicle names (saves and recipes stay valid); the shown name and text are refreshed.
         /// </summary>
         static void VesselParts(RaftKind kind, ItemDefinition[] typed, ItemDefinition[] cores)
         {
-            string vehicle = VesselRules.Vehicle(kind);
+            string ship = EvolutionRules.LineName(kind);
             for (int slot = 1; slot <= VesselRules.Parts; slot++)
             {
                 string name = VesselRules.PartName(kind, slot);
-                string id = $"{kind.ToString().ToLowerInvariant()}_{name.ToLowerInvariant().Replace(" & ", "_").Replace(" ", "_")}";
-                string file = $"Vessel{kind}{name.Replace(" & ", "").Replace(" ", "")}";
+                string old = VesselRules.LegacyName(kind, slot);
+                string legacy = VesselRules.LegacyKind(kind);
+                string id = $"{legacy.ToLowerInvariant()}_{old.ToLowerInvariant().Replace(" & ", "_").Replace(" ", "_")}";
+                string file = $"Vessel{legacy}{old.Replace(" & ", "").Replace(" ", "")}";
                 int lv = VesselRules.UnlockLevel(slot);
                 var part = LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", it =>
                 {
-                    it.id = id; it.displayName = name; it.type = ItemType.Vessel; it.maxStack = 1;
+                    it.id = id; it.type = ItemType.Vessel; it.maxStack = 1;
                     it.rarity = VesselRules.RarityOf(slot); it.element = typed[slot].element;
-                    it.raftKind = kind; it.vesselSlot = slot;
-                    it.description = $"Part {slot} of 5 of the {vehicle}. Opens at raft Lv {lv}. Put it on in Build → Raft tree.";
+                    it.vesselSlot = slot;
                 });
+                part.displayName = name;
+                part.raftKind = kind;
+                part.description = $"Part {slot} of 5 of a {ship} ({EvolutionRules.Stat(kind)}). Needed to go past ship Lv {lv}. Put it on in Build → Raft tree.";
+                EditorUtility.SetDirty(part);
                 Recipe($"craft_{id}", name, RecipeKind.Craft, new[] { (typed[slot], 2), (cores[slot - 1], 1) }, new[] { (part, 1) });
             }
         }
@@ -514,6 +525,25 @@ namespace BrineBattle.Editor
             if (item == null || item.gearPower == power) return;
             item.gearPower = power;
             EditorUtility.SetDirty(item);
+        }
+
+        /// <summary>A shaped module kit (Ed's ask): lays <paramref name="module"/> down in <paramref name="shape"/>.</summary>
+        static void ShapedKit(ItemDefinition module, ModuleShape shape, ItemDefinition binder)
+        {
+            int cells = ShapeRules.Size(shape);
+            string tag = shape.ToString();
+            string id = $"{module.id}_{tag.ToLowerInvariant()}";
+            string name = $"{module.displayName} {ShapeRules.Name(shape)}";
+            var kit = LoadOrCreate<ItemDefinition>($"{Root}/Items/Kit{module.name}{tag}.asset", i =>
+            {
+                i.id = id; i.type = ItemType.Module; i.maxStack = 20;
+            });
+            kit.displayName = name;
+            kit.rarity = module.rarity; kit.element = module.element; kit.moduleLevel = module.moduleLevel;
+            kit.shape = shape; kit.segment = module;
+            kit.description = $"A {ShapeRules.Name(shape)} kit: lays {cells} {module.displayName}s at once. Turn it in the Shipyard (R). Made by a Builder or Alchemist minion. {ShapeRules.Lock(shape)}.";
+            EditorUtility.SetDirty(kit);
+            Recipe($"kit_{id}", name, RecipeKind.Craft, new[] { (module, cells), (binder, 1) }, new[] { (kit, 1) });
         }
 
         static ItemDefinition Module(string file, string id, string name, Rarity rarity, int level, string description) =>

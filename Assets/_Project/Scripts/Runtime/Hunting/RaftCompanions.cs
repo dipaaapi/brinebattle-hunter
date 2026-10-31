@@ -152,6 +152,8 @@ namespace BrineBattle.Hunting
         void Update()
         {
             if (hook == null || Raft == null) return;
+            // Minions don't help in the Shipyard (Ed's ask): a hammering job stops and its part stays in the bag.
+            if (!ShipyardRules.MinionsMayWork(Shipyard.IsOpen)) { EndJob(); return; }
             Place();
             foreach (var c in hook.Companions.All) c.SinceFavourite += Time.deltaTime;   // C-16 mood clock
             // Each container rattles while minions are inside it (Ed's ask: the bin too, not just the box).
@@ -497,12 +499,12 @@ namespace BrineBattle.Hunting
                 var path = CompanionWork.BuilderLevelUp(g, hook.Inventory);
                 if (path != null && g.TryUpgrade(hook.Inventory, path.Value))
                 {
-                    Work(who, $"leveled the raft to Lv {(int)g.Tier + 1}");
-                    hook.Log($"{who.Name} (Builder) leveled the raft up to Lv {(int)g.Tier + 1}!");
+                    Work(who, $"leveled up to {g.LevelName}");
+                    hook.Log($"{who.Name} (Builder) leveled it up: {g.LevelName}, {g.FormName}!");
                     return;
                 }
             }
-            if (CompanionSettings.BuilderCrafts) Crafted(who, "Builder", CompanionWork.BuilderCraftPick(known, hook.Inventory, g));
+            if (CompanionSettings.BuilderCrafts) Crafted(who, "Builder", CompanionWork.BuilderCraftPick(known, hook.Inventory, g, 2, Shipyard.Wanted(FindFirstObjectByType<Shipyard>())));
         }
 
         void SalvageJob(Companion who)

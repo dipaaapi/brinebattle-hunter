@@ -123,9 +123,9 @@ namespace BrineBattle.Hunting
             var c = PartColor(part.rarity);
             switch (part.raftKind)
             {
-                case RaftKind.Fortress: return Color.Lerp(c, new Color(0.45f, 0.4f, 0.38f), 0.55f);
-                case RaftKind.Sky: return Color.Lerp(c, new Color(0.75f, 0.9f, 1f), 0.55f);
-                case RaftKind.Beast: return Color.Lerp(c, new Color(0.75f, 0.35f, 0.3f), 0.55f);
+                case RaftKind.Sea: return Color.Lerp(c, new Color(0.45f, 0.4f, 0.38f), 0.55f);
+                case RaftKind.Aerial: return Color.Lerp(c, new Color(0.75f, 0.9f, 1f), 0.55f);
+                case RaftKind.Undersea: return Color.Lerp(c, new Color(0.75f, 0.35f, 0.3f), 0.55f);
                 default: return c;
             }
         }

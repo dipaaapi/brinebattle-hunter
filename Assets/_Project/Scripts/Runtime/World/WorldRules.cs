@@ -310,8 +310,8 @@ namespace BrineBattle.World
         {
             if (w != Weather.Storm) return 0;
             double c = BaseStrikeChance;
-            if (raftMain == Rafts.RaftKind.Fortress) c *= 0.5;
-            else if (raftMain == Rafts.RaftKind.Sky) c *= 1.5;
+            if (raftMain == Rafts.RaftKind.Sea) c *= 0.5;
+            else if (raftMain == Rafts.RaftKind.Aerial) c *= 1.5;
             return Math.Min(1, c);
         }
 

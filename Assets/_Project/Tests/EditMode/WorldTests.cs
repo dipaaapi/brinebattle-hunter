@@ -112,8 +112,8 @@ namespace BrineBattle.Tests
         public void LightningOnlyInStormsAndFortressesShrugItOff()
         {
             Assert.AreEqual(0, WorldRules.StrikeChance(Weather.Rain, RaftKind.Plain));
-            Assert.Less(WorldRules.StrikeChance(Weather.Storm, RaftKind.Fortress), WorldRules.StrikeChance(Weather.Storm, RaftKind.Plain));
-            Assert.Greater(WorldRules.StrikeChance(Weather.Storm, RaftKind.Sky), WorldRules.StrikeChance(Weather.Storm, RaftKind.Plain));
+            Assert.Less(WorldRules.StrikeChance(Weather.Storm, RaftKind.Sea), WorldRules.StrikeChance(Weather.Storm, RaftKind.Plain));
+            Assert.Greater(WorldRules.StrikeChance(Weather.Storm, RaftKind.Aerial), WorldRules.StrikeChance(Weather.Storm, RaftKind.Plain));
         }
 
         [Test]

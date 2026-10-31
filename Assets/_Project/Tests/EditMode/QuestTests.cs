@@ -48,7 +48,7 @@ namespace BrineBattle.Tests
             Assert.AreEqual(QuestTarget.RaftTree, level.Target);
             var kills = level.Lines.Single(l => l.Text == "Monsters beaten");
             Assert.AreEqual(2, kills.Have);
-            Assert.AreEqual(RaftRules.KillsToUpgrade(Rarity.Common), kills.Need);
+            Assert.AreEqual(EvolutionRules.Kills(Rarity.Common), kills.Need);
             Assert.IsFalse(level.Done);
             Assert.IsFalse(level.Lines.Single(l => l.Text.Contains("hammer")).Done, "no hammer in the bag");
         }
@@ -79,7 +79,9 @@ namespace BrineBattle.Tests
             var bag = new Inventory();
             Assert.IsFalse(QuestRules.Build(raft, bag, null).Any(q => q.Id == "boss"), "bosses off");
             raft.BossesNeeded = true;
-            Assert.IsTrue(QuestRules.Build(raft, bag, null).Any(q => q.Id == "boss"));
+            Assert.IsFalse(QuestRules.Build(raft, bag, null).Any(q => q.Id == "boss"), "no boss in the middle of a tier");
+            raft.RestoreEvolution(RaftKind.Plain, 16);
+            Assert.IsTrue(QuestRules.Build(raft, bag, null).Any(q => q.Id == "boss"), "Lv 16 ends the Common tier");
             Assert.AreEqual(QuestTarget.Boss, QuestRules.Build(raft, bag, null).First(q => q.Id == "boss").Target, "summon it from the Quest tab");
             Assert.IsFalse(QuestRules.Build(raft, bag, null).Any(q => q.Id == "vessel" || q.Id == "leave"), "no type picked yet");
         }

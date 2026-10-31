@@ -19,6 +19,10 @@ namespace BrineBattle.Items
         public Rafts.RaftKind raftKind;
         [Tooltip("Vehicle parts only: which of the type's five pieces it is, 1-5 (Ed's ask). 0 = not a vehicle part.")]
         [Range(0, 5)] public int vesselSlot;
+        [Tooltip("Shaped module kits only (Ed's ask): the footprint it lays down. Single = an ordinary module.")]
+        public Rafts.ModuleShape shape;
+        [Tooltip("Shaped module kits only: the plain module placed on each cell of the shape.")]
+        public ItemDefinition segment;
         [Tooltip("Gear only: attack (weapon) or defense (armor) added to the hunter. Refine (+) raises it.")]
         [Min(0)] public int gearPower;
         [Tooltip("Gear only: passive skills. Only as many count as the rarity allows (Rare 1, Legendary 2, Mythic 3).")]

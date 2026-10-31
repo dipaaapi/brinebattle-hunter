@@ -85,6 +85,33 @@ namespace BrineBattle.Hunting
             return MakeBoss(raft.transform.position - dir * (raft.EdgeDistance + 2f));
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>Developer mode only: the raft level's boss right now, due or not.</summary>
+        public Drift DevSummonBoss()
+        {
+            var already = live.Find(d => d != null && d.Monster.isBoss);
+            if (already != null) return already;
+            return MakeBoss(raft.transform.position - currentDirection.normalized * (raft.EdgeDistance + 2f));
+        }
+
+        /// <summary>Developer mode only: a drift of <paramref name="m"/> in <paramref name="state"/> just off the raft.</summary>
+        public Drift DevSpawn(MonsterDefinition m, DriftState state)
+        {
+            var dir = currentDirection.normalized;
+            var pos = raft.transform.position - dir * (raft.EdgeDistance + 2.5f);
+            pos.y = 0.1f;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            go.transform.SetParent(transform, true);
+            go.transform.position = pos;
+            var drift = go.AddComponent<Drift>();
+            drift.Init(m, state, state, dir * driftSpeed * 0.3f);
+            live.Add(drift);
+            return drift;
+        }
+
+        public IReadOnlyList<MonsterDefinition> DevBosses => bosses;
+#endif
+
         Drift MakeBoss(Vector3 pos)
         {
             var boss = BossFor(raft.Tier);

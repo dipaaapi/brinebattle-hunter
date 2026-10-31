@@ -28,11 +28,18 @@ namespace BrineBattle.Hunting
                 && (WorldPause.Open == Menu.None || WorldPause.Open == Menu.Quests)) Toggle();
         }
 
-        List<Quest> Quests() => hook != null && hook.raft != null
-            ? QuestRules.Build(hook.raft.Grid, hook.Inventory, hook.builder != null ? hook.builder.recipes.Where(r => r != null && hook.Knows(r)) : null)
-            : new List<Quest>();
+        List<Quest> Quests()
+        {
+            if (hook == null || hook.raft == null) return new List<Quest>();
+            var list = QuestRules.Build(hook.raft.Grid, hook.Inventory, hook.builder != null ? hook.builder.recipes.Where(r => r != null && hook.Knows(r)) : null);
+            // The blueprint loaded in the Shipyard (Ed's ask): what it still needs.
+            var yard = Shipyard.Target != null ? FindFirstObjectByType<Shipyard>() : null;
+            var bp = yard != null ? QuestRules.BlueprintQuest(Shipyard.Target, hook.raft.Grid, hook.Inventory, yard.Find) : null;
+            if (bp != null) list.Add(bp);
+            return list;
+        }
 
-        const string JournalId = "journal";
+        const string JournalId = "journal", FameId = "fame";
 
         void OnGUI()
         {
@@ -45,7 +52,7 @@ namespace BrineBattle.Hunting
             float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 60), h = Mathf.Min(460, HuntStyles.H - 160);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 44, HuntStyles.H / 2f - h / 2f, w, h), $"Quests ({quests.Count(q => !q.Done)} open)", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Quests); GUILayout.EndArea(); return; }
-            bool journal = picked == JournalId || quests.Count == 0;
+            bool journal = picked == JournalId || picked == FameId || quests.Count == 0;
             var current = journal ? null : quests.FirstOrDefault(q => q.Id == picked) ?? quests.FirstOrDefault(q => !q.Done) ?? quests[0];
             if (!journal) picked = current.Id;
 
@@ -64,7 +71,30 @@ namespace BrineBattle.Hunting
             if (journal) GUI.backgroundColor = HuntStyles.Go;
             if (GUILayout.Button($"<color=#ffd866>★</color> <b>Sea journal</b>\n<size=11>{hook.Firsts.Count}/{World.Firsts.All.Length} firsts</size>", HuntStyles.RichButton, GUILayout.Height(44))) picked = JournalId;
             GUI.backgroundColor = bg;
+            // Fame and achievements (Ed's ask: the goal is fame), after the journal.
+            if (picked == FameId) GUI.backgroundColor = HuntStyles.Go;
+            if (GUILayout.Button($"<color=#ffd866>🏆</color> <b>Fame {hook.Fame.Points}</b>\n<size=11>{hook.Fame.Rank} · {hook.Fame.Unlocked.Count()}/{Rafts.FameBook.All.Length}</size>", HuntStyles.RichButton, GUILayout.Height(44))) picked = FameId;
+            GUI.backgroundColor = bg;
             GUILayout.EndScrollView();
+
+            if (picked == FameId)
+            {
+                detailScroll = GUILayout.BeginScrollView(detailScroll);
+                GUILayout.Label($"Fame {hook.Fame.Points} · {hook.Fame.Rank}", HuntStyles.Heading);
+                GUILayout.Label($"Monsters {hook.Fame.Kills} · bosses {hook.Fame.Bosses} · tames {hook.Fame.Tames} · crafts {hook.Fame.Crafts} · best raft Lv {hook.Fame.BestRaft} · best ship Lv {hook.Fame.BestShip} · {hook.Voyage.Difficulty} ×{Rafts.FameBook.Multiplier(hook.Voyage.Difficulty):0.#}", HuntStyles.Hint);
+                foreach (var a in Rafts.FameBook.All)
+                {
+                    bool got = hook.Fame.Has(a.Id);
+                    GUILayout.BeginHorizontal(HuntStyles.Card);
+                    GUILayout.Label(got ? "<color=#7be08a>✔</color>" : "<color=#9bb0c8>○</color>", HuntStyles.Text, GUILayout.Width(18));
+                    GUILayout.Label($"<b>{a.Title}</b>\n<size=11>{a.Goal}  <color=#ffd866>+{a.Fame} fame</color></size>", HuntStyles.Text);
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndScrollView();
+                GUILayout.EndHorizontal();
+                GUILayout.EndArea();
+                return;
+            }
 
             if (journal)
             {
