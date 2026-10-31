@@ -21,6 +21,8 @@ MonoBehaviour:
   moduleLevel: 1
   raftKind: 2
   vesselSlot: 4
+  shape: 0
+  segment: {fileID: 0}
   gearPower: 0
   passives: 
   actives: 
