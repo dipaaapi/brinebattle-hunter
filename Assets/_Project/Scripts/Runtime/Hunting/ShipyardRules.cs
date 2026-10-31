@@ -11,8 +11,68 @@ namespace BrineBattle.Hunting
     /// <summary>The Shipyard's part sub-tabs (Ed: the one long list was too long).</summary>
     public enum PartTab { Planks, AutoLoot, Kits, Habitats, ShipPieces, ShipParts }
 
+    /// <summary>
+    /// The raft's four edges for the Shipyard's direction markers. The bow is downstream (+X); the stern is the
+    /// upstream "left edge" (−X) where the auto-loot modules go; port is +Z and starboard −Z.
+    /// </summary>
+    public enum RaftEdge { Bow, Stern, Port, Starboard }
+
     public static class ShipyardRules
     {
+        public static readonly RaftEdge[] Edges = { RaftEdge.Bow, RaftEdge.Stern, RaftEdge.Port, RaftEdge.Starboard };
+        static readonly RaftEdge[] NoEdges = new RaftEdge[0];
+
+        /// <summary>The edge's direction in the raft's own frame (x, z).</summary>
+        public static (int x, int z) Direction(RaftEdge e) => e switch
+        {
+            RaftEdge.Bow => (1, 0),
+            RaftEdge.Stern => (-1, 0),
+            RaftEdge.Port => (0, 1),
+            _ => (0, -1),
+        };
+
+        public static string EdgeName(RaftEdge e) => e switch
+        {
+            RaftEdge.Bow => "BOW (front)",
+            RaftEdge.Stern => "STERN (left edge)",
+            RaftEdge.Port => "PORT side",
+            _ => "STARBOARD side",
+        };
+
+        /// <summary>Where a piece goes, as edges to point at (the hull and the sides: both sides; the mast stands at the bow edge).</summary>
+        public static RaftEdge[] EdgesOf(PieceSlot slot) => slot switch
+        {
+            PieceSlot.Bow => new[] { RaftEdge.Bow },
+            PieceSlot.Mast => new[] { RaftEdge.Bow },
+            PieceSlot.Stern => new[] { RaftEdge.Stern },
+            PieceSlot.Sides => new[] { RaftEdge.Port, RaftEdge.Starboard },
+            PieceSlot.Hull => new[] { RaftEdge.Port, RaftEdge.Starboard },
+            _ => Edges,
+        };
+
+        /// <summary>The edges a quest points at: its ship piece's slot, or the left edge for auto-loot modules; none otherwise.</summary>
+        public static RaftEdge[] EdgesFor(Quest q) =>
+            q == null ? NoEdges : q.Piece != null ? EdgesOf(q.Piece.Slot) : q.Id == "modules" ? new[] { RaftEdge.Stern } : NoEdges;
+
+        /// <summary>The quests the Shipyard shows: only the raft and ship ones (Ed's ask).</summary>
+        public static bool IsShipyardQuest(Quest q) =>
+            q != null && (q.Id == "level" || q.Id == "piece" || q.Id == "modules" || q.Id == "vessel" || q.Id == "type" || q.Id == "hammer" || q.Id == "blueprint");
+
+        /// <summary>
+        /// From the raft's centre on screen (cx, cy), along a direction (dx, dy), to the border of the view rect:
+        /// where an edge marker sits, at the outer edge of the view and never over the raft.
+        /// </summary>
+        public static (float x, float y) ToBorder(float cx, float cy, float dx, float dy, float minX, float minY, float maxX, float maxY)
+        {
+            float t = float.MaxValue;
+            if (dx > 1e-5f) t = Math.Min(t, (maxX - cx) / dx);
+            if (dx < -1e-5f) t = Math.Min(t, (minX - cx) / dx);
+            if (dy > 1e-5f) t = Math.Min(t, (maxY - cy) / dy);
+            if (dy < -1e-5f) t = Math.Min(t, (minY - cy) / dy);
+            if (t == float.MaxValue || t < 0f) t = 0f;
+            return (Math.Max(minX, Math.Min(maxX, cx + dx * t)), Math.Max(minY, Math.Min(maxY, cy + dy * t)));
+        }
+
         /// <summary>The sub-tab an item belongs in, or null when it isn't something the Shipyard builds with.</summary>
         public static PartTab? TabOf(ItemDefinition item)
         {

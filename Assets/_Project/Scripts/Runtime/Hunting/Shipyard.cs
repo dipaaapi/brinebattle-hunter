@@ -301,7 +301,7 @@ namespace BrineBattle.Hunting
             if (mouse == null || cam == null) return;
             Vector2 mp = mouse.position.ReadValue();
             var ui = new Vector2(mp.x, Screen.height - mp.y) / HuntStyles.Scale;
-            bool overUi = stripRect.Contains(ui) || topRect.Contains(ui) || bottomRect.Contains(ui);
+            bool overUi = stripRect.Contains(ui) || topRect.Contains(ui) || bottomRect.Contains(ui) || questRect.Contains(ui);
 
             float wheel = mouse.scroll.ReadValue().y;
             if (!overUi && Mathf.Abs(wheel) > 0.01f) zoom -= Mathf.Sign(wheel) * 1.2f;
@@ -459,6 +459,7 @@ namespace BrineBattle.Hunting
             GUI.depth = -40;   // on top of the HUD and every other menu
             float W = HuntStyles.W, H = HuntStyles.H;
             if (rt != null) GUI.DrawTexture(new Rect(0, 0, W, H), rt, ScaleMode.StretchToFill, false);
+            EdgeMarkers(Grid, W, H);
             titleStyle ??= new GUIStyle(HuntStyles.Heading) { fontSize = 20 };
             var g = Grid;
 
@@ -529,6 +530,7 @@ namespace BrineBattle.Hunting
         /// <summary>Bottom: what the hovered cell would do, the last result and the controls.</summary>
         void BottomBar(float W, float H)
         {
+            QuestPanel(Grid, W, H);   // every tab draws the bottom bar, so the quest panel shows on all of them
             bottomRect = new Rect(270, H - 62, W - 280, 54);
             GUILayout.BeginArea(bottomRect, HuntStyles.Box);
             GUILayout.Label(hoverText.Length > 0 ? hoverText : message, HuntStyles.Text);
@@ -615,6 +617,101 @@ namespace BrineBattle.Hunting
                 GUILayout.EndVertical();
             }
             GUILayout.EndScrollView();
+        }
+
+        // ---- Quests and direction markers (Ed's ask: know what to do, and where, without leaving the Shipyard) ----
+
+        static bool questsOpen = true;
+        string questPick;
+        Rect questRect;
+        Vector2 questScroll;
+        List<Quest> quests = new List<Quest>();
+        GUIStyle arrowStyle, edgeStyle;
+
+        /// <summary>
+        /// A compact, collapsible panel at the top right with only the raft and ship quests and their ✔/✘ lines.
+        /// Click a quest to point the edge markers at where its piece goes.
+        /// </summary>
+        void QuestPanel(RaftGrid g, float W, float H)
+        {
+            // Built once per frame on Layout and kept for the Repaint, so both draw the same lines.
+            if (Event.current.type == EventType.Layout)
+            {
+                quests = QuestRules.Build(g, hook.Inventory, hook.builder != null ? hook.builder.recipes : null).Where(ShipyardRules.IsShipyardQuest).ToList();
+                if (questPick == null || !quests.Any(q => q.Id == questPick))
+                    questPick = quests.FirstOrDefault(q => !q.Done && ShipyardRules.EdgesFor(q).Length > 0)?.Id;
+            }
+            float w = 310, h = questsOpen ? Mathf.Min(H - 58 - 80, 44 + quests.Sum(q => 30 + 19 * q.Lines.Count)) : 38;
+            questRect = new Rect(W - w - 10, 58, w, h);
+            GUILayout.BeginArea(questRect, HuntStyles.Box);
+            int open = quests.Count(q => !q.Done);
+            if (GUILayout.Button($"{(questsOpen ? "▾" : "▸")} <b>Raft quests</b> <size=11>({open} open)</size>", HuntStyles.RichButton, GUILayout.Height(26))) questsOpen = !questsOpen;
+            if (questsOpen)
+            {
+                questScroll = GUILayout.BeginScrollView(questScroll);
+                if (quests.Count == 0) GUILayout.Label("Nothing to do for the raft right now.", HuntStyles.Hint);
+                foreach (var q in quests)
+                {
+                    bool picked = q.Id == questPick;
+                    var edges = ShipyardRules.EdgesFor(q);
+                    string where = edges.Length == 0 ? "" : edges.Length == ShipyardRules.Edges.Length ? " <size=10>· all edges</size>"
+                        : $" <size=10>· {string.Join(", ", edges.Select(ShipyardRules.EdgeName))}</size>";
+                    string mark = q.Done ? "<color=#8fe08f>✔</color> " : picked ? "<color=#ffd866>▶</color> " : "";
+                    if (GUILayout.Button($"{mark}<b>{q.Title}</b>{where}", HuntStyles.RichButton, GUILayout.Height(26))) questPick = picked ? null : q.Id;
+                    foreach (var l in q.Lines)
+                        GUILayout.Label($"<size=11>{(l.Done ? "<color=#8fe08f>✔</color>" : $"<color={HuntStyles.BadHex}>✘</color>")} {l.Text}{(l.Need > 1 ? $"  {Mathf.Min(l.Have, l.Need)}/{l.Need}" : "")}</size>", HuntStyles.Text);
+                }
+                GUILayout.EndScrollView();
+            }
+            GUILayout.EndArea();
+        }
+
+        /// <summary>
+        /// BOW / STERN / PORT / STARBOARD markers at the outer edge of the view, never over the raft; they turn
+        /// with the view so each always points at that real side. The picked quest's edges pulse gold.
+        /// </summary>
+        void EdgeMarkers(RaftGrid g, float W, float H)
+        {
+            if (model == null || cam == null || g.Count == 0) return;
+            arrowStyle ??= new GUIStyle(GUI.skin.label) { fontSize = 26, alignment = TextAnchor.MiddleCenter, richText = true };
+            edgeStyle ??= new GUIStyle(GUI.skin.label) { fontSize = 12, alignment = TextAnchor.MiddleCenter, richText = true, fontStyle = FontStyle.Bold };
+            var hot = ShipyardRules.EdgesFor(quests.FirstOrDefault(q => q.Id == questPick));
+            float s = Raft.CellSize;
+            var keys = g.Parts.Keys;
+            float minX = (keys.Min(c => c.X) - 0.5f - centerX) * s, maxX = (keys.Max(c => c.X) + 0.5f - centerX) * s;
+            float minZ = (keys.Min(c => c.Z) - 0.5f - centerZ) * s, maxZ = (keys.Max(c => c.Z) + 0.5f - centerZ) * s;
+            var mid = new Vector3((minX + maxX) / 2f, PickHeight, (minZ + maxZ) / 2f);
+            Vector2 OnScreen(Vector3 local)
+            {
+                var vp = cam.WorldToViewportPoint(model.TransformPoint(local));
+                return new Vector2(vp.x * W, (1f - vp.y) * H);
+            }
+            var c = OnScreen(mid);
+            // The free view between the parts list and the quest panel, above the bottom bar.
+            float left = stripRect.xMax + 40, right = questRect.xMin - 40, top = 58 + 30, bottom = H - 62 - 40;
+            if (right <= left || bottom <= top) return;
+            var old = GUI.color;
+            foreach (var e in ShipyardRules.Edges)
+            {
+                var (dx, dz) = ShipyardRules.Direction(e);
+                var edge = mid + new Vector3(dx * (maxX - minX) / 2f, 0f, dz * (maxZ - minZ) / 2f);
+                var d = OnScreen(edge) - c;
+                if (d.sqrMagnitude < 1f) continue;
+                d.Normalize();
+                var (bx, by) = ShipyardRules.ToBorder(c.x, c.y, d.x, d.y, left, top, right, bottom);
+                bool isHot = System.Array.IndexOf(hot, e) >= 0;
+                float pulse = isHot ? 0.6f + 0.4f * Mathf.Sin(Time.unscaledTime * 6f) : 0f;
+                var col = isHot ? Color.Lerp(new Color(1f, 0.8f, 0.3f), Color.white, pulse * 0.4f) : new Color(0.75f, 0.85f, 0.95f, 0.55f);
+                GUI.color = col;
+                var m = GUI.matrix;
+                GUIUtility.RotateAroundPivot(Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, new Vector2(bx, by));
+                float size = isHot ? 34f + 6f * pulse : 28f;
+                GUI.Label(new Rect(bx - size / 2f, by - size / 2f, size, size), "▶", arrowStyle);
+                GUI.matrix = m;
+                // The name sits on the raft's side of the arrow.
+                GUI.Label(new Rect(bx - 80 - d.x * 30, by - 10 - d.y * 26, 160, 20), ShipyardRules.EdgeName(e), edgeStyle);
+            }
+            GUI.color = old;
         }
 
         static readonly PartTab[] Tabs = (PartTab[])System.Enum.GetValues(typeof(PartTab));

@@ -63,6 +63,34 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void QuestsPointAtTheRightEdges()
+        {
+            Assert.AreEqual(new[] { RaftEdge.Stern }, ShipyardRules.EdgesFor(new Quest { Id = "modules" }), "modules go on the left (upstream) edge");
+            Assert.AreEqual(new[] { RaftEdge.Bow }, ShipyardRules.EdgesFor(new Quest { Id = "piece", Piece = ShipPieceRules.Find("piece_pointed_bow") }));
+            Assert.AreEqual(new[] { RaftEdge.Stern }, ShipyardRules.EdgesFor(new Quest { Id = "piece", Piece = ShipPieceRules.Find("piece_rudder") }));
+            CollectionAssert.AreEquivalent(new[] { RaftEdge.Port, RaftEdge.Starboard }, ShipyardRules.EdgesFor(new Quest { Id = "piece", Piece = ShipPieceRules.Find("piece_keel") }));
+            Assert.AreEqual(4, ShipyardRules.EdgesFor(new Quest { Id = "piece", Piece = ShipPieceRules.Find("piece_deck_trim") }).Length, "the rim goes all round");
+            Assert.AreEqual(0, ShipyardRules.EdgesFor(new Quest { Id = "level" }).Length);
+            Assert.AreEqual(0, ShipyardRules.EdgesFor(null).Length);
+            Assert.AreEqual((1, 0), ShipyardRules.Direction(RaftEdge.Bow));
+            Assert.AreEqual((-1, 0), ShipyardRules.Direction(RaftEdge.Stern));
+            Assert.IsTrue(ShipyardRules.IsShipyardQuest(new Quest { Id = "piece" }));
+            Assert.IsFalse(ShipyardRules.IsShipyardQuest(new Quest { Id = "boss" }), "the Shipyard shows only raft and ship quests");
+        }
+
+        [Test]
+        public void EdgeMarkersSitOnTheBorderOfTheView()
+        {
+            // From the centre (100, 50) of a 0..200 × 0..100 view.
+            Assert.AreEqual((200f, 50f), ShipyardRules.ToBorder(100, 50, 1, 0, 0, 0, 200, 100));
+            Assert.AreEqual((0f, 50f), ShipyardRules.ToBorder(100, 50, -1, 0, 0, 0, 200, 100));
+            Assert.AreEqual((100f, 0f), ShipyardRules.ToBorder(100, 50, 0, -1, 0, 0, 200, 100));
+            var (x, y) = ShipyardRules.ToBorder(100, 50, 0.7071f, 0.7071f, 0, 0, 200, 100);
+            Assert.AreEqual(100f, y, 1e-3f, "a diagonal stops at the nearer border");
+            Assert.AreEqual(150f, x, 1e-2f);
+        }
+
+        [Test]
         public void HoverPreviewUsesTheSameRulesAsBuilding()
         {
             var plank = Part();
