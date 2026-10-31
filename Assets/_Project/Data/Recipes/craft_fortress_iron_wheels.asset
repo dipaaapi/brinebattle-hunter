@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_fortress_iron_wheels
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_fortress_iron_wheels
-  displayName: Iron Wheels
+  displayName: Cannons
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: a1b44c813acd39b4aaad50cbc059b502, type: 2}

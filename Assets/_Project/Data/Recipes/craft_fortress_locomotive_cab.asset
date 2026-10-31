@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_fortress_locomotive_cab
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_fortress_locomotive_cab
-  displayName: Locomotive Cab
+  displayName: Stern Castle
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: 3437bfae898b63c4b9344b25de5bd56b, type: 2}

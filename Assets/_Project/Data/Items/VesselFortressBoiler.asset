@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VesselFortressBoiler
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.ItemDefinition
   id: fortress_boiler
-  displayName: Boiler
+  displayName: Bow & Bowsprit
   type: 11
   rarity: 3
   element: 3
@@ -28,5 +28,5 @@ MonoBehaviour:
   cures: 0
   effectAmount: 0
   icon: {fileID: 0}
-  description: "Part 3 of 5 of the sea train. Opens at raft Lv 4. Put it on in Build
-    \u2192 Raft tree."
+  description: "Part 3 of 5 of a Sea-level ship (STR). Needed to go past ship Lv
+    60. Put it on in Build \u2192 Raft tree."

@@ -28,5 +28,5 @@ MonoBehaviour:
   cures: 0
   effectAmount: 0
   icon: {fileID: 0}
-  description: "Part 4 of 5 of the plane. Opens at raft Lv 5. Put it on in Build
-    \u2192 Raft tree."
+  description: "Part 4 of 5 of a Aerial ship (INT). Needed to go past ship Lv 80.
+    Put it on in Build \u2192 Raft tree."

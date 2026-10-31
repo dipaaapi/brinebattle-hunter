@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_beast_masts_sails
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_beast_masts_sails
-  displayName: Masts & Sails
+  displayName: Periscope
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: df39c8ef4a8cb7d4d8ba67348acb413d, type: 2}

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VesselFortressIronWheels
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.ItemDefinition
   id: fortress_iron_wheels
-  displayName: Iron Wheels
+  displayName: Cannons
   type: 11
   rarity: 2
   element: 3
@@ -28,5 +28,5 @@ MonoBehaviour:
   cures: 0
   effectAmount: 0
   icon: {fileID: 0}
-  description: "Part 2 of 5 of the sea train. Opens at raft Lv 3. Put it on in Build
-    \u2192 Raft tree."
+  description: "Part 2 of 5 of a Sea-level ship (STR). Needed to go past ship Lv
+    40. Put it on in Build \u2192 Raft tree."

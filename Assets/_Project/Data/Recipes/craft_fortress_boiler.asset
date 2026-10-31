@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_fortress_boiler
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_fortress_boiler
-  displayName: Boiler
+  displayName: Bow & Bowsprit
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: 3408150fdaf8a8345af3877d72da3edc, type: 2}
