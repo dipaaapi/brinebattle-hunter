@@ -39,6 +39,17 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void PanningStaysNearTheRaftAndDragsDropOnlyOnACell()
+        {
+            Assert.AreEqual(ShipyardRules.PanLimit, ShipyardRules.ClampPan(50f));
+            Assert.AreEqual(-ShipyardRules.PanLimit, ShipyardRules.ClampPan(-50f));
+            Assert.AreEqual(2f, ShipyardRules.ClampPan(2f));
+            Assert.IsTrue(ShipyardRules.Drops(false, true), "released over a cell of the raft");
+            Assert.IsFalse(ShipyardRules.Drops(true, true), "released over the list: cancelled");
+            Assert.IsFalse(ShipyardRules.Drops(false, false), "released off the raft: cancelled");
+        }
+
+        [Test]
         public void TheWholeGameIsHaltedWhileItIsOpen()
         {
             Assert.AreEqual(0f, ShipyardRules.WorldTimeScale(true, 1f));

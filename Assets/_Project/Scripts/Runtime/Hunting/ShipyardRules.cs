@@ -21,6 +21,16 @@ namespace BrineBattle.Hunting
         public static float WrapYaw(float y) => ((y % 360f) + 360f) % 360f;
         public static bool IsClick(float movedPixels) => movedPixels < ClickSlop;
 
+        /// <summary>How far the view may pan from the raft's middle, in metres (WASD / arrows, middle-drag).</summary>
+        public const float PanLimit = 7f;
+        public static float ClampPan(float v) => Math.Max(-PanLimit, Math.Min(PanLimit, v));
+
+        /// <summary>
+        /// A part dragged from the list drops on release only over the raft view and a cell; anywhere else
+        /// (over the list or bars, or off the raft) the drag is cancelled.
+        /// </summary>
+        public static bool Drops(bool overUi, bool overCell) => !overUi && overCell;
+
         /// <summary>
         /// Ed's ask: the whole game is halted while the Shipyard is open (no battles, looting, waves, drifts,
         /// spawns, clocks, minion jobs or auto-save). The world's time scale is 0; on close the old one comes back.

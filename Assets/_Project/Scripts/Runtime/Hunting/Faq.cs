@@ -108,7 +108,7 @@ namespace BrineBattle.Hunting
 
             new Topic("Raft",
                 new Entry("How do I build?",
-                    "In the Shipyard: press Y (or Build → Open the Shipyard). Your raft or ship stands alone on a dock. Drag, WASD or the arrow keys turn it left, right, up and down; the mouse wheel zooms; Reset view puts it back. Pick a part on the left, hover a cell to see what a click does, click to place it (or swap a built part), right-click to take a part off; it goes back to the Bag. The game is paused while you're there, and minions don't help. Press Done, Esc or Y to go back."),
+                    "In the Shipyard: press Y (or Build → Open the Shipyard). Your raft or ship stands alone on a dock. Hold the right mouse button and drag to turn it; WASD, the arrow keys or the middle mouse button move the view; the mouse wheel zooms; Reset view puts it back. Drag a part from the list on the left onto the raft (or pick it and click a cell): the cell shows green when it fits and red with the reason when not. Right-click a part to take it off; it goes back to the Bag. The game is paused while you're there, and minions don't help. Press Done, Esc or Y to go back."),
                 new Entry("What are shaped modules?",
                     "Bigger modules: 1×2 (raft Lv 10), 2×2 (Lv 20), L (Lv 30), T (Lv 40) and 1×3 (on a ship). A kit lays several cells of its module at once; press R in the Shipyard to turn it, and hover to see its footprint. Kits are alchemy: a Builder or Alchemist minion makes them (Workbench → Raft → Auto-loot), from one module per cell plus a fang. Taking the cells off later gives back plain modules."),
                 new Entry("What are blueprints?",

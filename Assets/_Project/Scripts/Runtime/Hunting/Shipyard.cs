@@ -45,6 +45,11 @@ namespace BrineBattle.Hunting
         Rect stripRect, topRect, bottomRect;
         GUIStyle titleStyle;
         int rot;   // quarter turns of a shaped kit (R)
+        float panX, panZ;   // WASD / arrows, middle-drag
+        bool orbiting, panning;
+        Vector2 orbitAt;
+        /// <summary>A part being dragged from the list (one at a time); dropped on release over a cell.</summary>
+        ItemDefinition dragging;
         int stripTab;
         readonly List<GameObject> ghosts = new List<GameObject>();
 
@@ -274,9 +279,12 @@ namespace BrineBattle.Hunting
             pitch = ShipyardRules.ClampPitch(pitch);
             zoom = ShipyardRules.ClampZoom(zoom);
             if (model != null) model.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            panX = ShipyardRules.ClampPan(panX);
+            panZ = ShipyardRules.ClampPan(panZ);
+            var target = DockAt + new Vector3(panX, 0.3f, panZ);
             var dir = Quaternion.Euler(pitch, 0f, 0f) * Vector3.back;
-            cam.transform.position = DockAt + dir * zoom + Vector3.up * 0.3f;
-            cam.transform.LookAt(DockAt + Vector3.up * 0.3f);
+            cam.transform.position = target + dir * zoom;
+            cam.transform.LookAt(target);
             int w = Mathf.Max(64, Screen.width), h = Mathf.Max(64, Screen.height);
             if (rt == null || rt.width != w || rt.height != h)
             {
@@ -291,10 +299,12 @@ namespace BrineBattle.Hunting
             float dt = Time.unscaledDeltaTime;
             if (kb != null)
             {
-                if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) yaw += 90f * dt;
-                if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) yaw -= 90f * dt;
-                if (kb.wKey.isPressed || kb.upArrowKey.isPressed) pitch += 60f * dt;
-                if (kb.sKey.isPressed || kb.downArrowKey.isPressed) pitch -= 60f * dt;
+                // WASD / arrows pan the view (Ed's ask); the mouse turns it.
+                float speed = 6f * dt;
+                if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) panX -= speed;
+                if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) panX += speed;
+                if (kb.wKey.isPressed || kb.upArrowKey.isPressed) panZ += speed;
+                if (kb.sKey.isPressed || kb.downArrowKey.isPressed) panZ -= speed;
             }
             var mouse = Mouse.current;
             if (mouse == null || cam == null) return;
@@ -331,21 +341,52 @@ namespace BrineBattle.Hunting
             }
             Highlight();
 
-            // Left: press and drag turns the raft; a press without moving is a click. Right-click removes.
-            if (mouse.leftButton.wasPressedThisFrame && !overUi) { pressing = true; pressAt = lastMouse = mp; }
-            if (pressing && mouse.leftButton.isPressed)
+            // Drag and drop from the list (Ed's ask): one part at a time, dropped on the cell under the cursor.
+            if (dragging != null)
+            {
+                if (mouse.leftButton.wasReleasedThisFrame)
+                {
+                    if (ShipyardRules.Drops(overUi, hoverCell != null)) Use(hoverCell.Value, false);
+                    else message = "Dropped outside the raft: nothing changed.";
+                    dragging = null;
+                }
+                return;
+            }
+
+            // Left click on a cell: place (or take off with the Remove tool). The click is the fallback to dragging.
+            if (mouse.leftButton.wasPressedThisFrame && !overUi) { pressing = true; pressAt = mp; }
+            if (pressing && mouse.leftButton.wasReleasedThisFrame)
+            {
+                pressing = false;
+                if (ShipyardRules.IsClick((mp - pressAt).magnitude) && hoverCell != null) Use(hoverCell.Value, removeMode);
+            }
+
+            // Right: hold and drag to turn the raft; a right-click without moving takes a part off.
+            if (mouse.rightButton.wasPressedThisFrame && !overUi) { orbiting = true; orbitAt = lastMouse = mp; }
+            if (orbiting && mouse.rightButton.isPressed)
             {
                 var d = mp - lastMouse;
                 yaw -= d.x * 0.35f;
                 pitch -= d.y * 0.25f;
                 lastMouse = mp;
             }
-            if (pressing && mouse.leftButton.wasReleasedThisFrame)
+            if (orbiting && mouse.rightButton.wasReleasedThisFrame)
             {
-                pressing = false;
-                if (ShipyardRules.IsClick((mp - pressAt).magnitude) && hoverCell != null) Use(hoverCell.Value, removeMode);
+                orbiting = false;
+                if (ShipyardRules.IsClick((mp - orbitAt).magnitude) && hoverCell != null) Use(hoverCell.Value, true);
             }
-            if (mouse.rightButton.wasPressedThisFrame && !overUi && hoverCell != null) Use(hoverCell.Value, true);
+
+            // Middle: drag to pan.
+            if (mouse.middleButton.wasPressedThisFrame && !overUi) { panning = true; lastMouse = mp; }
+            if (panning && mouse.middleButton.isPressed)
+            {
+                var d = mp - lastMouse;
+                float k = zoom / Mathf.Max(200f, Screen.height) * 2f;
+                panX -= d.x * k;
+                panZ -= d.y * k;
+                lastMouse = mp;
+            }
+            if (mouse.middleButton.wasReleasedThisFrame) panning = false;
         }
 
         /// <summary>The kit's cells at the hovered anchor, green when it fits, red when not.</summary>
@@ -448,7 +489,7 @@ namespace BrineBattle.Hunting
             GUILayout.BeginHorizontal();
             GUILayout.Label($"⚓ Shipyard · <b>{g.LevelName}</b> <size=13>({g.FormName}) · size {g.Size} · {g.Count} parts · {g.MaxHp} HP</size>", titleStyle);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Reset view", GUILayout.Width(110), GUILayout.Height(32))) { yaw = ShipyardRules.StartYaw; pitch = ShipyardRules.StartPitch; zoom = ShipyardRules.StartZoom; }
+            if (GUILayout.Button("Reset view", GUILayout.Width(110), GUILayout.Height(32))) { yaw = ShipyardRules.StartYaw; pitch = ShipyardRules.StartPitch; zoom = ShipyardRules.StartZoom; panX = panZ = 0f; }
             if (HuntStyles.ColorButton("Done", HuntStyles.Go, GUILayout.Width(100))) WorldPause.Close(Menu.Shipyard);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
@@ -478,14 +519,24 @@ namespace BrineBattle.Hunting
                 var old = GUI.backgroundColor;
                 if (selected == p && !removeMode) GUI.backgroundColor = HuntStyles.Go;
                 string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color>" + (fits ? "" : $"\n<size=10><color={HuntStyles.BadHex}>won't fit</color></size>");
-                if (GUILayout.Button(label, HuntStyles.RichButton, GUILayout.Height(fits ? 30 : 40))) { selected = p; removeMode = false; dirty = true; }
-                if (Event.current.type == EventType.Repaint && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)) tip = p;
+                var rect = GUILayoutUtility.GetRect(new GUIContent(label), HuntStyles.RichButton, GUILayout.Height(fits ? 30 : 40));
+                // Press on a part starts dragging it (Ed's ask); a click still just picks it.
+                if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
+                { selected = p; dragging = p; removeMode = false; dirty = true; }
+                GUI.Button(rect, label, HuntStyles.RichButton);
+                if (Event.current.type == EventType.Repaint && rect.Contains(Event.current.mousePosition)) tip = p;
                 GUI.backgroundColor = old;
             }
             GUILayout.EndScrollView();
             GUILayout.EndArea();
-            if (tip != null) Tooltip(tip, g);
+            if (tip != null && dragging == null) Tooltip(tip, g);
             BottomBar(W, H);
+            // The dragged part follows the cursor.
+            if (dragging != null)
+            {
+                var at = Event.current.mousePosition;
+                GUI.Label(new Rect(at.x + 14, at.y + 6, 220, 26), $"<b>{dragging.displayName}</b>", HuntStyles.Text);
+            }
             EatMouse();
         }
 
@@ -495,7 +546,7 @@ namespace BrineBattle.Hunting
             bottomRect = new Rect(270, H - 62, W - 280, 54);
             GUILayout.BeginArea(bottomRect, HuntStyles.Box);
             GUILayout.Label(hoverText.Length > 0 ? hoverText : message, HuntStyles.Text);
-            GUILayout.Label("<size=11>Drag or WASD / arrows: turn · wheel: zoom · click: place / swap · right-click: take off · R: turn a shaped kit · Esc or Y: done</size>", HuntStyles.Hint);
+            GUILayout.Label("<size=11>Drag a part onto the raft or click a cell: place · right-drag: turn · right-click: take off · WASD / arrows or middle-drag: pan · wheel: zoom · R: turn a kit · Esc or Y: done</size>", HuntStyles.Hint);
             GUILayout.EndArea();
         }
 
