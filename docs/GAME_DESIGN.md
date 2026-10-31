@@ -9,7 +9,7 @@
 | **Genre** | Survival-builder × Alchemy, turn-based monster hunting |
 | **View** | Top-down exploration/building + separate battle view |
 | **Engine** | Unity |
-| **Art** | Chibi 2.5D, outlined characters, Blender-made models |
+| **Art** | Chibi 3D, outlined characters, Blender-made models |
 | **Modes** | Single-player with optional party (other hunters) |
 
 ## 2. World & Lore
@@ -268,7 +268,7 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 - **Unity**, top-down camera; dedicated battle view.
 - **Chibi** characters with **outlines** (inverted hull / URP renderer feature).
-- **Blender** 3D models rendered as 2.5D.
+- **Blender** 3D models, shown in full 3D (top-down camera that zooms and turns).
 - **Collision** meshes authored in Blender (simplified, `_col` naming) for easy iteration.
 - **Modular, grid-based** raft parts.
 
