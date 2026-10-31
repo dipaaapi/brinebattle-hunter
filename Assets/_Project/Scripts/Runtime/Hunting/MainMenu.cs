@@ -52,6 +52,12 @@ namespace BrineBattle.Hunting
         string message;
         GUIStyle title, big, richButton, rich;
 
+        // The calm day music plays on the main menu too (Ed's ask).
+        void Start()
+        {
+            if (FindFirstObjectByType<MusicPlayer>() == null) gameObject.AddComponent<MusicPlayer>();
+        }
+
         void OnGUI()
         {
             HuntStyles.Begin();

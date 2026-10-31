@@ -117,7 +117,8 @@ namespace BrineBattle.Hunting
                     window.normal.background = window.onNormal.background = WindowTex();
                     window.border = new RectOffset(10, 10, 30, 10);
                     window.padding = new RectOffset(12, 12, 36, 10);
-                    window.contentOffset = new Vector2(14, 0);
+                    // The title sits in the teal bar; lower, the page's tabs covered it and only stray letters showed (Ed).
+                    window.contentOffset = new Vector2(14, -29);
                     window.normal.textColor = window.onNormal.textColor = new Color(0.85f, 1f, 0.98f);
                 }
                 return window;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Battle;
 using BrineBattle.Items;
@@ -219,78 +220,92 @@ namespace BrineBattle.Hunting
             if (!Active) return;
             GUI.depth = -5;
             // Bottom-right, so the fight itself stays in view (the camera aims to the left of this).
-            float w = Mathf.Min(480, HuntStyles.W * 0.42f), h = (state.Actives.Count > 0 ? 340 : 310) + (state.Companion != null ? 24 : 0);
-            GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, HuntStyles.H - h - 12, w, h), $"Battle — round {state.Round}" + (state.CoatingRounds > 0 ? $" — {state.Coating} oil" : ""), HuntStyles.Window);
+            // Ed's ask: a cleaner panel: the foe on top, your side in one row, no minion bar, nothing overlapping.
+            var items = state.Outcome == BattleOutcome.Ongoing && state.Bag != null
+                ? state.Bag.Items.Where(kv => kv.Key.effect != ConsumableEffect.None).ToList() : new List<KeyValuePair<ItemDefinition, int>>();
+            int itemRows = Mathf.CeilToInt(items.Count / 2f);
+            float w = Mathf.Min(500, HuntStyles.W * 0.44f);
+            float h = 292 + (state.Actives.Count > 0 ? 40 : 0) + itemRows * 34;
+            string title = $"Battle · round {state.Round}" + (state.CoatingRounds > 0 ? $" · {state.Coating} oil" : "");
+            GUILayout.BeginArea(new Rect(HuntStyles.W - w - 12, HuntStyles.H - h - 12, w, h), title, HuntStyles.Window);
 
-            Bar(state.Monster.Name, state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.35f, 0.3f));
-            Bar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.4f));
-            Bar("Raft", state.RaftHp, state.RaftMaxHp, new Color(0.85f, 0.75f, 0.5f));
-            if (state.Companion != null) Bar(state.Companion.Name, state.Companion.Hp, state.Companion.MaxHp, new Color(0.75f, 0.5f, 0.95f));
-            Bar("Stamina", state.Stamina, BattleRules.MaxStamina, new Color(0.4f, 0.65f, 1f));
+            // The foe.
+            GUILayout.Label($"<b>{state.Monster.Name}</b>", HuntStyles.Text);
+            BigBar(state.Monster.Hp, state.Monster.MaxHp, new Color(0.9f, 0.32f, 0.3f), 18);
 
+            // Your side, side by side.
+            GUILayout.Space(4);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Mode", GUILayout.Width(60));
-            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
+            MiniBar("Hunter", state.Hunter.Hp, state.Hunter.MaxHp, new Color(0.35f, 0.85f, 0.45f));
+            MiniBar("Raft", state.RaftHp, state.RaftMaxHp, new Color(0.85f, 0.72f, 0.45f));
+            MiniBar("Stamina", state.Stamina, BattleRules.MaxStamina, new Color(0.4f, 0.65f, 1f));
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Mode", HuntStyles.Hint, GUILayout.Width(40));
+            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels, GUILayout.Height(24));
+            GUILayout.EndHorizontal();
+
+            // What just happened, in a dark box.
+            GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Height(66));
             int from = Mathf.Max(0, state.Log.Count - 3);
-            for (int i = from; i < state.Log.Count; i++) GUILayout.Label(state.Log[i]);
+            for (int i = from; i < state.Log.Count; i++) GUILayout.Label(state.Log[i], i == state.Log.Count - 1 ? HuntStyles.Text : HuntStyles.Hint);
+            GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
 
-            GUILayout.BeginHorizontal();
             if (state.Outcome != BattleOutcome.Ongoing)
             {
-                GUILayout.Label($"<b>{OutcomeText(state.Outcome)}</b>", new GUIStyle(GUI.skin.label) { richText = true });
+                GUILayout.Label($"<b>{OutcomeText(state.Outcome)}</b>", HuntStyles.Heading);
+                GUILayout.EndArea();
+                return;
             }
-            else
-            {
-                bool waiting = Waiting();
-                GUI.enabled = waiting;
-                if (GUILayout.Button("Attack")) Play(BattleAction.Attack);
-                GUI.enabled = waiting && state.CanUse(BattleAction.Harpoon);
-                if (GUILayout.Button(state.Weapon != null && state.Weapon.Broken ? "Harpoon (broken)" : $"Harpoon ({BattleRules.HarpoonCost} st · {state.Weapon})")) Play(BattleAction.Harpoon);
-                GUI.enabled = waiting;
-                if (GUILayout.Button("Brace")) Play(BattleAction.Brace);
-                GUI.enabled = true;
-            }
+            bool waiting = Waiting();
+            GUILayout.BeginHorizontal();
+            GUI.enabled = waiting;
+            if (HuntStyles.ColorButton("Attack", HuntStyles.Go, GUILayout.Height(32))) Play(BattleAction.Attack);
+            GUI.enabled = waiting && state.CanUse(BattleAction.Harpoon);
+            if (HuntStyles.ColorButton(state.Weapon != null && state.Weapon.Broken ? "Harpoon (broken)" : $"Harpoon · {BattleRules.HarpoonCost} st", HuntStyles.Other, GUILayout.Height(32))) Play(BattleAction.Harpoon);
+            GUI.enabled = waiting;
+            if (HuntStyles.ColorButton("Brace", new Color(0.6f, 0.65f, 0.75f), GUILayout.Height(32))) Play(BattleAction.Brace);
+            GUI.enabled = true;
             GUILayout.EndHorizontal();
 
-            if (state.Outcome == BattleOutcome.Ongoing && state.Actives.Count > 0)
+            if (state.Actives.Count > 0)
             {
                 // Gear actives (GDD §9): cost stamina, take the turn.
                 GUILayout.BeginHorizontal();
-                bool waiting = Waiting();
                 foreach (var skill in state.Actives)
                 {
                     GUI.enabled = waiting && state.CanUseSkill(skill);
-                    if (GUILayout.Button($"{GearSkillRules.Label(skill)} ({GearSkillRules.Describe(skill)})")) UseSkill(skill);
+                    if (GUILayout.Button(new GUIContent(GearSkillRules.Label(skill), GearSkillRules.Describe(skill)), GUILayout.Height(30))) UseSkill(skill);
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
             }
 
-            if (state.Outcome == BattleOutcome.Ongoing && state.Bag != null)
+            // Consumables (Phase 6), two a row so long names never run off the panel.
+            if (items.Count == 0) GUILayout.Label("No consumables.", HuntStyles.Hint);
+            for (int i = 0; i < items.Count; i += 2)
             {
-                // Consumables (Phase 6): using one takes the hunter's turn. Semi-auto and Auto use them when low (BattleAI.ChooseItem).
-                var items = state.Bag.Items.Where(kv => kv.Key.effect != ConsumableEffect.None).ToList();
                 GUILayout.BeginHorizontal();
-                if (items.Count == 0) GUILayout.Label("<size=11>No consumables.</size>", new GUIStyle(GUI.skin.label) { richText = true });
-                bool waiting = Waiting();
-                foreach (var kv in items)
+                for (int j = i; j < Mathf.Min(i + 2, items.Count); j++)
                 {
-                    var item = kv.Key;
+                    var item = items[j].Key;
                     string what = item.effect == ConsumableEffect.HealHunter ? $"+{item.effectAmount} HP"
                         : item.effect == ConsumableEffect.RepairRaft ? $"+{item.effectAmount} raft"
                         : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} minion"
-                        : $"{item.element}, {item.effectAmount} rounds";
+                        : $"{item.element} oil";
                     GUI.enabled = waiting && state.CanUseItem(item);
-                    if (GUILayout.Button($"{item.displayName} ×{kv.Value} ({what})")) UseItem(item);
+                    if (GUILayout.Button($"{item.displayName} ×{items[j].Value}  <size=10>{what}</size>", ItemButton, GUILayout.Width((w - 36) / 2f), GUILayout.Height(30))) UseItem(item);
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndArea();
         }
+
+        static GUIStyle itemButton;
+        static GUIStyle ItemButton => itemButton ??= new GUIStyle(GUI.skin.button) { richText = true, fontSize = 12, clipping = TextClipping.Clip };
 
         static string OutcomeText(BattleOutcome o)
         {
@@ -302,16 +317,32 @@ namespace BrineBattle.Hunting
             }
         }
 
-        static void Bar(string label, int value, int max, Color color)
+        static GUIStyle barText;
+        static GUIStyle BarText => barText ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 11, fontStyle = FontStyle.Bold };
+
+        /// <summary>A rounded bar with the numbers written inside it.</summary>
+        static void BigBar(int value, int max, Color color, float height)
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(label, GUILayout.Width(110));
-            var r = GUILayoutUtility.GetRect(200, 16, GUILayout.ExpandWidth(true));
-            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.5f), 0, 0);
-            var fill = new Rect(r.x, r.y, r.width * Mathf.Clamp01(value / (float)Mathf.Max(1, max)), r.height);
-            GUI.DrawTexture(fill, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, color, 0, 0);
-            GUILayout.Label($"{value}/{max}", GUILayout.Width(70));
-            GUILayout.EndHorizontal();
+            var r = GUILayoutUtility.GetRect(100, height, GUILayout.ExpandWidth(true));
+            DrawBar(r, value, max, color);
+        }
+
+        /// <summary>A label over a small bar, three to a row.</summary>
+        static void MiniBar(string label, int value, int max, Color color)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Label(label, HuntStyles.Hint);
+            var r = GUILayoutUtility.GetRect(60, 14, GUILayout.ExpandWidth(true));
+            DrawBar(r, value, max, color);
+            GUILayout.EndVertical();
+        }
+
+        static void DrawBar(Rect r, int value, int max, Color color)
+        {
+            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.02f, 0.04f, 0.07f, 0.9f), 0, r.height / 2f);
+            float share = Mathf.Clamp01(value / (float)Mathf.Max(1, max));
+            if (share > 0f) GUI.DrawTexture(new Rect(r.x, r.y, Mathf.Max(r.height, r.width * share), r.height), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, color, 0, r.height / 2f);
+            GUI.Label(r, $"{value}/{max}", BarText);
         }
     }
 }

@@ -51,22 +51,20 @@ namespace BrineBattle.Hunting
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Settings); GUILayout.EndArea(); return; }
 
             // Owner idea U-25: short pages. FAQ is the game's only guide (Ed's call).
-            var labels = inGame ? new[] { "Game", "Save", "Controls", "FAQ" } : new[] { "Game", "Controls", "FAQ" };
+            var labels = inGame ? new[] { "Game", "Sound", "Save", "Controls", "FAQ" } : new[] { "Game", "Sound", "Controls", "FAQ" };
             page = Mathf.Min(page, labels.Length - 1);
             page = HuntStyles.Tabs(page, labels);
             string current = labels[page];
             if (current == "Controls") { Controls(); GUILayout.EndArea(); return; }
             if (current == "Save") { SavePage(); GUILayout.EndArea(); return; }
             if (current == "FAQ") { FaqPage(); GUILayout.EndArea(); return; }
+            if (current == "Sound") { SoundPage(); GUILayout.EndArea(); return; }
 
             GUILayout.Label("Screen size (text and buttons)", HuntStyles.Heading);
             int size = Mathf.Clamp(Mathf.RoundToInt((HuntStyles.Scale - 1f) / 0.25f), 0, 2);
             int pickedSize = GUILayout.Toolbar(size, new[] { "Small", "Big", "Huge" }, GUILayout.Height(30));
             if (pickedSize != size) HuntStyles.Scale = 1f + 0.25f * pickedSize;
 
-            GUILayout.Space(8);
-            GUILayout.Label($"Music volume  <size=12>{Mathf.RoundToInt(MusicSettings.Volume * 100)}%</size>", HuntStyles.Heading);
-            MusicSettings.Volume = GUILayout.HorizontalSlider(MusicSettings.Volume, 0f, 1f);
 
             GUILayout.Space(8);
             GUILayout.Label("Battle mode", HuntStyles.Heading);
@@ -84,6 +82,20 @@ namespace BrineBattle.Hunting
 
             if (inGame) ResetRaftRow();
             GUILayout.EndArea();
+        }
+
+        /// <summary>Sound (Ed's ask: its own tab): music volume now; sound effects join it with the SFX pass.</summary>
+        static void SoundPage()
+        {
+            GUILayout.Label($"Music  <size=12>{Mathf.RoundToInt(MusicSettings.Volume * 100)}%</size>", HuntStyles.Heading);
+            MusicSettings.Volume = GUILayout.HorizontalSlider(MusicSettings.Volume, 0f, 1f);
+            GUILayout.Space(14);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Mute music", GUILayout.Height(28))) MusicSettings.Volume = 0f;
+            if (GUILayout.Button("Default (60%)", GUILayout.Height(28))) MusicSettings.Volume = 0.6f;
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+            GUILayout.Label("Play each piece of the soundtrack in the Journal (C) → Music. Sound effects come next.", HuntStyles.Hint);
         }
 
         int page;
