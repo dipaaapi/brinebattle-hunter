@@ -71,7 +71,8 @@ namespace BrineBattle.Hunting
         string resultTitle, resultBody;
 
         // Line tension (idea C-2)
-        float tensionStart, tensionWidth, tensionSpeed, tensionTime;
+        /// <summary>The reel minigame in play (Ed's U-42), while reeling.</summary>
+        ReelGame reel;
         bool tensionPressed, tensionHit, tensionAuto, tensionSemi, tensionByAuto;
 
         void Awake()
@@ -203,32 +204,25 @@ namespace BrineBattle.Hunting
                 phase = Phase.Reeling;
                 t = 0f;
                 reelFrom = target.transform.position;
-                int size = target.Monster.sizeClass;
-                // Rough seas and storms jerk the line about: a smaller sweet spot (U-15).
-                tensionWidth = TensionRules.ZoneWidth(size) * World.WorldRules.ReelZoneScale(WorldClock.Weather);
-                tensionSpeed = TensionRules.Speed(size);
-                tensionStart = TensionRules.RandomZoneStart(tensionWidth, rng);
-                tensionTime = 0f;
+                var m = target.Monster;
+                // Rarer and bigger: a narrower green zone and a wilder catch. Rough seas and storms shrink it too (U-15);
+                // Alchemy Mastery and a Looter minion widen it.
+                float width = ReelGame.ZoneWidth(m.sizeClass, m.rarity, World.WorldRules.ReelZoneScale(WorldClock.Weather),
+                    ReelGame.Bonus(Mastery.Level, Companions.Best(MinionSkill.Looter) != null));
+                reel = new ReelGame(width, ReelGame.CatchSpeed(m.sizeClass, m.rarity), BattleSettings.Mode, rng);
                 tensionPressed = tensionHit = false;
                 tensionAuto = BattleSettings.Mode == BattleMode.Auto;
                 tensionSemi = BattleSettings.Mode == BattleMode.SemiAuto;
-                tensionByAuto = false;
-                if (tensionAuto) AutoPress();
+                tensionByAuto = tensionAuto;
             }
         }
 
         void UpdateReeling()
         {
             if (!CheckTarget()) return;
-            t += Time.deltaTime / reelTime;
-            tensionTime += Time.deltaTime;
-            if (!tensionPressed && PressedTension())
-            {
-                tensionPressed = true;
-                tensionHit = TensionRules.IsHit(TensionRules.Marker(tensionTime, tensionSpeed), tensionStart, tensionWidth);
-            }
-            // Semi-auto: the player may press first; otherwise the reel presses itself late.
-            if (!tensionPressed && tensionSemi && t >= TensionRules.SemiAutoPressAt) AutoPress();
+            reel.Step(Time.deltaTime, HeldReel(), PressedTension());
+            // The catch comes closer as the meter fills, and drifts back out as it drains.
+            t = reel.Meter;
             // Reeled in until its body touches the raft's edge, not over the planks (owner's ask: no overlap).
             float stop = Mathf.Max(raft.EdgeDistance, (raft.Grid.Radius + 0.5f) * Raft.CellSize + target.BodyRadius + 0.1f);
             var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * stop;
@@ -236,7 +230,12 @@ namespace BrineBattle.Hunting
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
             line.SetPosition(0, HookOrigin());
             line.SetPosition(1, target.transform.position);
-            if (t >= 1f) Resolve();
+            if (reel.Done)
+            {
+                tensionPressed = reel.Caught;
+                tensionHit = reel.Clean;
+                Resolve();
+            }
         }
 
         bool CheckTarget()
@@ -254,7 +253,7 @@ namespace BrineBattle.Hunting
             if (!tensionPressed)
             {
                 // Never set the hook: the catch slips away whatever it was.
-                Finish($"{m.displayName} slipped off the hook. Press Space in the green zone to set it!", false, false);
+                Finish($"{m.displayName} slipped off the hook. Hold or tap Space to keep it inside the green zone until the meter fills!", false, false);
                 return;
             }
             phase = Phase.Result;
@@ -363,11 +362,11 @@ namespace BrineBattle.Hunting
             phase = Phase.Idle;
         }
 
-        void AutoPress()
+        bool HeldReel()
         {
-            tensionPressed = true;
-            tensionByAuto = true;
-            tensionHit = rng.NextDouble() < TensionRules.AutoCleanChance;
+            var kb = Keyboard.current;
+            var mouse = Mouse.current;
+            return (kb != null && kb.spaceKey.isPressed) || (mouse != null && mouse.leftButton.isPressed);
         }
 
         bool PressedTension()
@@ -377,24 +376,33 @@ namespace BrineBattle.Hunting
             return (kb != null && kb.spaceKey.wasPressedThisFrame) || (mouse != null && mouse.leftButton.wasPressedThisFrame);
         }
 
+        /// <summary>The reel minigame (U-42): a tall bar with the green zone and the catch, and the catch meter beside it.</summary>
         void DrawTension()
         {
-            float w = 360, h = 26;
-            var r = new Rect((HuntStyles.W - w) / 2f, HuntStyles.H - 120, w, h);
-            string result = tensionHit ? "clean reel!" : "sloppy reel";
-            string label = tensionAuto ? (t < 0.5f ? "<b>AUTO</b> reel..." : $"<b>AUTO</b> — {result}")
-                : tensionSemi ? (!tensionPressed ? "<b>SEMI-AUTO</b> — press Space first, or it reels for you"
-                    : tensionByAuto ? $"<b>SEMI-AUTO</b> reeled for you — {result}" : $"<b>SEMI-AUTO</b> — you: {result}")
-                : tensionPressed ? (tensionHit ? "<b>Clean reel!</b>" : "<b>Sloppy...</b>") : "Press <b>Space</b> or click in the green zone!";
-            var prev = GUI.color;
-            if (tensionAuto) GUI.color = new Color(1f, 1f, 1f, 0.45f);
-            GUI.Label(new Rect(r.x, r.y - 22, w, 20), label, Rich);
-            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.6f), 0, 0);
-            var zone = new Rect(r.x + tensionStart * w, r.y, tensionWidth * w, h);
-            GUI.DrawTexture(zone, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.3f, 0.85f, 0.4f, 0.9f), 0, 0);
-            float m = TensionRules.Marker(tensionTime, tensionSpeed);
-            GUI.DrawTexture(new Rect(r.x + m * w - 2, r.y - 4, 4, h + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, Color.white, 0, 0);
-            GUI.color = prev;
+            if (reel == null) return;
+            float w = 46, h = 300;
+            var bar = new Rect(HuntStyles.W / 2f + 170, HuntStyles.H / 2f - h / 2f, w, h);
+            var meter = new Rect(bar.xMax + 8, bar.y, 12, h);
+            string label = tensionAuto ? "<b>AUTO</b> reel"
+                : tensionSemi ? "<b>SEMI-AUTO</b>: hold or tap <b>Space</b>, it helps you"
+                : "Hold or tap <b>Space</b>: keep the catch in the green!";
+            GUI.Label(new Rect(bar.x - 110, bar.y - 44, 280, 40), label, Rich);
+            GUI.DrawTexture(new Rect(bar.x - 4, bar.y - 4, meter.xMax - bar.x + 8, h + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.05f, 0.1f, 0.18f, 0.85f), 0, 8);
+            GUI.DrawTexture(bar, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.1f, 0.25f, 0.4f, 0.95f), 0, 4);
+            // 0 is the bottom of the bar.
+            float Y(float v) => bar.yMax - v * h;
+            var zone = new Rect(bar.x + 3, Y(reel.Zone + reel.Width), w - 6, reel.Width * h);
+            GUI.DrawTexture(zone, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0,
+                reel.Inside ? new Color(0.35f, 0.95f, 0.45f, 0.95f) : new Color(0.3f, 0.75f, 0.4f, 0.7f), 0, 4);
+            // The catch: a small fish-shaped mark that shakes while it's inside the zone being reeled.
+            float shake = reel.Inside ? Mathf.Sin(Time.time * 50f) * 1.5f : 0f;
+            var fish = new Rect(bar.x + w / 2f - 11 + shake, Y(reel.Catch) - 8, 22, 16);
+            GUI.DrawTexture(fish, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, Tint.Of(target.Monster.element), 0, 8);
+            GUI.DrawTexture(new Rect(fish.xMax - 2, fish.y + 3, 7, 10), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, Tint.Of(target.Monster.element), 0, 2);
+            // Catch meter: fills green inside the zone, drains outside.
+            GUI.DrawTexture(meter, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0f, 0f, 0f, 0.6f), 0, 4);
+            var fill = Color.Lerp(new Color(1f, 0.35f, 0.25f), new Color(0.4f, 1f, 0.45f), reel.Meter);
+            GUI.DrawTexture(new Rect(meter.x, meter.yMax - reel.Meter * h, meter.width, reel.Meter * h), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, fill, 0, 4);
         }
 
         void OnGUI()
@@ -454,8 +462,8 @@ namespace BrineBattle.Hunting
         public bool CanFight(Drift d) => d != null && battle != null;
 
         /// <summary>
-        /// An auto-loot module hooked a live monster: it can't swim off, so the battle starts at once and
-        /// plays in Auto (owner's call), cancelling the hunter's own cast or reel. False only during another
+        /// An auto-loot module hooked a live monster: it can't swim off, so the battle starts at once in the
+        /// Settings mode (Ed: Manual means manual everywhere), cancelling the hunter's own cast or reel. False only during another
         /// battle or a prompt (the world is paused then); the module holds it and starts right after.
         /// </summary>
         public bool ModuleBattle(Drift d, object module)
@@ -475,7 +483,7 @@ namespace BrineBattle.Hunting
             target = d;
             tensionHit = false;   // it ambushes the raft: the monster strikes first
             pendingLoot = null;
-            battle.ForceAuto = true;
+            battle.ModuleCatch = true;
             StartBattle();
             return true;
         }
@@ -521,7 +529,7 @@ namespace BrineBattle.Hunting
             phase = Phase.Battle;
             var m = target.Monster;
             // Module battles don't cost raft parts (Phase 8, Claude's default until Ed decides).
-            bool moduleFight = battle.ForceAuto;
+            bool moduleFight = battle.ModuleCatch;
             int gorged = target.GorgedParts;
             battle.Begin(target, tensionHit ? Initiative.Hunter : Initiative.Monster, outcome =>
             {

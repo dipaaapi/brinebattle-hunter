@@ -62,7 +62,7 @@ namespace BrineBattle.Hunting
             bobPhase = Random.value * 10f;
             name = $"Drift ({monster.displayName})";
             Tint.Apply(GetComponent<Renderer>(), monster.isFlotsam ? Raft.PartColor(monster.rarity) : Tint.Of(monster.element));
-            float s = (0.6f + 0.35f * monster.sizeClass) * (monster.isBoss ? 1.8f : 1f);   // bosses loom large
+            float s = (0.6f + 0.35f * monster.sizeClass) * (monster.isBoss ? 1.3f : 1f);   // bosses loom large, but never hide the raft (Ed's ask)
             // Floating loot is a flat crate-like slab; creatures keep their capsule shape.
             transform.localScale = monster.isFlotsam ? new Vector3(s, s * 0.3f, s) : new Vector3(s, s * 0.5f, s * 1.4f);
         }

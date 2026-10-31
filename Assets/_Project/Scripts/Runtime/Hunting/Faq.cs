@@ -31,7 +31,7 @@ namespace BrineBattle.Hunting
 
             new Topic("Hunting",
                 new Entry("How do I catch something?",
-                    "Click a monster or item floating on the water. The harpoon flies out. When it hooks, press Space while the marker is in the green zone to reel it in. A clean reel gives extra loot."),
+                    "Click a monster or item floating on the water. The harpoon flies out. When it hooks, a tall reel bar opens: the catch darts up and down, and you hold or tap Space (or the mouse) to lift the green zone and keep the catch inside it. Inside, the meter fills; outside, it drains. Full meter = caught, empty = it slips off the hook. Rarer and bigger catches have a narrower green zone and move wilder; Alchemy Mastery and a Looter minion widen it. Catching it while barely leaving the zone is a clean reel: extra loot, and you strike first."),
                 new Entry("What do \"Looks dead\", \"Twitching...\" and \"Something moves!\" mean?",
                     "It's a guess about the monster's state, and it can be wrong.\nLooks dead: usually safe to harvest for loot.\nTwitching...: weak; finish it for loot, or tame it as a minion.\nSomething moves!: alive; it may fight you."),
                 new Entry("What are Harvest, Finish it, Tame, Fight, Flee and Cut line?",
@@ -62,7 +62,7 @@ namespace BrineBattle.Hunting
                 new Entry("How do battles work?",
                     "Turns: you, your battle minion and the monster each act by speed. Attack, use a skill or an item. Elements matter: a strong element hits harder."),
                 new Entry("What are Manual, Semi-auto and Auto?",
-                    "Manual: you pick every action and press Space to reel.\nSemi-auto: basic attacks are automatic; you decide the important turns.\nAuto: the game plays every turn and reels for you.\nChange it in Settings → Game, or during a battle."),
+                    "Manual: you pick every action and play the reel minigame yourself.\nSemi-auto: basic attacks are automatic; you decide the important turns, and the reel's green zone helps follow the catch.\nAuto: the game plays every turn and plays the reel minigame for you.\nChange it in Settings → Game, or during a battle."),
                 new Entry("What is auto-use?",
                     "In Semi-auto and Auto, potions are used for you when HP is low. Turn it on or off in Settings → Game."),
                 new Entry("What are ailments?",

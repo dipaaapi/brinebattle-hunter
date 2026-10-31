@@ -28,11 +28,11 @@ namespace BrineBattle.Hunting
         public static bool CameraBusy { get; private set; }
 
         /// <summary>
-        /// True for a battle an auto-loot module started (an aggressive live catch, owner's call):
-        /// it plays in Auto whatever the setting, and the mode can't be switched.
+        /// True for a battle an auto-loot module started (an aggressive live catch). It plays in the mode
+        /// set in Settings like any other battle (Ed: Manual means manual everywhere).
         /// </summary>
-        public bool ForceAuto { get; set; }
-        BattleMode Mode => ForceAuto ? BattleMode.Auto : BattleSettings.Mode;
+        public bool ModuleCatch { get; set; }
+        static BattleMode Mode => BattleSettings.Mode;
 
         BattleState state;
         BattleStage stage;
@@ -92,7 +92,7 @@ namespace BrineBattle.Hunting
                 state.Actives.AddRange(hook.Gear.Actives);
             }
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
-            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)Mode]}{(ForceAuto ? " (module catch)" : "")}.{first}");
+            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)Mode]}{(ModuleCatch ? " (a module caught it)" : "")}.{first}");
             // Idea Round 4: say who the time and weather favour (the stats were already changed).
             if (WorldClock.Now != null)
             {
@@ -208,7 +208,7 @@ namespace BrineBattle.Hunting
             state = null;
             InBattle = false;
             Foe = null;
-            ForceAuto = false;
+            ModuleCatch = false;
             drift = null;
             onEnd?.Invoke(outcome);
         }
@@ -230,8 +230,7 @@ namespace BrineBattle.Hunting
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Mode", GUILayout.Width(60));
-            if (ForceAuto) GUILayout.Label("Auto (a module caught it)");
-            else BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
+            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.EndHorizontal();
 
             int from = Mathf.Max(0, state.Log.Count - 3);

@@ -79,7 +79,7 @@ namespace BrineBattle.Hunting
                 if (!(calm ? hook.ModuleCatchCalm(kv.Key, kv.Value) : hook.ModuleBattle(kv.Key, kv.Value))) return;
                 held.Remove(kv.Key);
                 hook.Log(calm ? $"The {kv.Value.Item.displayName} brings in the {kv.Key.Monster.displayName}: finish it or tame it."
-                    : $"The {kv.Value.Item.displayName}'s {kv.Key.Monster.displayName} attacks: auto battle!");
+                    : $"The {kv.Value.Item.displayName}'s {kv.Key.Monster.displayName} attacks: battle!");
                 return;
             }
         }
@@ -176,14 +176,14 @@ namespace BrineBattle.Hunting
                 }
                 return;
             }
-            // A live catch can't escape (owner's call): auto battle now, or held on the line until the hunter is free.
+            // A live catch can't escape (owner's call): battle now (in the Settings mode), or held on the line until the hunter is free.
             if (d.Actual == DriftState.Alive && hook.CanFight(d))
             {
-                if (hook.ModuleBattle(d, s)) hook.Log($"The {name} hooked a live {d.Monster.displayName}! It can't escape: auto battle!");
+                if (hook.ModuleBattle(d, s)) hook.Log($"The {name} hooked a live {d.Monster.displayName}! It can't escape: battle!");
                 else
                 {
                     held[d] = s;
-                    hook.Log($"The {name} hooked a live {d.Monster.displayName} and holds it. Auto battle as soon as you're free.");
+                    hook.Log($"The {name} hooked a live {d.Monster.displayName} and holds it. The battle starts as soon as you're free.");
                 }
                 return;
             }

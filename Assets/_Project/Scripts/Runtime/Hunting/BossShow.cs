@@ -47,7 +47,7 @@ namespace BrineBattle.Hunting
             introAt = Now;
             shake = 0.6f;
             wasEnraged = finished = false;
-            auraDisc = Disc(drift.transform, "Boss aura", aura * 0.9f, 2.2f);
+            // No flat aura disc any more (Ed: it covered the raft, the hunter and the minions).
         }
 
         /// <summary>The treasure burst and the BOSS DEFEATED card (called by HookController with what dropped).</summary>
@@ -104,7 +104,8 @@ namespace BrineBattle.Hunting
                 float t = Now - introAt;
                 // Rise: small and deep → big, with a splash ring, after the warning (1.0-1.8 s).
                 float rise = Mathf.Clamp01((t - 1.0f) / 0.8f);
-                boss.transform.localScale = baseScale * Mathf.Lerp(0.2f, 1.6f, 1f - (1f - rise) * (1f - rise));
+                // Rises to its normal size; bigger hid the whole raft (Ed's ask).
+                boss.transform.localScale = baseScale * Mathf.Lerp(0.2f, 1f, 1f - (1f - rise) * (1f - rise));
                 if (rise > 0f && splash == null && t < 2f)
                 {
                     splash = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -117,7 +118,7 @@ namespace BrineBattle.Hunting
                 {
                     float s = Mathf.Clamp01((t - 1.0f) / 1.2f);
                     splash.transform.position = boss.transform.position + Vector3.down * 0.3f;
-                    splash.transform.localScale = new Vector3(1f + s * 5f, 0.03f, 1f + s * 5f);
+                    splash.transform.localScale = new Vector3(1f + s * 2.5f, 0.03f, 1f + s * 2.5f);
                     if (s >= 1f) { Destroy(splash); splash = null; }
                 }
                 if (auraDisc != null)
@@ -131,7 +132,8 @@ namespace BrineBattle.Hunting
                     wasEnraged = true;
                     enragedAt = Now;
                     shake = 1f;
-                    if (auraDisc != null) Tint.Apply(auraDisc.GetComponent<Renderer>(), Color.Lerp(aura, new Color(1f, 0.15f, 0.1f), 0.6f));
+                    // Enraged: the boss itself turns red instead of a disc around it.
+                    Tint.Apply(boss.GetComponent<Renderer>(), Color.Lerp(aura, new Color(1f, 0.15f, 0.1f), 0.6f));
                 }
                 // Defeat: slow motion on the last hit.
                 if (state != null && state.Outcome == BattleOutcome.Won && !finished)

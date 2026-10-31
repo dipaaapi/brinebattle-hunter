@@ -2,6 +2,12 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Reel minigame (U-42), smaller boss, one battle mode everywhere
+- **Reel minigame** (Ed's co-worker's idea, fishing-game feel): `Encounters/ReelGame` (plain C#): the catch darts on a vertical bar, hold/tap Space lifts the green zone, the catch meter fills inside and drains outside (caught / slips off). Zone width by size, rarity, weather, Alchemy Mastery and a Looter minion. Semi-auto pulls the zone toward the catch; Auto plays it. `HookController.DrawTension` draws the bar and meter; the catch is pulled in as the meter fills. +5 `ReelGameTests`. Ed: works in Manual.
+- **Boss:** rises to normal size (was ×1.6 on top of ×1.8), boss drift ×1.3, no flat aura disc (it covered the raft, hunter and minions); enraged tints the boss red. Ed: OK now.
+- **Battle mode:** module catches used to force Auto. Now every battle uses the Settings mode (`BattleController.ModuleCatch` only marks the no-raft-part-loss rule). GDD updated.
+- Runtime compiled with Unity's Roslyn while the Editor was open; Ed runs the Test Runner.
+
 ## 2026-10-31 — Idea Round 4 fixes from Ed's Unity test (office desktop)
 - Desktop synced to `idea-round/4-world` 2b3a5cd; its old local changes are in `git stash` (nothing pushed from the desktop before this).
 - **Reset raft:** the ~20% the sea takes now float off as "Your lost raft part!" drifts (`DriftSpawner.WashOff`, `Drift.CarryPart`), slow and on the water 120 s. Hooking one, a module or a Looter gives that exact part back (`HookController.LootOf`).
