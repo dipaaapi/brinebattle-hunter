@@ -70,8 +70,8 @@ namespace BrineBattle.Tests
             Assert.AreEqual(RaftKind.Undersea, t.Second);
             var f = RaftTypeRules.BonusOf(RaftKind.Sea);
             var b = RaftTypeRules.BonusOf(RaftKind.Undersea);
-            Assert.AreEqual(f.RaftHpPercent / 2, t.Bonus.RaftHpPercent);
-            Assert.AreEqual(b.Attack / 2, t.Bonus.Attack);
+            Assert.AreEqual(f.RaftHpPercent / 2 + b.RaftHpPercent / 2, t.Bonus.RaftHpPercent, "half of each line's HP bonus");
+            Assert.AreEqual(f.Attack / 2 + b.Attack / 2, t.Bonus.Attack);
             StringAssert.StartsWith("Hybrid", t.Name);
         }
 
