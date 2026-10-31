@@ -196,6 +196,81 @@ namespace BrineBattle.Hunting
             return picked;
         }
 
+        /// <summary>One tile in a <see cref="TileGrid"/>.</summary>
+        public struct GridTile
+        {
+            public string Title;
+            /// <summary>Small pill in the top-right corner (a count), or null.</summary>
+            public string Badge;
+            /// <summary>The round swatch in the middle (element or type colour).</summary>
+            public Color Swatch;
+            /// <summary>Rim colour (rarity).</summary>
+            public Color Rim;
+            /// <summary>Not found yet: dark swatch and "???".</summary>
+            public bool Locked;
+        }
+
+        static GUIStyle tileTitle, tileBadge;
+
+        /// <summary>
+        /// A grid of rounded tiles, like an app's inventory screen (Ed: the menus looked outdated). Wraps to
+        /// <paramref name="width"/>; returns the clicked tile's index, or -1.
+        /// </summary>
+        public static int TileGrid(System.Collections.Generic.IList<GridTile> tiles, float width, int selected, float size = 92f)
+        {
+            tileTitle ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, wordWrap = true, fontSize = 11, richText = true, clipping = TextClipping.Clip };
+            tileBadge ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 10, fontStyle = FontStyle.Bold };
+            const float gap = 6f;
+            int cols = Mathf.Max(1, Mathf.FloorToInt((width + gap) / (size + gap)));
+            int rows = Mathf.CeilToInt(tiles.Count / (float)cols);
+            var area = GUILayoutUtility.GetRect(width, rows * (size + gap), GUILayout.Width(width));
+            int clicked = -1;
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                var t = tiles[i];
+                var r = new Rect(area.x + (i % cols) * (size + gap), area.y + (i / cols) * (size + gap), size, size);
+                bool hover = r.Contains(Event.current.mousePosition);
+                var rim = i == selected ? Gold : t.Locked ? new Color(0.2f, 0.28f, 0.36f) : t.Rim;
+                GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, rim, 0, 12);
+                GUI.DrawTexture(new Rect(r.x + 2, r.y + 2, r.width - 4, r.height - 4), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0,
+                    hover ? new Color(0.17f, 0.27f, 0.38f) : Raised, 0, 10);
+                float d = size * 0.42f;
+                var sw = new Rect(r.center.x - d / 2f, r.y + 10, d, d);
+                GUI.DrawTexture(sw, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, t.Locked ? new Color(0.04f, 0.06f, 0.09f) : t.Swatch, 0, d / 2f);
+                if (!t.Locked) GUI.DrawTexture(new Rect(sw.x + d * 0.2f, sw.y + d * 0.12f, d * 0.3f, d * 0.18f), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 1f, 1f, 0.35f), 0, d * 0.09f);
+                GUI.Label(new Rect(r.x + 4, sw.yMax + 4, r.width - 8, r.yMax - sw.yMax - 6), t.Locked ? "???" : t.Title, tileTitle);
+                if (!string.IsNullOrEmpty(t.Badge))
+                {
+                    var b = new Rect(r.xMax - 34, r.y + 4, 30, 16);
+                    GUI.DrawTexture(b, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.03f, 0.06f, 0.1f, 0.9f), 0, 8);
+                    GUI.Label(b, t.Badge, tileBadge);
+                }
+                if (GUI.Button(r, GUIContent.none, GUIStyle.none)) clicked = i;
+            }
+            return clicked;
+        }
+
+        /// <summary>A rarity's colour as a Color (the tile rim).</summary>
+        public static Color RarityTint(Items.Rarity r)
+        {
+            ColorUtility.TryParseHtmlString(BagPanel.RarityColor(r), out var c);
+            return c;
+        }
+
+        /// <summary>A small rounded label chip, e.g. "HP 20".</summary>
+        public static void Chip(string text, Color color)
+        {
+            var content = new GUIContent(text);
+            var style = Hint;
+            var size = style.CalcSize(content);
+            var r = GUILayoutUtility.GetRect(size.x + 14, 20, GUILayout.Width(size.x + 14));
+            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, color, 0, 9);
+            var old = style.normal.textColor;
+            style.normal.textColor = Ink;
+            GUI.Label(new Rect(r.x + 7, r.y + 2, size.x + 2, 18), content, style);
+            style.normal.textColor = old;
+        }
+
         /// <summary>"have/need", green when there is enough, red when not.</summary>
         public static string Count(int have, int need) => $"<color={(have >= need ? GoodHex : BadHex)}>{have}/{need}</color>";
 

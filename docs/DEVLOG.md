@@ -2,6 +2,12 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Menus refreshed (Ed: Build scrolled sideways, Book and Bag looked outdated)
+- Build panel 460 → 640 wide, vertical scrolling only, content kept to the panel width.
+- `HuntStyles.TileGrid` / `GridTile` (rounded tiles with a swatch, rarity rim and a count badge) and `HuntStyles.Chip`.
+- **Collection Book:** wider and centred; tile grid on the left (items with type filters and bag counts, BOSS badge), detail card on the right with chips (type, rarity, element, HP/ATK/DEF/SPD) and drops with chances. **Recipes:** the Workbench's tabs and sub-tabs with known/total counts, two cards a row with have/need per ingredient.
+- **Bag → Items:** tile grid with counts (red rim = below your tier) and a card for the picked item with Equip / Use / Salvage 1 / Salvage all.
+
 ## 2026-10-31 — Claude's ideas C-14 to C-23 (Ed: apply what doesn't touch Phase 9)
 - Ed asked for more of Claude's ideas: logged C-14…C-23, then built all but C-20 (audio → Phase 9) and C-22 (daily sea → Phase 10).
 - **C-14** catch styles on the reel (`CatchStyle`, `ReelGame.StyleOf`). **C-21** `Hunting/Juice` (splash, pop-ups, shake) + reel line colour. **C-23** `Hunting/EdgeArrows`.

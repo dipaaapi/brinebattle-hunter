@@ -311,7 +311,8 @@ namespace BrineBattle.Hunting
         {
             HuntStyles.Begin();
             if (!Active || raft == null) return;
-            float w = Mathf.Min(460, HuntStyles.W - HookController.HudRight - 22), h = HuntStyles.H - 120;
+            // Wide enough for every tab and sub-tab (Ed: no sideways scrolling).
+            float w = Mathf.Min(640, HuntStyles.W - HookController.HudRight - 22), h = HuntStyles.H - 120;
             panelRect = new Rect(HuntStyles.W - w - 12, 20, w, h);
             GUI.depth = -5;
             var g = raft.Grid;
@@ -326,7 +327,9 @@ namespace BrineBattle.Hunting
             var picked = (Page)HuntStyles.Tabs((int)page, labels);
             if (picked != page) { page = picked; panelScroll = Vector2.zero; }
 
-            panelScroll = GUILayout.BeginScrollView(panelScroll);
+            // Vertical scrolling only: content is kept to the panel's width.
+            panelScroll = GUILayout.BeginScrollView(panelScroll, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+            GUILayout.BeginVertical(GUILayout.MaxWidth(w - 40));
             switch (page)
             {
                 case Page.Build: DrawBuild(); break;
@@ -334,6 +337,7 @@ namespace BrineBattle.Hunting
                 case Page.Modules: DrawModules(); break;
                 default: DrawTree(); break;
             }
+            GUILayout.EndVertical();
             GUILayout.EndScrollView();
             if (!string.IsNullOrEmpty(message)) GUILayout.Label(message, HuntStyles.Text);
             GUILayout.EndArea();
