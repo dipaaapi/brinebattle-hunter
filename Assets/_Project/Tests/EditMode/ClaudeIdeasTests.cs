@@ -96,6 +96,24 @@ namespace BrineBattle.Tests
             Assert.AreEqual(a, SaveGame.LoadPet(p).Favourite, "same id, same favourite");
         }
 
+        // ---- Auto-feed (Ed's ask) ----
+
+        [Test]
+        public void AutoFeedPicksTickedRaritiesFavouriteFirstAndKeepsPartOfEachStack()
+        {
+            var c = new Companion { Id = "eel", Name = "Eel", MaxHp = 20, Hp = 20, Favourite = (int)FoodKind.RaftParts };
+            c.CatchUp();
+            var mat = Item(ItemType.Material); var plank = Item(ItemType.Raft); var rare = Item(ItemType.Material, Rarity.Rare); var hammer = Item(ItemType.Tool);
+            var bag = new Dictionary<ItemDefinition, int> { [mat] = 10, [plank] = 4, [rare] = 10, [hammer] = 5 };
+            bool CommonOnly(Rarity r) => r == Rarity.Common;
+            Assert.AreEqual(plank, MinionRules.AutoFeedPick(bag, c, CommonOnly, 0.5f), "favourite first");
+            bag[plank] = 1;
+            Assert.AreEqual(mat, MinionRules.AutoFeedPick(bag, c, CommonOnly, 0.5f), "never the last of a stack at 50%");
+            bag[mat] = 1;
+            Assert.IsNull(MinionRules.AutoFeedPick(bag, c, CommonOnly, 0.5f), "rare isn't ticked, hammers never");
+            Assert.AreEqual(rare, MinionRules.AutoFeedPick(bag, c, r => true, 0.5f));
+        }
+
         // ---- C-18 ----
 
         [Test]

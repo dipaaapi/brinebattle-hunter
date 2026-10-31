@@ -2,6 +2,16 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Ed's 11-point polish list
+- Menu music on the main menu; Settings has a **Sound** tab (music volume, mute, default).
+- Panel titles sit in the title bar (`HuntStyles.Window` content offset), fixing the stray letter behind the Build/Workbench tabs and the "Battle — round" overlap.
+- **Battle panel:** foe HP on top, Hunter / Raft / Stamina side by side with numbers in the bars, no minion bar, last moves in a card, coloured action buttons, consumables two a row.
+- **Day/weather card:** dark card with sun or moon, "Day N · time", weather in colour and a day-clock bar; readable in daylight.
+- Minions keep a wider berth from the box and bin (radius 0.72; the box worker stands on the next plank). **Hiding after a defeat:** they run to the storage box or the Salvage Bin (shared), hop into the lid in one clean arc, and each container rattles while minions are inside; they pop back out of the same one.
+- **Auto-feed** (Auto mode): each minion snacks every 45 s, favourite first, only ticked rarities, never more than the set share of a stack, never hammers (`MinionRules.AutoFeedPick`, `CompanionSettings.AutoFeed/FeedTier/FeedShare`). +1 test.
+- **Chores:** two cards a row, a letter badge, one-line job, who/what now, a pill switch; steppers for Keep N and Take-apart rarity; Auto-feed card. **Skill tree:** four coloured branches drawn as glowing node chains, the next skill pulsing gold, hover for what a skill does.
+- **Raft tree:** a road of six level stops and two-column level cards; long buttons wrap (`BigButton`), and a blocked "Leave the sea" is a line of text, not a giant disabled button.
+
 ## 2026-10-31 — Phase 9 starts with BGM (Ed: BGM, then SFX, Blender last)
 - `Audio/MusicRules` (which layer at what volume: daylight, rain/storm, danger by the visible hint, battle, boss, menus) and `Audio/MusicSynth` (seven 8-bar loops in D minor at 84 BPM, made as samples in code: chord pad + sea swell, marimba shanty tune, night bells, toms + shaker, battle bass + drums, boss brass + timpani, rain + rumble).
 - `Hunting/MusicPlayer`: makes the clips one per frame at start, starts them on the same DSP tick, fades each layer toward its target. `MusicSettings.Volume` with a slider in Settings → Game. +4 `MusicTests`. Preview mixes rendered to `Logs/bgm-*.wav` (git-ignored).

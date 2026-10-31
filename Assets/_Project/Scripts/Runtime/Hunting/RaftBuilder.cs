@@ -193,10 +193,11 @@ namespace BrineBattle.Hunting
             string leave = g.LeaveBlocker();
             if (g.Tier == Rarity.Mythic) Step(g.BossBeaten(Rarity.Mythic), BossLine(Rarity.Mythic));
             var voyage = VoyageController.Instance;
-            GUI.enabled = leave == null && voyage != null;
-            if (HuntStyles.ColorButton(leave == null ? VesselRules.LeaveVerb(kind) : $"Leave the sea: {leave}", HuntStyles.Go) && voyage != null && voyage.Leave())
-                WorldPause.Close(Menu.Build);
-            GUI.enabled = true;
+            if (leave == null && voyage != null)
+            {
+                if (HuntStyles.ColorButton(VesselRules.LeaveVerb(kind), HuntStyles.Go) && voyage.Leave()) WorldPause.Close(Menu.Build);
+            }
+            else GUILayout.Label($"<b>Leave the sea</b>  <size=12><color=#9bb0c8>{leave}</color></size>", HuntStyles.Text);
             GUILayout.EndVertical();
         }
 
@@ -524,7 +525,10 @@ namespace BrineBattle.Hunting
             DrawBranch(treeTab);
         }
 
-        /// <summary>One type's branch: a trunk with a node per level, each listing what it lets you make.</summary>
+        /// <summary>
+        /// One type's branch (Ed: the old list was cut off and hard to follow): a road of six level stops
+        /// along the top (done, your raft, locked), then a card per level with what it lets you make, two a row.
+        /// </summary>
         void DrawBranch(RaftKind kind)
         {
             var g = raft.Grid;
@@ -533,29 +537,66 @@ namespace BrineBattle.Hunting
             {
                 // Not the raft's type: locked, and it doesn't branch out.
                 GUILayout.BeginVertical(HuntStyles.Card);
-                GUILayout.Label($"<color=#999999>🔒 <b>{kind}</b> · {RaftTree.Look(kind)}</color>", HuntStyles.Heading);
+                GUILayout.Label($"<color=#999999><b>{kind}</b> · {RaftTree.Look(kind)}</color>", HuntStyles.Heading);
                 GUILayout.Label($"<color=#888888>Your raft is a {chosen}. This branch stays locked.</color>", HuntStyles.Text);
                 GUILayout.EndVertical();
                 return;
             }
-            GUILayout.Label($"<b>{kind}</b> · {RaftTree.Look(kind)}  <size=12>{RaftTypeRules.BonusOf(kind)}</size>", HuntStyles.Text);
-            var nodes = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && RaftTree.KindOf(r) == kind).ToList();
+            GUILayout.Label($"<b>{kind}</b> · {RaftTree.Look(kind)}", HuntStyles.Text);
+            GUILayout.Label(RaftTypeRules.BonusOf(kind).ToString(), HuntStyles.Hint);
+
+            // The road: six stops joined by a line, filled up to the raft's level.
+            int here = (int)g.Tier + 1;
+            var road = GUILayoutUtility.GetRect(200, 64, GUILayout.ExpandWidth(true));
+            float step = (road.width - 40) / 5f, y = road.y + 22;
+            var kindColor = KindColor(kind);
             for (int lv = 1; lv <= 6; lv++)
             {
+                float x = road.x + 20 + (lv - 1) * step;
+                if (lv < 6)
+                {
+                    bool doneLink = RaftTree.Unlocked(g, kind, lv + 1);
+                    GUI.DrawTexture(new Rect(x, y - 2, step, 4), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, doneLink ? kindColor : new Color(0.2f, 0.27f, 0.35f), 0, 2);
+                }
+            }
+            for (int lv = 1; lv <= 6; lv++)
+            {
+                float x = road.x + 20 + (lv - 1) * step;
                 bool open = RaftTree.Unlocked(g, kind, lv);
-                bool here = lv == (int)g.Tier + 1;
-                var made = nodes.Where(r => RaftTree.LevelOf(r.outputs[0].item) == lv).Select(r => r.outputs[0].item.displayName).Distinct().ToList();
-                string branch = string.Join("\n", made.Select((m, i) => $"{(i == made.Count - 1 ? "└─" : "├─")} {m}"));
+                float r = lv == here ? 15 : 12;
+                if (lv == here) GUI.DrawTexture(new Rect(x - r - 4, y - r - 4, 2 * r + 8, 2 * r + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.81f, 0.29f, 0.35f + 0.2f * Mathf.Sin(Time.unscaledTime * 4f)), 0, r + 4);
+                GUI.DrawTexture(new Rect(x - r, y - r, 2 * r, 2 * r), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, open ? kindColor : new Color(0.16f, 0.22f, 0.3f), 0, r);
+                GUI.Label(new Rect(x - r, y - r, 2 * r, 2 * r), open ? $"<b>{lv}</b>" : $"<color=#7a8899><b>{lv}</b></color>", RoadNum);
+                GUI.Label(new Rect(x - 40, y + 18, 80, 18), lv == here ? "<color=#ffd866><b>your raft</b></color>" : open ? "<color=#9fe89f>open</color>" : "<color=#7a8899>locked</color>", RoadNum);
+            }
+
+            // A card per level, two a row.
+            var nodes = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && RaftTree.KindOf(r) == kind).ToList();
+            float cardW = (panelRect.width - 70) / 2f;
+            for (int lv = 1; lv <= 6; lv += 2)
+            {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(lv == 1 ? "  ●" : "  │\n  ●", HuntStyles.Text, GUILayout.Width(28));
-                GUILayout.BeginVertical(HuntStyles.Card);
-                string head = open ? $"<color={HuntStyles.GoodHex}>✔ Lv {lv}</color>" : $"<color=#999999>🔒 Lv {lv}</color>";
-                GUILayout.Label($"{head}{(here ? "  <size=11>(your raft)</size>" : "")}", HuntStyles.Text);
-                GUILayout.Label(open ? $"<size=12>{branch}</size>" : $"<size=12><color=#888888>{branch}</color></size>", HuntStyles.Text);
-                GUILayout.EndVertical();
+                for (int k = lv; k <= lv + 1; k++)
+                {
+                    bool open = RaftTree.Unlocked(g, kind, k);
+                    var made = nodes.Where(r => RaftTree.LevelOf(r.outputs[0].item) == k).Select(r => r.outputs[0].item.displayName).Distinct().ToList();
+                    GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Width(cardW), GUILayout.MinHeight(84));
+                    string head = open ? $"<color={HuntStyles.GoodHex}><b>Lv {k}</b></color>" : $"<color=#8a96a6><b>Lv {k}</b></color>";
+                    string tag = k == here ? "  <size=11><color=#ffd866>your raft</color></size>" : open ? "" : "  <size=11><color=#8a96a6>locked</color></size>";
+                    GUILayout.Label(head + tag, HuntStyles.Text);
+                    foreach (var m in made)
+                        GUILayout.Label(open ? $"<size=12>• {m}</size>" : $"<size=12><color=#7a8899>• {m}</color></size>", HuntStyles.Text);
+                    GUILayout.EndVertical();
+                }
                 GUILayout.EndHorizontal();
             }
         }
+
+        static Color KindColor(RaftKind k) =>
+            k == RaftKind.Fortress ? new Color(0.6f, 0.55f, 0.5f) : k == RaftKind.Sky ? new Color(0.45f, 0.7f, 1f) : k == RaftKind.Beast ? new Color(0.85f, 0.45f, 0.35f) : new Color(0.5f, 0.75f, 0.55f);
+
+        static GUIStyle roadNum;
+        static GUIStyle RoadNum => roadNum ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, richText = true, fontSize = 12 };
 
         /// <summary>Why a recipe is still "???": Alchemy Mastery, or the raft tree branch (U-31).</summary>
         public static string LockReason(HookController hook, RecipeDefinition r)
