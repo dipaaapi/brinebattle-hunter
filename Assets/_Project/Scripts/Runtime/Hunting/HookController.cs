@@ -126,6 +126,8 @@ namespace BrineBattle.Hunting
             // Developer mode (Ed's ask): F1 panel, Editor and development builds only.
             if (FindFirstObjectByType<DevPanel>() == null) new GameObject("Developer").AddComponent<DevPanel>().hook = this;
 #endif
+            // Shipyard (Ed's ask): the raft is customised in its own view, not on the sea.
+            if (FindFirstObjectByType<Shipyard>() == null) new GameObject("Shipyard").AddComponent<Shipyard>().hook = this;
             // Quest tab (Ed's ask), likewise.
             if (FindFirstObjectByType<QuestPanel>() == null) new GameObject("Quests").AddComponent<QuestPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();

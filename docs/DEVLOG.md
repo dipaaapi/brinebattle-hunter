@@ -58,6 +58,7 @@
 - `RaftDecor`: raft grows every 10 levels; Sea = galleon, Aerial = skyship, Undersea = new submarine; pennant by level.
 - `Rafts/FameBook`: fame, 14 achievements, ranks; HUD line and Quest tab → Fame; saved. Difficulty text: fame ×1/×1.5/×2.
 - Saves: `hasEvolution`, line, level, fame; older saves migrate (old Lv n → raft Lv 1 + 8(n−1), type and vehicle dropped). DataVersion 14 (ship part names). FAQ: Raft, ship lines, Bosses & fame.
+- **Shipyard** (Ed's U-46): `Hunting/Shipyard` (virtual dock rendered by its own camera into a render texture, drawn full-screen on top; turn/zoom; hover preview; click / right-click; left parts strip with tooltips; world time scale 0 while open) and `Hunting/ShipyardRules` (limits, halt, minion pause, hover preview). Build tab routes to it; in-sea placement removed. Auto-save and the idle clock wait; minion jobs stop. +3 `ShipyardTests`.
 - Tests: new `EvolutionTests` (6), `FameTests` (4); updated raft tree, voyage, raft grid, raft type, quest and dev tests. Compiles (also as a release build); Ed runs the Test Runner.
 
 ## 2026-10-31 — Developer mode (laptop)

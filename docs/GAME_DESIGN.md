@@ -100,6 +100,8 @@ Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown b
 - **No leaving the sea.** The goal is **fame** (§ Fame). Difficulty: monsters ×1/×1.25/×1.5, loot ×1/×0.8/×0.6, **fame ×1/×1.5/×2** ("types to win" is gone).
 - **Older saves**: old raft Lv n → raft Lv 1 + 8 × (n − 1) (1, 9, 17, 25, 33, 41); the old type and vehicle parts are dropped; bosses beaten stay beaten.
 
+**Shipyard (Ed's ask, 2026-10-31):** the raft is customised in its own full-screen view, not on the sea (the Build menu covered it). A virtual dock shows only the raft or ship; drag / WASD / arrows turn it (yaw, and pitch 8-85°), the wheel zooms (5-28 m), Reset view. Hover a cell to see what a click does (the same rules as before: tier, ship line, touching, modules, hammer); click places or swaps, right-click removes; parts come from the bag in a slim left strip with a tooltip. **The whole game is halted while it is open** (world time scale 0, no battles, loot, waves, drifts, spawns, clocks, minion jobs, auto-save or dozing off); the dock animates on real time. Minions don't help there. Open with Y or Build → Open the Shipyard; the old in-sea placement is gone.
+
 **Fame and achievements (Ed's ask, first version, local only):** fame from monsters (1 + rarity step), bosses (25 × (1 + step)), tames (3 + step), crafts (1), each new best raft level (5) and ship level (10), times the difficulty; 14 achievements add a lump once (first catch … Fully Evolved at ship Lv 100). Ranks: Castaway, Deckhand (50), Sailor (250), Captain (1000), Famed Captain (5000), Legend of the Brine (20000). Shown in the HUD and Quest tab → Fame. Online leaderboards: idea U-45.
 
 *Below: the raft design before ship evolution, kept for history.*

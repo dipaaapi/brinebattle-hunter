@@ -108,7 +108,7 @@ namespace BrineBattle.Hunting
 
             new Topic("Raft",
                 new Entry("How do I build?",
-                    "Build (R) → Build tab. Pick a part, then click a green tile next to the raft. Click a built tile to swap it for the picked part. Use Remove to take a part off; it goes back to the Bag."),
+                    "In the Shipyard: press Y (or Build → Open the Shipyard). Your raft or ship stands alone on a dock. Drag, WASD or the arrow keys turn it left, right, up and down; the mouse wheel zooms; Reset view puts it back. Pick a part on the left, hover a cell to see what a click does, click to place it (or swap a built part), right-click to take a part off; it goes back to the Bag. The game is paused while you're there, and minions don't help. Press Done, Esc or Y to go back."),
                 new Entry("Why can't I build?",
                     "You need a hammer of the raft's level or better. Make or upgrade it in Workbench → Raft → Hammers. A Smith minion makes it for you too."),
                 new Entry("How do I start the raft over?",

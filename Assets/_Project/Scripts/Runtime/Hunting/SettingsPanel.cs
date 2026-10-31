@@ -33,6 +33,7 @@ namespace BrineBattle.Hunting
         void AutoSave()
         {
             if (!inGame || BattleSettings.Mode == BattleMode.Manual || !SaveSystem.Exists) return;
+            if (!ShipyardRules.TimersRun(Shipyard.IsOpen)) return;   // the whole game is halted in the Shipyard
             autoTimer += Time.unscaledDeltaTime;
             if (autoTimer < SaveSystem.AutoSaveSeconds) return;
             if (BattleController.InBattle || WorldPause.Open != Menu.None || WorldPause.Prompt || WorldPause.Asleep) return;
@@ -145,6 +146,7 @@ namespace BrineBattle.Hunting
             ("B", "Bag"),
             ("P", "Minions"),
             ("J", "Quests (or the tab on the right edge)"),
+            ("Y", "Shipyard: customise the raft"),
             ("C", "Journal (collection and music)"),
             ("R", "Build the raft and the Workbench"),
             ("Esc", "Settings, or close a menu"),

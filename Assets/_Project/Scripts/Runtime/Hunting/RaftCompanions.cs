@@ -152,6 +152,8 @@ namespace BrineBattle.Hunting
         void Update()
         {
             if (hook == null || Raft == null) return;
+            // Minions don't help in the Shipyard (Ed's ask): a hammering job stops and its part stays in the bag.
+            if (!ShipyardRules.MinionsMayWork(Shipyard.IsOpen)) { EndJob(); return; }
             Place();
             foreach (var c in hook.Companions.All) c.SinceFavourite += Time.deltaTime;   // C-16 mood clock
             // Each container rattles while minions are inside it (Ed's ask: the bin too, not just the box).

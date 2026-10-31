@@ -13,7 +13,6 @@ namespace BrineBattle.Hunting
     /// </summary>
     public class RaftBuilder : MonoBehaviour
     {
-        enum Mode { Place, Remove }
 
         public Raft raft;
         public HookController hook;
@@ -22,10 +21,6 @@ namespace BrineBattle.Hunting
 
         public bool Active => WorldPause.Open == Menu.Build;
 
-        Mode mode;
-        ItemDefinition selected;
-        readonly List<GameObject> ghosts = new List<GameObject>();
-        GameObject hover;
         Rect panelRect;
         Vector2 panelScroll;
         RecipeCategory tab;
@@ -43,78 +38,9 @@ namespace BrineBattle.Hunting
             var kb = Keyboard.current;
             if (kb != null && kb.rKey.wasPressedThisFrame) Toggle();
             if (kb != null && Active && kb.escapeKey.wasPressedThisFrame) Toggle();
-            if (!Active || raft == null)
-            {
-                if (ghosts.Count > 0 || hover != null) ClearGhosts();
-                return;
-            }
+            if (!Active || raft == null) return;
 
-            if (selected != null && hook.Inventory.Count(selected) == 0) selected = null;
-            RefreshGhosts();
-
-            var mouse = Mouse.current;
-            if (mouse == null || Camera.main == null) return;
-            Vector2 mp = mouse.position.ReadValue();
-            var guiPoint = new Vector2(mp.x, Screen.height - mp.y) / HuntStyles.Scale;
-            bool overPanel = panelRect.Contains(guiPoint);
-
-            Cell? cell = overPanel ? null : CellUnderMouse(mp);
-            UpdateHover(cell);
-            if (overPanel || cell == null || !mouse.leftButton.wasPressedThisFrame) return;
-
-            if (mode == Mode.Place) TryPlace(cell.Value);
-            else TryRemove(cell.Value);
-        }
-
-        Cell? CellUnderMouse(Vector2 screen)
-        {
-            var ray = Camera.main.ScreenPointToRay(screen);
-            var plane = new Plane(Vector3.up, raft.transform.position + Vector3.up * 0.15f);
-            if (!plane.Raycast(ray, out float d)) return null;
-            return raft.WorldToCell(ray.GetPoint(d));
-        }
-
-        void TryPlace(Cell c)
-        {
-            if (selected == null) { message = "Pick a raft part from the list first."; return; }
-            // Clicking a built cell swaps its part for the selected one (Ed's ask: replace, not remove then place).
-            if (raft.Grid.Has(c))
-            {
-                var rr = raft.Grid.Replace(c, selected, out var old);
-                if (rr == PlaceResult.Ok)
-                {
-                    hook.Inventory.Remove(selected, 1);
-                    hook.Inventory.Add(old, 1);
-                    message = $"Replaced {old.displayName} with {selected.displayName}; the old one is back in the bag.";
-                    hook.Log($"Replaced {old.displayName} with {selected.displayName} at {c}.");
-                }
-                else message = rr == PlaceResult.Same ? "That part is already there." : PlaceText(rr);
-                return;
-            }
-            var r = raft.Grid.Place(c, selected);
-            if (r == PlaceResult.Ok)
-            {
-                hook.Inventory.Remove(selected, 1);
-                message = $"Placed {selected.displayName}.";
-                hook.Log($"Built {selected.displayName} at {c}. Raft is size {raft.size}.");
-            }
-            else message = PlaceText(r);
-        }
-
-        void TryRemove(Cell c)
-        {
-            var r = raft.Grid.Remove(c, out var part);
-            switch (r)
-            {
-                case RemoveResult.Ok:
-                    hook.Inventory.Add(part, 1);
-                    message = $"Took off {part.displayName}; it's back in the bag.";
-                    break;
-                case RemoveResult.WouldSplit: message = "That part holds the raft together."; break;
-                case RemoveResult.LastPart: message = "You can't remove the last part."; break;
-                case RemoveResult.NeedsHammer: message = HammerText; break;
-                default: message = "No part there."; break;
-            }
+            // Parts are placed in the Shipyard now (Ed's ask: the Build menu covered the raft at sea).
         }
 
         /// <summary>
@@ -211,75 +137,6 @@ namespace BrineBattle.Hunting
             hook.Log($"Parts for other raft types came off and are back in the bag ({string.Join(", ", names)}); basic planks took their place.");
         }
 
-        const string HammerText = "Your hammer is too weak for this raft level.";
-
-        static string PlaceText(PlaceResult r)
-        {
-            switch (r)
-            {
-                case PlaceResult.Occupied: return "There's already a part there.";
-                case PlaceResult.NotAdjacent: return "Parts must touch the raft.";
-                case PlaceResult.OutOfBounds: return "Too far out (max 9x9).";
-                case PlaceResult.BelowTier: return "That part is too weak for this raft level.";
-                case PlaceResult.NeedsModules: return "Not enough modules on the left edge yet.";
-                case PlaceResult.NeedsHammer: return HammerText;
-                case PlaceResult.WrongType: return "That part is for another raft type, so it stays off your raft.";
-                default: return "That isn't a raft part.";
-            }
-        }
-
-        void RefreshGhosts()
-        {
-            var open = mode == Mode.Place ? raft.Grid.OpenCells().ToList() : new List<Cell>();
-            while (ghosts.Count < open.Count)
-            {
-                var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                g.name = "Ghost";
-                Destroy(g.GetComponent<Collider>());
-                g.transform.localScale = new Vector3(0.9f, 0.08f, 0.9f);
-                ghosts.Add(g);
-            }
-            bool fits = selected != null && SalvageRules.IsCompatible(selected.type, selected.rarity, raft.Tier);
-            var color = fits ? new Color(0.4f, 0.95f, 0.5f) : new Color(0.9f, 0.9f, 0.9f);
-            // Upgrade guide: the left-edge spots that still need a module glow yellow.
-            var gaps = page != Page.Workbench && !raft.Grid.ModulesReady ? new HashSet<Cell>(raft.Grid.UpstreamGaps()) : new HashSet<Cell>();
-            var gapColor = new Color(1f, 0.85f, 0.2f) * (0.8f + 0.2f * Mathf.Sin(Time.unscaledTime * 6f));
-            for (int i = 0; i < ghosts.Count; i++)
-            {
-                bool on = i < open.Count;
-                ghosts[i].SetActive(on);
-                if (!on) continue;
-                ghosts[i].transform.position = raft.CellToWorld(open[i]) + Vector3.up * 0.02f;
-                Tint.Apply(ghosts[i].GetComponent<Renderer>(), gaps.Contains(open[i]) ? gapColor : color);
-            }
-        }
-
-        void UpdateHover(Cell? cell)
-        {
-            if (hover == null)
-            {
-                hover = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                hover.name = "Build Cursor";
-                Destroy(hover.GetComponent<Collider>());
-                hover.transform.localScale = new Vector3(1.05f, 0.4f, 1.05f);
-            }
-            hover.SetActive(cell != null);
-            if (cell == null) return;
-            hover.transform.position = raft.CellToWorld(cell.Value) + Vector3.up * 0.1f;
-            bool ok = mode == Mode.Place
-                ? selected != null && (raft.Grid.Has(cell.Value) ? raft.Grid.CanReplace(cell.Value, selected) : raft.Grid.CanPlace(cell.Value, selected)) == PlaceResult.Ok
-                : raft.Grid.CanRemove(cell.Value) == RemoveResult.Ok;
-            Tint.Apply(hover.GetComponent<Renderer>(), ok ? new Color(1f, 1f, 0.4f) : new Color(1f, 0.35f, 0.3f));
-        }
-
-        void ClearGhosts()
-        {
-            foreach (var g in ghosts) if (g != null) Destroy(g);
-            ghosts.Clear();
-            if (hover != null) Destroy(hover);
-            hover = null;
-        }
-
         // Ed's ask: Level up and the Tree are one page, the raft skill tree.
         enum Page { Build, Workbench, Modules, Tree }
         RaftKind path = RaftKind.Sea;
@@ -368,33 +225,9 @@ namespace BrineBattle.Hunting
             if (!hasHammer && GUILayout.Button("Make one", GUILayout.Width(90), GUILayout.Height(28))) OpenBench(RecipeSub.Hammers);
             GUILayout.EndHorizontal();
 
-            mode = (Mode)HuntStyles.Tabs((int)mode, new[] { "Place / replace", "Remove" });
-            if (mode == Mode.Remove) return;
-
-            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module || kv.Key.type == ItemType.Habitat).ToList();
-            if (parts.Count == 0)
-            {
-                GUILayout.Label("No raft parts in the bag.", HuntStyles.Text);
-                if (GUILayout.Button("Open the plank recipes", GUILayout.Height(30))) OpenBench(RecipeSub.Parts);
-                return;
-            }
-            foreach (var kv in parts)
-            {
-                var p = kv.Key;
-                bool strong = SalvageRules.IsCompatible(p.type, p.rarity, g.Tier), ofType = g.FitsType(p);
-                bool fits = strong && ofType;
-                string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color>"
-                    + (p.type == ItemType.Raft && p.raftKind != RaftKind.Plain ? $"  <size=11>{p.raftKind}</size>" : "")
-                    + (!ofType ? $"  <size=11><color={HuntStyles.BadHex}>not for a {g.Chosen} raft</color></size>"
-                        : strong ? "" : $"  <size=11><color={HuntStyles.BadHex}>too weak for {g.LevelName}</color></size>");
-                GUI.enabled = fits;
-                var old = GUI.backgroundColor;
-                if (selected == p) GUI.backgroundColor = HuntStyles.Go;
-                if (GUILayout.Button((selected == p ? "▶ " : "") + label, HuntStyles.RichButton, GUILayout.Height(32))) { selected = p; mode = Mode.Place; }
-                GUI.backgroundColor = old;
-                GUI.enabled = true;
-            }
-            if (parts.Any(kv => !SalvageRules.IsCompatible(kv.Key.type, kv.Key.rarity, g.Tier)))
+            // Ed's ask: the raft is customised in the Shipyard, a separate view where nothing covers it.
+            if (HuntStyles.ColorButton("⚓ Open the Shipyard (Y)", HuntStyles.Go)) { WorldPause.Close(Menu.Build); Shipyard.Toggle(); }
+            if (hook.Inventory.Items.Any(kv => (kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module) && !SalvageRules.IsCompatible(kv.Key.type, kv.Key.rarity, g.Tier)))
                 if (GUILayout.Button("Make stronger parts (Reinforce)", GUILayout.Height(28))) OpenBench(RecipeSub.Parts);
         }
 

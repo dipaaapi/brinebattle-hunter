@@ -40,6 +40,7 @@ namespace BrineBattle.Hunting
             var battle = BattleController.Current;
             if (DevMode.God && battle != null && battle.Outcome == BattleOutcome.Ongoing) battle.DevHeal();
             // Time speed outside battles; the boss show's slow motion and battles run at their own pace.
+            if (Shipyard.IsOpen) return;   // the Shipyard halts the world
             if (!BattleController.InBattle && speed != 1) Time.timeScale = speed;
             else if (speed != 1 && Time.timeScale == speed) Time.timeScale = 1f;
         }
