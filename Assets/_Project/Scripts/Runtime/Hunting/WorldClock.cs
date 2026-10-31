@@ -20,6 +20,8 @@ namespace BrineBattle.Hunting
         public static WorldState Now { get; private set; }
         public static TimeOfDay Time => Now?.Time ?? TimeOfDay.Day;
         public static Weather Weather => Now?.Weather ?? Weather.Clear;
+        /// <summary>The raft hangs a lantern from Lv 2 (Claude's C-19); it lights at dusk and night.</summary>
+        public static bool Lantern { get; private set; }
 
         /// <summary>Raft parts on fire right now; the hook is jammed while any burn (U-15).</summary>
         public static readonly List<RaftFire> Fires = new List<RaftFire>();
@@ -93,7 +95,7 @@ namespace BrineBattle.Hunting
                 case Weather.Fog: line = "Fog rolls in. You can't make out far drifts, and hints are unreliable."; break;
                 default: line = "The sky clears."; break;
             }
-            if (from == Weather.Storm && to != Weather.Storm) line += " Wreckage from the storm is drifting your way!";
+            if (from == Weather.Storm && to != Weather.Storm) { line += " Wreckage from the storm is drifting your way!"; hook?.First("storm"); }
             hook?.Log(line);
         }
 
@@ -180,6 +182,7 @@ namespace BrineBattle.Hunting
             flash = Mathf.MoveTowards(flash, 0f, UnityEngine.Time.deltaTime * 4f);
             sky = Color.Lerp(sky, Color.white, flash * 0.7f);
             if (cam != null) cam.backgroundColor = sky;
+            LanternAndGlow(light);
 
             if (sun != null)
             {
@@ -193,7 +196,7 @@ namespace BrineBattle.Hunting
 
             // Fog limits sight; the camera sits far above the raft, so the fog starts at the raft.
             // On clear days a light haze still melts the far sea into the sky, so its edge never shows (Ed's ask).
-            float sight = WorldRules.SightRange(w, Now.Time);
+            float sight = WorldRules.SightRange(w, Now.Time, Lantern);
             bool fogOn = cam != null && raft != null;
             RenderSettings.fog = fogOn;
             if (fogOn)
@@ -212,6 +215,57 @@ namespace BrineBattle.Hunting
                 RenderSettings.fogColor = sky;
                 RenderSettings.fogStartDistance = Mathf.Min(start, end - 1f);
                 RenderSettings.fogEndDistance = end;
+            }
+        }
+
+        // ---- Raft lantern and glowing Moon creatures (Claude's C-19) ----
+
+        Light lamp;
+        GameObject lampPost;
+        float glowScan;
+
+        void LanternAndGlow(float light)
+        {
+            Lantern = raft != null && raft.Tier >= Items.Rarity.Uncommon;
+            bool lit = Lantern && light < 0.6f;
+            if (Lantern && lampPost == null)
+            {
+                // A pole with a glowing bulb at the back of the raft, and a warm point light.
+                lampPost = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                lampPost.name = "Raft lantern";
+                Destroy(lampPost.GetComponent<Collider>());
+                lampPost.transform.SetParent(raft.transform, false);
+                lampPost.transform.localScale = new Vector3(0.06f, 0.7f, 0.06f);
+                Tint.Apply(lampPost.GetComponent<Renderer>(), new Color(0.3f, 0.22f, 0.15f));
+                var bulb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Destroy(bulb.GetComponent<Collider>());
+                bulb.name = "Bulb";
+                bulb.transform.SetParent(lampPost.transform, false);
+                bulb.transform.localPosition = Vector3.up * 1.05f;
+                bulb.transform.localScale = new Vector3(4f, 0.45f, 4f);
+                lamp = bulb.AddComponent<Light>();
+                lamp.type = LightType.Point;
+                lamp.color = new Color(1f, 0.8f, 0.45f);
+                lamp.range = 9f;
+            }
+            if (lampPost != null)
+            {
+                lampPost.SetActive(Lantern);
+                // Back (upstream-left) corner of the starter square, out of the hunter's way.
+                lampPost.transform.localPosition = new Vector3(-Raft.CellSize, 1.0f, -Raft.CellSize);
+                lamp.enabled = lit;
+                lamp.intensity = lit ? Mathf.Lerp(2.5f, 0.8f, light / 0.6f) : 0f;
+                Tint.Apply(lamp.GetComponent<Renderer>(), lit ? new Color(1f, 0.9f, 0.55f) : new Color(0.5f, 0.45f, 0.35f));
+            }
+            // Moon creatures glow in the dark: a brighter tint at night, their own colour by day.
+            if (UnityEngine.Time.time < glowScan) return;
+            glowScan = UnityEngine.Time.time + 0.5f;
+            foreach (var d in FindObjectsByType<Drift>(FindObjectsSortMode.None))
+            {
+                if (d == null || d.Monster == null || d.Monster.isFlotsam || d.Monster.isBoss || d.Carried != null) continue;
+                if (WorldRules.AffinityOf(d.Monster.element) != Affinity.Moon) continue;
+                var c = Tint.Of(d.Monster.element);
+                Tint.Apply(d.GetComponent<Renderer>(), WorldRules.Glows(d.Monster.element, Now.Time) ? Color.Lerp(c, new Color(0.6f, 1f, 1f), 0.5f) * 1.6f : c);
             }
         }
 

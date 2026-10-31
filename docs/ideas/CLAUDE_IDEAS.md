@@ -43,32 +43,32 @@ The HUD shows the next weather and when it comes ("Storm in 40 s"), and storms o
 ### C-13 Wreck field after a storm — 2026-10-30 · ✅ Idea Round 4 · §2, §11 · S · Idea Round 4
 When a storm clears, the next 3 drifts are floating loot one rarity higher. A reward for riding out the storm, and an answer to U-15's "do storms bring rarer drifts?".
 
-### C-14 Reel "fight moves" by monster kind — 2026-10-31 · 💡 · §4 · S · after U-42
+### C-14 Reel "fight moves" by monster kind — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §4 · S · after U-42
 Each element moves differently on the reel bar: eels zig-zag, crabs sit still then jump, gulls dart up, heavy monsters sink. Dead drifts barely move, alive ones thrash. The reel becomes a second hint ("it's fighting hard, careful") without new UI.
 
-### C-15 Sea journal of "firsts" with small rewards — 2026-10-31 · 💡 · §11 · S · Phase 9
+### C-15 Sea journal of "firsts" with small rewards — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §11 · S · Phase 9
 First clean reel, first boss, first storm survived, first vehicle part, first tame of each element: each gives a one-time reward (essence, a recipe hint, a cosmetic for the raft). Gives new players a trail of small goals beside the quest tab.
 
-### C-16 Minion moods and favourite food — 2026-10-31 · 💡 · §10 · S · Idea Round 5
+### C-16 Minion moods and favourite food — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §10 · S · Idea Round 5
 Each minion has a favourite loot type (rolled when tamed). Feeding it that gives double EXP and a happy hop; ignoring it for long makes it sulk (works 20% slower). Makes the Glutton and the junk pile a small choice, and minions feel like individuals.
 
-### C-17 Distress flares and rescue drifts — 2026-10-31 · 💡 · §2, §4 · M · Idea Round 5
+### C-17 Distress flares and rescue drifts — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §2, §4 · M · Idea Round 5
 Now and then a flare goes up far away: a shipwrecked survivor on a plank drifts by. Hook them before the current takes them and they trade one rare recipe or an item for supplies. A breather from monsters and a reason to scan the horizon.
 
-### C-18 Raft crafting combos ("set bonuses") — 2026-10-31 · 💡 · §6 · S · Idea Round 5
+### C-18 Raft crafting combos ("set bonuses") — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §6 · S · Idea Round 5
 Three of the same module in a row, or a full ring of one raft kind around a habitat, gives a small bonus (+range, +pet heal). Rewards planning the layout instead of filling cells anywhere.
 
-### C-19 Night lanterns and bioluminescent drifts — 2026-10-31 · 💡 · §2 · S · Phase 9
+### C-19 Night lanterns and bioluminescent drifts — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §2 · S · Phase 9
 At night, a craftable lantern on the raft pushes sight back out a few metres; some Moon creatures glow, so they can be read through the dark. Makes night look great in the art pass and gives a reason to craft light.
 
-### C-20 Audio that follows the world — 2026-10-31 · 💡 · U-20 · M · Phase 9
+### C-20 Audio that follows the world — 2026-10-31 · 🟨 Phase 9 (Ed\'s call) · U-20 · M · Phase 9
 Music layers instead of tracks: a calm ocean bed by day, softer at night, drums added when an alive drift is near, full battle theme in fights, a big brass layer for bosses, rain and thunder layers by weather. One small set of loops covers every state.
 
-### C-21 Juice for the reel and the loot — 2026-10-31 · 💡 · §4 · S · Phase 9
+### C-21 Juice for the reel and the loot — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §4 · S · Phase 9
 Line creak that rises with the catch meter, a splash and a "pop" when it lands, loot icons that fly into the Bag button, a soft screen shake on a clean reel. Cheap, and it is most of what makes catching feel good.
 
-### C-22 Daily current (seeded sea of the day) — 2026-10-31 · 💡 · §2 · S · Phase 10
+### C-22 Daily current (seeded sea of the day) — 2026-10-31 · 💡 Phase 10 · §2 · S · Phase 10
 One sea a day with a fixed seed: same weather, same drifts for everyone. A score for "most loot by sunset" that can later feed the asynchronous hunters (C-8) before real multiplayer.
 
-### C-23 Danger forecast on the minimap edge — 2026-10-31 · 💡 · §4 · S · Idea Round 5
+### C-23 Danger forecast on the minimap edge — 2026-10-31 · ✅ Idea Round 4 (Ed: "i-apply na natin ngayon") · §4 · S · Idea Round 5
 Small arrows at the screen edge for things coming from off-screen: a boss, a gorged monster, a lost raft part floating away. Helps you not miss what matters, and the lost-part arrow fits Ed's Reset raft chase.

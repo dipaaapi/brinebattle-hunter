@@ -10,6 +10,23 @@ namespace BrineBattle.Encounters
     /// empty = it slips off the hook. Semi-auto nudges the zone toward the catch; Auto plays it for you.
     /// Plain C# so EditMode tests can drive it frame by frame.
     /// </summary>
+    /// <summary>How a catch fights on the reel bar (Claude's C-14): a second, rough hint at what's on the line.</summary>
+    public enum CatchStyle
+    {
+        /// <summary>Barely moves: dead.</summary>
+        Limp,
+        /// <summary>Swims about evenly.</summary>
+        Swimmer,
+        /// <summary>Snakes up and down fast, like an eel (water, ice, steam).</summary>
+        ZigZag,
+        /// <summary>Sits still, then jumps far, like a crab (earth, mud, sand, magma).</summary>
+        Jumper,
+        /// <summary>Sinks slowly, then darts upward, like a gull (wind, lightning).</summary>
+        Darter,
+        /// <summary>Heavy: keeps pulling to the bottom (big live monsters).</summary>
+        Sinker,
+    }
+
     public class ReelGame
     {
         // ---- Tuning ----
@@ -39,7 +56,36 @@ namespace BrineBattle.Encounters
         /// <summary>Extra zone width from Alchemy Mastery (+0.5% a level, up to +6%) and a Looter minion (+4%).</summary>
         public static float Bonus(int masteryLevel, bool looter) => Math.Min(0.06f, 0.005f * Math.Max(0, masteryLevel - 1)) + (looter ? 0.04f : 0f);
 
+        /// <summary>The fighting style of a catch: dead ones go limp, big live ones sink, the rest by element.</summary>
+        public static CatchStyle StyleOf(Elements.Element e, DriftState state, int sizeClass)
+        {
+            if (state == DriftState.Dead) return CatchStyle.Limp;
+            if (state == DriftState.Alive && sizeClass >= 4) return CatchStyle.Sinker;
+            switch (e)
+            {
+                case Elements.Element.Water: case Elements.Element.Ice: case Elements.Element.Steam: return CatchStyle.ZigZag;
+                case Elements.Element.Earth: case Elements.Element.Mud: case Elements.Element.Sand: case Elements.Element.Magma: return CatchStyle.Jumper;
+                case Elements.Element.Wind: case Elements.Element.Lightning: return CatchStyle.Darter;
+                default: return CatchStyle.Swimmer;
+            }
+        }
+
+        /// <summary>A few words for the reel label.</summary>
+        public static string Describe(CatchStyle s)
+        {
+            switch (s)
+            {
+                case CatchStyle.Limp: return "It hangs limp on the line...";
+                case CatchStyle.ZigZag: return "It snakes up and down!";
+                case CatchStyle.Jumper: return "It sits... then jumps!";
+                case CatchStyle.Darter: return "It darts upward!";
+                case CatchStyle.Sinker: return "It's heavy, pulling down hard!";
+                default: return "It swims about.";
+            }
+        }
+
         public BattleMode Mode { get; }
+        public CatchStyle Style { get; }
         public float Width { get; }
         public float Speed { get; }
         /// <summary>Bottom of the green zone, 0-1.</summary>
@@ -55,13 +101,16 @@ namespace BrineBattle.Encounters
         public bool Done => Caught || Escaped;
         public bool Clean => Caught && TimeOutside <= CleanSlack;
 
-        float velocity, goal, nextGoal;
+        float velocity, goal, nextGoal, pause;
+        int zig = 1;
         readonly Random rng;
 
-        public ReelGame(float width, float speed, BattleMode mode, Random rng)
+        public ReelGame(float width, float speed, BattleMode mode, Random rng, CatchStyle style = CatchStyle.Swimmer)
         {
             Width = width;
-            Speed = speed;
+            Style = style;
+            // Limp catches drift slowly whatever their size.
+            Speed = style == CatchStyle.Limp ? speed * 0.35f : speed;
             Mode = mode;
             this.rng = rng;
             Catch = goal = 0.3f + (float)rng.NextDouble() * 0.4f;
@@ -78,7 +127,7 @@ namespace BrineBattle.Encounters
             if (Mode == BattleMode.Auto)
             {
                 // Computer-played: follows the catch a step behind, so it can still slip outside now and then.
-                Zone = MoveTowards(Zone, want, Speed * 1.15f * dt);
+                Zone = MoveTowards(Zone, want, Speed * 1.6f * dt);
             }
             else
             {
@@ -96,17 +145,44 @@ namespace BrineBattle.Encounters
             Meter = Clamp(Meter, 0f, 1f);
         }
 
-        /// <summary>The catch swims toward a goal that changes every so often, now and then with a sudden dart.</summary>
+        /// <summary>The catch swims toward a goal that changes now and then, in its own style (C-14).</summary>
         void MoveCatch(float dt)
         {
+            float R() => (float)rng.NextDouble();
+            float speed = Speed;
             nextGoal -= dt;
-            if (nextGoal <= 0f)
+            switch (Style)
             {
-                goal = (float)rng.NextDouble();
-                nextGoal = 0.4f + (float)rng.NextDouble() * 0.9f;
+                case CatchStyle.Limp:
+                    if (nextGoal <= 0f) { goal = Clamp(Catch + (R() - 0.5f) * 0.3f, 0f, 1f); nextGoal = 0.8f + R(); }
+                    break;
+                case CatchStyle.ZigZag:
+                    // Quick swings the other way each time.
+                    if (nextGoal <= 0f) { zig = -zig; goal = Clamp(Catch + zig * (0.25f + R() * 0.2f), 0f, 1f); nextGoal = 0.35f + R() * 0.25f; }
+                    speed *= 1.2f;
+                    break;
+                case CatchStyle.Jumper:
+                    // Still for a moment, then a long fast jump.
+                    if (pause > 0f) { pause -= dt; return; }
+                    if (nextGoal <= 0f) { goal = R(); nextGoal = 0.5f; }
+                    speed *= 2.2f;
+                    if (Math.Abs(Catch - goal) < 0.01f) { pause = 0.6f + R() * 0.8f; nextGoal = 0f; }
+                    break;
+                case CatchStyle.Darter:
+                    // Sinks slowly, then shoots up.
+                    if (nextGoal <= 0f) { goal = goal < Catch ? Clamp(Catch + 0.35f + R() * 0.3f, 0f, 1f) : Clamp(Catch - 0.2f, 0f, 1f); nextGoal = goal > Catch ? 0.4f : 0.9f + R() * 0.6f; }
+                    speed *= goal > Catch ? 2f : 0.5f;
+                    break;
+                case CatchStyle.Sinker:
+                    // Keeps to the bottom, rising only now and then.
+                    if (nextGoal <= 0f) { goal = R() < 0.25f ? 0.4f + R() * 0.4f : R() * 0.3f; nextGoal = 0.6f + R() * 0.8f; }
+                    break;
+                default:
+                    if (nextGoal <= 0f) { goal = R(); nextGoal = 0.4f + R() * 0.9f; }
+                    if (rng.NextDouble() < 0.15f) speed *= 1.8f;   // now and then a sudden dart
+                    break;
             }
-            float burst = rng.NextDouble() < 0.15f ? 1.8f : 1f;
-            Catch = Clamp(MoveTowards(Catch, goal, Speed * burst * dt), 0f, 1f);
+            Catch = Clamp(MoveTowards(Catch, goal, speed * dt), 0f, 1f);
         }
 
         static float MoveTowards(float a, float b, float step) => Math.Abs(b - a) <= step ? b : a + Math.Sign(b - a) * step;

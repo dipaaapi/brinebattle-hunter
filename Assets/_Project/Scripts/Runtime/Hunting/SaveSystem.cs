@@ -63,6 +63,7 @@ namespace BrineBattle.Hunting
                 data.weatherLeft = world.WeatherLeft;
                 data.wrecks = world.WrecksLeft;
             }
+            data.firsts = hook.Firsts.Done.ToList();
             foreach (var e in hook.Gorged.Entries)
                 data.gorged.Add(new SaveData.Gorge { monster = e.MonsterId, parts = e.Parts.Select(p => p.id).ToList() });
             try
@@ -207,6 +208,7 @@ namespace BrineBattle.Hunting
                     Next = (World.Weather)data.nextWeather, WeatherLeft = data.weatherLeft, WrecksLeft = data.wrecks,
                 });
             hook.Mastery.Restore(data.hasMastery ? data.mastery : AlchemyMastery.StartingPoints(hook.raft.Tier));
+            hook.Firsts.Restore(data.firsts);
             // Saves from before hammers existed get the starter hammer, so building isn't locked out.
             if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))
                 hook.Inventory.Add(hook.starterHammer, 1);

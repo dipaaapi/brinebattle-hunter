@@ -39,6 +39,20 @@ namespace BrineBattle.Hunting
         public CompanionRoster Companions { get; } = new CompanionRoster();
         /// <summary>Alchemy Mastery (Idea Round 3): better hints, more recipes, essence combining.</summary>
         public AlchemyMastery Mastery { get; } = new AlchemyMastery();
+        /// <summary>The sea journal of firsts (Claude's C-15).</summary>
+        public World.Firsts Firsts { get; } = new World.Firsts();
+
+        /// <summary>Marks a first and gives its reward the first time (C-15).</summary>
+        public void First(string id)
+        {
+            if (!Firsts.Mark(id)) return;
+            var e = World.Firsts.Get(id);
+            Inventory.AddEssence(new EssenceKey(raft.Tier, Elements.Element.None), e.Essence);
+            Mastery.Add(e.Mastery);
+            Log($"★ Sea journal: {e.Title}! +{e.Essence} {raft.Tier} essence, +{e.Mastery} Mastery.");
+            Juice.Pop($"★ {e.Title}!", raft.transform.position + Vector3.up * 1.5f, new Color(1f, 0.85f, 0.35f));
+            LootAdded?.Invoke();
+        }
         /// <summary>The hunter's HP and ailment between battles (U-32): they carry into the next fight.</summary>
         public Combatant HunterBody { get; } = Combatant.Hunter();
         float hunterRegen, petRegen, ailmentTick;
@@ -80,6 +94,9 @@ namespace BrineBattle.Hunting
             line = GetComponent<LineRenderer>();
             line.positionCount = 2;
             line.startWidth = line.endWidth = 0.05f;
+            // Vertex colours, so the line can show the reel's strain (C-21).
+            if (line.sharedMaterial == null || !line.sharedMaterial.shader.name.StartsWith("Sprites")) line.material = new Material(Shader.Find("Sprites/Default"));
+            line.startColor = line.endColor = Color.white;
             line.enabled = false;
             if (starterModule != null) Inventory.Add(starterModule, 1);
             if (starterHammer != null) Inventory.Add(starterHammer, 1);
@@ -114,6 +131,8 @@ namespace BrineBattle.Hunting
             if (Camera.main != null && !Camera.main.TryGetComponent<CameraRig>(out _)) Camera.main.gameObject.AddComponent<CameraRig>().raft = raft;
             // The hunter's idle, pulling and knocked-out motions (Ed's ask), likewise added at runtime.
             if (!TryGetComponent<HunterMotion>(out _)) gameObject.AddComponent<HunterMotion>().hook = this;
+            // Arrows to off-screen bosses, gorged monsters and lost parts (C-23), likewise added at runtime.
+            if (!TryGetComponent<EdgeArrows>(out _)) gameObject.AddComponent<EdgeArrows>();
             // Companions on the raft (Phase 7), likewise added at runtime.
             if (!TryGetComponent<RaftCompanions>(out _)) gameObject.AddComponent<RaftCompanions>().hook = this;
             // Storage box = crafting table (owner's ask), likewise added at runtime.
@@ -140,6 +159,10 @@ namespace BrineBattle.Hunting
             CrewMend();
             Rest();
             FamiliarFetch();
+            // Firsts that are a state rather than an event (C-15).
+            // (after the save has loaded, so a loaded raft doesn't pay them out twice)
+            if (Time.timeSinceLevelLoad > 3f && raft.Tier > Rarity.Common) First("level");
+            if (Time.timeSinceLevelLoad > 3f && raft.Grid.VesselCount > 0) First("vessel");
             switch (phase)
             {
                 case Phase.Idle: UpdateIdle(); break;
@@ -209,7 +232,10 @@ namespace BrineBattle.Hunting
                 // Alchemy Mastery and a Looter minion widen it.
                 float width = ReelGame.ZoneWidth(m.sizeClass, m.rarity, World.WorldRules.ReelZoneScale(WorldClock.Weather),
                     ReelGame.Bonus(Mastery.Level, Companions.Best(MinionSkill.Looter) != null));
-                reel = new ReelGame(width, ReelGame.CatchSpeed(m.sizeClass, m.rarity), BattleSettings.Mode, rng);
+                // C-14: it fights in its own style; a weakened catch has less fight in it.
+                var style = ReelGame.StyleOf(m.element, target.Actual, m.sizeClass);
+                float speed = ReelGame.CatchSpeed(m.sizeClass, m.rarity) * (target.Actual == DriftState.Weakened ? 0.7f : 1f);
+                reel = new ReelGame(width, speed, BattleSettings.Mode, rng, style);
                 tensionPressed = tensionHit = false;
                 tensionAuto = BattleSettings.Mode == BattleMode.Auto;
                 tensionSemi = BattleSettings.Mode == BattleMode.SemiAuto;
@@ -230,10 +256,17 @@ namespace BrineBattle.Hunting
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
             line.SetPosition(0, HookOrigin());
             line.SetPosition(1, target.transform.position);
+            // C-21: the line turns from strained red to green as the meter fills, and thickens while it's inside the zone.
+            line.startColor = line.endColor = Color.Lerp(new Color(1f, 0.45f, 0.35f), new Color(0.6f, 1f, 0.6f), reel.Meter);
+            line.widthMultiplier = reel.Inside ? 1.4f : 1f;
             if (reel.Done)
             {
                 tensionPressed = reel.Caught;
                 tensionHit = reel.Clean;
+                line.widthMultiplier = 1f;
+                line.startColor = line.endColor = Color.white;
+                if (reel.Clean) { First("clean_reel"); Juice.Shake(0.5f); Juice.Pop("CLEAN REEL!", target.transform.position + Vector3.up * 0.6f, new Color(0.5f, 1f, 0.6f)); }
+                else if (reel.Escaped) Juice.Pop("It got away...", target.transform.position, new Color(1f, 0.6f, 0.5f));
                 Resolve();
             }
         }
@@ -307,8 +340,22 @@ namespace BrineBattle.Hunting
         List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m) => RollLoot(m, tensionHit);
 
         /// <summary>A lost raft part gives just that part back; any other drift rolls its loot table.</summary>
-        List<Drop<ItemDefinition>> LootOf(Drift d, bool clean) =>
-            d.Carried != null ? new List<Drop<ItemDefinition>> { new Drop<ItemDefinition>(d.Carried, 1) } : RollLoot(d.Monster, clean);
+        List<Drop<ItemDefinition>> LootOf(Drift d, bool clean)
+        {
+            if (d.Survivor)
+            {
+                // C-17: the survivor's thank-you gift: two rolls of their (richer) flotsam, plus a bit of essence.
+                First("rescue");
+                var gift = RollLoot(d.Monster, clean);
+                gift.AddRange(RollLoot(d.Monster, false));
+                Inventory.AddEssence(new EssenceKey(d.Monster.rarity, Elements.Element.None), 3);
+                Log($"The survivor thanks you: \"Take these, and 3 {d.Monster.rarity} essence. I owe you!\"");
+                return gift;
+            }
+            if (d.Carried == null) return RollLoot(d.Monster, clean);
+            First("lost_part");
+            return new List<Drop<ItemDefinition>> { new Drop<ItemDefinition>(d.Carried, 1) };
+        }
 
         List<Drop<ItemDefinition>> RollLoot(Monsters.MonsterDefinition m, bool clean)
         {
@@ -336,6 +383,7 @@ namespace BrineBattle.Hunting
             string got = drops.Count == 0 ? "nothing" : string.Join(", ", drops.Select(x => $"{x.Quantity} {x.Item.displayName}"));
             Log($"{source} caught a {d.Monster.displayName}: {got}.");
             if (drops.Count > 0) StorageBox.Instance?.Store(got, d.transform.position);
+            PopLoot(drops, d.transform.position);
             LootAdded?.Invoke();
             Destroy(d.gameObject);
         }
@@ -347,7 +395,9 @@ namespace BrineBattle.Hunting
                 if (target != null) MonsterAcquired?.Invoke(target.Monster);
                 foreach (var d in pendingLoot) Inventory.Add(d.Item, d.Quantity);
                 Log(message);
-                if (pendingLoot.Count > 0) StorageBox.Instance?.Store(Brief(pendingLoot), target != null ? target.transform.position : raft.transform.position);
+                var at = target != null ? target.transform.position : raft.transform.position;
+                if (pendingLoot.Count > 0) StorageBox.Instance?.Store(Brief(pendingLoot), at);
+                PopLoot(pendingLoot, at);
                 LootAdded?.Invoke();
             }
             else Log(message);
@@ -360,6 +410,14 @@ namespace BrineBattle.Hunting
             pendingLoot = null;
             pendingPet = null;
             phase = Phase.Idle;
+        }
+
+        /// <summary>C-21: a splash where the catch lands and a "+2 Shellback" for each drop.</summary>
+        static void PopLoot(List<Drop<ItemDefinition>> drops, Vector3 at)
+        {
+            Juice.Splash(at, 0.8f);
+            for (int i = 0; i < drops.Count; i++)
+                Juice.Pop($"+{drops[i].Quantity} {drops[i].Item.displayName}", at + Vector3.up * (0.35f * i), Raft.PartColor(drops[i].Item.rarity));
         }
 
         bool HeldReel()
@@ -387,6 +445,7 @@ namespace BrineBattle.Hunting
                 : tensionSemi ? "<b>SEMI-AUTO</b>: hold or tap <b>Space</b>, it helps you"
                 : "Hold or tap <b>Space</b>: keep the catch in the green!";
             GUI.Label(new Rect(bar.x - 110, bar.y - 44, 280, 40), label, Rich);
+            GUI.Label(new Rect(bar.x - 110, bar.yMax + 8, 280, 22), $"<i>{ReelGame.Describe(reel.Style)}</i>", Rich);
             GUI.DrawTexture(new Rect(bar.x - 4, bar.y - 4, meter.xMax - bar.x + 8, h + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.05f, 0.1f, 0.18f, 0.85f), 0, 8);
             GUI.DrawTexture(bar, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.1f, 0.25f, 0.4f, 0.95f), 0, 4);
             // 0 is the bottom of the bar.
@@ -558,6 +617,7 @@ namespace BrineBattle.Hunting
         /// </summary>
         void BossTreasure(Monsters.MonsterDefinition m)
         {
+            First("boss");
             int lucky = BossFightRules.LuckyRolls(Companions.All);
             for (int i = 0; i < lucky && m.loot != null; i++) pendingLoot.AddRange(m.loot.Roll(rng));
             pendingLoot = pendingLoot.GroupBy(d => d.Item).Select(g => new Drop<ItemDefinition>(g.Key, g.Sum(d => d.Quantity))).ToList();
@@ -626,7 +686,7 @@ namespace BrineBattle.Hunting
                 if (HunterBody.Hp < HunterBody.MaxHp && HunterBody.Status == StatusEffect.None) HunterBody.Hp++;
             }
             petRegen += dt;
-            if (petRegen >= HazardRules.PetRegenSeconds(raft.Grid.HabitatCount))
+            if (petRegen >= HazardRules.PetRegenSeconds(Rafts.SetBonusRules.HealingHabitats(raft.Grid.Parts)))   // cozy habitats count twice (C-18)
             {
                 petRegen = 0f;
                 foreach (var c in Companions.All)
@@ -786,10 +846,11 @@ namespace BrineBattle.Hunting
             }
             pendingPet = Companion.FromMonster(m);
             pendingPet.Look = rng.Next(CompanionGrowth.Looks.Length);   // a random variety (looks only)
+            pendingPet.Favourite = rng.Next(4);   // C-16: what it loves to eat
             var next = MinionRules.NextSkill(pendingPet);
             resultTitle = $"Tamed {m.displayName}! A new minion";
             resultBody = $"Minion Lv {pendingPet.Level} · {pendingPet.Rarity} · {pendingPet.Element}\n{pendingPet.Stats}\n"
-                + $"Skills: {MinionRules.Skills(pendingPet)}"
+                + $"Skills: {MinionRules.Skills(pendingPet)}\nLoves eating {MinionRules.FoodName(pendingPet.Favourite)}"
                 + (next != null ? $"\nNext: {next} at Lv {MinionRules.NextLearnLevel(pendingPet)}" : "");
         }
 
@@ -799,6 +860,7 @@ namespace BrineBattle.Hunting
             var pet = pendingPet;
             Companions.Add(pet);
             Mastery.Add(AlchemyMastery.TamePoints);
+            First("tame");
             pendingPet = null;
             MonsterTamed?.Invoke(m);
             ApplyCompanionBonuses();

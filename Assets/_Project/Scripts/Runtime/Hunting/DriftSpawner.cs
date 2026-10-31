@@ -82,11 +82,65 @@ namespace BrineBattle.Hunting
             if (hook != null) hook.Log($"BOSS! {boss.displayName} rises from the deep. Beat it to level up the raft.");
         }
 
+        // ---- Distress flares (Claude's C-17) ----
+
+        [Header("Survivors (C-17)")]
+        [Tooltip("Seconds between chances of a distress flare.")]
+        public float survivorInterval = 150f;
+        [Range(0f, 1f)] public float survivorChance = 0.5f;
+        float survivorTimer;
+
+        /// <summary>Now and then a flare goes up far upstream and a survivor on a plank drifts toward the raft.</summary>
+        void SpawnSurvivor()
+        {
+            survivorTimer += Time.deltaTime;
+            if (survivorTimer < survivorInterval) return;
+            survivorTimer = 0f;
+            if (raft == null || flotsam.Count == 0 || rng.NextDouble() >= survivorChance || live.Exists(d => d != null && d.Survivor)) return;
+            var tier = raft.Tier;
+            var basis = flotsam.Find(f => f.rarity == (tier < Items.Rarity.Mythic ? tier + 1 : tier)) ?? flotsam.Find(f => f.rarity == tier) ?? flotsam[0];
+            var dir = currentDirection.normalized;
+            var side = Vector3.Cross(Vector3.up, dir);
+            var pos = raft.transform.position + dir * -spawnDistance + side * Random.Range(-5f, 5f);
+            pos.y = 0.1f;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.transform.SetParent(transform, true);
+            go.transform.position = pos;
+            var drift = go.AddComponent<Drift>();
+            drift.Init(basis, DriftState.Dead, DriftState.Dead, dir * driftSpeed * 0.6f);
+            drift.MakeSurvivor();
+            live.Add(drift);
+            StartCoroutine(Flare(pos));
+            if (hook != null) hook.Log("A distress flare goes up! A survivor on a plank is drifting your way. Hook them for a thank-you gift.");
+        }
+
+        /// <summary>A red flare that shoots up, hangs, and fades.</summary>
+        static System.Collections.IEnumerator Flare(Vector3 from)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            go.name = "Distress flare";
+            Destroy(go.GetComponent<Collider>());
+            go.transform.localScale = Vector3.one * 0.35f;
+            Tint.Apply(go.GetComponent<Renderer>(), new Color(1f, 0.25f, 0.15f));
+            var light = go.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(1f, 0.3f, 0.2f);
+            light.range = 14f;
+            for (float t = 0f; t < 4f && go != null; t += Time.deltaTime)
+            {
+                go.transform.position = from + Vector3.up * (Mathf.Min(1f, t / 1.2f) * 9f);
+                light.intensity = 3f * (1f - Mathf.Clamp01((t - 2.5f) / 1.5f));
+                yield return null;
+            }
+            if (go != null) Destroy(go);
+        }
+
         void Update()
         {
             live.RemoveAll(d => d == null);
             if (WorldPause.Active) return;
             SpawnBoss();
+            SpawnSurvivor();
             timer += Time.deltaTime;
             if (timer >= spawnInterval && live.Count < maxDrifts)
             {

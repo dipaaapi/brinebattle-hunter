@@ -629,6 +629,11 @@ namespace BrineBattle.Hunting
             var g = raft.Grid;
             var (guarded, rows) = g.UpstreamModules();
             GUILayout.Label($"Left edge: {HuntStyles.Count(guarded, g.ModulesNeeded)} rows guarded (of {rows})", HuntStyles.Text);
+            // Layout bonuses (C-18): show what's active and how to get them.
+            int lined = g.Parts.Keys.Count(c => SetBonusRules.ModuleReach(g.Parts, c) > 0f);
+            int cozy = g.Parts.Keys.Count(c => SetBonusRules.Cozy(g.Parts, c));
+            GUILayout.Label($"<size=11>Layout bonuses: {lined} module(s) in a line of {SetBonusRules.LineLength}+ (+{SetBonusRules.LineReach:0} m reach), "
+                + $"{cozy} cozy habitat(s) (planks on all 4 sides: double minion healing).</size>", HuntStyles.Text);
             if (modules == null || modules.Slots.Count == 0)
             {
                 GUILayout.Label("No modules on the raft yet.", HuntStyles.Text);

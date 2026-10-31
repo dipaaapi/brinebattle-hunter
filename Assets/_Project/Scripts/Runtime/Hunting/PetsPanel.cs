@@ -81,6 +81,9 @@ namespace BrineBattle.Hunting
             GUILayout.Label($"<color={BagPanel.RarityColor(c.Rarity)}>{c.Name}</color>  <size=12>{c.Rarity} · {c.Element} · {c.StageName}</size>", HuntStyles.Heading);
             int need = MinionRules.ExpToNext(c.Level);
             GUILayout.Label(need > 0 ? $"<b>Lv {c.Level}</b>  <size=11>{c.Exp}/{need} EXP</size>" : $"<b>Lv {c.Level}</b>  <size=11>max level</size>", HuntStyles.Text);
+            if (c.Favourite >= 0)
+                GUILayout.Label($"<size=11>Loves eating <b>{MinionRules.FoodName(c.Favourite)}</b> (double EXP). "
+                    + (c.Sulking ? "<color=#9bb0c8>Sulking: hasn't had it in a while, works 20% slower.</color>" : "<color=#9fe89f>Happy.</color>") + "</size>", HuntStyles.Text);
             HuntStyles.Bar(need > 0 ? (float)c.Exp / need : 1f, new Color(0.55f, 0.8f, 1f));
             int max = MinionRules.MaxSkills(c.Rarity, c.Stage);
             int nextAt = MinionRules.NextLearnLevel(c);
@@ -256,6 +259,7 @@ namespace BrineBattle.Hunting
                         var r = CompanionGrowth.Feed(c, item, learned);
                         if (r != FeedResult.CantEat && r != FeedResult.Full) inv.Remove(item, 1);
                         if (learned.Count > 0) hook.Companions.Refresh();
+                        if (r != FeedResult.CantEat && r != FeedResult.Full) hook.GetComponent<RaftCompanions>()?.Yum(c, item);
                         hook.Log(r == FeedResult.Infused ? $"{c.Name} drank the {item.displayName}. {c.Stats}"
                             : r == FeedResult.Full ? $"{c.Name} is full: {(item.type == ItemType.Consumable ? "no more potions until it evolves" : "it is max level")}."
                             : r == FeedResult.CantEat ? $"{c.Name} won't eat that."

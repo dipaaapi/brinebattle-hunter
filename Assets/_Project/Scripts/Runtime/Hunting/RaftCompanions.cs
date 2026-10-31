@@ -117,6 +117,15 @@ namespace BrineBattle.Hunting
             }
         }
 
+        /// <summary>C-16: a happy hop and a heart over a minion that just ate its favourite food.</summary>
+        public void Yum(Companion c, ItemDefinition item)
+        {
+            if (!MinionRules.IsFavourite(item, c) || !bodies.TryGetValue(c, out var b)) return;
+            b.Busy = 1.2f;
+            hook.First("favourite");
+            Juice.Pop("<3 Yum!", b.Go.transform.position + Vector3.up * 0.3f, new Color(1f, 0.55f, 0.7f));
+        }
+
         /// <summary>A minion's body on the raft, or null when it has none (or is hidden).</summary>
         public Transform BodyOf(Companion c) => c != null && bodies.TryGetValue(c, out var b) && b.Go.activeInHierarchy ? b.Go.transform : null;
 
@@ -127,6 +136,7 @@ namespace BrineBattle.Hunting
         {
             if (hook == null || Raft == null) return;
             Place();
+            foreach (var c in hook.Companions.All) c.SinceFavourite += Time.deltaTime;   // C-16 mood clock
             if (StorageBox.Instance != null) StorageBox.Instance.Scared = Scared && bodies.Count > 0;
             if (WorldPause.Open != Menu.None || BattleController.InBattle || Scared) return;
             Chores();
@@ -391,7 +401,7 @@ namespace BrineBattle.Hunting
             who = hook.Companions.Best(skill);
             if (who == null) return false;
             timers.TryGetValue(skill, out var t);
-            t += Time.deltaTime;
+            t += Time.deltaTime * MinionRules.WorkSpeed(who);   // a sulking minion (C-16) works slower
             if (t < CompanionWork.JobSeconds) { timers[skill] = t; return false; }
             timers[skill] = 0f;
             return true;
@@ -487,13 +497,14 @@ namespace BrineBattle.Hunting
             hook.Inventory.Remove(item, 1);
             Work(who, eater == who ? $"ate a {item.displayName}" : $"fed {eater.Name}");
             hook.Log(FeedLine(eater, item, r, before, learned) + (eater != who ? $" ({who.Name} shared it)" : ""));
+            Yum(eater, item);
             if (learned.Count > 0) hook.Companions.Refresh();
         }
 
         /// <summary>One log line for a meal: EXP, level-ups, evolutions and new skills.</summary>
         public static string FeedLine(Companion c, ItemDefinition item, FeedResult r, int levelBefore, List<MinionSkill> learned)
         {
-            string line = $"{c.Name} ate the {item.displayName} (+{CompanionGrowth.FeedPoints(item, c)} EXP).";
+            string line = $"{c.Name} ate the {item.displayName} (+{CompanionGrowth.FeedPoints(item, c)} EXP){(MinionRules.IsFavourite(item, c) ? ", its favourite!" : ".")}";
             if (c.Level > levelBefore) line += $" Lv {c.Level}!";
             if (r == FeedResult.Evolved) line += $" Evolved into an {c.StageName}!";
             if (learned != null && learned.Count > 0) line += $" Learned {string.Join(", ", learned)}.";
@@ -658,7 +669,7 @@ namespace BrineBattle.Hunting
             {
                 var sp = HuntStyles.Ui(cam.WorldToScreenPoint(b.Go.transform.position + Vector3.up * 0.45f));
                 if (sp.z < 0f) continue;
-                string tag = b.Busy > 0f ? " <color=#ffd866>working!</color>" : "";
+                string tag = b.Busy > 0f ? " <color=#ffd866>working!</color>" : b.Pet.Sulking ? " <color=#9bb0c8>sulking</color>" : "";
                 GUI.Label(new Rect(sp.x - 70, HuntStyles.H - sp.y - 10, 140, 20), $"<b>Lv {b.Pet.Level}</b>{tag}", nameStyle);
             }
             // The Crew's install progress over the spot (Ed's ask: a loading bar, not instant).

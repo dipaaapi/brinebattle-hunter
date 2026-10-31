@@ -55,6 +55,8 @@ namespace BrineBattle.Saving
         public int difficulty = 1, sea = 1;
         public List<int> escaped = new List<int>();
         public int habitats;
+        /// <summary>Sea journal firsts (C-15) by id; empty in older saves.</summary>
+        public List<string> firsts = new List<string>();
         public string collection;
         /// <summary>Menu settings (Settings, Bag, Build); false in saves made before they were saved.</summary>
         public bool hasSettings;
@@ -97,6 +99,8 @@ namespace BrineBattle.Saving
             /// <summary>Minion level, EXP and skills (U-39). Level 0 = an older save: <see cref="role"/> and stage turn into skills and a level.</summary>
             public int level, exp;
             public List<int> skills = new List<int>();
+            /// <summary>Favourite food (C-16); -1 in older saves, then picked from the id.</summary>
+            public int favourite = -1;
         }
         [Serializable] public class Gorge { public string monster; public List<string> parts = new List<string>(); }
         [Serializable] public class Grave { public string id, name; public int rarity, role, age; }
@@ -136,7 +140,7 @@ namespace BrineBattle.Saving
                     age = c.Age, stage = (int)c.Stage, growth = c.Growth, infusions = c.Infusions, look = c.Look,
                     echo = string.IsNullOrEmpty(c.Echo) ? null : c.Echo,
                     hp = c.Hp, status = (int)c.Status, statusRounds = c.StatusRounds,
-                    level = c.Level, exp = c.Exp, skills = c.Skills.Select(s => (int)s).ToList(),
+                    level = c.Level, exp = c.Exp, skills = c.Skills.Select(s => (int)s).ToList(), favourite = c.Favourite,
                 });
             foreach (var m in pets.Memorials)
                 d.memorials.Add(new SaveData.Grave { id = m.Id, name = m.Name, rarity = (int)m.Rarity, role = (int)m.Role, age = m.Age });
@@ -198,6 +202,7 @@ namespace BrineBattle.Saving
                 Echo = string.IsNullOrEmpty(p.echo) ? null : p.echo,
                 Hp = p.hp < 0 ? p.maxHp : Math.Min(p.hp, p.maxHp),
                 Status = (Battle.StatusEffect)p.status, StatusRounds = p.statusRounds,
+                Favourite = p.favourite >= 0 ? p.favourite : MinionRules.FavouriteFromId(p.id ?? p.name),
             };
             if (p.level > 0)
             {

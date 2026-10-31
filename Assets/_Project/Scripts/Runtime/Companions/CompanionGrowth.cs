@@ -20,7 +20,7 @@ namespace BrineBattle.Companions
         // --- Feeding / infusion ---
 
         /// <summary>EXP one item gives this minion (see <see cref="MinionRules.ExpFor"/>).</summary>
-        public static int FeedPoints(ItemDefinition item, Companion c) => MinionRules.ExpFor(item, c);
+        public static int FeedPoints(ItemDefinition item, Companion c) => MinionRules.ExpFor(item, c) * (MinionRules.IsFavourite(item, c) ? 2 : 1);
 
         /// <summary>Potions a companion can take: 3 when Young, +2 per stage.</summary>
         public static int InfusionCap(GrowthStage stage) => 3 + 2 * (int)stage;
@@ -55,6 +55,7 @@ namespace BrineBattle.Companions
             if (c.Level >= MinionRules.MaxLevel) return FeedResult.Full;
             var stage = c.Stage;
             int levels = c.GainExp(FeedPoints(item, c), learned);
+            if (MinionRules.IsFavourite(item, c)) c.SinceFavourite = 0f;   // its favourite (C-16): happy again
             return c.Stage > stage ? FeedResult.Evolved : levels > 0 ? FeedResult.LevelUp : FeedResult.Grew;
         }
 

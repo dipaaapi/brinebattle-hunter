@@ -273,6 +273,19 @@ namespace BrineBattle.World
         /// How far (metres from the raft) a drift's name and hint can be read: fog 10, night 16, both 8.
         /// Infinity when it's clear enough to see everything.
         /// </summary>
+        /// <summary>How much further the raft's lantern lets you see at night (Claude's C-19).</summary>
+        public const float LanternReach = 6f;
+
+        /// <summary>The raft lantern (Lv 2 and up) pushes night sight out; it doesn't help against fog by day.</summary>
+        public static float SightRange(Weather w, TimeOfDay t, bool lantern)
+        {
+            float s = SightRange(w, t);
+            return lantern && t == TimeOfDay.Night && !float.IsInfinity(s) ? s + LanternReach : s;
+        }
+
+        /// <summary>Moon creatures glow at night (C-19): they can be read from any distance in the dark.</summary>
+        public static bool Glows(Element e, TimeOfDay t) => t == TimeOfDay.Night && AffinityOf(e) == Affinity.Moon;
+
         public static float SightRange(Weather w, TimeOfDay t)
         {
             bool fog = w == Weather.Fog, night = t == TimeOfDay.Night;

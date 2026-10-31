@@ -2,6 +2,13 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Claude's ideas C-14 to C-23 (Ed: apply what doesn't touch Phase 9)
+- Ed asked for more of Claude's ideas: logged C-14…C-23, then built all but C-20 (audio → Phase 9) and C-22 (daily sea → Phase 10).
+- **C-14** catch styles on the reel (`CatchStyle`, `ReelGame.StyleOf`). **C-21** `Hunting/Juice` (splash, pop-ups, shake) + reel line colour. **C-23** `Hunting/EdgeArrows`.
+- **C-19** `WorldRules.SightRange(w, t, lantern)`, `Glows`; `WorldClock` lantern (Lv 2+) and glow tint. **C-18** `Rafts/SetBonusRules` (module line reach, cozy habitats for healing), shown in Build.
+- **C-16** `FoodKind`, `Companion.Favourite/SinceFavourite/Sulking`, `MinionRules.IsFavourite/WorkSpeed`; saved (`favourite`, older saves pick from the id); "<3 Yum!" and "sulking" tags. **C-15** `World/Firsts` + `HookController.First`, journal in the Quest tab, saved. **C-17** survivors and flares in `DriftSpawner`, gift in `HookController.LootOf`.
+- +9 `ClaudeIdeasTests`. Runtime and tests compiled with Unity's Roslyn (Editor open); Ed runs the Test Runner.
+
 ## 2026-10-31 — Reel minigame (U-42), smaller boss, one battle mode everywhere
 - **Reel minigame** (Ed's co-worker's idea, fishing-game feel): `Encounters/ReelGame` (plain C#): the catch darts on a vertical bar, hold/tap Space lifts the green zone, the catch meter fills inside and drains outside (caught / slips off). Zone width by size, rarity, weather, Alchemy Mastery and a Looter minion. Semi-auto pulls the zone toward the catch; Auto plays it. `HookController.DrawTension` draws the bar and meter; the catch is pulled in as the meter fills. +5 `ReelGameTests`. Ed: works in Manual.
 - **Boss:** rises to normal size (was ×1.6 on top of ×1.8), boss drift ×1.3, no flat aura disc (it covered the raft, hunter and minions); enraged tints the boss red. Ed: OK now.

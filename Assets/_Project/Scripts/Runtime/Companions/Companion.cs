@@ -152,6 +152,11 @@ namespace BrineBattle.Companions
         public string Echo;
         /// <summary>Looks only (U-23 varieties): 0 Plain, 1 Scarf, 2 Bandana, 3 Crown.</summary>
         public int Look;
+        /// <summary>Favourite food (Claude's C-16), a <see cref="FoodKind"/>; -1 = none (only in tests and before loading).</summary>
+        public int Favourite = -1;
+        /// <summary>Seconds since it last ate its favourite food (not saved). Long enough and it sulks.</summary>
+        public float SinceFavourite;
+        public bool Sulking => Favourite >= 0 && SinceFavourite > MinionRules.SulkSeconds;
 
         public int Lifespan => CompanionRules.Lifespan(Rarity);
         public int AgeLeft => Math.Max(0, Lifespan - Age);

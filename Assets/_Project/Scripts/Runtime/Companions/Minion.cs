@@ -38,6 +38,9 @@ namespace BrineBattle.Companions
         Ferocious = 11,
     }
 
+    /// <summary>Kinds of food a minion can love (Claude's C-16). Saved as an int, so never renumber.</summary>
+    public enum FoodKind { Materials = 0, RaftParts = 1, Gear = 2, ModulesAndTools = 3 }
+
     /// <summary>Minion levels, skills and food (Ed's U-39, GDD §10). Plain C# for EditMode tests.</summary>
     public static class MinionRules
     {
@@ -152,6 +155,39 @@ namespace BrineBattle.Companions
         public static bool IsFood(ItemDefinition i) =>
             i != null && (i.type == ItemType.Material || i.type == ItemType.Raft || GearRules.IsGear(i.type)
                 || i.type == ItemType.Module || i.type == ItemType.Tool);
+
+        // ---- Favourite food and mood (Claude's C-16) ----
+
+        /// <summary>A minion that hasn't had its favourite food for this long (10 min) sulks and works 20% slower.</summary>
+        public const float SulkSeconds = 600f;
+
+        public static FoodKind KindOf(ItemDefinition i) =>
+            GearRules.IsGear(i.type) ? FoodKind.Gear : i.type == ItemType.Material ? FoodKind.Materials : i.type == ItemType.Raft ? FoodKind.RaftParts : FoodKind.ModulesAndTools;
+
+        public static bool IsFavourite(ItemDefinition i, Companion c) => c != null && c.Favourite >= 0 && IsFood(i) && (int)KindOf(i) == c.Favourite;
+
+        /// <summary>A favourite for a minion from an older save: picked from its id, so it stays the same.</summary>
+        public static int FavouriteFromId(string id)
+        {
+            int h = 17;
+            foreach (char ch in id ?? "") h = unchecked(h * 31 + ch);
+            return (h & 0x7fffffff) % 4;
+        }
+
+        /// <summary>Job speed: 0.8 while sulking, else 1.</summary>
+        public static float WorkSpeed(Companion c) => c != null && c.Sulking ? 0.8f : 1f;
+
+        public static string FoodName(int kind)
+        {
+            switch ((FoodKind)kind)
+            {
+                case FoodKind.Materials: return "materials";
+                case FoodKind.RaftParts: return "raft parts";
+                case FoodKind.Gear: return "gear";
+                case FoodKind.ModulesAndTools: return "modules and hammers";
+                default: return "anything";
+            }
+        }
 
         /// <summary>EXP one item gives: (1 + rarity step) × 1 material / 2 part, module or tool / 3 gear; double when its element matches.</summary>
         public static int ExpFor(ItemDefinition i, Companion c)

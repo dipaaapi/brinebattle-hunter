@@ -32,6 +32,8 @@ namespace BrineBattle.Hunting
             ? QuestRules.Build(hook.raft.Grid, hook.Inventory, hook.builder != null ? hook.builder.recipes.Where(r => r != null && hook.Knows(r)) : null)
             : new List<Quest>();
 
+        const string JournalId = "journal";
+
         void OnGUI()
         {
             HuntStyles.Begin();
@@ -43,9 +45,9 @@ namespace BrineBattle.Hunting
             float w = Mathf.Min(600, HuntStyles.W - HookController.HudRight - 60), h = Mathf.Min(460, HuntStyles.H - 160);
             GUILayout.BeginArea(new Rect(HuntStyles.W - w - 44, HuntStyles.H / 2f - h / 2f, w, h), $"Quests ({quests.Count(q => !q.Done)} open)", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { WorldPause.Close(Menu.Quests); GUILayout.EndArea(); return; }
-            if (quests.Count == 0) { GUILayout.Label("Nothing left to do on this sea.", HuntStyles.Heading); GUILayout.EndArea(); return; }
-            var current = quests.FirstOrDefault(q => q.Id == picked) ?? quests.FirstOrDefault(q => !q.Done) ?? quests[0];
-            picked = current.Id;
+            bool journal = picked == JournalId || quests.Count == 0;
+            var current = journal ? null : quests.FirstOrDefault(q => q.Id == picked) ?? quests.FirstOrDefault(q => !q.Done) ?? quests[0];
+            if (!journal) picked = current.Id;
 
             GUILayout.BeginHorizontal();
             listScroll = GUILayout.BeginScrollView(listScroll, GUILayout.Width(200));
@@ -57,7 +59,31 @@ namespace BrineBattle.Hunting
                 if (GUILayout.Button($"{mark} <b>{q.Title}</b>\n<size=11>{q.Summary}</size>", HuntStyles.RichButton, GUILayout.Height(44))) picked = q.Id;
                 GUI.backgroundColor = old;
             }
+            // The sea journal of firsts (C-15), after the quests.
+            var bg = GUI.backgroundColor;
+            if (journal) GUI.backgroundColor = HuntStyles.Go;
+            if (GUILayout.Button($"<color=#ffd866>★</color> <b>Sea journal</b>\n<size=11>{hook.Firsts.Count}/{World.Firsts.All.Length} firsts</size>", HuntStyles.RichButton, GUILayout.Height(44))) picked = JournalId;
+            GUI.backgroundColor = bg;
             GUILayout.EndScrollView();
+
+            if (journal)
+            {
+                detailScroll = GUILayout.BeginScrollView(detailScroll);
+                GUILayout.Label("Sea journal", HuntStyles.Heading);
+                GUILayout.Label("Small firsts on your voyage. Each one gives a little essence and Alchemy Mastery, once.", HuntStyles.Hint);
+                foreach (var e in World.Firsts.All)
+                {
+                    bool got = hook.Firsts.Has(e.Id);
+                    GUILayout.BeginHorizontal(HuntStyles.Card);
+                    GUILayout.Label(got ? "<color=#7be08a>✔</color>" : "<color=#9bb0c8>○</color>", HuntStyles.Text, GUILayout.Width(18));
+                    GUILayout.Label($"<b>{e.Title}</b>\n<size=11>{e.How}  <color=#ffd866>+{e.Essence} essence, +{e.Mastery} Mastery</color></size>", HuntStyles.Text);
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndScrollView();
+                GUILayout.EndHorizontal();
+                GUILayout.EndArea();
+                return;
+            }
 
             detailScroll = GUILayout.BeginScrollView(detailScroll);
             GUILayout.Label(current.Title, HuntStyles.Heading);

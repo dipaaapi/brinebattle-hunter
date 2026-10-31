@@ -100,7 +100,7 @@ namespace BrineBattle.Hunting
                 drifts ??= FindObjectsByType<Drift>(FindObjectsSortMode.None);
                 if (explained.Count > 64) explained.RemoveWhere(x => x == null);
                 Vector3 at = raft.CellToWorld(kv.Key);
-                float reach = ModuleRules.Range(s.Level);
+                float reach = ModuleRules.Range(s.Level) + SetBonusRules.ModuleReach(raft.Grid.Parts, kv.Key);   // module line (C-18)
                 // Measured to the drift's edge, so a big crab counts as touching when it looks like it.
                 // Everything that touches is hooked (Ed's ask); a calm weakened one is brought in for the hunter to tame or finish.
                 // A drift pressed against the raft next to this module counts too, even in a notch between parts.
