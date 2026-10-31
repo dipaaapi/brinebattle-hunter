@@ -84,6 +84,33 @@ namespace BrineBattle.Hunting
             }
             if (raft.Grid.IsShip) Pennant(b);
             AnimateInstall();
+            Footprints();
+        }
+
+        /// <summary>
+        /// The footprint (in the raft's frame) of every low piece of decor, so monsters in the water stay out of
+        /// the floats, bow, stern deck, wings and the rest (Ed's ask: nothing overlaps the ship). High things
+        /// (sails, flags) don't count.
+        /// </summary>
+        void Footprints()
+        {
+            raft.Solid.Clear();
+            var inv = raft.transform.worldToLocalMatrix;
+            foreach (var go in parts)
+            {
+                if (go == null || !go.TryGetComponent<MeshFilter>(out var mf) || mf.sharedMesh == null) continue;
+                var mb = mf.sharedMesh.bounds;
+                var m = inv * go.transform.localToWorldMatrix;
+                float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue, minY = float.MaxValue;
+                for (int i = 0; i < 8; i++)
+                {
+                    var c = m.MultiplyPoint3x4(mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));
+                    minX = Mathf.Min(minX, c.x); maxX = Mathf.Max(maxX, c.x);
+                    minZ = Mathf.Min(minZ, c.z); maxZ = Mathf.Max(maxZ, c.z);
+                    minY = Mathf.Min(minY, c.y);
+                }
+                if (minY < 1.6f) raft.Solid.Add(new DeckBox(minX, maxX, minZ, maxZ));
+            }
         }
 
         struct Bounds2
@@ -355,16 +382,19 @@ namespace BrineBattle.Hunting
         {
             float y = raft.WaterLine;
             // Frame: the hull along the raft and the conning tower in the middle.
-            var hull = Piece(PrimitiveType.Capsule, new Vector3(b.MidX, y - 0.05f, b.MidZ), new Vector3(Mathf.Max(1.2f, b.Width * 0.7f), b.Length / 2f + 0.6f, 0.9f), Deep);
+            // Ed's rule: nothing over the deck. The hull is a flat capsule UNDER the planks (0.8 m tall, as wide as
+            // the raft), and the conning tower stands just off the port side.
+            var hull = Piece(PrimitiveType.Capsule, new Vector3(b.MidX, y - 0.48f, b.MidZ), new Vector3(0.8f, b.Length / 2f + 0.6f, Mathf.Max(1.2f, b.Width * 0.9f)), Deep);
             hull.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-            Piece(PrimitiveType.Cube, new Vector3(b.MidX - 0.4f, 0.75f, b.Row), new Vector3(0.9f, 0.9f, 0.6f), Deep);   // conning tower
+            var tower = new Vector3(b.MidX - 0.4f, 0.75f, b.Z1 + 0.45f);
+            Piece(PrimitiveType.Cube, tower, new Vector3(0.9f, 0.9f, 0.6f), Deep);   // conning tower
             if (Has(1))   // pressure hull plates
                 foreach (int side in new[] { -1, 1 })
                     Piece(PrimitiveType.Cube, new Vector3(b.MidX, y + 0.2f, side < 0 ? b.Z0 - 0.1f : b.Z1 + 0.1f), new Vector3(b.Length, 0.35f, 0.08f), Iron);
             if (Has(2))   // ballast tanks
                 foreach (int side in new[] { -1, 1 })
                 {
-                    var tank = Piece(PrimitiveType.Capsule, new Vector3(b.MidX, y - 0.1f, (side < 0 ? b.Z0 - 0.45f : b.Z1 + 0.45f)), new Vector3(0.45f, b.Length / 2.5f, 0.45f), Iron);
+                    var tank = Piece(PrimitiveType.Capsule, new Vector3(b.MidX + (side > 0 ? 0.9f : 0f), y - 0.1f, (side < 0 ? b.Z0 - 0.45f : b.Z1 + 0.45f)), new Vector3(0.45f, b.Length / 2.5f, 0.45f), Iron);
                     tank.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
                 }
             if (Has(3))   // the screw at the back
@@ -373,7 +403,7 @@ namespace BrineBattle.Hunting
                 hub.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
                 propeller = Piece(PrimitiveType.Cube, new Vector3(b.X0 - 0.6f, y, b.MidZ), new Vector3(0.06f, 0.9f, 0.18f), Brass).transform;
             }
-            if (Has(4)) Piece(PrimitiveType.Cylinder, new Vector3(b.MidX - 0.3f, 1.55f, b.Row), new Vector3(0.07f, 0.45f, 0.07f), Iron);   // periscope
+            if (Has(4)) Piece(PrimitiveType.Cylinder, tower + new Vector3(0.1f, 0.8f, 0f), new Vector3(0.07f, 0.45f, 0.07f), Iron);   // periscope, on the tower
             if (Has(5)) Piece(PrimitiveType.Sphere, new Vector3(b.X1 + 0.5f, y + 0.1f, b.MidZ), Vector3.one * 0.8f, Glass);   // sonar dome
         }
 
@@ -408,17 +438,18 @@ namespace BrineBattle.Hunting
             // Cockpit: a glass canopy on the front of the deck.
             if (Has(5))
             {
-                Piece(PrimitiveType.Sphere, new Vector3(b.X1 - 0.6f, y + 0.35f, b.Row), new Vector3(1.1f, 0.7f, 0.9f), new Color(0.55f, 0.85f, 1f));
-                Piece(PrimitiveType.Cube, new Vector3(b.X1 - 0.6f, y + 0.08f, b.Row), new Vector3(1.2f, 0.16f, 1f), Sky);
+                // Past the front edge (Ed: nothing where people stand), on the nose.
+                Piece(PrimitiveType.Sphere, new Vector3(b.X1 + 0.6f, y + 0.35f, b.Row), new Vector3(1.1f, 0.7f, 0.9f), new Color(0.55f, 0.85f, 1f));
+                Piece(PrimitiveType.Cube, new Vector3(b.X1 + 0.6f, y + 0.08f, b.Row), new Vector3(1.2f, 0.16f, 1f), Sky);
             }
             if (!Has(3)) { Tail(b, y); return; }
             // Nose and propeller just past the front.
             float front = b.X1 + 0.15f;
-            var nose = Piece(PrimitiveType.Capsule, new Vector3(front + 0.35f, y + 0.35f, b.Row), new Vector3(0.6f, 0.45f, 0.6f), Sky);
+            var nose = Piece(PrimitiveType.Capsule, new Vector3(front + 0.75f, y + 0.35f, b.Row), new Vector3(0.6f, 0.45f, 0.6f), Sky);
             nose.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             propeller = new GameObject("Propeller").transform;
             propeller.SetParent(raft.transform, false);
-            propeller.localPosition = new Vector3(front + 0.85f, y + 0.35f, b.Row);
+            propeller.localPosition = new Vector3(front + 1.3f, y + 0.35f, b.Row);
             parts.Add(propeller.gameObject);
             var hub = Piece(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.25f, Iron);
             hub.transform.SetParent(propeller, false);
@@ -482,15 +513,17 @@ namespace BrineBattle.Hunting
                 Piece(PrimitiveType.Cube, new Vector3(b.X0 - 0.45f, wl + 1.15f, b.MidZ), new Vector3(0.9f, 0.1f, b.Width + 0.6f), DarkWood);
             }
             // Two masts with square sails, on the middle row, and a skull flag on the tall one.
-            float[] masts = Has(4) ? new[] { b.X1 - b.Length * 0.25f, b.X0 + b.Length * 0.35f } : new float[0];
+            // Ed's rule: nothing stands where people walk, so the masts are on the outer part of the front and back
+            // edge cells and the sails start above head height.
+            float[] masts = Has(4) ? new[] { b.X1 - Raft.CellSize * 0.08f, b.X0 + Raft.CellSize * 0.08f } : new float[0];
             for (int i = 0; i < masts.Length; i++)
             {
-                float h = i == 0 ? 2.6f : 2.2f;
+                float sailH = i == 0 ? 1.3f : 1.1f, h = 1.55f + sailH + 0.45f;
                 var foot = new Vector3(masts[i], 0.3f, b.Row);
                 Piece(PrimitiveType.Cylinder, foot + Vector3.up * h / 2f, new Vector3(0.12f, h / 2f, 0.12f), DarkWood);
-                Piece(PrimitiveType.Cylinder, foot + Vector3.up * (h * 0.8f), new Vector3(0.06f, 0.9f, 0.06f), DarkWood)
+                Piece(PrimitiveType.Cylinder, foot + Vector3.up * (1.6f + sailH), new Vector3(0.06f, 0.9f, 0.06f), DarkWood)
                     .transform.localRotation = Quaternion.Euler(90f, 0f, 0f);   // yard
-                sails.Add(Piece(PrimitiveType.Cube, foot + Vector3.up * (h * 0.55f), new Vector3(0.04f, h * 0.5f, 1.7f), Cloth).transform);
+                sails.Add(Piece(PrimitiveType.Cube, foot + Vector3.up * (1.55f + sailH / 2f), new Vector3(0.04f, sailH, 1.7f), Cloth).transform);
                 Piece(PrimitiveType.Cylinder, foot + Vector3.up * (h - 0.1f), new Vector3(0.35f, 0.08f, 0.35f), DarkWood);   // crow's nest
                 if (i == 0)
                 {

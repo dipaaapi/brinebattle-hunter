@@ -269,7 +269,8 @@ namespace BrineBattle.Hunting
             // A ratchet tick while the catch is inside the green zone.
             if (reel.Inside && (reelTick -= Time.deltaTime) <= 0f) { reelTick = 0.12f; SfxPlayer.Play(Sfx.ReelTick); }
             // Reeled in until its body touches the raft's edge, not over the planks (owner's ask: no overlap).
-            float stop = Mathf.Max(raft.EdgeDistance, (raft.Grid.Radius + 0.5f) * Raft.CellSize + target.BodyRadius + 0.1f);
+            // Past the raft's decor on that side too (outriggers, bow, stern deck...): its body never touches the ship (Ed's ask).
+            float stop = Mathf.Max(raft.EdgeDistance, raft.ReachToward(reelFrom - raft.transform.position) + target.BodyRadius + 0.15f);
             var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * stop;
             edge.y = reelFrom.y;
             target.transform.position = Vector3.Lerp(reelFrom, edge, Mathf.SmoothStep(0f, 1f, t));
@@ -1023,7 +1024,8 @@ namespace BrineBattle.Hunting
             if (d != null)
             {
                 var start = d.transform.position;
-                var edge = raft.transform.position + Flat(start - raft.transform.position).normalized * raft.EdgeDistance * 0.8f;
+                var toward = Flat(start - raft.transform.position).normalized;
+                var edge = raft.transform.position + toward * (raft.ReachToward(toward) + d.BodyRadius + 0.15f);
                 for (float t = 0f; t < pullTime && d != null; )
                 {
                     if (!WorldPause.Active) t += Time.deltaTime;

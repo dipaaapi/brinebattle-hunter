@@ -294,7 +294,8 @@ namespace BrineBattle.Hunting
                 if (SalvageBin.Instance != null && SalvageBin.Instance.Placed) p = PushOut(p, SalvageBin.Instance.LocalPosition, PetRadius + BoxRadius, 1f);
                 foreach (var other in shown)
                     if (other != b) p = PushOut(p, other.Go.transform.localPosition, PetRadius * 2f, 0.5f);
-                b.Go.transform.localPosition = p;
+                // Ed: pushed or walking, a minion never ends up half off the planks (floating) or in a wall.
+                b.Go.transform.localPosition = Raft.ClampToDeck(p, PetRadius);
             }
         }
 

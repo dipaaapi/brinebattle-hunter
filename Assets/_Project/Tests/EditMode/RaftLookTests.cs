@@ -58,6 +58,47 @@ namespace BrineBattle.Tests
         }
 
         [Test]
+        public void NothingStandsOnTheWalkableDeckOfAnyShip([Values(RaftKind.Sea, RaftKind.Aerial, RaftKind.Undersea)] RaftKind line, [Values(1, 4)] int half)
+        {
+            LogAssert.ignoreFailingMessages = true;
+            var plank = ScriptableObject.CreateInstance<ItemDefinition>();
+            plank.type = ItemType.Raft;
+            var go = new GameObject("Raft");
+            try
+            {
+                var raft = go.AddComponent<Raft>();
+                raft.Grid.FillSquare(plank, half);
+                var decor = go.AddComponent<RaftDecor>();
+                decor.raft = raft;
+                var rebuild = typeof(RaftDecor).GetMethod("Rebuild", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                float s = Raft.CellSize;
+                float minX = (-half - 0.5f) * s + EdgeBand, maxX = (half + 0.5f) * s - EdgeBand;
+                raft.Grid.RestorePieces(ShipPieceRules.FreeFor(EvolutionRules.RaftMax));
+                for (int parts = 0; parts <= VesselRules.Parts; parts++)
+                    foreach (int lv in new[] { 1, 50, EvolutionRules.ShipMax })
+                    {
+                        raft.Grid.RestoreEvolution(line, lv);
+                        raft.Grid.RestoreVoyage(Enumerable.Range(1, parts), new Rarity[0]);
+                        foreach (Transform c in go.transform) Object.DestroyImmediate(c.gameObject);
+                        rebuild.Invoke(decor, null);
+                        foreach (var r in go.GetComponentsInChildren<Renderer>())
+                        {
+                            var b = r.bounds;
+                            bool overDeck = b.max.x > minX && b.min.x < maxX && b.max.z > minX && b.min.z < maxX;
+                            bool inPeoplesSpace = b.max.y > DeckTop + Flat && b.min.y < HeadHeight;
+                            Assert.IsFalse(overDeck && inPeoplesSpace,
+                                $"{line} Lv {lv} with {parts} parts, {2 * half + 1}×{2 * half + 1}: '{r.name}' at {b.center} size {b.size} stands on the walkable deck");
+                        }
+                    }
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                LogAssert.ignoreFailingMessages = false;
+            }
+        }
+
+        [Test]
         public void EachInstalledPieceAddsToTheLook()
         {
             LogAssert.ignoreFailingMessages = true;

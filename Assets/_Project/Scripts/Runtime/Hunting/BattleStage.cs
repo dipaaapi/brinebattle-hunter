@@ -43,6 +43,8 @@ namespace BrineBattle.Hunting
         }
 
         readonly Dictionary<BattleActor, Actor> actors = new Dictionary<BattleActor, Actor>();
+        Raft raft;
+        Actor Find(BattleActor id) => actors.TryGetValue(id, out var a) ? a : null;
         readonly Queue<BattleEvent> queue = new Queue<BattleEvent>();
         readonly List<Popup> popups = new List<Popup>();
         readonly List<GameObject> spawned = new List<GameObject>();
@@ -57,7 +59,9 @@ namespace BrineBattle.Hunting
             Clear();
             var hunterTf = raft.transform.Find("Hunter");
             if (hunterTf != null) Add(BattleActor.Hunter, hunterTf, false, radius: 0.3f);
-            Add(BattleActor.Raft, raft.transform, false, radius: (raft.Grid.Radius + 0.5f) * Raft.CellSize);
+            this.raft = raft;
+            var toFoe = drift.transform.position - raft.transform.position;
+            Add(BattleActor.Raft, raft.transform, false, radius: raft.ReachToward(toFoe));
             Add(BattleActor.Monster, drift.transform, drift.Monster.habitat == Monsters.Habitat.Sky, radius: drift.BodyRadius);
             if (drift.Monster.habitat == Monsters.Habitat.Sky) actors[BattleActor.Monster].Home += Vector3.up * 2f;
 
@@ -72,6 +76,9 @@ namespace BrineBattle.Hunting
                 var side = Vector3.Cross(Vector3.up, toMonster.normalized);
                 // Beside the hunter with room between them (owner's ask: nobody overlaps).
                 go.transform.position = hunterTf.position + side * 0.85f - Vector3.up * 0.3f;
+                // Fully on the planks (Ed's ask: nobody floats half off the raft).
+                var onDeck = raft.ClampToDeck(raft.transform.InverseTransformPoint(go.transform.position), 0.23f);
+                go.transform.position = raft.transform.TransformPoint(onDeck);
                 go.transform.localScale = Vector3.one * 0.45f;
                 Tint.Apply(go.GetComponent<Renderer>(), Tint.Of(companion.Element));
                 spawned.Add(go);
@@ -205,6 +212,13 @@ namespace BrineBattle.Hunting
             // Stop where the two bodies touch, never inside the target (owner's ask: no overlap).
             float reach = Mathf.Clamp(dir.magnitude - from.Radius - to.Radius - 0.05f, 0.1f, dir.magnitude * 0.6f);
             dir = dir.normalized * reach;
+            // The hunter and the minion lunge only as far as the deck goes: never over the water or into a wall.
+            if (raft != null && (from == Find(BattleActor.Hunter) || from == Find(BattleActor.Companion)))
+            {
+                var land = raft.ClampToDeck(raft.transform.InverseTransformPoint(from.Home + dir), from.Radius);
+                var flat = raft.transform.TransformPoint(land) - from.Home;
+                dir = new Vector3(flat.x, 0f, flat.z);
+            }
             for (float t = 0; t < LungeTime; t += Time.deltaTime)
             {
                 float k = t / LungeTime;
