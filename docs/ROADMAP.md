@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 9 — Art pass ⬜ (Idea Round 4 merged into `main`, 2026-10-31) |
-| **Next step** | Start Phase 9 on `phase/9-art`: Blender pipeline and a first model (pirate ship suggested), toon shader + outline, then BGM/SFX (U-20, C-20 layered audio, C-21 sounds). Open: module battles eat parts? (default: no) |
+| **Current phase** | Phase 9 — Art and sound pass 🟨 on `phase/9-audio`: BGM done, SFX next, Blender last |
+| **Next step** | Ed listens to the BGM in Play (Settings → Music volume). Then SFX. PR #8 (summon boss) waits for Ed; `phase/9-audio` is based on it. Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
 | **Last updated** | 2026-10-31 |
@@ -170,8 +170,11 @@ Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
 
 **Done when:** the day turns to night and back, weather changes with a forecast, storms strike the raft, fog hides far drifts, and sun/moon creatures are stronger at their time.
 
-### ⬜ Phase 9 — Art pass
-Blender pipeline (chibi hunter, raft part, monster), `_col` collision meshes, toon shader + inverted-hull outline.
+### 🟨 Phase 9 — Art and sound pass
+Order (Ed, 2026-10-31): **BGM → SFX → Blender** (Blender last, it's the biggest job).
+- [x] BGM: layered music made in code (C-20): ocean bed, day tune, night bells, danger drums, battle, boss, storm; crossfades by the world; music volume in Settings (placeholder until real tracks)
+- [ ] SFX: cast, reel (line creak by the meter), splash, hit, loot, craft, level-up, thunder (C-21 sounds)
+- [ ] Blender pipeline (chibi hunter, raft part, monster; pirate ship first), `_col` collision meshes, toon shader + inverted-hull outline
 
 ### 🟨 Phase 10 — Other hunters & party
 Trade, tied rafts, RO-style EXP/item share. Starts with a multiplayer feasibility study.

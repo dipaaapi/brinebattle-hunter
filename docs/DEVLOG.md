@@ -2,6 +2,11 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Phase 9 starts with BGM (Ed: BGM, then SFX, Blender last)
+- `Audio/MusicRules` (which layer at what volume: daylight, rain/storm, danger by the visible hint, battle, boss, menus) and `Audio/MusicSynth` (seven 8-bar loops in D minor at 84 BPM, made as samples in code: chord pad + sea swell, marimba shanty tune, night bells, toms + shaker, battle bass + drums, boss brass + timpani, rain + rumble).
+- `Hunting/MusicPlayer`: makes the clips one per frame at start, starts them on the same DSP tick, fades each layer toward its target. `MusicSettings.Volume` with a slider in Settings → Game. +4 `MusicTests`. Preview mixes rendered to `Logs/bgm-*.wav` (git-ignored).
+- Branch `phase/9-audio` is based on `fix/summon-boss` (PR #8).
+
 ## 2026-10-31 — Knocked-out countdown; Idea Round 4 merged
 - Knocked out: a "KNOCKED OUT · back on your feet in N s" banner with a bar mid-screen and "Zzz… N" over the hunter (`HookController.DrawRespawn`). Ed: 281/281 tests pass.
 - PR #7 merged into `main` on Ed's word. Next: Phase 9.

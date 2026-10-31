@@ -65,6 +65,10 @@ namespace BrineBattle.Hunting
             if (pickedSize != size) HuntStyles.Scale = 1f + 0.25f * pickedSize;
 
             GUILayout.Space(8);
+            GUILayout.Label($"Music volume  <size=12>{Mathf.RoundToInt(MusicSettings.Volume * 100)}%</size>", HuntStyles.Heading);
+            MusicSettings.Volume = GUILayout.HorizontalSlider(MusicSettings.Volume, 0f, 1f);
+
+            GUILayout.Space(8);
             GUILayout.Label("Battle mode", HuntStyles.Heading);
             BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels, GUILayout.Height(30));
 
