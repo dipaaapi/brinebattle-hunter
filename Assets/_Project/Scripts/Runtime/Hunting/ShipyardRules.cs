@@ -33,10 +33,11 @@ namespace BrineBattle.Hunting
 
         public static string EdgeName(RaftEdge e) => e switch
         {
-            RaftEdge.Bow => "BOW (front)",
-            RaftEdge.Stern => "STERN (left edge)",
-            RaftEdge.Port => "PORT side",
-            _ => "STARBOARD side",
+            // In the player's words (Ed: "kulang ng module sa left"): left/right as seen in the game's normal view.
+            RaftEdge.Bow => "RIGHT · bow",
+            RaftEdge.Stern => "LEFT · stern",
+            RaftEdge.Port => "TOP side",
+            _ => "BOTTOM side",
         };
 
         /// <summary>Where a piece goes, as edges to point at (the hull and the sides: both sides; the mast stands at the bow edge).</summary>
