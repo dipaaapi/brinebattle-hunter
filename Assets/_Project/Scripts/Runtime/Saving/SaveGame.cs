@@ -60,6 +60,9 @@ namespace BrineBattle.Saving
         /// <summary>Vehicle parts on the raft, bosses beaten, difficulty, sea and types that left (Ed's ask); false in older saves.</summary>
         public bool hasVoyage;
         public List<int> vessel = new List<int>();
+        /// <summary>Ship pieces on the raft (Ed's ask); false in older saves, which get the pieces of their level for free.</summary>
+        public bool hasPieces;
+        public List<string> pieces = new List<string>();
         public List<int> bosses = new List<int>();
         public int difficulty = 1, sea = 1;
         public List<int> escaped = new List<int>();
@@ -140,6 +143,8 @@ namespace BrineBattle.Saving
             d.raftLevel = raft.Level;
             d.hasVoyage = true;
             d.vessel = raft.Vessel.OrderBy(v => v).ToList();
+            d.hasPieces = true;
+            d.pieces = raft.Pieces.OrderBy(p => p).ToList();
             d.bosses = raft.BossesBeaten.Select(b => (int)b).OrderBy(b => b).ToList();
             foreach (var kv in raft.Parts) d.parts.Add(new SaveData.Part { x = kv.Key.X, z = kv.Key.Z, id = kv.Value.id });
             if (moduleDurability != null)
@@ -194,6 +199,7 @@ namespace BrineBattle.Saving
                 : Enumerable.Range(0, (int)raft.Tier).Select(b => (Rarity)b));
             if (d.hasEvolution) raft.RestoreEvolution((RaftKind)d.raftLine, d.raftLevel);
             else MigrateRaft(raft, (Rarity)d.raftTier, d.bosses, d.hasVoyage);
+            raft.RestorePieces(d.hasPieces ? d.pieces : ShipPieceRules.FreeFor(raft.PieceLevel));
             moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
             pets.Restore(d.companions.Select(LoadPet), d.activeCompanion, d.habitats);
             pets.RestoreMemorials(d.memorials.Select(m => new Memorial

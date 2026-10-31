@@ -21,6 +21,8 @@ namespace BrineBattle.Rafts
     public class Quest
     {
         public string Id, Title, Summary;
+        /// <summary>The ship piece this quest is about (for the Shipyard's direction arrows), or null.</summary>
+        public ShipPiece Piece;
         public QuestTarget Target;
         /// <summary>The Workbench sub-tab when <see cref="Target"/> is Workbench.</summary>
         public RecipeSub Sub;
@@ -60,7 +62,32 @@ namespace BrineBattle.Rafts
                 if (raft.BossesNeeded && EvolutionRules.BossGate(raft.Chosen, raft.Level)) q.Lines.Add(new QuestLine($"{raft.Tier} boss beaten", raft.BossBeaten(raft.Tier) ? 1 : 0, 1));
                 int part = EvolutionRules.PartNeeded(raft.Chosen, raft.Level);
                 if (part > 0) q.Lines.Add(new QuestLine($"{VesselRules.PartName(raft.Chosen, part)} on", raft.HasVessel(part) ? 1 : 0, 1));
+                if (raft.NeedsPieces) foreach (var p in raft.PiecesMissing) q.Lines.Add(new QuestLine($"Install: {p.Name}", 0, 1));
                 q.Summary = q.Done ? "Ready: level up in the Raft tree" : $"{raft.FormName} · {q.Missing} left";
+                list.Add(q);
+            }
+
+            // The next ship piece (Ed's ask: the raft becomes a boat piece by piece), from 2 levels before it opens.
+            var piece = raft.NeedsPieces ? ShipPieceRules.Next(raft.PieceLevel, raft.Pieces) : null;
+            if (piece != null && piece.Level <= raft.PieceLevel + 2)
+            {
+                var item = known.Select(r => r.outputs[0].item).FirstOrDefault(i => i.id == piece.Id);
+                var q = new Quest { Id = "piece", Piece = piece, Title = $"Ship piece: {piece.Name}",
+                    Summary = $"Goes on the {ShipPieceRules.SlotText(piece.Slot)} · needed to pass Lv {piece.Level} · {piece.Bonus}" };
+                q.Lines.Add(new QuestLine($"Raft Lv {piece.Level}", Math.Min(raft.PieceLevel, piece.Level), piece.Level));
+                if (item != null && bag.Count(item) > 0)
+                {
+                    q.Target = QuestTarget.Build;
+                    q.Lines.Add(new QuestLine($"{piece.Name} installed (Shipyard → Pieces, or your Builder)", 0, 1));
+                }
+                else
+                {
+                    q.Target = QuestTarget.Workbench;
+                    q.Sub = RecipeSub.ShipPieces;
+                    q.Lines.Add(new QuestLine($"{piece.Name} made", 0, 1));
+                    var recipe = known.FirstOrDefault(r => r.outputs[0].item.id == piece.Id);
+                    if (recipe != null) AddIngredients(q, recipe, bag);
+                }
                 list.Add(q);
             }
             else if (raft.IsShip)

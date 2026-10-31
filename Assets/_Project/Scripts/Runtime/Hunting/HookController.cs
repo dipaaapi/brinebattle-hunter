@@ -726,7 +726,7 @@ namespace BrineBattle.Hunting
         /// <summary>The hunter in battle: gear plus the raft type's bonus (Phase 8).</summary>
         public Combatant Fighter()
         {
-            var h = Rafts.RaftTypeRules.Apply(Combatant.Hunter(Gear), raft != null ? raft.Grid.Type.Bonus : default);
+            var h = Rafts.RaftTypeRules.Apply(Combatant.Hunter(Gear), raft != null ? raft.Grid.Bonus : default);
             h.Hp = Mathf.Clamp(HunterBody.Hp, 0, h.MaxHp);
             h.Status = HunterBody.Status;
             h.StatusRounds = HunterBody.StatusRounds;

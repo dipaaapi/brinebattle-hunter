@@ -437,6 +437,8 @@ namespace BrineBattle.Hunting
 
             // Builder: grows the raft toward the next level and the vehicle (Ed's ask: the auto-craft ladder).
             if (Due(MinionSkill.Builder, out var builderPet)) BuilderJob(builderPet, known);
+            // Crewmate: puts ship pieces from the bag on the raft too (the Builder also makes them).
+            if (Due(MinionSkill.Crewmate, out var crewPet)) InstalledPiece(crewPet, "Crewmate");
 
             // Salvager and Glutton share the junk (Ed's ask): rarity at or under the Chores setting is taken apart, the rest is eaten.
             if (CompanionSettings.SalvagerSorts && Due(MinionSkill.Salvager, out var salvager)) SalvageJob(salvager);
@@ -486,9 +488,22 @@ namespace BrineBattle.Hunting
         MinionRules.JunkAction ActionFor(ItemDefinition item) =>
             MinionRules.ForJunk(item, CompanionSettings.TakeApartUpTo, DismantleFor(item) != null);
 
+        /// <summary>Puts the lowest ship piece from the bag on the raft (it grows in with sparks); false if none can go on.</summary>
+        bool InstalledPiece(Companion who, string role)
+        {
+            var piece = CompanionWork.BuilderPiecePick(Raft.Grid, hook.Inventory);
+            if (piece == null || !Raft.Grid.InstallPiece(piece, hook.Inventory)) return false;
+            Work(who, $"installed the {piece.displayName}");
+            SfxPlayer.Play(Sfx.Hammer);
+            hook.Log($"{who.Name} ({role}) installed the {piece.displayName} on the raft.");
+            return true;
+        }
+
         void BuilderJob(Companion who, List<RecipeDefinition> known)
         {
             var g = Raft.Grid;
+            // Ship pieces first (Ed's ask): the Builder puts each one on as soon as it's made, and the raft shows it growing in.
+            if (InstalledPiece(who, "Builder")) return;
             var vessel = CompanionWork.BuilderVesselPick(g, hook.Inventory);
             if (vessel != null && g.InstallVessel(vessel, hook.Inventory))
             {

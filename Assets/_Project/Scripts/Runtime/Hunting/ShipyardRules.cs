@@ -8,8 +8,39 @@ namespace BrineBattle.Hunting
     /// The Shipyard's rules (Ed's ask, 2026-10-31): the view's turn and zoom limits, the full halt of the world
     /// while it is open, and what clicking a cell would do. Plain C# for EditMode tests.
     /// </summary>
+    /// <summary>The Shipyard's part sub-tabs (Ed: the one long list was too long).</summary>
+    public enum PartTab { Planks, AutoLoot, Kits, Habitats, ShipPieces, ShipParts }
+
     public static class ShipyardRules
     {
+        /// <summary>The sub-tab an item belongs in, or null when it isn't something the Shipyard builds with.</summary>
+        public static PartTab? TabOf(ItemDefinition item)
+        {
+            if (item == null) return null;
+            switch (item.type)
+            {
+                case ItemType.Raft: return PartTab.Planks;
+                case ItemType.Module: return ShapeRules.IsKit(item) ? PartTab.Kits : PartTab.AutoLoot;
+                case ItemType.Habitat: return PartTab.Habitats;
+                case ItemType.ShipPiece: return PartTab.ShipPieces;
+                case ItemType.Vessel: return PartTab.ShipParts;
+                default: return null;
+            }
+        }
+
+        public static string TabName(PartTab t) => t switch
+        {
+            PartTab.Planks => "Planks",
+            PartTab.AutoLoot => "Auto-loot",
+            PartTab.Kits => "Kits",
+            PartTab.Habitats => "Habitats",
+            PartTab.ShipPieces => "Pieces",
+            _ => "Ship parts",
+        };
+
+        /// <summary>Tabs whose items go on a cell (the rest are installed on their slot with one click).</summary>
+        public static bool OnCells(PartTab t) => t <= PartTab.Habitats;
+
         public const float MinPitch = 8f, MaxPitch = 85f, MinZoom = 5f, MaxZoom = 28f;
         public const float StartYaw = 35f, StartPitch = 40f, StartZoom = 12f;
         /// <summary>Mouse movement (pixels) below which a press counts as a click, not a turn.</summary>

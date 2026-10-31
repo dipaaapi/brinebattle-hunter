@@ -486,12 +486,25 @@ namespace BrineBattle.Hunting
             bool hasHammer = RaftRules.HasHammer(hook.Inventory, g.Tier);
             GUILayout.Label(hasHammer ? $"<size=11>Hammer: {hammer.displayName}</size>"
                 : $"<size=11><color={HuntStyles.BadHex}>Hammer: {(hammer != null ? hammer.displayName + " is too weak" : "none")}</color></size>", HuntStyles.Text);
-            HuntStyles.Section("Parts in the bag");
-            stripScroll = GUILayout.BeginScrollView(stripScroll);
-            var parts = hook.Inventory.Items.Where(kv => kv.Key.type == ItemType.Raft || kv.Key.type == ItemType.Module || kv.Key.type == ItemType.Habitat)
-                .OrderBy(kv => kv.Key.type).ThenByDescending(kv => kv.Key.rarity).ToList();
-            if (parts.Count == 0) GUILayout.Label("No raft parts in the bag.", HuntStyles.Hint);
+            // Sub-tabs with what the bag holds in each (Ed: the one list was too long). The last tab is remembered.
+            if (partTab < 0) partTab = Mathf.Clamp(PlayerPrefs.GetInt("brinebattle.shipyardTab", 0), 0, Tabs.Length - 1);
+            var inBag = hook.Inventory.Items.Where(kv => ShipyardRules.TabOf(kv.Key) != null).ToList();
+            var tabLabels = Tabs.Select(t =>
+            {
+                int n = inBag.Where(kv => ShipyardRules.TabOf(kv.Key) == t).Sum(kv => kv.Value);
+                if (t == PartTab.ShipPieces) n = g.PiecesMissing.Count;
+                return n > 0 ? $"{ShipyardRules.TabName(t)} ({n})" : ShipyardRules.TabName(t);
+            }).ToArray();
+            int pick = GUILayout.SelectionGrid(partTab, tabLabels, 3, GUILayout.Height(52));
+            if (pick != partTab) { partTab = pick; PlayerPrefs.SetInt("brinebattle.shipyardTab", pick); stripScroll = Vector2.zero; SfxPlayer.Play(Sfx.Tab); }
+            var tab = Tabs[partTab];
             ItemDefinition tip = null;
+            stripScroll = GUILayout.BeginScrollView(stripScroll);
+            if (tab == PartTab.ShipPieces) PiecesTab(g);
+            else if (tab == PartTab.ShipParts) ShipPartsTab(g, inBag);
+            var parts = ShipyardRules.OnCells(tab) ? inBag.Where(kv => ShipyardRules.TabOf(kv.Key) == tab).OrderByDescending(kv => kv.Key.rarity).ToList()
+                : new List<KeyValuePair<ItemDefinition, int>>();
+            if (ShipyardRules.OnCells(tab) && parts.Count == 0) GUILayout.Label($"No {ShipyardRules.TabName(tab).ToLowerInvariant()} in the bag.", HuntStyles.Hint);
             foreach (var kv in parts)
             {
                 var p = kv.Key;
@@ -602,6 +615,58 @@ namespace BrineBattle.Hunting
                 GUILayout.EndVertical();
             }
             GUILayout.EndScrollView();
+        }
+
+        static readonly PartTab[] Tabs = (PartTab[])System.Enum.GetValues(typeof(PartTab));
+        static int partTab = -1;
+
+        /// <summary>
+        /// Ship pieces (Ed's ask): every piece with its slot and state; click one in the bag to install it.
+        /// Minions (Builder/Crewmate) make and install them too.
+        /// </summary>
+        void PiecesTab(RaftGrid g)
+        {
+            var missing = g.PiecesMissing;
+            GUILayout.Label($"<size=11>{g.Pieces.Count}/{ShipPieceRules.All.Length} on · " +
+                (missing.Count == 0 ? "the next level needs none" : $"<color=#ffd866>the next level needs {missing.Count}</color>") + "</size>", HuntStyles.Text);
+            foreach (var p in ShipPieceRules.All)
+            {
+                var item = Find(p.Id);
+                bool on = g.HasPiece(p.Id);
+                int have = item != null ? hook.Inventory.Count(item) : 0;
+                string state = on ? "<color=#8fe08f>✔ on</color>"
+                    : g.PieceLevel < p.Level ? $"<color=#9a9a9a>opens at Lv {p.Level}</color>"
+                    : have > 0 ? "<color=#ffd866>in the bag: click to install</color>"
+                    : $"<color={HuntStyles.BadHex}>✘ not made yet (Workbench / Builder)</color>";
+                string label = $"<color={BagPanel.RarityColor(p.Rarity)}>{p.Name}</color> <size=10>· Lv {p.Level} · {ShipPieceRules.SlotText(p.Slot)}</size>\n<size=10>{state}</size>";
+                if (GUILayout.Button(label, HuntStyles.RichButton, GUILayout.Height(38)) && !on)
+                {
+                    string why = item == null ? "Not found yet." : g.PieceBlocker(item, hook.Inventory);
+                    if (why == null && g.InstallPiece(item, hook.Inventory)) { message = $"Installed the {p.Name} ({p.Bonus})."; SfxPlayer.Play(Sfx.Hammer); dirty = true; }
+                    else { message = $"{p.Name}: {why}"; SfxPlayer.Play(Sfx.Invalid); }
+                }
+                if (Event.current.type == EventType.Repaint && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+                    hoverText = $"{p.Name}: {p.Look}. Gives {p.Bonus}.";
+            }
+        }
+
+        /// <summary>The ship line's five parts in the bag; click one to put it on.</summary>
+        void ShipPartsTab(RaftGrid g, List<KeyValuePair<ItemDefinition, int>> inBag)
+        {
+            var list = inBag.Where(kv => kv.Key.type == ItemType.Vessel).OrderBy(kv => kv.Key.vesselSlot).ToList();
+            GUILayout.Label($"<size=11>{g.VesselCount}/{VesselRules.Parts} ship parts on.</size>", HuntStyles.Text);
+            if (list.Count == 0) GUILayout.Label("No ship parts in the bag.", HuntStyles.Hint);
+            foreach (var kv in list)
+            {
+                var p = kv.Key;
+                string why = g.VesselBlocker(p, hook.Inventory);
+                string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color>\n<size=10>{(why == null ? "<color=#ffd866>click to put it on</color>" : $"<color={HuntStyles.BadHex}>{why}</color>")}</size>";
+                if (GUILayout.Button(label, HuntStyles.RichButton, GUILayout.Height(38)))
+                {
+                    if (g.InstallVessel(p, hook.Inventory)) { message = $"Put on the {p.displayName}."; SfxPlayer.Play(Sfx.Hammer); dirty = true; }
+                    else { message = why; SfxPlayer.Play(Sfx.Invalid); }
+                }
+            }
         }
 
         void Load(Blueprint bp)

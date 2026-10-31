@@ -103,6 +103,11 @@ namespace BrineBattle.Companions
 
         // ---- Minion jobs added with U-39 (Builder, Tinker, junk) ----
 
+        /// <summary>A ship piece in the bag that can go on the raft now (Builder), lowest level first, or null.</summary>
+        public static ItemDefinition BuilderPiecePick(RaftGrid raft, Inventory bag) =>
+            bag.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.ShipPiece).OrderBy(i => ShipPieceRules.Find(i.id)?.Level ?? 99)
+                .FirstOrDefault(i => raft.PieceBlocker(i, bag) == null);
+
         /// <summary>A vehicle part in the bag that can go on the raft now (Builder), or null.</summary>
         public static ItemDefinition BuilderVesselPick(RaftGrid raft, Inventory bag) =>
             bag.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.Vessel).OrderBy(i => i.vesselSlot)
@@ -123,6 +128,12 @@ namespace BrineBattle.Companions
                 var forBlueprint = ready.FirstOrDefault(r => wanted.Contains(r.outputs[0].item.id));
                 if (forBlueprint != null) return forBlueprint;
             }
+            // The next ship piece the raft is missing (from 2 levels before it opens).
+            var piece = ready.Where(r => r.outputs[0].item.type == ItemType.ShipPiece)
+                .Select(r => (r, p: ShipPieceRules.Find(r.outputs[0].item.id)))
+                .Where(x => x.p != null && !raft.HasPiece(x.p.Id) && bag.Count(x.r.outputs[0].item) == 0 && raft.PieceLevel >= x.p.Level - 2)
+                .OrderBy(x => x.p.Level).Select(x => x.r).FirstOrDefault();
+            if (piece != null) return piece;
             var vessel = ready.Where(r => r.outputs[0].item.type == ItemType.Vessel)
                 .Where(r => { var o = r.outputs[0].item; return o.raftKind == raft.Chosen && raft.Chosen != RaftKind.Plain && !raft.HasVessel(o.vesselSlot) && bag.Count(o) == 0
                     && raft.Level >= EvolutionRules.PartOpensAt(o.vesselSlot) - 5; })

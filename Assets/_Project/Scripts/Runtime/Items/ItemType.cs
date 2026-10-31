@@ -20,5 +20,7 @@ namespace BrineBattle.Items
         Accessory = 10,
         /// <summary>Vehicle part (Ed's ask): one of the five pieces that finish the plane, sea train or pirate ship.</summary>
         Vessel = 11,
+        /// <summary>Ship piece (Ed's ask): one of the 22 pieces that turn the raft into a boat by Lv 50 (see ShipPieceRules).</summary>
+        ShipPiece = 12,
     }
 }

@@ -322,6 +322,7 @@ namespace BrineBattle.Editor
             foreach (var m in new[] { net, hookArm }.Concat(nets))
                 foreach (ModuleShape shape in new[] { ModuleShape.Bar2, ModuleShape.Square, ModuleShape.L, ModuleShape.T, ModuleShape.Bar3 })
                     ShapedKit(m, shape, fang);
+            ShipPieceItems(new[] { plank, tarred, shell, coral, leviathan }, patch, fang, scale);
             Flotsam("DriftwoodBundle", "driftwood_bundle", "Driftwood Bundle", Rarity.Common, (plank, 1f, 2, 3), (patch, 0.4f, 1, 1));
             Flotsam("TarBarrel", "tar_barrel", "Tar Barrel", Rarity.Uncommon, (tarred, 1f, 1, 2), (patch, 0.6f, 1, 2));
             Flotsam("ShellWreck", "shell_wreck", "Shell Wreck", Rarity.Rare, (shell, 1f, 1, 2), (scale, 0.6f, 1, 2));
@@ -498,6 +499,27 @@ namespace BrineBattle.Editor
                 part.description = $"Part {slot} of 5 of a {ship} ({EvolutionRules.Stat(kind)}). Needed to go past ship Lv {lv}. Put it on in Build → Raft tree.";
                 EditorUtility.SetDirty(part);
                 Recipe($"craft_{id}", name, RecipeKind.Craft, new[] { (typed[slot], 2), (cores[slot - 1], 1) }, new[] { (part, 1) });
+            }
+        }
+
+        /// <summary>
+        /// The 22 ship pieces (Ed's ask): the raft turns into a boat through real pieces. Each costs wood of its
+        /// band's rarity plus a binder (patch for the rim, sides and bow; fang for the mast; scale for the hull and stern).
+        /// </summary>
+        static void ShipPieceItems(ItemDefinition[] wood, ItemDefinition patch, ItemDefinition fang, ItemDefinition scale)
+        {
+            foreach (var p in ShipPieceRules.All)
+            {
+                int r = (int)p.Rarity;
+                string file = "Piece" + p.Name.Replace(" & ", "And").Replace(" ", "");
+                var item = LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i => { i.id = p.Id; i.type = ItemType.ShipPiece; i.maxStack = 5; });
+                item.displayName = p.Name;
+                item.rarity = p.Rarity;
+                item.element = Element.None;
+                item.description = ShipPieceRules.Describe(p);
+                EditorUtility.SetDirty(item);
+                var binder = p.Slot == PieceSlot.Hull || p.Slot == PieceSlot.Stern ? scale : p.Slot == PieceSlot.Mast ? fang : patch;
+                Recipe($"craft_{p.Id}", p.Name, RecipeKind.Craft, new[] { (wood[r], 2 + r), (binder, 1 + r / 2) }, new[] { (item, 1) });
             }
         }
 

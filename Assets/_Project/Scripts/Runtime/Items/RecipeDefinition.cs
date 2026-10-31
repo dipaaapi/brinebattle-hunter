@@ -18,7 +18,7 @@ namespace BrineBattle.Items
         Weapon = 0, Armor = 1, Accessory = 2,
         Potions = 10, Oils = 11,
         Treats = 20, Habitats = 21,
-        Parts = 30, Modules = 31, Hammers = 32, Vehicle = 33,
+        Parts = 30, Modules = 31, Hammers = 32, Vehicle = 33, ShipPieces = 34,
         Dismantle = 40,
     }
 
@@ -88,7 +88,7 @@ namespace BrineBattle.Items
             }
         }
 
-        public static string Label(RecipeSub s) => s == RecipeSub.Parts ? "Planks & parts" : s == RecipeSub.Modules ? "Auto-loot" : s.ToString();
+        public static string Label(RecipeSub s) => s == RecipeSub.Parts ? "Planks & parts" : s == RecipeSub.Modules ? "Auto-loot" : s == RecipeSub.ShipPieces ? "Ship pieces" : s.ToString();
 
         /// <summary>Dismantle recipes by kind; the rest by what the first output is.</summary>
         public static RecipeSub SubOf(RecipeDefinition r)
@@ -108,6 +108,7 @@ namespace BrineBattle.Items
                 case ItemType.Module: return RecipeSub.Modules;
                 case ItemType.Tool: return RecipeSub.Hammers;
                 case ItemType.Vessel: return RecipeSub.Vehicle;
+                case ItemType.ShipPiece: return RecipeSub.ShipPieces;
                 default: return RecipeSub.Parts;
             }
         }

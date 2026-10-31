@@ -282,7 +282,7 @@ namespace BrineBattle.Hunting
             var g = raft.Grid;
             var chosen = g.Chosen;
             GUILayout.BeginVertical(HuntStyles.Card);
-            GUILayout.Label($"<b>{g.LevelName}</b> · {g.FormName} · {g.Tier}" + (chosen != RaftKind.Plain ? $"  <size=12>{g.Type.Bonus}</size>" : ""), HuntStyles.Text);
+            GUILayout.Label($"<b>{g.LevelName}</b> · {g.FormName} · {g.Tier}" + (chosen != RaftKind.Plain ? $"  <size=12>{g.Bonus}</size>" : ""), HuntStyles.Text);
             EvolutionRoad(g);
             GUILayout.EndVertical();
 

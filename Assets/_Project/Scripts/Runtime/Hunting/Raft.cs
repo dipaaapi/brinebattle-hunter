@@ -18,13 +18,13 @@ namespace BrineBattle.Hunting
         [Tooltip("How far the hook reaches beyond the raft's edge.")]
         public float hookRange = 12f;
 
-        public RaftGrid Grid { get; } = new RaftGrid { ModulesToGrow = RaftRules.ModuleShareToGrow };
+        public RaftGrid Grid { get; } = new RaftGrid { ModulesToGrow = RaftRules.ModuleShareToGrow, NeedsPieces = true };
         public int size => Grid.Size;
         public int MaxHp => Grid.MaxHp;
         public Rarity Tier => Grid.Tier;
         /// <summary>Distance from the centre to just past the outer parts.</summary>
         public float EdgeDistance => (Grid.Radius + 1.2f) * CellSize;
-        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach - World.WorldRules.ReachPenalty(WorldClock.Weather);
+        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Bonus.Reach - World.WorldRules.ReachPenalty(WorldClock.Weather);
 
         readonly Dictionary<Cell, GameObject> tiles = new Dictionary<Cell, GameObject>();
 

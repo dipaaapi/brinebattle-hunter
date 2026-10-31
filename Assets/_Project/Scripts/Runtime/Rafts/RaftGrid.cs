@@ -176,7 +176,9 @@ namespace BrineBattle.Rafts
         public int Count => parts.Count;
         public int Size => RaftRules.SizeFor(parts.Count);
         /// <summary>Battle HP: every part's HP, with the raft type's bonus (Phase 8).</summary>
-        public int MaxHp => parts.Count == 0 ? 0 : RaftTypeRules.WithHpBonus(parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier)), Type.Bonus);
+        public int MaxHp => parts.Count == 0 ? 0 : RaftTypeRules.WithHpBonus(parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier)), Bonus);
+        /// <summary>The ship line's (or raft type's) bonus plus every installed ship piece's.</summary>
+        public RaftBonus Bonus => Type.Bonus + ShipPieceRules.Bonus(pieces);
         /// <summary>Fortress, Sky, Beast, a hybrid or Plain, from the raft parts (Phase 8).</summary>
         /// <summary>
         /// The type picked in the raft tree wins (Ed: a Sky raft must look and fight like Sky even with
@@ -336,6 +338,7 @@ namespace BrineBattle.Rafts
             if (!HammerReady) missing.Add($"a {Tier} hammer or better");
             if (BossPending) missing.Add($"beat the {Tier} boss");
             if (PartPending > 0) missing.Add($"put on the {VesselRules.PartName(line, PartPending)}");
+            if (NeedsPieces) foreach (var p in PiecesMissing) missing.Add($"install the {p.Name}");
             return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
         }
 
@@ -473,10 +476,57 @@ namespace BrineBattle.Rafts
         {
             if (devLine != line) vessel.Clear();
             SetLevel(devLine, level);
+            // The look follows the pieces: the dev slider puts on exactly the pieces open at that raft level.
+            pieces.Clear();
+            foreach (var id in ShipPieceRules.FreeFor(PieceLevel)) pieces.Add(id);
             Kills = 0;
             Changed?.Invoke();
         }
 #endif
+        // ---- Ship pieces (Ed's ask: the raft becomes a boat through real pieces) ----
+
+        readonly HashSet<string> pieces = new HashSet<string>();
+        /// <summary>Installed ship pieces (ids).</summary>
+        public IReadOnlyCollection<string> Pieces => pieces;
+        public bool HasPiece(string id) => pieces.Contains(id);
+        /// <summary>Off for bare grids (tests); the game turns it on: level-ups wait for the open pieces.</summary>
+        public bool NeedsPieces { get; set; }
+        /// <summary>The raft level that counts for pieces (a ship has passed raft Lv 50).</summary>
+        public int PieceLevel => ShipPieceRules.RaftLevel(IsShip, Level);
+        public List<ShipPiece> PiecesMissing => ShipPieceRules.Missing(PieceLevel, pieces);
+        /// <summary>The id of the piece put on last (for the build animation); null after a load.</summary>
+        public string LastInstalled { get; private set; }
+
+        /// <summary>Why this ship piece can't go on now, or null when it can.</summary>
+        public string PieceBlocker(ItemDefinition item, Inventory bag)
+        {
+            if (!ShipPieceRules.IsPiece(item)) return "That isn't a ship piece.";
+            string why = ShipPieceRules.InstallBlocker(ShipPieceRules.Find(item.id), PieceLevel, pieces);
+            if (why != null) return why;
+            if (bag != null && bag.Count(item) <= 0) return "Make it at the Workbench first.";
+            if (!HammerReady) return $"Needs a {Tier} hammer or better.";
+            return null;
+        }
+
+        public bool InstallPiece(ItemDefinition item, Inventory bag)
+        {
+            if (PieceBlocker(item, bag) != null) return false;
+            bag?.Remove(item, 1);
+            pieces.Add(item.id);
+            LastInstalled = item.id;
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>Loads the installed pieces from a save.</summary>
+        public void RestorePieces(IEnumerable<string> saved)
+        {
+            pieces.Clear();
+            LastInstalled = null;
+            if (saved != null) foreach (var id in saved) if (ShipPieceRules.Find(id) != null) pieces.Add(id);
+            Changed?.Invoke();
+        }
+
         readonly HashSet<Rarity> bosses = new HashSet<Rarity>();
         /// <summary>Raft levels whose boss is beaten (by the level's rarity).</summary>
         public IEnumerable<Rarity> BossesBeaten => bosses;
