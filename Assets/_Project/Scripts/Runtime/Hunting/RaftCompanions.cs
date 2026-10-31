@@ -497,8 +497,8 @@ namespace BrineBattle.Hunting
                 var path = CompanionWork.BuilderLevelUp(g, hook.Inventory);
                 if (path != null && g.TryUpgrade(hook.Inventory, path.Value))
                 {
-                    Work(who, $"leveled the raft to Lv {(int)g.Tier + 1}");
-                    hook.Log($"{who.Name} (Builder) leveled the raft up to Lv {(int)g.Tier + 1}!");
+                    Work(who, $"leveled up to {g.LevelName}");
+                    hook.Log($"{who.Name} (Builder) leveled it up: {g.LevelName}, {g.FormName}!");
                     return;
                 }
             }

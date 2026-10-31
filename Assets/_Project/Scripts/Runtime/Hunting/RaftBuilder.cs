@@ -118,43 +118,46 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>
-        /// What the next raft level needs, each ✔ or ✘ with have/need. How-to text lives only in
+        /// What the next level needs, each ✔ or ✘ with have/need. How-to text lives only in
         /// Settings → FAQ (Ed's call).
         /// </summary>
         void DrawRequirements()
         {
             var g = raft.Grid;
             var inv = hook.Inventory;
-            int kills = RaftRules.KillsToUpgrade(g.Tier), mats = RaftRules.MaterialsToUpgrade(g.Tier), cost = RaftRules.UpgradeCost(g.Tier);
+            int kills = g.KillsNeeded, mats = g.MaterialsNeeded, cost = g.EssenceNeeded;
             var (guarded, _) = g.UpstreamModules();
             var hammer = RaftRules.BestHammer(inv);
             GUILayout.BeginVertical(HuntStyles.Card);
-            GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 2} ({g.Tier + 1}) needs</b>", HuntStyles.Text);
+            GUILayout.Label($"<b>{EvolutionRules.Label(g.Chosen, g.Level + 1)} needs</b>", HuntStyles.Text);
             Step(g.Kills >= kills, $"Monsters beaten: {Mathf.Min(g.Kills, kills)}/{kills}");
             Step(inv.MaterialCount() >= mats, $"Monster materials: {Mathf.Min(inv.MaterialCount(), mats)}/{mats}");
             Step(inv.EssenceAtLeast(g.Tier) >= cost, $"{g.Tier}+ essence: {Mathf.Min(inv.EssenceAtLeast(g.Tier), cost)}/{cost}");
             Step(guarded >= g.ModulesNeeded, $"Modules on the left edge: {Mathf.Min(guarded, g.ModulesNeeded)}/{g.ModulesNeeded}");
             Step(RaftRules.HasHammer(inv, g.Tier), $"{g.Tier} hammer or better: {(hammer != null ? hammer.displayName : "none")}");
-            Step(g.BossBeaten(g.Tier), BossLine(g.Tier));
+            if (EvolutionRules.BossGate(g.Chosen, g.Level) && g.BossesNeeded) Step(g.BossBeaten(g.Tier), BossLine(g.Tier));
+            int part = EvolutionRules.PartNeeded(g.Chosen, g.Level);
+            if (part > 0) Step(g.HasVessel(part), $"{VesselRules.PartName(g.Chosen, part)} on the ship");
             GUILayout.EndVertical();
         }
 
         DriftSpawner spawner;
 
-        /// <summary>"Beat the Lv 2 boss, Tidecaller Eel (comes after 10 monsters)".</summary>
+        /// <summary>"Beat the Uncommon boss, Tidecaller Eel (comes once enough monsters are beaten)".</summary>
         string BossLine(Rarity level)
         {
             if (spawner == null) spawner = FindFirstObjectByType<DriftSpawner>();
             var boss = spawner != null ? spawner.BossFor(level) : null;
             var g = raft.Grid;
             string name = boss != null ? $", {boss.displayName}" : "";
-            string when = g.BossBeaten(level) ? "" : g.Kills >= RaftRules.KillsToUpgrade(level) ? " (it's out there now)" : " (comes once enough monsters are beaten)";
-            return $"Beat the Lv {(int)level + 1} boss{name}{when}";
+            string when = g.BossBeaten(level) ? "" : g.Kills >= g.KillsNeeded ? " (it's out there now)" : " (comes once enough monsters are beaten)";
+            return $"Beat the {level} boss{name}{when}";
         }
 
         /// <summary>
-        /// The vehicle of the raft's type (Ed's ask): five parts that open one per level from Lv 2, made at
-        /// the Workbench (Raft → Vehicle) and put on here. All five, Lv 6 and the last boss: leave the sea.
+        /// The ship's parts (Ed's ask: ships have more parts to build): five, opening at ship Lv 20, 40, 60, 80
+        /// and 99, made at the Workbench (Raft → Vehicle) and put on here. A ship can't level past a part's level
+        /// until that part is on. No leaving the sea any more: the goal is fame.
         /// </summary>
         void DrawVehicle()
         {
@@ -164,7 +167,7 @@ namespace BrineBattle.Hunting
             var inv = hook.Inventory;
             GUILayout.Space(6);
             GUILayout.BeginVertical(HuntStyles.Card);
-            GUILayout.Label($"<b>Your {VesselRules.Vehicle(kind)}</b>  <size=12>{g.VesselCount}/{VesselRules.Parts} parts on</size>", HuntStyles.Text);
+            GUILayout.Label($"<b>{EvolutionRules.LineName(kind)} parts</b>  <size=12>{g.VesselCount}/{VesselRules.Parts} on</size>", HuntStyles.Text);
             for (int slot = 1; slot <= VesselRules.Parts; slot++)
             {
                 int lv = VesselRules.UnlockLevel(slot);
@@ -173,14 +176,14 @@ namespace BrineBattle.Hunting
                 string name = VesselRules.PartName(kind, slot);
                 GUILayout.BeginHorizontal();
                 if (g.HasVessel(slot)) GUILayout.Label($"<color={HuntStyles.GoodHex}>✔ {name}</color>", HuntStyles.Text);
-                else if ((int)g.Tier + 1 < lv) GUILayout.Label($"<color=#999999>🔒 {name} · opens at Lv {lv}</color>", HuntStyles.Text);
+                else if (g.Level < lv) GUILayout.Label($"<color=#999999>🔒 {name} · opens at ship Lv {lv}</color>", HuntStyles.Text);
                 else if (item != null && inv.Count(item) > 0)
                 {
                     GUILayout.Label($"<b>{name}</b> · in the Bag", HuntStyles.Text);
                     string why = g.VesselBlocker(item, inv);
                     GUI.enabled = why == null;
                     if (HuntStyles.ColorButton(why == null ? "Put it on" : why, HuntStyles.Go, GUILayout.Width(150)) && g.InstallVessel(item, inv))
-                        hook.Log($"The {name} is on your {VesselRules.Vehicle(kind)} ({g.VesselCount}/{VesselRules.Parts}).");
+                        hook.Log($"The {name} is on your {EvolutionRules.LineName(kind)} ({g.VesselCount}/{VesselRules.Parts}).");
                     GUI.enabled = true;
                 }
                 else
@@ -190,14 +193,6 @@ namespace BrineBattle.Hunting
                 }
                 GUILayout.EndHorizontal();
             }
-            string leave = g.LeaveBlocker();
-            if (g.Tier == Rarity.Mythic) Step(g.BossBeaten(Rarity.Mythic), BossLine(Rarity.Mythic));
-            var voyage = VoyageController.Instance;
-            if (leave == null && voyage != null)
-            {
-                if (HuntStyles.ColorButton(VesselRules.LeaveVerb(kind), HuntStyles.Go) && voyage.Leave()) WorldPause.Close(Menu.Build);
-            }
-            else GUILayout.Label($"<b>Leave the sea</b>  <size=12><color=#9bb0c8>{leave}</color></size>", HuntStyles.Text);
             GUILayout.EndVertical();
         }
 
@@ -287,7 +282,7 @@ namespace BrineBattle.Hunting
 
         // Ed's ask: Level up and the Tree are one page, the raft skill tree.
         enum Page { Build, Workbench, Modules, Tree }
-        RaftKind path = RaftKind.Fortress;
+        RaftKind path = RaftKind.Sea;
         /// <summary>The type tab shown in the raft tree; follows the picked type once there is one.</summary>
         RaftKind treeTab = RaftKind.Plain;
         static readonly string[] PageLabels = { "Build", "Workbench", "Modules", "Raft tree" };
@@ -317,14 +312,14 @@ namespace BrineBattle.Hunting
             panelRect = new Rect(HuntStyles.W - w - 12, 20, w, h);
             GUI.depth = -5;
             var g = raft.Grid;
-            GUILayout.BeginArea(panelRect, $"Build raft · Lv {(int)g.Tier + 1} ({g.Tier})", HuntStyles.Window);
+            GUILayout.BeginArea(panelRect, $"Build · {g.LevelName} ({g.FormName})", HuntStyles.Window);
             if (HuntStyles.CloseX(w)) { Toggle(); GUILayout.EndArea(); return; }
 
             // Owner idea U-25 (Ed: "hindi user friendly"): four short pages instead of one long scroll.
             var labels = (string[])PageLabels.Clone();
             int ready = recipes.Count(r => r != null && hook.Knows(r) && CraftRules.CanCraft(hook.Inventory, r));
             if (ready > 0) labels[1] = $"Workbench ({ready})";
-            if ((RaftRules.UpgradeCost(g.Tier) > 0 && g.UpgradeBlocker(hook.Inventory) == null) || g.CanChoose) labels[3] = "Raft tree ✔";
+            if ((!g.AtMax && g.UpgradeBlocker(hook.Inventory) == null) || g.CanChoose) labels[3] = "Raft tree ✔";
             var picked = (Page)HuntStyles.Tabs((int)page, labels);
             if (picked != page) { page = picked; panelScroll = Vector2.zero; }
 
@@ -358,8 +353,8 @@ namespace BrineBattle.Hunting
             var kinds = g.Parts.Values.Where(p => p.type == ItemType.Raft).GroupBy(p => p.raftKind).ToDictionary(x => x.Key, x => x.Count());
             int Kind(RaftKind k) => kinds.TryGetValue(k, out var n) ? n : 0;
             GUILayout.BeginVertical(HuntStyles.Card);
-            GUILayout.Label($"Type: <b>{type}</b>  <size=12>{type.Bonus}</size>", HuntStyles.Text);
-            GUILayout.Label($"<size=12>Fortress {Kind(RaftKind.Fortress)} · Sky {Kind(RaftKind.Sky)} · Beast {Kind(RaftKind.Beast)} · Plain {Kind(RaftKind.Plain)}</size>", HuntStyles.Text);
+            GUILayout.Label($"<b>{g.LevelName}</b> · {g.FormName}  <size=12>{(g.IsShip ? type.Bonus.ToString() : "ship line at raft Lv 50")}</size>", HuntStyles.Text);
+            if (g.IsShip) GUILayout.Label($"<size=12>{g.Chosen} parts {Kind(g.Chosen)} · plain {Kind(RaftKind.Plain)}</size>", HuntStyles.Text);
             if (hook.Gorged.Count > 0)
                 GUILayout.Label($"<size=12><color={HuntStyles.BadHex}>{hook.Gorged.Entries.Sum(e => e.Parts.Count)} part(s) inside gorged monsters</color></size>", HuntStyles.Text);
             GUILayout.EndVertical();
@@ -391,7 +386,7 @@ namespace BrineBattle.Hunting
                 string label = $"{kv.Value} × <color={BagPanel.RarityColor(p.rarity)}>{p.displayName}</color>"
                     + (p.type == ItemType.Raft && p.raftKind != RaftKind.Plain ? $"  <size=11>{p.raftKind}</size>" : "")
                     + (!ofType ? $"  <size=11><color={HuntStyles.BadHex}>not for a {g.Chosen} raft</color></size>"
-                        : strong ? "" : $"  <size=11><color={HuntStyles.BadHex}>too weak for Lv {(int)g.Tier + 1}</color></size>");
+                        : strong ? "" : $"  <size=11><color={HuntStyles.BadHex}>too weak for {g.LevelName}</color></size>");
                 GUI.enabled = fits;
                 var old = GUI.backgroundColor;
                 if (selected == p) GUI.backgroundColor = HuntStyles.Go;
@@ -443,86 +438,106 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>
-        /// The raft skill tree (Ed's ask: Level up and Tree in one place). Top: the raft's level, type and
-        /// what the next level needs, with the level-up button. The type is picked once (at
-        /// <see cref="RaftTree.PickLevel"/>); then the picked type's tab opens by default and its branch
-        /// grows one level per level-up. The other types' tabs stay locked and never branch out.
+        /// The raft tree (Ed's ask: Level up and Tree in one place). Top: the evolution road (raft Lv 1-50 to a
+        /// simple boat, then the picked ship Lv 1-100, then the next evolution "Coming soon"). At raft Lv 50 the
+        /// ship line is picked once: Sea level (STR), Aerial (INT) or Undersea (DEX). Then what the next level
+        /// needs with the level-up button, the ship's parts, and the line's branch of materials and parts.
         /// </summary>
         void DrawTree()
         {
             var g = raft.Grid;
             var chosen = g.Chosen;
             GUILayout.BeginVertical(HuntStyles.Card);
-            GUILayout.Label($"<b>Raft Lv {(int)g.Tier + 1}</b> ({g.Tier}) · {(chosen == RaftKind.Plain ? "no type yet" : $"<b>{chosen}</b>  <size=12>{RaftTree.Look(chosen)}</size>")}", HuntStyles.Text);
-            if (chosen == RaftKind.Plain)
-                GUILayout.Label($"<size=12>Lv 1–{RaftTree.PickLevel - 1}: the basics. At Lv {RaftTree.PickLevel} you pick the raft's type, once.</size>", HuntStyles.Text);
+            GUILayout.Label($"<b>{g.LevelName}</b> · {g.FormName} · {g.Tier}" + (chosen != RaftKind.Plain ? $"  <size=12>{g.Type.Bonus}</size>" : ""), HuntStyles.Text);
+            EvolutionRoad(g);
             GUILayout.EndVertical();
 
-            // Pick the type: once, at the pick level (or now, if the raft is already past it).
-            bool pickNow = g.CanChoose;
-            bool pickAtLevelUp = chosen == RaftKind.Plain && (int)g.Tier + 2 >= RaftTree.PickLevel && !pickNow;
-            if (pickNow || pickAtLevelUp)
+            // The ship pick: once, at raft Lv 50 with the Rare boss beaten.
+            if (chosen == RaftKind.Plain && g.Level >= EvolutionRules.RaftMax)
             {
-                GUILayout.Label($"<b>Pick your raft type</b>  <size=12>once only; the others lock</size>", HuntStyles.Text);
+                GUILayout.Label("<b>Pick your ship line</b>  <size=12>once only; the ship starts again at Lv 1 and evolves to Lv 100</size>", HuntStyles.Text);
                 GUILayout.BeginHorizontal();
-                var voyage = hook.Voyage;
-                // A type that already left a sea can't be picked again until the game is won (Ed's ask).
-                if (!voyage.CanPick(path)) path = RaftTree.Kinds.FirstOrDefault(voyage.CanPick);
+                if (path == RaftKind.Plain) path = RaftTree.Kinds[0];
                 foreach (var kind in RaftTree.Kinds)
                 {
-                    GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Width(132));
-                    GUILayout.Label($"<b>{kind}</b>\n<size=11>{RaftTree.Look(kind)}</size>\n<size=11>{RaftTypeRules.BonusOf(kind)}</size>", HuntStyles.Text);
+                    GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Width(150));
+                    GUILayout.Label($"<b>{EvolutionRules.LineName(kind)}</b> · <color=#ffd866>{EvolutionRules.Stat(kind)}</color>\n<size=11>{RaftTree.Look(kind)}</size>\n<size=11>{EvolutionRules.Bonus(kind, 1)} (grows with its level)</size>", HuntStyles.Text);
                     var old = GUI.backgroundColor;
                     if (path == kind) GUI.backgroundColor = HuntStyles.Go;
-                    GUI.enabled = voyage.CanPick(kind);
-                    if (GUILayout.Button(!voyage.CanPick(kind) ? "✔ Finished" : path == kind ? "▶ Picked" : "Pick", GUILayout.Height(26))) path = kind;
-                    GUI.enabled = true;
+                    if (GUILayout.Button(path == kind ? "▶ Picked" : "Pick", GUILayout.Height(26))) path = kind;
                     GUI.backgroundColor = old;
                     GUILayout.EndVertical();
                 }
                 GUILayout.EndHorizontal();
-                if (pickNow && HuntStyles.ColorButton($"Make my raft a {path} ({RaftTree.Look(path)})", HuntStyles.Go) && g.Choose(path))
+                string why = g.ChooseBlocker();
+                if (why != null) Step(false, why);
+                else if (HuntStyles.ColorButton($"Make it a {EvolutionRules.LineName(path)} ({EvolutionRules.Stat(path)})", HuntStyles.Go) && g.Choose(path))
                 {
                     treeTab = path;
-                    hook.Log($"Your raft is now a {path}: {RaftTree.Look(path)}. Its branch of the raft tree is open up to Lv {(int)g.Tier + 1}.");
+                    hook.Log($"Your boat is now a {EvolutionRules.LineName(path)}: {EvolutionRules.FormName(path, 1)}, Lv 1. It evolves up to Lv {EvolutionRules.ShipMax}.");
                     ResetForType();
                 }
+                return;
             }
 
             // Level up.
-            if (RaftRules.UpgradeCost(g.Tier) <= 0) GUILayout.Label("The raft is at the highest level.", HuntStyles.Text);
+            if (g.AtMax) GUILayout.Label($"<b>Lv {g.MaxLevel}.</b> The next evolution: <color=#ffd866>{EvolutionRules.NextEvolution}</color>.", HuntStyles.Text);
             else
             {
                 DrawRequirements();
                 string blocker = g.UpgradeBlocker(hook.Inventory);
-                int next = (int)g.Tier + 2;
-                string become = pickAtLevelUp ? $" · becomes {path}" : "";
-                if (blocker == null && !pickNow)
+                if (blocker == null)
                 {
-                    if (HuntStyles.ColorButton($"Level up the raft → Lv {next} ({g.Tier + 1}){become}", HuntStyles.Go) && g.TryUpgrade(hook.Inventory, path))
-                    {
-                        if (g.Chosen != RaftKind.Plain) treeTab = g.Chosen;
-                        hook.Log($"Raft leveled up to Lv {(int)g.Tier + 1} ({g.Tier})! Max HP {g.MaxHp}."
-                            + (g.Chosen != RaftKind.Plain ? $" The {g.Chosen} branch grew to Lv {(int)g.Tier + 1}." : ""));
-                        ResetForType();
-                    }
+                    if (HuntStyles.ColorButton($"Level up → {EvolutionRules.Label(chosen, g.Level + 1)}", HuntStyles.Go) && g.TryUpgrade(hook.Inventory))
+                        hook.Log($"{g.LevelName}! {g.FormName}, max HP {g.MaxHp}.");
                 }
                 else
                 {
                     GUI.enabled = false;
-                    GUILayout.Button(pickNow ? "Pick the raft type first" : "Not ready yet (see ✘)", GUILayout.Height(32));
+                    GUILayout.Button("Not ready yet (see ✘)", GUILayout.Height(32));
                     GUI.enabled = true;
                 }
             }
             DrawVehicle();
+            if (chosen == RaftKind.Plain) return;
 
-            // The tree, one tab per type; the picked type's tab is the default.
-            if (chosen != RaftKind.Plain && treeTab == RaftKind.Plain) treeTab = chosen;
-            if (treeTab == RaftKind.Plain) treeTab = path;
+            // The picked line's branch of materials and parts, by tier.
             GUILayout.Space(6);
-            var tabLabels = RaftTree.Kinds.Select(k => chosen == RaftKind.Plain || k == chosen ? k.ToString() : $"🔒 {k}").ToArray();
-            treeTab = RaftTree.Kinds[HuntStyles.Tabs(System.Array.IndexOf(RaftTree.Kinds, treeTab), tabLabels)];
-            DrawBranch(treeTab);
+            treeTab = chosen;
+            DrawBranch(chosen);
+        }
+
+        /// <summary>
+        /// The evolution road: the raft's forms (Lv 1, 10, 20, 30, 40, 50 boat), or the ship's (Lv 1, 25, 50, 75,
+        /// 100) and a locked "Coming soon" stop, filled up to the current level.
+        /// </summary>
+        void EvolutionRoad(RaftGrid g)
+        {
+            bool ship = g.IsShip;
+            int[] stops = ship ? new[] { 1, 25, 50, 75, 100 } : new[] { 1, 10, 20, 30, 40, 50 };
+            int count = stops.Length + (ship ? 1 : 0);
+            var road = GUILayoutUtility.GetRect(200, 70, GUILayout.ExpandWidth(true));
+            float step = (road.width - 60) / (count - 1), y = road.y + 22;
+            var color = KindColor(g.Chosen);
+            for (int i = 0; i < count - 1; i++)
+            {
+                bool done = i + 1 < stops.Length && g.Level >= stops[i + 1];
+                GUI.DrawTexture(new Rect(road.x + 30 + i * step, y - 2, step, 4), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, done ? color : new Color(0.2f, 0.27f, 0.35f), 0, 2);
+            }
+            for (int i = 0; i < count; i++)
+            {
+                float x = road.x + 30 + i * step;
+                bool soon = i >= stops.Length;
+                int lv = soon ? 0 : stops[i];
+                bool open = !soon && g.Level >= lv;
+                bool here = !soon && open && (i + 1 >= stops.Length || g.Level < stops[i + 1]);
+                float r = here ? 15 : 12;
+                if (here) GUI.DrawTexture(new Rect(x - r - 4, y - r - 4, 2 * r + 8, 2 * r + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.81f, 0.29f, 0.35f + 0.2f * Mathf.Sin(Time.unscaledTime * 4f)), 0, r + 4);
+                GUI.DrawTexture(new Rect(x - r, y - r, 2 * r, 2 * r), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, open ? color : new Color(0.16f, 0.22f, 0.3f), 0, r);
+                GUI.Label(new Rect(x - r, y - r, 2 * r, 2 * r), soon ? "<color=#7a8899><b>?</b></color>" : open ? $"<b>{lv}</b>" : $"<color=#7a8899><b>{lv}</b></color>", RoadNum);
+                string name = soon ? EvolutionRules.NextEvolution : EvolutionRules.FormName(g.Chosen, lv);
+                GUI.Label(new Rect(x - 46, y + 17, 92, 30), here ? $"<color=#ffd866><b>{name}</b></color>" : open ? $"<color=#9fe89f>{name}</color>" : $"<color=#7a8899>{name}</color>", RoadNum);
+            }
         }
 
         /// <summary>
@@ -538,14 +553,14 @@ namespace BrineBattle.Hunting
                 // Not the raft's type: locked, and it doesn't branch out.
                 GUILayout.BeginVertical(HuntStyles.Card);
                 GUILayout.Label($"<color=#999999><b>{kind}</b> · {RaftTree.Look(kind)}</color>", HuntStyles.Heading);
-                GUILayout.Label($"<color=#888888>Your raft is a {chosen}. This branch stays locked.</color>", HuntStyles.Text);
+                GUILayout.Label($"<color=#888888>Your ship is a {EvolutionRules.LineName(chosen)}. This branch stays locked.</color>", HuntStyles.Text);
                 GUILayout.EndVertical();
                 return;
             }
             GUILayout.Label($"<b>{kind}</b> · {RaftTree.Look(kind)}", HuntStyles.Text);
             GUILayout.Label(RaftTypeRules.BonusOf(kind).ToString(), HuntStyles.Hint);
 
-            // The road: six stops joined by a line, filled up to the raft's level.
+            // The road: six tier stops (Common … Mythic) joined by a line, filled up to the ship's tier.
             int here = (int)g.Tier + 1;
             var road = GUILayoutUtility.GetRect(200, 64, GUILayout.ExpandWidth(true));
             float step = (road.width - 40) / 5f, y = road.y + 22;
@@ -567,7 +582,7 @@ namespace BrineBattle.Hunting
                 if (lv == here) GUI.DrawTexture(new Rect(x - r - 4, y - r - 4, 2 * r + 8, 2 * r + 8), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(1f, 0.81f, 0.29f, 0.35f + 0.2f * Mathf.Sin(Time.unscaledTime * 4f)), 0, r + 4);
                 GUI.DrawTexture(new Rect(x - r, y - r, 2 * r, 2 * r), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, open ? kindColor : new Color(0.16f, 0.22f, 0.3f), 0, r);
                 GUI.Label(new Rect(x - r, y - r, 2 * r, 2 * r), open ? $"<b>{lv}</b>" : $"<color=#7a8899><b>{lv}</b></color>", RoadNum);
-                GUI.Label(new Rect(x - 40, y + 18, 80, 18), lv == here ? "<color=#ffd866><b>your raft</b></color>" : open ? "<color=#9fe89f>open</color>" : "<color=#7a8899>locked</color>", RoadNum);
+                GUI.Label(new Rect(x - 40, y + 18, 80, 18), lv == here ? "<color=#ffd866><b>your ship</b></color>" : open ? $"<color=#9fe89f>{(Rarity)(lv - 1)}</color>" : $"<color=#7a8899>{(Rarity)(lv - 1)}</color>", RoadNum);
             }
 
             // A card per level, two a row.
@@ -581,8 +596,8 @@ namespace BrineBattle.Hunting
                     bool open = RaftTree.Unlocked(g, kind, k);
                     var made = nodes.Where(r => RaftTree.LevelOf(r.outputs[0].item) == k).Select(r => r.outputs[0].item.displayName).Distinct().ToList();
                     GUILayout.BeginVertical(HuntStyles.Card, GUILayout.Width(cardW), GUILayout.MinHeight(84));
-                    string head = open ? $"<color={HuntStyles.GoodHex}><b>Lv {k}</b></color>" : $"<color=#8a96a6><b>Lv {k}</b></color>";
-                    string tag = k == here ? "  <size=11><color=#ffd866>your raft</color></size>" : open ? "" : "  <size=11><color=#8a96a6>locked</color></size>";
+                    string head = open ? $"<color={HuntStyles.GoodHex}><b>{(Rarity)(k - 1)}</b></color>" : $"<color=#8a96a6><b>{(Rarity)(k - 1)}</b></color>";
+                    string tag = k == here ? "  <size=11><color=#ffd866>your ship</color></size>" : open ? "" : "  <size=11><color=#8a96a6>locked</color></size>";
                     GUILayout.Label(head + tag, HuntStyles.Text);
                     foreach (var m in made)
                         GUILayout.Label(open ? $"<size=12>• {m}</size>" : $"<size=12><color=#7a8899>• {m}</color></size>", HuntStyles.Text);
@@ -593,7 +608,7 @@ namespace BrineBattle.Hunting
         }
 
         static Color KindColor(RaftKind k) =>
-            k == RaftKind.Fortress ? new Color(0.6f, 0.55f, 0.5f) : k == RaftKind.Sky ? new Color(0.45f, 0.7f, 1f) : k == RaftKind.Beast ? new Color(0.85f, 0.45f, 0.35f) : new Color(0.5f, 0.75f, 0.55f);
+            k == RaftKind.Sea ? new Color(0.6f, 0.55f, 0.5f) : k == RaftKind.Aerial ? new Color(0.45f, 0.7f, 1f) : k == RaftKind.Undersea ? new Color(0.85f, 0.45f, 0.35f) : new Color(0.5f, 0.75f, 0.55f);
 
         static GUIStyle roadNum;
         static GUIStyle RoadNum => roadNum ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, richText = true, fontSize = 12 };
@@ -650,7 +665,7 @@ namespace BrineBattle.Hunting
         void Craft(RecipeDefinition r, string verb)
         {
             CraftRules.Craft(hook.Inventory, r);
-            if (r.kind != RecipeKind.Dismantle) hook.Mastery.Add(AlchemyMastery.CraftPoints);
+            if (r.kind != RecipeKind.Dismantle) { hook.Mastery.Add(AlchemyMastery.CraftPoints); hook.Fame.Craft(hook.Voyage.Difficulty); }
             message = $"{verb}: got {CraftRules.Describe(r.outputs)}.";
             // Taking apart goes through the Salvage Bin (Ed's ask); making pops out of the storage box.
             if (r.kind == RecipeKind.Dismantle) SalvageBin.Instance?.Took($"{CraftRules.Describe(r.inputs)} → {CraftRules.Describe(r.outputs)}", 3, new Color(0.8f, 0.45f, 1f));

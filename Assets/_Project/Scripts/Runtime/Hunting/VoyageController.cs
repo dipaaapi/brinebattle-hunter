@@ -50,7 +50,7 @@ namespace BrineBattle.Hunting
                 float k = t / time, ease = k * k;
                 // Downstream is +X. The plane climbs as it goes; the train and the ship just speed off.
                 raft.transform.position = new Vector3(home.x + ease * 60f, raft.transform.position.y, home.z);
-                raft.Lift = left == RaftKind.Sky ? Mathf.Max(0f, k - 0.3f) * 18f : 0f;
+                raft.Lift = left == RaftKind.Aerial ? Mathf.Max(0f, k - 0.3f) * 18f : 0f;
                 yield return null;
             }
             leaving = false;

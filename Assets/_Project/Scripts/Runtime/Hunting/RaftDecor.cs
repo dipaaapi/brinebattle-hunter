@@ -6,14 +6,14 @@ using UnityEngine;
 namespace BrineBattle.Hunting
 {
     /// <summary>
-    /// Looks only (owner's ask), rebuilt whenever the raft changes. The raft's type sets its look (Ed's ask):
-    /// - Plain: katig (outrigger floats on bamboo arms) and a small mast with a sail;
-    /// - Fortress (STR, tank): a sea train: a locomotive with a smoking stack up front, rails and wheels along the sides;
-    /// - Sky (INT): a winged plane: wings out to both sides, a propeller up front, a tail at the back;
-    /// - Beast (DEX): a pirate ship: hull walls, a pointed bow with a bowsprit, two masts with square sails, a skull flag.
-    /// Each piece shows only once its vehicle part is on (Ed's ask: the vehicle is built up part by part,
-    /// see <see cref="VesselRules"/>); with none on yet, the raft keeps the Plain katig.
-    /// The front is downstream (+X). Placeholder primitives until the art pass; no gameplay.
+    /// Looks only (owner's ask), rebuilt whenever the raft changes. Evolution (Ed's ask, 2026-10-31):
+    /// - Raft Lv 1-50: katig (outrigger floats on bamboo arms) and a small mast with a sail, then a little more every
+    ///   ten levels: lashings (10), railings (20), a second mast (30), a cabin (40), and at Lv 50 boat sides and a bow;
+    /// - Sea-level ship (STR): a galleon: hull walls, a pointed bow with a bowsprit, masts with square sails, a flag;
+    /// - Aerial ship (INT): a skyship: wings out to both sides, a propeller up front, a tail at the back;
+    /// - Undersea ship (DEX): a submarine: a dark hull with a conning tower, ballast tanks, a screw, a periscope, a sonar dome.
+    /// Each ship piece shows once its ship part is on (see <see cref="VesselRules"/>); every ship flies a pennant that
+    /// grows with its level. The front is downstream (+X). Placeholder primitives until the art pass; no gameplay.
     /// </summary>
     public class RaftDecor : MonoBehaviour
     {
@@ -33,9 +33,11 @@ namespace BrineBattle.Hunting
         static readonly Color Wing = new Color(0.9f, 0.93f, 0.97f), Sky = new Color(0.35f, 0.6f, 0.95f);
         static readonly Color Hull = new Color(0.42f, 0.27f, 0.15f), DarkWood = new Color(0.28f, 0.18f, 0.1f), Black = new Color(0.08f, 0.08f, 0.09f);
 
-        /// <summary>The look follows the raft's type: the one picked in the raft tree, or before a pick, the parts'.</summary>
-        RaftKind Look => raft.Grid.Type.Main;
-        int built = -1;
+        /// <summary>The look follows the ship line once it is picked; before that it's the raft.</summary>
+        RaftKind Look => raft.Grid.Chosen;
+        int built = -1, stage = -1;
+        /// <summary>Rebuilds every 5 levels (and on the ship pick), so the raft changes a little as it grows.</summary>
+        int Stage => (raft.Grid.IsShip ? 1000 : 0) + raft.Grid.Level / 5;
 
         void Start()
         {
@@ -68,13 +70,15 @@ namespace BrineBattle.Hunting
             look = Look;
             // The vehicle builds up part by part (Ed's ask). Once the type is picked its frame shows right away
             // (Ed: "hindi pa rin siya nagmumukhang pirate ship"); each vehicle part then adds its full piece.
-            switch (raft.Grid.VesselCount == 0 && raft.Grid.Chosen == RaftKind.Plain ? RaftKind.Plain : look)
+            stage = Stage;
+            switch (look)
             {
-                case RaftKind.Fortress: SeaTrain(b); break;
-                case RaftKind.Sky: Plane(b); break;
-                case RaftKind.Beast: PirateShip(b); break;
+                case RaftKind.Sea: PirateShip(b); break;
+                case RaftKind.Aerial: Plane(b); break;
+                case RaftKind.Undersea: Submarine(b); break;
                 default: Plain(b, cells); break;
             }
+            if (raft.Grid.IsShip) Pennant(b);
         }
 
         struct Bounds2
@@ -109,58 +113,93 @@ namespace BrineBattle.Hunting
             var foot = new Vector3(mastX * s, 0.3f, row * s);
             Piece(PrimitiveType.Cylinder, foot + Vector3.up * 1.3f, new Vector3(0.08f, 1.3f, 0.08f), Bamboo);
             sails.Add(Piece(PrimitiveType.Cube, foot + Vector3.up * 1.55f, new Vector3(1.4f, 1.6f, 0.03f), Cloth).transform);
+            RaftGrowth(b, cells, foot);
         }
 
-        /// <summary>Fortress, STR: a sea train. Locomotive in front, rails and wheels down both sides.</summary>
+        /// <summary>
+        /// The raft's slow evolution (Ed's ask): a little more every ten levels until it is a simple boat at Lv 50.
+        /// </summary>
+        void RaftGrowth(Bounds2 b, List<Cell> cells, Vector3 mastFoot)
+        {
+            int lv = raft.Grid.Level;
+            float s = Raft.CellSize, deck = 0.34f;
+            if (lv >= 10)   // rope lashings across both ends
+                foreach (float x in new[] { b.X0 + 0.15f, b.X1 - 0.15f })
+                    Piece(PrimitiveType.Cube, new Vector3(x, deck, b.MidZ), new Vector3(0.08f, 0.06f, b.Width), DarkWood);
+            if (lv >= 20)   // railings along both long sides
+                foreach (float z in new[] { b.Z0 + 0.1f, b.Z1 - 0.1f })
+                {
+                    for (float x = b.X0 + 0.3f; x <= b.X1 - 0.2f; x += s)
+                        Piece(PrimitiveType.Cube, new Vector3(x, deck + 0.25f, z), new Vector3(0.07f, 0.5f, 0.07f), Bamboo);
+                    Piece(PrimitiveType.Cube, new Vector3(b.MidX, deck + 0.5f, z), new Vector3(b.Length - 0.4f, 0.05f, 0.05f), Bamboo);
+                }
+            if (lv >= 30)   // a second mast and sail at the back
+            {
+                var back = new Vector3(b.X0 + 0.6f, 0.3f, mastFoot.z);
+                Piece(PrimitiveType.Cylinder, back + Vector3.up * 1.0f, new Vector3(0.07f, 1.0f, 0.07f), Bamboo);
+                sails.Add(Piece(PrimitiveType.Cube, back + Vector3.up * 1.2f, new Vector3(1.0f, 1.1f, 0.03f), Cloth).transform);
+            }
+            if (lv >= 40)   // a small cabin at the back of the middle row
+            {
+                var at = new Vector3(b.X0 + 0.5f, deck + 0.4f, b.Row + (b.Width > 2.5f ? s : 0f));
+                Piece(PrimitiveType.Cube, at, new Vector3(0.9f, 0.8f, 0.9f), Hull);
+                Piece(PrimitiveType.Cube, at + Vector3.up * 0.45f, new Vector3(1.05f, 0.1f, 1.05f), DarkWood);
+            }
+            if (lv >= 50)   // a simple boat: plank sides and a bow
+            {
+                foreach (float z in new[] { b.Z0 - 0.05f, b.Z1 + 0.05f })
+                    Piece(PrimitiveType.Cube, new Vector3(b.MidX, raft.WaterLine + 0.25f, z), new Vector3(b.Length, 0.5f, 0.1f), Hull);
+                var bow = Piece(PrimitiveType.Cube, new Vector3(b.X1 + 0.35f, raft.WaterLine + 0.25f, b.MidZ), new Vector3(0.9f, 0.5f, 0.9f), Hull);
+                bow.transform.localRotation = Quaternion.Euler(0f, 45f, 0f);
+            }
+        }
+
+        /// <summary>Every ship flies a pennant in its line's colour that grows longer as it levels up (Lv 1 → 100).</summary>
+        void Pennant(Bounds2 b)
+        {
+            int lv = raft.Grid.Level;
+            var col = raft.Grid.Chosen == RaftKind.Sea ? new Color(0.85f, 0.25f, 0.2f) : raft.Grid.Chosen == RaftKind.Aerial ? Sky : new Color(0.2f, 0.75f, 0.7f);
+            var top = new Vector3(b.MidX, 2.9f, b.MidZ);
+            Piece(PrimitiveType.Cylinder, top - Vector3.up * 0.6f, new Vector3(0.05f, 0.6f, 0.05f), DarkWood);
+            float len = 0.4f + 1.6f * lv / (float)EvolutionRules.ShipMax;
+            sails.Add(Piece(PrimitiveType.Cube, top + new Vector3(-len / 2f, 0f, 0f), new Vector3(len, 0.22f, 0.02f), col).transform);
+            // A gold star for every 25 levels.
+            for (int i = 0; i < lv / 25; i++)
+                Piece(PrimitiveType.Sphere, top + new Vector3(0f, 0.2f + 0.18f * i, 0f), Vector3.one * 0.14f, Brass);
+        }
+
         bool Has(int slot) => raft.Grid.HasVessel(slot);
 
-        void SeaTrain(Bounds2 b)
-        {
-            float y = 0.3f;
-            // Locomotive just past the front edge, on the middle row.
-            float front = b.X1 + 0.2f;
-            if (Has(3))   // boiler, with its band, headlamp and cowcatcher
-            {
-                var boiler = Piece(PrimitiveType.Cylinder, new Vector3(front + 0.6f, y + 0.45f, b.Row), new Vector3(0.9f, 0.9f, 0.9f), Iron);
-                boiler.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-                Piece(PrimitiveType.Cylinder, new Vector3(front + 0.6f, y + 0.45f, b.Row), new Vector3(0.95f, 0.08f, 0.95f), Brass)
-                    .transform.localRotation = Quaternion.Euler(0f, 0f, 90f);   // brass band
-                Piece(PrimitiveType.Sphere, new Vector3(front + 1.3f, y + 0.55f, b.Row), Vector3.one * 0.25f, new Color(1f, 0.95f, 0.6f));   // headlamp
-                var catcher = Piece(PrimitiveType.Cube, new Vector3(front + 1.25f, y + 0.12f, b.Row), new Vector3(0.6f, 0.25f, 0.9f), Red);
-                catcher.transform.localRotation = Quaternion.Euler(0f, 45f, 0f);   // cowcatcher wedge
-            }
-            if (Has(5))   // locomotive cab
-            {
-                Piece(PrimitiveType.Cube, new Vector3(front - 0.35f, y + 0.6f, b.Row), new Vector3(0.7f, 1.2f, 1.1f), Red);
-                Piece(PrimitiveType.Cube, new Vector3(front - 0.35f, y + 1.25f, b.Row), new Vector3(0.85f, 0.1f, 1.25f), Iron);   // roof
-            }
-            if (Has(4)) stack = Piece(PrimitiveType.Cylinder, new Vector3(front + 1.0f, y + 1.15f, b.Row), new Vector3(0.28f, 0.35f, 0.28f), Iron).transform;
+        static readonly Color Deep = new Color(0.12f, 0.22f, 0.3f), Glass = new Color(0.55f, 0.9f, 1f);
 
-            // Sea track along both long sides at the waterline, with wheels that turn.
-            foreach (int side in new[] { -1, 1 })
-            {
-                float z = side < 0 ? b.Z0 - 0.25f : b.Z1 + 0.25f;
-                if (Has(1)) Piece(PrimitiveType.Cube, new Vector3((b.X0 + front + 1.3f) / 2f, raft.WaterLine + 0.15f, z), new Vector3(front + 1.3f - b.X0, 0.08f, 0.12f), Iron);
-                else Piece(PrimitiveType.Cube, new Vector3(b.MidX, raft.WaterLine + 0.15f, z), new Vector3(b.Length, 0.06f, 0.08f), Iron);   // frame: a bare rail
-                if (!Has(2)) continue;
-                for (float x = b.X0 + 0.5f; x < front + 1f; x += 1.1f)
+        /// <summary>Undersea, DEX: a submarine. A dark hull under the raft and a conning tower; each part adds its piece.</summary>
+        void Submarine(Bounds2 b)
+        {
+            float y = raft.WaterLine;
+            // Frame: the hull along the raft and the conning tower in the middle.
+            var hull = Piece(PrimitiveType.Capsule, new Vector3(b.MidX, y - 0.05f, b.MidZ), new Vector3(Mathf.Max(1.2f, b.Width * 0.7f), b.Length / 2f + 0.6f, 0.9f), Deep);
+            hull.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            Piece(PrimitiveType.Cube, new Vector3(b.MidX - 0.4f, 0.75f, b.Row), new Vector3(0.9f, 0.9f, 0.6f), Deep);   // conning tower
+            if (Has(1))   // pressure hull plates
+                foreach (int side in new[] { -1, 1 })
+                    Piece(PrimitiveType.Cube, new Vector3(b.MidX, y + 0.2f, side < 0 ? b.Z0 - 0.1f : b.Z1 + 0.1f), new Vector3(b.Length, 0.35f, 0.08f), Iron);
+            if (Has(2))   // ballast tanks
+                foreach (int side in new[] { -1, 1 })
                 {
-                    var w = Piece(PrimitiveType.Cylinder, new Vector3(x, raft.WaterLine + 0.3f, z), new Vector3(0.55f, 0.06f, 0.55f), Iron).transform;
-                    w.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    wheels.Add(w);
+                    var tank = Piece(PrimitiveType.Capsule, new Vector3(b.MidX, y - 0.1f, (side < 0 ? b.Z0 - 0.45f : b.Z1 + 0.45f)), new Vector3(0.45f, b.Length / 2.5f, 0.45f), Iron);
+                    tank.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
                 }
-            }
-            // Track ties ahead of the train, and couplings between "carriages" every two cells.
-            if (Has(1))
+            if (Has(3))   // the screw at the back
             {
-                for (float x = b.X1 + 0.6f; x < b.X1 + 6f; x += 0.7f)
-                    Piece(PrimitiveType.Cube, new Vector3(x, raft.WaterLine + 0.05f, b.MidZ), new Vector3(0.18f, 0.06f, b.Width + 0.8f), DarkWood);
-                for (float x = b.X0 + 2f * Raft.CellSize; x < b.X1 - 0.5f; x += 2f * Raft.CellSize)
-                    Piece(PrimitiveType.Cube, new Vector3(x, raft.WaterLine + 0.2f, b.MidZ), new Vector3(0.1f, 0.1f, b.Width + 0.5f), Iron);
+                var hub = Piece(PrimitiveType.Cylinder, new Vector3(b.X0 - 0.5f, y, b.MidZ), new Vector3(0.25f, 0.15f, 0.25f), Brass);
+                hub.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                propeller = Piece(PrimitiveType.Cube, new Vector3(b.X0 - 0.6f, y, b.MidZ), new Vector3(0.06f, 0.9f, 0.18f), Brass).transform;
             }
+            if (Has(4)) Piece(PrimitiveType.Cylinder, new Vector3(b.MidX - 0.3f, 1.55f, b.Row), new Vector3(0.07f, 0.45f, 0.07f), Iron);   // periscope
+            if (Has(5)) Piece(PrimitiveType.Sphere, new Vector3(b.X1 + 0.5f, y + 0.1f, b.MidZ), Vector3.one * 0.8f, Glass);   // sonar dome
         }
 
-        /// <summary>Sky, INT: a winged plane. Wings out to both sides, a propeller in front, a tail behind.</summary>
+        /// <summary>Aerial, INT: a skyship. Wings out to both sides, a propeller in front, a tail behind.</summary>
         void Plane(Bounds2 b)
         {
             float y = 0.32f;
@@ -225,7 +264,7 @@ namespace BrineBattle.Hunting
             Piece(PrimitiveType.Cube, new Vector3(back - 0.9f, y + 0.3f, b.Row), new Vector3(0.5f, 0.06f, 1.6f), Wing);      // stabilizers
         }
 
-        /// <summary>Beast, DEX: a pirate ship. Hull walls, a pointed bow, two masts with square sails, a skull flag.</summary>
+        /// <summary>Sea level, STR: a galleon. Hull walls, a pointed bow, two masts with square sails, a skull flag.</summary>
         void PirateShip(Bounds2 b)
         {
             float wl = raft.WaterLine;
@@ -304,7 +343,7 @@ namespace BrineBattle.Hunting
         void Update()
         {
             // A raft tree pick changes the look even when no part moved.
-            if (Look != look || raft.Grid.VesselCount != built) { built = raft.Grid.VesselCount; Rebuild(); }
+            if (Look != look || raft.Grid.VesselCount != built || Stage != stage) { built = raft.Grid.VesselCount; Rebuild(); }
             if (spawner == null) spawner = FindFirstObjectByType<DriftSpawner>();
             var wind = spawner != null && spawner.currentDirection.sqrMagnitude > 0.01f ? spawner.currentDirection : Vector3.right;
             float flutter = Mathf.Sin(Time.time * 3f) * 4f;
@@ -312,7 +351,7 @@ namespace BrineBattle.Hunting
             // Plain: the sail turns to catch the current's wind and flutters. Pirate sails stay square to the ship.
             foreach (var sail in sails)
                 if (sail != null)
-                    sail.rotation = look == RaftKind.Beast
+                    sail.rotation = look == RaftKind.Sea
                         ? raft.transform.rotation * Quaternion.Euler(0f, flutter * 0.5f, 0f)
                         : raft.transform.rotation * face * Quaternion.Euler(0f, flutter, 0f);
             if (WorldPause.Active) return;

@@ -66,6 +66,11 @@ namespace BrineBattle.Hunting
                 data.wrecks = world.WrecksLeft;
             }
             data.firsts = hook.Firsts.Done.ToList();
+            data.hasFame = true;
+            data.fame = hook.Fame.Points;
+            data.fameKills = hook.Fame.Kills; data.fameBosses = hook.Fame.Bosses; data.fameTames = hook.Fame.Tames; data.fameCrafts = hook.Fame.Crafts;
+            data.bestRaft = hook.Fame.BestRaft; data.bestShip = hook.Fame.BestShip;
+            data.achievements = hook.Fame.Unlocked.ToList();
             foreach (var e in hook.Gorged.Entries)
                 data.gorged.Add(new SaveData.Gorge { monster = e.MonsterId, parts = e.Parts.Select(p => p.id).ToList() });
             try
@@ -212,6 +217,8 @@ namespace BrineBattle.Hunting
                 });
             hook.Mastery.Restore(data.hasMastery ? data.mastery : AlchemyMastery.StartingPoints(hook.raft.Tier));
             hook.Firsts.Restore(data.firsts);
+            if (data.hasFame) hook.Fame.Restore(data.fame, data.fameKills, data.fameBosses, data.fameTames, data.fameCrafts, data.bestRaft, data.bestShip, data.achievements);
+            else hook.Fame.Restore(0, 0, 0, 0, 0, hook.raft.Grid.IsShip ? EvolutionRules.RaftMax : hook.raft.Grid.Level, hook.raft.Grid.IsShip ? hook.raft.Grid.Level : 0, null);
             // Saves from before hammers existed get the starter hammer, so building isn't locked out.
             if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))
                 hook.Inventory.Add(hook.starterHammer, 1);

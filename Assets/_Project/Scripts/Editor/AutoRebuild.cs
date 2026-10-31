@@ -12,7 +12,7 @@ namespace BrineBattle.Editor
     [InitializeOnLoad]
     static class AutoRebuild
     {
-        public const int DataVersion = 13;   // 1 gear, 2 consumables, 3 gear skills, 4 elemental oils, 5 habitats, 6 reinforced raft parts, 7 main menu scene, 8 kelp biscuit, 9 hammers, 10 raft types, 11 raft tree, modules by rarity, flotsam, cure potions, 12 accessories, 13 bosses and vehicle parts
+        public const int DataVersion = 14;   // 1 gear, 2 consumables, 3 gear skills, 4 elemental oils, 5 habitats, 6 reinforced raft parts, 7 main menu scene, 8 kelp biscuit, 9 hammers, 10 raft types, 11 raft tree, modules by rarity, flotsam, cure potions, 12 accessories, 13 bosses and vehicle parts, 14 ship lines (vehicle parts renamed to ship parts)
         static string Key => $"brinebattle.dataVersion.{Application.dataPath.GetHashCode()}";
 
         static AutoRebuild()

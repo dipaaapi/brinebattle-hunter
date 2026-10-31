@@ -27,7 +27,7 @@ namespace BrineBattle.Hunting
         int tab;
         Vector2 scroll;
         string filter = "", snapshot = "scenario";
-        int speed = 1;
+        int speed = 1, devLevel;
         static readonly string[] Tabs = { "Raft", "Bag", "Minions", "Battle", "World", "Saves", "Log" };
         static readonly int[] Speeds = { 1, 3, 10 };
 
@@ -81,27 +81,38 @@ namespace BrineBattle.Hunting
         {
             var g = hook.raft.Grid;
             var bag = hook.Inventory;
-            HuntStyles.Section($"Raft Lv {(int)g.Tier + 1} · {g.Type} · kills {g.Kills}/{RaftRules.KillsToUpgrade(g.Tier)}");
+            HuntStyles.Section($"{g.LevelName} ({g.FormName}) · {g.Tier} · kills {g.Kills}/{g.KillsNeeded}");
+            // Level slider: raft Lv 1-50, ship Lv 1-100 (Ed's ask).
             GUILayout.BeginHorizontal();
-            if (Button("Lv −1") && g.Tier > Rarity.Common) { g.DevSetTier(g.Tier - 1); Did($"raft set to Lv {(int)g.Tier + 1}"); }
-            if (Button("Lv +1 (free)") && g.Tier < Rarity.Mythic) { g.DevSetTier(g.Tier + 1); Did($"raft set to Lv {(int)g.Tier + 1}"); }
-            if (Button("Max level") && g.Tier < Rarity.Mythic) { g.DevSetTier(Rarity.Mythic); Did("raft set to max level"); }
+            GUILayout.Label($"Lv {devLevel}", GUILayout.Width(56));
+            devLevel = Mathf.RoundToInt(GUILayout.HorizontalSlider(devLevel <= 0 ? g.Level : devLevel, 1, g.MaxLevel));
+            if (Button("Set", 60)) { g.DevSetLevel(g.Chosen, devLevel); Did($"{g.LevelName}"); }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (Button("Lv −1") && g.Level > 1) { g.DevSetLevel(g.Chosen, g.Level - 1); devLevel = g.Level; Did(g.LevelName); }
+            if (Button("Lv +1 (free)") && !g.AtMax) { g.DevSetLevel(g.Chosen, g.Level + 1); devLevel = g.Level; Did(g.LevelName); }
+            if (Button("Max level")) { g.DevSetLevel(g.Chosen, g.MaxLevel); devLevel = g.Level; Did(g.LevelName); }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (Button("Back to a raft")) { g.DevSetLevel(RaftKind.Plain, EvolutionRules.RaftMax); devLevel = g.Level; Did("back to a Lv 50 raft"); }
+            foreach (var k in RaftTree.Kinds)
+                if (Button($"{k} ship")) { g.DevSetLevel(k, 1); devLevel = 1; hook.raft.Grid.ResetOffType(null, hook.Inventory); Did($"made it a {EvolutionRules.LineName(k)} Lv 1"); }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (Button("Fill what the next level needs")) FillNextLevel();
-            if (Button("Level up (pay)") && g.TryUpgrade(bag, g.Chosen)) Did($"raft leveled up (paid) to Lv {(int)g.Tier + 1}");
+            if (Button("Level up (pay)") && g.TryUpgrade(bag, g.Chosen)) Did($"leveled up (paid): {g.LevelName}");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            if (Button("Kills = needed")) { g.Kills = RaftRules.KillsToUpgrade(g.Tier); Did("kills set to what the level needs"); }
-            if (Button("Mark this level's boss beaten")) { g.MarkBoss(g.Tier); Did($"Lv {(int)g.Tier + 1} boss marked beaten"); }
+            if (Button("Kills = needed")) { g.Kills = g.KillsNeeded; Did("kills set to what the level needs"); }
+            if (Button("Mark this tier's boss beaten")) { g.MarkBoss(g.Tier); Did($"{g.Tier} boss marked beaten"); }
             GUILayout.EndHorizontal();
 
             // "Why not?": the blockers the game itself checks, straight from the rules.
             HuntStyles.Section("Why not?");
             Why("Level up", g.UpgradeBlocker(bag));
-            Why("Pick the raft type", g.CanChoose ? null : g.Chosen != RaftKind.Plain ? $"already picked: {g.Chosen}" : $"opens at raft Lv {RaftTree.PickLevel}");
-            Why("Boss due", BossRules.Due(g) ? null : !g.BossesNeeded ? "bosses are off" : g.BossBeaten(g.Tier) ? "already beaten" : $"needs {RaftRules.KillsToUpgrade(g.Tier) - g.Kills} more kills");
-            Why("Leave the sea", g.LeaveBlocker());
+            Why("Pick the ship line", g.ChooseBlocker());
+            Why("Boss due", BossRules.Due(g) ? null : !g.BossesNeeded ? "bosses are off" : !EvolutionRules.BossGate(g.Chosen, g.Level) ? "no boss at this level (bands end at raft 16/33/50, ship 33/66/99)" : g.BossBeaten(g.Tier) ? "already beaten" : $"needs {g.KillsNeeded - g.Kills} more kills");
+            Why("Ship part", g.PartPending == 0 ? null : $"put on the {VesselRules.PartName(g.Chosen, g.PartPending)}");
             foreach (var q in QuestRules.Build(g, bag, hook.builder != null ? hook.builder.recipes.Where(hook.Knows) : null).Where(q => !q.Done))
                 Why(q.Title, string.Join(", ", q.Lines.Where(l => !l.Done).Select(l => $"{l.Text} {l.Have}/{l.Need}")));
         }
@@ -113,17 +124,22 @@ namespace BrineBattle.Hunting
         {
             var g = hook.raft.Grid;
             var bag = hook.Inventory;
-            g.Kills = Math.Max(g.Kills, RaftRules.KillsToUpgrade(g.Tier));
+            g.Kills = Math.Max(g.Kills, g.KillsNeeded);
             var mat = Items().FirstOrDefault(i => i.type == ItemType.Material && i.raftKind == RaftKind.Plain);
-            if (mat != null) bag.Add(mat, Math.Max(0, RaftRules.MaterialsToUpgrade(g.Tier) - bag.MaterialCount()));
-            bag.AddEssence(new EssenceKey(g.Tier, Elements.Element.None), RaftRules.UpgradeCost(g.Tier));
+            if (mat != null) bag.Add(mat, Math.Max(0, g.MaterialsNeeded - bag.MaterialCount()));
+            bag.AddEssence(new EssenceKey(g.Tier, Elements.Element.None), g.EssenceNeeded);
             if (!RaftRules.HasHammer(bag, g.Tier))
             {
                 var hammer = Items().Where(i => i.type == ItemType.Tool && i.rarity >= g.Tier).OrderBy(i => i.rarity).FirstOrDefault();
                 if (hammer != null) bag.Add(hammer, 1);
             }
             g.MarkBoss(g.Tier);
-            Did($"filled kills, materials, essence, hammer and boss for raft Lv {(int)g.Tier + 2} (modules on the left edge are still yours to place)");
+            if (g.PartPending > 0)
+            {
+                var part = Items().FirstOrDefault(i => i.type == ItemType.Vessel && i.raftKind == g.Chosen && i.vesselSlot == g.PartPending);
+                if (part != null) { bag.Add(part, 1); g.InstallVessel(part, bag); }
+            }
+            Did($"filled what {g.LevelName} needs to go up (modules on the left edge are still yours to place)");
         }
 
         // ---- Bag ----

@@ -44,6 +44,13 @@ namespace BrineBattle.Saving
         public int hunterHp = -1, hunterStatus, hunterStatusRounds;
         /// <summary>Raft type picked at each raft level-up (U-31), from Lv 2 up.</summary>
         public List<int> raftPaths = new List<int>();
+        /// <summary>Raft/ship evolution (Ed's ask, 2026-10-31): the line (0 raft, 1 Sea, 2 Aerial, 3 Undersea) and its level. False in older saves.</summary>
+        public bool hasEvolution;
+        public int raftLine, raftLevel;
+        /// <summary>Fame and achievements (local, first version).</summary>
+        public bool hasFame;
+        public int fame, fameKills, fameBosses, fameTames, fameCrafts, bestRaft, bestShip;
+        public List<string> achievements = new List<string>();
         /// <summary>Monsters that ate raft parts (Phase 8).</summary>
         public List<Gorge> gorged = new List<Gorge>();
         /// <summary>Time of day, weather and forecast (Idea Round 4); false in older saves (they start in the morning).</summary>
@@ -128,6 +135,9 @@ namespace BrineBattle.Saving
             d.raftTier = (int)raft.Tier;
             d.raftKills = raft.Kills;
             d.raftPaths = raft.Paths.Select(p => (int)p).ToList();
+            d.hasEvolution = true;
+            d.raftLine = (int)raft.Chosen;
+            d.raftLevel = raft.Level;
             d.hasVoyage = true;
             d.vessel = raft.Vessel.OrderBy(v => v).ToList();
             d.bosses = raft.BossesBeaten.Select(b => (int)b).OrderBy(b => b).ToList();
@@ -182,11 +192,26 @@ namespace BrineBattle.Saving
             raft.RestoreVoyage(d.vessel ?? new List<int>(), d.hasVoyage
                 ? (d.bosses ?? new List<int>()).Select(b => (Rarity)b)
                 : Enumerable.Range(0, (int)raft.Tier).Select(b => (Rarity)b));
+            if (d.hasEvolution) raft.RestoreEvolution((RaftKind)d.raftLine, d.raftLevel);
+            else MigrateRaft(raft, (Rarity)d.raftTier, d.bosses, d.hasVoyage);
             moduleDurability = d.modules.ToDictionary(m => new Cell(m.x, m.z), m => m.count);
             pets.Restore(d.companions.Select(LoadPet), d.activeCompanion, d.habitats);
             pets.RestoreMemorials(d.memorials.Select(m => new Memorial
                 { Id = m.id, Name = m.name, Rarity = (Rarity)m.rarity, Role = (CompanionRole)m.role, Age = m.age }));
             return missing;
+        }
+
+        /// <summary>
+        /// Saves from before ship lines (Ed's ask, 2026-10-31): the old raft Lv n (1-6) becomes raft Lv 1 + 8 × (n − 1)
+        /// (Lv 1, 9, 17, 25, 33, 41); the old Fortress/Sky/Beast type and its vehicle parts are dropped (the ship line
+        /// is picked at raft Lv 50 now); bosses already beaten stay beaten.
+        /// </summary>
+        public static void MigrateRaft(RaftGrid raft, Rarity oldTier, List<int> bosses, bool hasVoyage)
+        {
+            raft.RestoreVoyage(null, hasVoyage
+                ? (bosses ?? new List<int>()).Select(b => (Rarity)b)
+                : Enumerable.Range(0, (int)oldTier).Select(b => (Rarity)b));
+            raft.RestoreEvolution(RaftKind.Plain, 1 + 8 * (int)oldTier);
         }
 
         /// <summary>

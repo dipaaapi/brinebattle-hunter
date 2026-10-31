@@ -119,7 +119,7 @@ namespace BrineBattle.Companions
                 && CraftRules.CanCraft(bag, r)).ToList();
             var vessel = ready.Where(r => r.outputs[0].item.type == ItemType.Vessel)
                 .Where(r => { var o = r.outputs[0].item; return o.raftKind == raft.Chosen && raft.Chosen != RaftKind.Plain && !raft.HasVessel(o.vesselSlot) && bag.Count(o) == 0
-                    && (int)raft.Tier + 1 >= VesselRules.UnlockLevel(o.vesselSlot); })
+                    && raft.Level >= EvolutionRules.PartOpensAt(o.vesselSlot) - 5; })
                 .OrderBy(r => r.outputs[0].item.vesselSlot).FirstOrDefault();
             if (vessel != null) return vessel;
             bool moduleInBag = bag.Items.Any(kv => kv.Key.type == ItemType.Module);
@@ -135,11 +135,11 @@ namespace BrineBattle.Companions
         }
 
         /// <summary>
-        /// The raft type the Builder levels up toward, or null when it shouldn't: only once the type is picked
-        /// (the pick is the player's) and when nothing blocks the level-up.
+        /// The line the Builder levels up on (raft or ship), or null when something blocks the level-up. The
+        /// ship pick at raft Lv 50 is always the player's: at that point the blocker says so.
         /// </summary>
         public static RaftKind? BuilderLevelUp(RaftGrid raft, Inventory bag) =>
-            raft.Chosen != RaftKind.Plain && raft.UpgradeBlocker(bag) == null ? raft.Chosen : (RaftKind?)null;
+            raft.UpgradeBlocker(bag) == null ? raft.Chosen : (RaftKind?)null;
 
         /// <summary>
         /// A weapon, armor or accessory recipe whose result beats what's equipped in that slot and fits its tier

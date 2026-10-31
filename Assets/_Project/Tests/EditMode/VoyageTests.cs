@@ -51,70 +51,91 @@ namespace BrineBattle.Tests
             Assert.AreEqual(3000, hard, 150, "about 60% of the loot on Hard");
         }
 
+        static Inventory Richer()
+        {
+            var inv = new Inventory();
+            inv.Add(Item(RaftKind.Plain, Rarity.Common, ItemType.Material), 99999);
+            for (var r = Rarity.Common; r <= Rarity.Mythic; r++) inv.AddEssence(new EssenceKey(r, Elements.Element.None), 99999);
+            return inv;
+        }
+
         [Test]
-        public void TheBossOfTheLevelGatesTheLevelUp()
+        public void TheBossAtTheEndOfATierGatesTheLevelUp()
         {
             var g = Ready();
             g.BossesNeeded = true;
-            Assert.IsFalse(BossRules.Due(new RaftGrid { BossesNeeded = true }));
+            Assert.IsFalse(BossRules.Due(g), "no boss in the middle of a tier");
+            Assert.IsTrue(g.TryUpgrade(Rich()), "Lv 1 → 2 needs no boss");
+            g.RestoreEvolution(RaftKind.Plain, 16);
+            g.Kills = 999;
             Assert.IsTrue(BossRules.Due(g));
             StringAssert.Contains("boss", g.UpgradeBlocker(Rich()));
             Assert.IsFalse(g.TryUpgrade(Rich()));
             g.MarkBoss(Rarity.Common);
             Assert.IsFalse(BossRules.Due(g));
             Assert.IsTrue(g.TryUpgrade(Rich()));
+            Assert.AreEqual(17, g.Level);
+            Assert.AreEqual(Rarity.Uncommon, g.Tier);
         }
 
         [Test]
-        public void VehiclePartsOpenOnePerLevelForThePickedType()
+        public void ShipPartsGateTheShipLevels()
         {
             var g = Ready();
             var bag = Rich();
-            Assert.IsTrue(g.TryUpgrade(bag, RaftKind.Sky));
-            var wings = Item(RaftKind.Sky, Rarity.Uncommon, ItemType.Vessel, 1);
-            var tail = Item(RaftKind.Sky, Rarity.Rare, ItemType.Vessel, 2);
-            var track = Item(RaftKind.Fortress, Rarity.Uncommon, ItemType.Vessel, 1);
+            g.RestoreEvolution(RaftKind.Plain, EvolutionRules.RaftMax);
+            Assert.IsTrue(g.Choose(RaftKind.Aerial));
+            g.RestoreEvolution(RaftKind.Aerial, 20);
+            var wings = Item(RaftKind.Aerial, Rarity.Uncommon, ItemType.Vessel, 1);
+            var tail = Item(RaftKind.Aerial, Rarity.Rare, ItemType.Vessel, 2);
+            var hull = Item(RaftKind.Sea, Rarity.Uncommon, ItemType.Vessel, 1);
             bag.Add(wings, 1);
             bag.Add(tail, 1);
-            bag.Add(track, 1);
-            Assert.IsNotNull(g.VesselBlocker(track, bag), "not the picked type");
-            Assert.IsNotNull(g.VesselBlocker(tail, bag), "opens at Lv 3");
+            bag.Add(hull, 1);
+            g.Kills = 999;
+            Assert.AreEqual(1, g.PartPending);
+            StringAssert.Contains("Wings", g.UpgradeBlocker(bag));
+            Assert.IsNotNull(g.VesselBlocker(hull, bag), "not the picked line");
+            Assert.IsNotNull(g.VesselBlocker(tail, bag), "opens at ship Lv 40");
             Assert.IsTrue(g.InstallVessel(wings, bag));
-            Assert.IsTrue(g.HasVessel(1));
-            Assert.AreEqual(0, bag.Count(wings));
-            Assert.IsFalse(g.InstallVessel(wings, bag), "already on");
-            Assert.AreEqual("Wings", VesselRules.PartName(RaftKind.Sky, 1));
-            Assert.AreEqual("Sea Track", VesselRules.PartName(RaftKind.Fortress, 1));
+            Assert.AreEqual(0, g.PartPending);
+            Assert.IsTrue(g.TryUpgrade(bag));
+            Assert.AreEqual(21, g.Level);
+            Assert.AreEqual("Wings", VesselRules.PartName(RaftKind.Aerial, 1));
+            Assert.AreEqual("Hull Walls", VesselRules.PartName(RaftKind.Sea, 1));
+            Assert.AreEqual("Pressure Hull", VesselRules.PartName(RaftKind.Undersea, 1));
+            Assert.AreEqual("Sea Track", VesselRules.LegacyName(RaftKind.Sea, 1), "the old asset name stays for saves");
         }
 
         [Test]
-        public void AFinishedVehicleLeavesForANewSeaBackAtLevelOne()
+        public void TheClimbGoesRaftFiftyThenShipHundredThenComingSoon()
         {
             var g = Ready();
-            var bag = Rich();
-            while (g.Tier < Rarity.Mythic)
+            var bag = Richer();
+            int ups = 0;
+            while (!g.AtMax) { g.Kills = 999; Assert.IsTrue(g.TryUpgrade(bag), g.UpgradeBlocker(bag)); ups++; }
+            Assert.AreEqual(EvolutionRules.RaftMax, g.Level);
+            Assert.AreEqual("Simple Boat", g.FormName);
+            StringAssert.Contains("pick", g.UpgradeBlocker(bag));
+            Assert.IsTrue(g.Choose(RaftKind.Undersea));
+            while (!g.AtMax)
             {
                 g.Kills = 999;
-                Assert.IsTrue(g.TryUpgrade(bag, RaftKind.Beast), g.UpgradeBlocker(bag));
+                if (g.PartPending > 0)
+                {
+                    var part = Item(RaftKind.Undersea, VesselRules.RarityOf(g.PartPending), ItemType.Vessel, g.PartPending);
+                    bag.Add(part, 1);
+                    Assert.IsTrue(g.InstallVessel(part, bag), g.VesselBlocker(part, bag));
+                }
+                Assert.IsTrue(g.TryUpgrade(bag), g.UpgradeBlocker(bag));
+                ups++;
             }
-            StringAssert.Contains("vehicle part", g.LeaveBlocker());
-            for (int slot = 1; slot <= VesselRules.Parts; slot++)
-            {
-                var part = Item(RaftKind.Beast, VesselRules.RarityOf(slot), ItemType.Vessel, slot);
-                bag.Add(part, 1);
-                Assert.IsTrue(g.InstallVessel(part, bag), g.VesselBlocker(part, bag));
-            }
+            Assert.AreEqual(EvolutionRules.RaftMax - 1 + EvolutionRules.ShipMax - 1, ups);
+            Assert.AreEqual(Rarity.Mythic, g.Tier);
             Assert.IsTrue(g.VesselComplete);
-            StringAssert.Contains("Lv 6 boss", g.LeaveBlocker());
-            g.MarkBoss(Rarity.Mythic);
-            Assert.IsTrue(g.CanLeave);
-
-            g.NewSea(Basic, bag);
-            Assert.AreEqual(Rarity.Common, g.Tier);
-            Assert.AreEqual(RaftKind.Plain, g.Chosen);
-            Assert.AreEqual(0, g.VesselCount);
-            Assert.IsFalse(g.BossBeaten(Rarity.Mythic));
-            Assert.AreEqual(9, g.Count);
+            Assert.AreEqual("Abyss Ark", g.FormName);
+            StringAssert.Contains("coming soon", g.UpgradeBlocker(bag));
+            Assert.IsFalse(g.TryUpgrade(bag));
         }
 
         [Test]
@@ -122,15 +143,15 @@ namespace BrineBattle.Tests
         {
             var v = new Voyage { Difficulty = Difficulty.Normal };
             Assert.AreEqual(1.25f, v.EnemyScale, 1e-4f);
-            v.Leave(RaftKind.Sky);
+            v.Leave(RaftKind.Aerial);
             Assert.AreEqual(2, v.Sea);
             Assert.IsFalse(v.Won);
-            Assert.IsFalse(v.CanPick(RaftKind.Sky), "a finished type can't be picked again");
-            Assert.IsTrue(v.CanPick(RaftKind.Beast));
+            Assert.IsFalse(v.CanPick(RaftKind.Aerial), "a finished type can't be picked again");
+            Assert.IsTrue(v.CanPick(RaftKind.Undersea));
             Assert.AreEqual((1f + Voyage.SeaStep) * 1.25f, v.EnemyScale, 1e-4f);
-            v.Leave(RaftKind.Beast);
+            v.Leave(RaftKind.Undersea);
             Assert.IsTrue(v.Won);
-            Assert.IsTrue(v.CanPick(RaftKind.Sky), "after winning every type is open");
+            Assert.IsTrue(v.CanPick(RaftKind.Aerial), "after winning every type is open");
 
             var c = new Combatant { MaxHp = 100, Hp = 100, Attack = 10, Defense = 4, Speed = 5 };
             Voyage.Scale(c, 1.5f);

@@ -107,12 +107,15 @@ namespace BrineBattle.Tests
             inv.Salvage(crab, 10); // 30 Rare essence
             inv.Add(Part(Rarity.Common, ItemType.Material), 6);
             Assert.IsFalse(g.TryUpgrade(inv), "no kills yet");
-            g.Kills = RaftRules.KillsToUpgrade(Rarity.Common);
+            g.Kills = g.KillsNeeded;
             Assert.IsTrue(g.TryUpgrade(inv));
-            Assert.AreEqual(Rarity.Uncommon, g.Tier);
-            Assert.AreEqual(20, inv.EssenceAtLeast(Rarity.Common));
-            Assert.AreEqual(1, inv.MaterialCount(), "5 materials spent");
-            Assert.AreEqual(0, g.Kills, "kills count again from the upgrade");
+            Assert.AreEqual(2, g.Level);
+            Assert.AreEqual(Rarity.Common, g.Tier, "the tier changes every few levels");
+            Assert.AreEqual(29, inv.EssenceAtLeast(Rarity.Common), "1 essence a level at Common");
+            Assert.AreEqual(4, inv.MaterialCount(), "2 materials spent");
+            Assert.AreEqual(0, g.Kills, "kills count again from the level-up");
+            g.RestoreEvolution(RaftKind.Plain, 17);
+            Assert.AreEqual(Rarity.Uncommon, g.Tier, "raft Lv 17 is Uncommon");
             Assert.AreEqual(PlaceResult.BelowTier, g.Place(new Cell(2, 0), Part(Rarity.Common)));
             Assert.AreEqual(PlaceResult.Ok, g.Place(new Cell(2, 0), Part(Rarity.Uncommon)));
             Assert.Greater(g.MaxHp, 90);
@@ -123,13 +126,13 @@ namespace BrineBattle.Tests
         {
             var g = Starter();
             var inv = new Inventory();
-            g.Kills = 2;
+            g.Kills = 1;
             string why = g.UpgradeBlocker(inv);
-            StringAssert.Contains("kill 3 more monsters", why);
-            StringAssert.Contains("5 more monster materials", why);
-            StringAssert.Contains("10 more Common+ essence", why);
-            Assert.AreEqual(10, RaftRules.KillsToUpgrade(Rarity.Uncommon));
-            Assert.AreEqual(10, RaftRules.MaterialsToUpgrade(Rarity.Uncommon));
+            StringAssert.Contains("kill 1 more monster", why);
+            StringAssert.Contains("2 more monster materials", why);
+            StringAssert.Contains("1 more Common+ essence", why);
+            Assert.AreEqual(3, EvolutionRules.Kills(Rarity.Uncommon));
+            Assert.AreEqual(4, EvolutionRules.Materials(Rarity.Uncommon));
         }
 
         [Test]
@@ -186,7 +189,7 @@ namespace BrineBattle.Tests
             Assert.AreEqual(10, RaftRules.PartHp(Rarity.Common, Rarity.Common));
             Assert.AreEqual(30, RaftRules.PartHp(Rarity.Rare, Rarity.Common));
             Assert.AreEqual(12, RaftRules.PartHp(Rarity.Common, Rarity.Uncommon));
-            Assert.AreEqual(0, RaftRules.UpgradeCost(Rarity.Mythic));
+            Assert.AreEqual(11, EvolutionRules.Essence(Rarity.Mythic));
         }
 
         [Test]
