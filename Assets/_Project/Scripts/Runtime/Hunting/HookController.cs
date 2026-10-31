@@ -1087,7 +1087,7 @@ namespace BrineBattle.Hunting
             x += tile + gap;
             if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Paw, "Minions", "P", WorldPause.Open == Menu.Pets)) PetsPanel.Toggle();
             x += tile + gap;
-            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Book", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
+            if (HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Book, "Journal", "C", WorldPause.Open == Menu.Book)) BookToggleRequested?.Invoke();
             x += tile + gap;
             if (builder != null && HuntStyles.Tile(new Rect(x, y, tile, tile), HuntIcons.Hammer, "Build", "R", builder.Active)) builder.Toggle();
             x += tile + gap;

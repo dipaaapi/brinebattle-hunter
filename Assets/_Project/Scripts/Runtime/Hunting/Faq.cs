@@ -25,7 +25,7 @@ namespace BrineBattle.Hunting
                 new Entry("What do I do in this game?",
                     "You live on a raft on an endless ocean. Monsters and loot float past. Hook them with your harpoon, fight or harvest them, then use the loot to build a bigger, stronger raft, make gear and potions, and raise minions."),
                 new Entry("What are the keys?",
-                    "Click a floating thing: throw the harpoon at it.\nSpace: reel in.\nB: Bag.  P: Minions.  J: Quests.  C: Collection Book.  R: Build.  Esc: Settings, or close a menu.\nMouse wheel or + / -: zoom in and out.  Right-drag or Q / E: turn the view.  F: put the view back.\nYou can also click the picture buttons at the bottom of the screen."),
+                    "Click a floating thing: throw the harpoon at it.\nSpace: reel in.\nB: Bag.  P: Minions.  J: Quests.  C: Journal.  R: Build.  Esc: Settings, or close a menu.\nMouse wheel or + / -: zoom in and out.  Right-drag or Q / E: turn the view.  F: put the view back.\nYou can also click the picture buttons at the bottom of the screen."),
                 new Entry("What do the boxes at the top-left mean?",
                     "Hunter: your HP and any ailment. Raft: its level, HP, size and type. Harpoon: how worn it is (press Fix to mend it). Minions: each one's level, EXP and what it is doing. The line under them shows the day, the time, the weather and the forecast (what weather comes next, and when).")),
 
@@ -92,7 +92,7 @@ namespace BrineBattle.Hunting
                 new Entry("What is Alchemy Mastery?",
                     "Your skill as a monster alchemist, shown at the top-left. Harvesting or beating a monster gives 2 points, taming 3, crafting 1. Each level needs more points (10, 20, 30 …)."),
                 new Entry("What does Mastery do?",
-                    "• Hints over drifts (\"Looks dead\" etc.) are right more often: 60% at Lv 1, up to 96%.\n• New recipes appear: Uncommon things at Lv 2, Rare at Lv 3, Epic at Lv 4, Legendary at Lv 5, Mythic at Lv 6. Until then they show as ??? in the Workbench and the Book.\n• From Lv 3 you can combine 5 essence into 1 of the next rarity (Bag → Essence)."),
+                    "• Hints over drifts (\"Looks dead\" etc.) are right more often: 60% at Lv 1, up to 96%.\n• New recipes appear: Uncommon things at Lv 2, Rare at Lv 3, Epic at Lv 4, Legendary at Lv 5, Mythic at Lv 6. Until then they show as ??? in the Workbench and the Journal.\n• From Lv 3 you can combine 5 essence into 1 of the next rarity (Bag → Essence)."),
                 new Entry("Why is a recipe \"???\"?",
                     "Your Alchemy Mastery isn't high enough yet. The card says which level reveals it. Hunt, harvest and craft to level up. Book → Recipes lists every recipe you know.")),
 
@@ -166,9 +166,9 @@ namespace BrineBattle.Hunting
                 new Entry("What is Look?",
                     "A costume: Plain, Scarf, Bandana or Crown. It's just for looks.")),
 
-            new Topic("Book & saving",
-                new Entry("What is the Collection Book?",
-                    "C opens it. Monsters, items and minions you've found. ??? means not found yet. Each tab shows found/total."),
+            new Topic("Journal & saving",
+                new Entry("What is the Journal?",
+                    "C opens it. Monsters, items, minions and recipes you've found (??? means not found yet; each tab shows found/total), and the Music tab, where you can play each piece of the soundtrack on its own."),
                 new Entry("How do I save?",
                     "Settings → Save → Save now. There is one save file. In Semi-auto and Auto it also saves by itself every 5 minutes once a save exists. The top-right corner shows when."),
                 new Entry("What if I fall asleep while playing?",

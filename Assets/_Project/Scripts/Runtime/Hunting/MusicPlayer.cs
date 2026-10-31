@@ -24,6 +24,19 @@ namespace BrineBattle.Hunting
     {
         public HookController hook;
 
+        public static MusicPlayer Instance { get; private set; }
+        void Awake() => Instance = this;
+
+        /// <summary>
+        /// Journal → Music (Ed's ask): play one layer on its own (0…), a whole mix (<see cref="PreviewMix"/>), or
+        /// nothing set (-1) for the game's own music.
+        /// </summary>
+        public int Solo { get; set; } = -1;
+        public MusicMoment? PreviewMix { get; set; }
+        public bool Previewing => Solo >= 0 || PreviewMix.HasValue;
+        public void StopPreview() { Solo = -1; PreviewMix = null; }
+        public bool Ready => ready;
+
         AudioSource[] sources;
         float[] volumes;
         bool ready;
@@ -64,12 +77,15 @@ namespace BrineBattle.Hunting
         void Update()
         {
             if (!ready) return;
-            var m = Moment();
-            var targets = MusicRules.Targets(m);
+            if (Previewing && WorldPause.Open != Menu.Book) StopPreview();   // left the Journal: back to the game's music
+            float[] targets;
+            if (Solo >= 0) { targets = new float[sources.Length]; targets[Solo] = 1f; }
+            else targets = MusicRules.Targets(PreviewMix ?? Moment());
             float master = MusicSettings.Volume;
             for (int i = 0; i < sources.Length; i++)
             {
-                float step = Time.unscaledDeltaTime / MusicRules.FadeSeconds((MusicLayer)i);
+                // Previews switch quickly; in play, layers drift by their own fade times.
+                float step = Time.unscaledDeltaTime / (Previewing ? 0.4f : MusicRules.FadeSeconds((MusicLayer)i));
                 volumes[i] = Mathf.MoveTowards(volumes[i], targets[i], step);
                 sources[i].volume = volumes[i] * master;
             }

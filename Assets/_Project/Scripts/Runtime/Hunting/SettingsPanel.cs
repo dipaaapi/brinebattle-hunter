@@ -133,7 +133,7 @@ namespace BrineBattle.Hunting
             ("B", "Bag"),
             ("P", "Minions"),
             ("J", "Quests (or the tab on the right edge)"),
-            ("C", "Collection Book"),
+            ("C", "Journal (collection and music)"),
             ("R", "Build the raft and the Workbench"),
             ("Esc", "Settings, or close a menu"),
             ("Mouse wheel  or  + / -", "Zoom in and out"),
