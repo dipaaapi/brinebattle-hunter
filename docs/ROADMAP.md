@@ -7,6 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 9 — Art and sound pass 🟨 on `phase/9-audio`: BGM done, SFX next, Blender last |
+| **Dev tools** | Developer mode (F1, Editor/development builds only) on `tools/dev-mode`; next: raft Lv 1–50 → ship lines (Ed's ask 2026-10-31) |
 | **Next step** | Ed listens to the BGM in Play (Settings → Music volume). Then SFX. PR #8 (summon boss) waits for Ed; `phase/9-audio` is based on it. Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |

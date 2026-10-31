@@ -51,6 +51,11 @@
 - **Raft type look:** once the type is picked the vehicle's frame shows right away (low hull sides / stub wings / bare rails) instead of the katig; each vehicle part (Workbench → Vehicle, then Build) adds its full piece.
 - 268/268 EditMode tests pass (headless).
 
+## 2026-10-31 — Developer mode (laptop)
+- Ed's ask: a developer mode for fast QA of the real game, no login (it ends up on Steam). Branch `tools/dev-mode` from main 7c1f4a4.
+- `Hunting/DevMode` (Available only under `UNITY_EDITOR || DEVELOPMENT_BUILD`, `Used` marks the game DEV, god mode, action log) and `Hunting/DevPanel` (F1; Raft with "Why not?", Bag, Minions, Battle, World, Saves snapshots, Log). Dev-only hooks: `RaftGrid.DevSetTier`, `BattleState.DevFinish/DevHeal`, `DriftSpawner.DevSummonBoss/DevSpawn`, `HookController.SummonBoss(dev)`. `SaveData.dev`; Settings shows "(DEV)".
+- Checked: Runtime/Editor/Tests compile; Runtime also compiles as a release build without the dev defines. +4 `DevModeTests`. Docs: TOOLING "Developer mode".
+
 ## 2026-10-30 — Minions (Ed's U-39), on the laptop
 - Laptop is now Ed's main machine. Pulled `idea-round/4-world` (16b0e66), committed Unity's missing metas (e780813, pushed on Ed's OK).
 - Pets became **minions**: `Companions/Minion.cs` (plain C#: `MinionSkill`, `MinionRules` levels/EXP/skill order/gates/room/junk/tree states). `Companion` has Level, Exp, Skills, `GainExp`, `CatchUp`, `Learn`; `CompanionRoster.Best(MinionSkill)`; Fighter-only battle minion. Feeding gives EXP; fusion keeps the higher level and passes a skill. `CompanionWork`: Builder (vehicle parts, modules, reinforce, level-up), Tinker, junk picks, Hungriest.

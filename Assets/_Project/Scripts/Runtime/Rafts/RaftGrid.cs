@@ -428,6 +428,18 @@ namespace BrineBattle.Rafts
 
         /// <summary>Bosses gate the level-ups. Off for bare grids in tests; the game turns it on.</summary>
         public bool BossesNeeded { get; set; }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>Developer mode only: sets the level directly (paths fill up with Plain, or the picked type).</summary>
+        public void DevSetTier(Rarity tier)
+        {
+            while (Tier < tier) { Tier++; paths.Add(Chosen); }
+            while (Tier > tier && paths.Count > 0) { Tier--; paths.RemoveAt(paths.Count - 1); }
+            Tier = tier;
+            Kills = 0;
+            Changed?.Invoke();
+        }
+#endif
         readonly HashSet<Rarity> bosses = new HashSet<Rarity>();
         /// <summary>Raft levels whose boss is beaten (by the level's rarity).</summary>
         public IEnumerable<Rarity> BossesBeaten => bosses;

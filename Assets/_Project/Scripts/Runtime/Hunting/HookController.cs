@@ -117,6 +117,10 @@ namespace BrineBattle.Hunting
             if (FindFirstObjectByType<SettingsPanel>() == null) new GameObject("Settings").AddComponent<SettingsPanel>();
             // Pets menu (Ed's ask: its own menu, not in the Bag), likewise added at runtime.
             if (FindFirstObjectByType<PetsPanel>() == null) new GameObject("Pets").AddComponent<PetsPanel>().hook = this;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Developer mode (Ed's ask): F1 panel, Editor and development builds only.
+            if (FindFirstObjectByType<DevPanel>() == null) new GameObject("Developer").AddComponent<DevPanel>().hook = this;
+#endif
             // Quest tab (Ed's ask), likewise.
             if (FindFirstObjectByType<QuestPanel>() == null) new GameObject("Quests").AddComponent<QuestPanel>().hook = this;
             if (FindFirstObjectByType<IdleWatch>() == null) new GameObject("Idle Watch").AddComponent<IdleWatch>();
@@ -584,13 +588,20 @@ namespace BrineBattle.Hunting
         /// Ed's ask: the Quest tab's "Summon the boss now!" calls the raft level's boss (once its monsters are
         /// beaten) and the fight starts at once. You chose the moment, so you strike first.
         /// </summary>
-        public void SummonBoss()
+        public void SummonBoss() => SummonBoss(false);
+
+        /// <summary>Summons the boss; <paramref name="dev"/> (developer mode) skips the "is it due" check.</summary>
+        public void SummonBoss(bool dev)
         {
             var spawner = FindFirstObjectByType<DriftSpawner>();
             if (BattleController.InBattle) { Log("Finish this battle first."); return; }
             if (RestLeft > 0f) { Log($"You're still knocked out: {Mathf.CeilToInt(RestLeft)} s."); return; }
             if (phase != Phase.Idle) { Log("Finish what you're hooking first."); return; }
-            var d = spawner != null ? spawner.SummonBoss() : null;
+            Drift d = null;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (dev && spawner != null) d = spawner.DevSummonBoss();
+#endif
+            if (d == null && spawner != null) d = spawner.SummonBoss();
             if (d == null) { Log("The boss isn't ready yet: beat more of this level's monsters first."); return; }
             if (!d.TryClaim(this)) { Log("Something else has hold of the boss right now."); return; }
             Log($"You call out across the waves... {d.Monster.displayName} answers!");

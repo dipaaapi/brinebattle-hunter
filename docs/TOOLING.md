@@ -23,6 +23,22 @@
 
 Note: MCP tools add to every session's context, so enable each only for the phases that use it.
 
+## Developer mode (in-game, Ed's ask 2026-10-31)
+
+**F1** in the Unity Editor or a Development Build opens the Developer panel. All of it sits under `#if UNITY_EDITOR || DEVELOPMENT_BUILD`, so a release build for Steam has none of it (checked by compiling Runtime without those defines). No login: who can use it is decided by the build. Testers outside the PC get a Steam beta branch with a password, not an in-game account.
+
+| Tab | What |
+|---|---|
+| Raft | level −1 / +1 / max (free), fill what the next level needs, pay a level-up, kills, boss beaten; **Why not?** lists the game's own blockers (level-up, type pick, boss due, leave) and every open quest's missing lines |
+| Bag | +20 essence per rarity; find any item, +1 / +10 |
+| Minions | per minion: +1 Lv, Lv 10/20/30, heal, learn any skill; tame any monster (no roll, no room check) |
+| Battle | god mode, win now, lose now (hunter or raft), summon this level's boss due or not, spawn any monster or boss Alive/Weakened/Dead |
+| World | time ×1/×3/×10 outside battles, dawn/day/dusk/night, any weather, max Mastery, heal the hunter |
+| Saves | named snapshots in `Saves/Dev/` (save / load / delete); loading puts the old save in `save.backup.json` |
+| Log | every developer action |
+
+Any developer action marks the game **DEV** (badge at the top of the screen); its saves carry `dev: true` and Settings shows "(DEV)" next to the save time.
+
 ## Artifacts (claude.ai pages)
 
 | Artifact | When | Why |

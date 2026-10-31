@@ -32,7 +32,8 @@ namespace BrineBattle.Hunting
             try
             {
                 if (!Exists) return null;
-                return JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath))?.savedAt ?? "?";
+                var d = JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath));
+                return d == null ? "?" : (d.savedAt ?? "?") + (d.dev ? " (DEV)" : "");
             }
             catch (Exception) { return "unreadable"; }
         }
@@ -47,6 +48,7 @@ namespace BrineBattle.Hunting
                 modules?.Slots.Select(kv => new KeyValuePair<Cell, int>(kv.Key, kv.Value.Durability.Current)),
                 hook.Companions, book != null ? book.Log.Serialize() : null, DateTime.Now);
             CaptureSettings(data, hook, book);
+            data.dev = DevMode.Used;
             data.hasMastery = true;
             data.mastery = hook.Mastery.Points;
             data.difficulty = (int)hook.Voyage.Difficulty;
@@ -175,6 +177,7 @@ namespace BrineBattle.Hunting
             }
             catch (Exception e) { return $"Load failed: {e.Message}"; }
             if (data == null) return "Load failed: the file is empty or broken.";
+            DevMode.Used = data.dev;
 
             var book = UnityEngine.Object.FindFirstObjectByType<CollectionBook>();
             var known = new Dictionary<string, ItemDefinition>();

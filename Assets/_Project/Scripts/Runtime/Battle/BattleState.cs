@@ -191,6 +191,26 @@ namespace BrineBattle.Battle
             }
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>Developer mode only: ends the battle now with <paramref name="outcome"/>.</summary>
+        public void DevFinish(BattleOutcome outcome)
+        {
+            if (Outcome != BattleOutcome.Ongoing) return;
+            if (outcome == BattleOutcome.Won) { Monster.Hp = 0; Add($"{Monster.Name} is defeated! (dev)"); Emit(BattleEventKind.KnockedOut, BattleActor.Hunter, BattleActor.Monster, 0); }
+            else if (outcome == BattleOutcome.LostRaft) { RaftHp = 0; Add("The raft breaks apart! (dev)"); }
+            else { Hunter.Hp = 0; Add("You were knocked out. (dev)"); }
+            Outcome = outcome;
+        }
+
+        /// <summary>Developer mode only (god mode): hunter, minion and raft back to full.</summary>
+        public void DevHeal()
+        {
+            Hunter.Hp = Hunter.MaxHp;
+            RaftHp = RaftMaxHp;
+            if (Companion != null) Companion.Hp = Companion.MaxHp;
+        }
+#endif
+
         /// <summary>Boss fights: the other minions strike, the boss enrages at half HP, then tidal waves hit the raft.</summary>
         void BossEffects()
         {

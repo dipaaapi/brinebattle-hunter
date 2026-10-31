@@ -17,6 +17,8 @@ namespace BrineBattle.Saving
     public class SaveData
     {
         public int version = SaveGame.Version;
+        /// <summary>Made or changed with developer mode (never counts as real progress).</summary>
+        public bool dev;
         public string savedAt;
         public List<Stack> items = new List<Stack>();
         public List<EssenceStack> essence = new List<EssenceStack>();
