@@ -25,7 +25,7 @@ namespace BrineBattle.Companions
         {
             cell = default;
             var candidates = bag.Items.Select(kv => kv.Key)
-                .Where(i => (i.type == ItemType.Module || i.type == ItemType.Raft) && SalvageRules.IsCompatible(i.type, i.rarity, raft.Tier))
+                .Where(i => (i.type == ItemType.Module || i.type == ItemType.Raft) && !ShapeRules.IsKit(i) && SalvageRules.IsCompatible(i.type, i.rarity, raft.Tier))
                 .OrderBy(i => i.type == ItemType.Module ? 0 : 1).ThenByDescending(i => i.rarity).ThenByDescending(i => i.moduleLevel);
             foreach (var p in candidates)
             {
@@ -113,10 +113,16 @@ namespace BrineBattle.Companions
         /// the raft is missing, an auto-loot module while the left edge needs more, then a raft part of the raft's
         /// level (reinforce) while the bag has fewer than <paramref name="keepParts"/> that fit. Null if none.
         /// </summary>
-        public static RecipeDefinition BuilderCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, RaftGrid raft, int keepParts = 2)
+        public static RecipeDefinition BuilderCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, RaftGrid raft, int keepParts = 2, ISet<string> wanted = null)
         {
             var ready = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && r.outputs.Count > 0 && r.outputs[0].item != null
                 && CraftRules.CanCraft(bag, r)).ToList();
+            // A loaded blueprint's missing parts come first (Ed's ask: the minions make what the design needs).
+            if (wanted != null && wanted.Count > 0)
+            {
+                var forBlueprint = ready.FirstOrDefault(r => wanted.Contains(r.outputs[0].item.id));
+                if (forBlueprint != null) return forBlueprint;
+            }
             var vessel = ready.Where(r => r.outputs[0].item.type == ItemType.Vessel)
                 .Where(r => { var o = r.outputs[0].item; return o.raftKind == raft.Chosen && raft.Chosen != RaftKind.Plain && !raft.HasVessel(o.vesselSlot) && bag.Count(o) == 0
                     && raft.Level >= EvolutionRules.PartOpensAt(o.vesselSlot) - 5; })
@@ -125,7 +131,7 @@ namespace BrineBattle.Companions
             bool moduleInBag = bag.Items.Any(kv => kv.Key.type == ItemType.Module);
             if (!raft.ModulesReady && !moduleInBag)
             {
-                var module = ready.Where(r => r.outputs[0].item.type == ItemType.Module).OrderByDescending(r => r.outputs[0].item.moduleLevel).FirstOrDefault();
+                var module = ready.Where(r => r.outputs[0].item.type == ItemType.Module && !ShapeRules.IsKit(r.outputs[0].item)).OrderByDescending(r => r.outputs[0].item.moduleLevel).FirstOrDefault();
                 if (module != null) return module;
             }
             int fitting = bag.Items.Where(kv => kv.Key.type == ItemType.Raft && kv.Key.rarity >= raft.Tier && raft.FitsType(kv.Key)).Sum(kv => kv.Value);

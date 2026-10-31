@@ -450,6 +450,8 @@ namespace BrineBattle.Hunting
         public static string LockReason(HookController hook, RecipeDefinition r)
         {
             if (!hook.Mastery.Knows(r)) return $"Alchemy Mastery Lv {AlchemyMastery.Needed(r)}";
+            var made = r.outputs.Count > 0 ? r.outputs[0].item : null;
+            if (ShapeRules.IsKit(made)) return ShapeRules.Lock(made.shape);
             var kind = RaftTree.KindOf(r);
             int lv = RaftTree.LevelOf(r.outputs[0].item);
             var chosen = hook.raft != null ? hook.raft.Grid.Chosen : RaftKind.Plain;
@@ -481,9 +483,17 @@ namespace BrineBattle.Hunting
                     + (enough ? "" : $"  <color={HuntStyles.BadHex}>need {i.count - have} more</color>"), HuntStyles.Text);
             }
 
-            if (ok)
+            // Shaped module kits are alchemy (Ed's ask: the hunter is an ordinary person; minions do it).
+            var maker = main != null && ShapeRules.IsKit(main.item) ? MinionMaker() : null;
+            if (main != null && ShapeRules.IsKit(main.item) && maker == null)
             {
-                if (HuntStyles.ColorButton($"{verb}!", HuntStyles.Go)) Craft(r, verb);
+                GUI.enabled = false;
+                GUILayout.Button("Needs a Builder or Alchemist minion", GUILayout.Height(28));
+                GUI.enabled = true;
+            }
+            else if (ok)
+            {
+                if (HuntStyles.ColorButton(maker != null ? $"{maker.Name} makes it!" : $"{verb}!", HuntStyles.Go)) Craft(r, verb);
             }
             else
             {
@@ -494,6 +504,9 @@ namespace BrineBattle.Hunting
             }
             GUILayout.EndVertical();
         }
+
+        /// <summary>The minion that does alchemy for shaped kits: a Builder, else an Alchemist; null if none.</summary>
+        Companions.Companion MinionMaker() => hook.Companions.Best(Companions.MinionSkill.Builder) ?? hook.Companions.Best(Companions.MinionSkill.Alchemist);
 
         void Craft(RecipeDefinition r, string verb)
         {

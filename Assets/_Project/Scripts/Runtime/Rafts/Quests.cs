@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Items;
@@ -121,6 +122,24 @@ namespace BrineBattle.Rafts
                 }
             }
             return list;
+        }
+
+        /// <summary>
+        /// The loaded blueprint as a quest (Ed's ask): one line per part it still needs, have/need from the bag.
+        /// Null when nothing is loaded or the bag has it all.
+        /// </summary>
+        public static Quest BlueprintQuest(Blueprint bp, RaftGrid raft, Inventory bag, Func<string, ItemDefinition> find)
+        {
+            if (bp == null) return null;
+            var need = bp.Needed(raft);
+            if (need.Count == 0) return null;
+            var q = new Quest { Id = "blueprint", Title = $"Blueprint: {bp.name}", Summary = bp.Credit, Target = QuestTarget.Workbench, Sub = RecipeSub.Parts };
+            foreach (var kv in need)
+            {
+                var item = find(kv.Key);
+                q.Lines.Add(new QuestLine(item != null ? item.displayName : kv.Key, item != null ? bag.Count(item) : 0, kv.Value));
+            }
+            return q;
         }
 
         /// <summary>One line per ingredient of <paramref name="r"/>: have/need from the bag.</summary>

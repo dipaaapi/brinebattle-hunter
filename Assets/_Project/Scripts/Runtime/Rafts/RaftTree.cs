@@ -45,6 +45,8 @@ namespace BrineBattle.Rafts
         {
             if (r == null || r.kind == RecipeKind.Dismantle || r.outputs.Count == 0) return true;
             var item = r.outputs[0].item;
+            // Shaped module kits open with the raft's growth (Ed's ask).
+            if (item != null && ShapeRules.IsKit(item) && !ShapeRules.Unlocked(g, item.shape)) return false;
             if (item == null || item.raftKind == RaftKind.Plain) return true;
             return Unlocked(g, item.raftKind, LevelOf(item));
         }

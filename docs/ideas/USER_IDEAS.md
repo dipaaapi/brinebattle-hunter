@@ -212,3 +212,12 @@ The Build menu covered the raft, so customising at sea didn't work. A separate m
 
 ### U-47 Customizable shortcut keys — 2026-10-31 · 💡 Next patch, not now
 Shortcut keys for every menu (Bag, Journal, Settings, Build, Shipyard, Minions, Quests, …) with defaults 1, 2, 3, 4, 5, 6, 7, 8, 9, 0. Settings gets a "Shortcut keys" section to rebind them, with Reset to defaults. The same section lists Controllers as "Coming soon": keyboard only for now, gamepad / Joy-Con later.
+
+### U-48 Blueprints and a blueprint store — 2026-10-31 · 🟨 Phase 10 · GDD §6
+Save raft designs as blueprints; load one as a ghost and build it from your own loot (missing parts become a quest the minions work on; copying never gives parts for free). Share designs with others; every copy keeps the original author's credit. First version: share codes, no server and no login.
+
+### U-49 Bigger module shapes — 2026-10-31 · 🟨 Phase 10 · GDD §6
+Modules in more shapes than a square (1×2, 2×2, L, T, 1×3), unlocking at higher levels and made by minions through alchemy, since the hunter is an ordinary person. Parts can be turned in the Shipyard.
+
+### U-50 Online blueprint store / Steam Workshop — 2026-10-31 · 💡 later (needs Steam)
+A real online store for raft designs (browse, rate, copy), on Steam Workshop. The share codes are the first step.

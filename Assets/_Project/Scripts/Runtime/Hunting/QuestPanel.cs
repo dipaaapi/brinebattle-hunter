@@ -28,9 +28,16 @@ namespace BrineBattle.Hunting
                 && (WorldPause.Open == Menu.None || WorldPause.Open == Menu.Quests)) Toggle();
         }
 
-        List<Quest> Quests() => hook != null && hook.raft != null
-            ? QuestRules.Build(hook.raft.Grid, hook.Inventory, hook.builder != null ? hook.builder.recipes.Where(r => r != null && hook.Knows(r)) : null)
-            : new List<Quest>();
+        List<Quest> Quests()
+        {
+            if (hook == null || hook.raft == null) return new List<Quest>();
+            var list = QuestRules.Build(hook.raft.Grid, hook.Inventory, hook.builder != null ? hook.builder.recipes.Where(r => r != null && hook.Knows(r)) : null);
+            // The blueprint loaded in the Shipyard (Ed's ask): what it still needs.
+            var yard = Shipyard.Target != null ? FindFirstObjectByType<Shipyard>() : null;
+            var bp = yard != null ? QuestRules.BlueprintQuest(Shipyard.Target, hook.raft.Grid, hook.Inventory, yard.Find) : null;
+            if (bp != null) list.Add(bp);
+            return list;
+        }
 
         const string JournalId = "journal", FameId = "fame";
 

@@ -186,7 +186,7 @@ Order (Ed, 2026-10-31): **BGM → SFX → Blender** (Blender last, it's the bigg
 - [x] No leaving the sea; fame and 14 achievements (local), difficulty multiplies fame
 - [x] Older saves migrate (raft level, no old type)
 - [x] Shipyard (U-46): customise the raft in its own view, game halted, minions don't help
-- [ ] Blueprints, share codes, bigger module shapes (Ed's asks)
+- [x] Blueprints with share codes and credits (U-48), bigger module shapes made by minions (U-49)
 - [ ] Ed's Unity test (Test Runner, then Play with the F1 panel), then merge
 
 **Done when:** a raft can be taken from Lv 1 to 50, a ship line picked and levelled to 100 (fast with F1), the look changes along the way, and fame and achievements count up.

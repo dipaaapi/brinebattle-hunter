@@ -317,6 +317,11 @@ namespace BrineBattle.Editor
                 Recipe($"dismantle_{nets[n].id}", nets[n].displayName, RecipeKind.Dismantle, new[] { (nets[n], 1) }, new[] { (prevNet, 1), (netBases[n], 1) });
                 prevNet = nets[n];
             }
+            // Ed's ask: bigger module shapes. A kit per module and shape: one module per cell plus a fang as the
+            // alchemy binder, made by a Builder or Alchemist minion; the shapes open with the raft's growth.
+            foreach (var m in new[] { net, hookArm }.Concat(nets))
+                foreach (ModuleShape shape in new[] { ModuleShape.Bar2, ModuleShape.Square, ModuleShape.L, ModuleShape.T, ModuleShape.Bar3 })
+                    ShapedKit(m, shape, fang);
             Flotsam("DriftwoodBundle", "driftwood_bundle", "Driftwood Bundle", Rarity.Common, (plank, 1f, 2, 3), (patch, 0.4f, 1, 1));
             Flotsam("TarBarrel", "tar_barrel", "Tar Barrel", Rarity.Uncommon, (tarred, 1f, 1, 2), (patch, 0.6f, 1, 2));
             Flotsam("ShellWreck", "shell_wreck", "Shell Wreck", Rarity.Rare, (shell, 1f, 1, 2), (scale, 0.6f, 1, 2));
@@ -520,6 +525,25 @@ namespace BrineBattle.Editor
             if (item == null || item.gearPower == power) return;
             item.gearPower = power;
             EditorUtility.SetDirty(item);
+        }
+
+        /// <summary>A shaped module kit (Ed's ask): lays <paramref name="module"/> down in <paramref name="shape"/>.</summary>
+        static void ShapedKit(ItemDefinition module, ModuleShape shape, ItemDefinition binder)
+        {
+            int cells = ShapeRules.Size(shape);
+            string tag = shape.ToString();
+            string id = $"{module.id}_{tag.ToLowerInvariant()}";
+            string name = $"{module.displayName} {ShapeRules.Name(shape)}";
+            var kit = LoadOrCreate<ItemDefinition>($"{Root}/Items/Kit{module.name}{tag}.asset", i =>
+            {
+                i.id = id; i.type = ItemType.Module; i.maxStack = 20;
+            });
+            kit.displayName = name;
+            kit.rarity = module.rarity; kit.element = module.element; kit.moduleLevel = module.moduleLevel;
+            kit.shape = shape; kit.segment = module;
+            kit.description = $"A {ShapeRules.Name(shape)} kit: lays {cells} {module.displayName}s at once. Turn it in the Shipyard (R). Made by a Builder or Alchemist minion. {ShapeRules.Lock(shape)}.";
+            EditorUtility.SetDirty(kit);
+            Recipe($"kit_{id}", name, RecipeKind.Craft, new[] { (module, cells), (binder, 1) }, new[] { (kit, 1) });
         }
 
         static ItemDefinition Module(string file, string id, string name, Rarity rarity, int level, string description) =>

@@ -504,7 +504,7 @@ namespace BrineBattle.Hunting
                     return;
                 }
             }
-            if (CompanionSettings.BuilderCrafts) Crafted(who, "Builder", CompanionWork.BuilderCraftPick(known, hook.Inventory, g));
+            if (CompanionSettings.BuilderCrafts) Crafted(who, "Builder", CompanionWork.BuilderCraftPick(known, hook.Inventory, g, 2, Shipyard.Wanted(FindFirstObjectByType<Shipyard>())));
         }
 
         void SalvageJob(Companion who)
