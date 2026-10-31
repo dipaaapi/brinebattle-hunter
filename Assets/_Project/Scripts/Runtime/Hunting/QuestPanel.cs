@@ -100,7 +100,7 @@ namespace BrineBattle.Hunting
             }
             GUILayout.Space(6);
             string go = GoLabel(current);
-            if (go != null && HuntStyles.ColorButton(go, current.Done ? HuntStyles.Go : HuntStyles.Other)) Go(current);
+            if (go != null && HuntStyles.ColorButton(go, current.Done || current.Target == QuestTarget.Boss ? HuntStyles.Go : HuntStyles.Other)) Go(current);
             GUILayout.EndScrollView();
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
@@ -126,6 +126,8 @@ namespace BrineBattle.Hunting
                 case QuestTarget.Build: return "Open Build";
                 case QuestTarget.Workbench: return $"Open Workbench → {Items.CraftRules.Label(q.Sub)}";
                 case QuestTarget.Leave: return q.Done ? "Leave the sea" : null;
+                // Ed's ask: call the boss yourself once its monsters are beaten, instead of waiting for it.
+                case QuestTarget.Boss: return q.Lines.Count > 0 && q.Lines[0].Done ? "Summon the boss now!" : null;
                 default: return null;
             }
         }
@@ -140,6 +142,7 @@ namespace BrineBattle.Hunting
                 case QuestTarget.Build: b?.Toggle(); break;
                 case QuestTarget.Workbench: b?.OpenBench(q.Sub); break;
                 case QuestTarget.Leave: VoyageController.Instance?.Leave(); break;
+                case QuestTarget.Boss: hook.SummonBoss(); break;
             }
         }
     }

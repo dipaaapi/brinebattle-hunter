@@ -65,11 +65,31 @@ namespace BrineBattle.Hunting
             bossTimer += Time.deltaTime;
             if (bossTimer < Rafts.BossRules.SpawnSeconds) return;
             bossTimer = 0f;
-            var boss = bosses.Find(b => b.rarity == raft.Tier);
-            if (boss == null) return;
             var dir = currentDirection.normalized;
             var side = Vector3.Cross(Vector3.up, dir);
-            var pos = raft.transform.position + dir * -spawnDistance + side * Random.Range(-4f, 4f);
+            if (MakeBoss(raft.transform.position + dir * -spawnDistance + side * Random.Range(-4f, 4f)) != null && hook != null)
+                hook.Log($"BOSS! {BossFor(raft.Tier).displayName} rises from the deep. Beat it to level up the raft.");
+        }
+
+        /// <summary>
+        /// Ed's ask: summon the raft level's boss from the Quest tab once its monsters are beaten. It rises just
+        /// off the raft's edge (or the one already on the water is used). Null when it isn't due yet.
+        /// </summary>
+        public Drift SummonBoss()
+        {
+            if (raft == null || !Rafts.BossRules.Due(raft.Grid)) return null;
+            var already = live.Find(d => d != null && d.Monster.isBoss);
+            if (already != null) return already;
+            bossTimer = 0f;
+            var dir = currentDirection.normalized;
+            return MakeBoss(raft.transform.position - dir * (raft.EdgeDistance + 2f));
+        }
+
+        Drift MakeBoss(Vector3 pos)
+        {
+            var boss = BossFor(raft.Tier);
+            if (boss == null) return null;
+            var dir = currentDirection.normalized;
             pos.y = 0.1f;
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.transform.SetParent(transform, true);
@@ -79,7 +99,7 @@ namespace BrineBattle.Hunting
             drift.Init(boss, DriftState.Alive, DriftState.Alive, dir * driftSpeed * 0.6f);
             drift.Aggression = 1f;
             live.Add(drift);
-            if (hook != null) hook.Log($"BOSS! {boss.displayName} rises from the deep. Beat it to level up the raft.");
+            return drift;
         }
 
         // ---- Distress flares (Claude's C-17) ----

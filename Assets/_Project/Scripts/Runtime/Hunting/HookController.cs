@@ -579,6 +579,27 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>
+        /// Ed's ask: the Quest tab's "Summon the boss now!" calls the raft level's boss (once its monsters are
+        /// beaten) and the fight starts at once. You chose the moment, so you strike first.
+        /// </summary>
+        public void SummonBoss()
+        {
+            var spawner = FindFirstObjectByType<DriftSpawner>();
+            if (BattleController.InBattle) { Log("Finish this battle first."); return; }
+            if (RestLeft > 0f) { Log($"You're still knocked out: {Mathf.CeilToInt(RestLeft)} s."); return; }
+            if (phase != Phase.Idle) { Log("Finish what you're hooking first."); return; }
+            var d = spawner != null ? spawner.SummonBoss() : null;
+            if (d == null) { Log("The boss isn't ready yet: beat more of this level's monsters first."); return; }
+            if (!d.TryClaim(this)) { Log("Something else has hold of the boss right now."); return; }
+            Log($"You call out across the waves... {d.Monster.displayName} answers!");
+            target = d;
+            tensionHit = true;
+            pendingLoot = null;
+            battle.ModuleCatch = false;
+            StartBattle();
+        }
+
+        /// <summary>
         /// A module caught a weakened, calm drift (Ed: modules must hook what touches them). The hunter
         /// gets the same Finish / Tame choice as a hand catch; in Auto with no pet room it's finished for loot.
         /// False while the hunter is busy: the module keeps holding it.

@@ -5,6 +5,7 @@
 ## 2026-10-31 — Knocked-out countdown; Idea Round 4 merged
 - Knocked out: a "KNOCKED OUT · back on your feet in N s" banner with a bar mid-screen and "Zzz… N" over the hunter (`HookController.DrawRespawn`). Ed: 281/281 tests pass.
 - PR #7 merged into `main` on Ed's word. Next: Phase 9.
+- Then: **Summon the boss** (Ed's ask): the boss quest's Go button reads "Summon the boss now!" once the level's monsters are beaten; the boss rises just off the raft and the fight starts at once, hunter first (`DriftSpawner.SummonBoss`, `HookController.SummonBoss`). It still also shows up on its own every 25 s while due.
 
 ## 2026-10-31 — Menus refreshed (Ed: Build scrolled sideways, Book and Bag looked outdated)
 - Build panel 460 → 640 wide, vertical scrolling only, content kept to the panel width.
