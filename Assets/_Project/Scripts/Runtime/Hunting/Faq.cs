@@ -173,6 +173,8 @@ namespace BrineBattle.Hunting
             new Topic("Journal & saving",
                 new Entry("What is the Journal?",
                     "C opens it. Monsters, items, minions and recipes you've found (??? means not found yet; each tab shows found/total), and the Music tab, where you can play each piece of the soundtrack on its own."),
+                new Entry("How do I change the sound?",
+                    "Settings → Sound has a slider for the music and one for the sound effects, each with Mute and Default. Sound effects are made by the game itself. In the Shipyard the world is halted, so only the menu and building sounds play there."),
                 new Entry("How do I save?",
                     "Settings → Save → Save now. There is one save file. In Semi-auto and Auto it also saves by itself every 5 minutes once a save exists. The top-right corner shows when."),
                 new Entry("What if I fall asleep while playing?",

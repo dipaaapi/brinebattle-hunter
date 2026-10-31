@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Collections;
 using System.Collections.Generic;
 using BrineBattle.Battle;
@@ -142,6 +143,7 @@ namespace BrineBattle.Hunting
                     break;
                 case BattleEventKind.Shot:
                 case BattleEventKind.BigShot:
+                    if (e.Kind == BattleEventKind.BigShot) SfxPlayer.Play(Sfx.TidalWave);
                     if (from != null && to != null)
                         yield return Projectile(from, to, e.Kind == BattleEventKind.BigShot ? 0.7f : 0.3f, e.Kind == BattleEventKind.BigShot ? Tint.Of(Element.Water) : ShotColor(e.Element));
                     Impact(to, e);
@@ -153,6 +155,7 @@ namespace BrineBattle.Hunting
                     break;
                 case BattleEventKind.Heal:
                     // A treat can wake a knocked-out companion: it rises back up.
+                    SfxPlayer.Play(Sfx.Heal);
                     if (to != null) { to.Flash = 1f; to.FlashColor = new Color(0.4f, 1f, 0.5f); to.Sink = 0f; }
                     Pop(to, $"+{e.Amount}", new Color(0.4f, 1f, 0.5f), 28);
                     yield return new WaitForSeconds(0.35f);
@@ -160,6 +163,7 @@ namespace BrineBattle.Hunting
                 case BattleEventKind.Blocked:
                     System.Action blocked = () =>
                     {
+                        SfxPlayer.Play(Sfx.Miss);
                         if (to != null) { to.Flash = 1f; to.FlashColor = new Color(0.6f, 0.8f, 1f); }
                         Pop(to, "Blocked!", new Color(0.6f, 0.8f, 1f), 24);
                     };
@@ -167,6 +171,7 @@ namespace BrineBattle.Hunting
                     else blocked();
                     break;
                 case BattleEventKind.Buff:
+                    SfxPlayer.Play(Sfx.Buff);
                     if (to != null) { to.Flash = 1f; to.FlashColor = e.Element != Element.None ? Tint.Of(e.Element) : new Color(0.6f, 0.8f, 1f); }
                     Pop(to, e.Text, to != null ? to.FlashColor : Color.white, 22);
                     yield return new WaitForSeconds(0.35f);
@@ -178,6 +183,7 @@ namespace BrineBattle.Hunting
                     yield return new WaitForSeconds(0.3f);
                     break;
                 case BattleEventKind.KnockedOut:
+                    SfxPlayer.Play(e.To == BattleActor.Monster ? Sfx.Defeat : e.To == BattleActor.Hunter ? Sfx.KnockOut : Sfx.Hit);
                     Pop(to, e.To == BattleActor.Raft ? "Broken!" : "KO!", new Color(1f, 0.35f, 0.3f), 30);
                     for (float t = 0; t < 0.7f; t += Time.deltaTime)
                     {
@@ -237,6 +243,7 @@ namespace BrineBattle.Hunting
         void Impact(Actor to, BattleEvent e)
         {
             if (to == null) return;
+            SfxPlayer.Play(e.Kind == BattleEventKind.BigShot ? Sfx.Crit : e.Amount > 0 ? Sfx.Hit : Sfx.Miss);
             to.Shake = 1f;
             to.Flash = 1f;
             to.FlashColor = e.To == BattleActor.Monster ? Color.white : new Color(1f, 0.35f, 0.3f);

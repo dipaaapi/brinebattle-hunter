@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Items;
@@ -415,9 +416,9 @@ namespace BrineBattle.Hunting
                 if (kr == PlaceResult.Ok && bag.Count(selected) > 0)
                 {
                     int n = ShapeRules.Place(g, selected, rot, c);
-                    if (n > 0) { bag.Remove(selected, 1); message = $"Laid a {selected.displayName}: {n} cells. Size {g.Size}, {g.MaxHp} HP."; }
+                    if (n > 0) { bag.Remove(selected, 1); SfxPlayer.Play(Sfx.Place); message = $"Laid a {selected.displayName}: {n} cells. Size {g.Size}, {g.MaxHp} HP."; }
                 }
-                else message = ShipyardRules.PlaceText(kr);
+                else { message = ShipyardRules.PlaceText(kr); SfxPlayer.Play(Sfx.Invalid); }
                 if (selected != null && bag.Count(selected) == 0) selected = null;
                 dirty = true;
                 return;
@@ -426,21 +427,23 @@ namespace BrineBattle.Hunting
             switch (act)
             {
                 case ShipyardRules.Action.Remove:
-                    if (g.Remove(c, out var part) == RemoveResult.Ok) { bag.Add(part, 1); message = $"Took off {part.displayName}; it's back in the bag."; }
+                    if (g.Remove(c, out var part) == RemoveResult.Ok) { bag.Add(part, 1); SfxPlayer.Play(Sfx.Remove); message = $"Took off {part.displayName}; it's back in the bag."; }
                     break;
                 case ShipyardRules.Action.Replace:
                     if (g.Replace(c, selected, out var old) == PlaceResult.Ok)
                     {
                         bag.Remove(selected, 1);
                         bag.Add(old, 1);
+                        SfxPlayer.Play(Sfx.Place);
                         message = $"Swapped {old.displayName} for {selected.displayName}.";
                     }
                     break;
                 case ShipyardRules.Action.Place:
-                    if (g.Place(c, selected) == PlaceResult.Ok) { bag.Remove(selected, 1); message = $"Placed {selected.displayName}. Size {g.Size}, {g.MaxHp} HP."; }
+                    if (g.Place(c, selected) == PlaceResult.Ok) { bag.Remove(selected, 1); SfxPlayer.Play(Sfx.Place); message = $"Placed {selected.displayName}. Size {g.Size}, {g.MaxHp} HP."; }
                     break;
                 default:
                     message = why;
+                    SfxPlayer.Play(Sfx.Invalid);
                     break;
             }
             if (selected != null && bag.Count(selected) == 0) selected = null;

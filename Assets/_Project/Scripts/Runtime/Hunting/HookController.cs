@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Battle;
@@ -108,7 +109,7 @@ namespace BrineBattle.Hunting
             raft.Grid.BossesNeeded = true;
             // Fame for every new best raft or ship level, and a log line for each achievement.
             raft.Grid.Changed += () => { int f = Fame.Reached(raft.Grid.Chosen, raft.Grid.Level, Voyage.Difficulty); if (f > 0) Log($"{raft.Grid.LevelName}: +{f} fame."); };
-            Fame.Earned += a => Log($"🏆 Achievement: {a.Title} ({a.Goal}) +{a.Fame} fame!");
+            Fame.Earned += a => { Log($"🏆 Achievement: {a.Title} ({a.Goal}) +{a.Fame} fame!"); SfxPlayer.Play(Sfx.Achievement); };
             CurrentVoyage = Voyage;
             Voyage.Difficulty = GameStart.Difficulty;
             // Leaving the sea and the ending screen (Ed's ask), likewise added at runtime.
@@ -144,6 +145,7 @@ namespace BrineBattle.Hunting
             if (!TryGetComponent<HunterMotion>(out _)) gameObject.AddComponent<HunterMotion>().hook = this;
             // Layered BGM made in code (Phase 9), likewise added at runtime.
             if (!TryGetComponent<MusicPlayer>(out _)) gameObject.AddComponent<MusicPlayer>().hook = this;
+            if (!TryGetComponent<SfxPlayer>(out _)) gameObject.AddComponent<SfxPlayer>();
             // Arrows to off-screen bosses, gorged monsters and lost parts (C-23), likewise added at runtime.
             if (!TryGetComponent<EdgeArrows>(out _)) gameObject.AddComponent<EdgeArrows>();
             // Companions on the raft (Phase 7), likewise added at runtime.
@@ -226,6 +228,7 @@ namespace BrineBattle.Hunting
             phase = Phase.Casting;
             t = 0f;
             line.enabled = true;
+            SfxPlayer.Play(Sfx.Throw);
         }
 
         void UpdateCasting()
@@ -239,6 +242,7 @@ namespace BrineBattle.Hunting
             {
                 phase = Phase.Reeling;
                 t = 0f;
+                SfxPlayer.Play(Sfx.HookHit);
                 reelFrom = target.transform.position;
                 var m = target.Monster;
                 // Rarer and bigger: a narrower green zone and a wilder catch. Rough seas and storms shrink it too (U-15);
@@ -262,6 +266,8 @@ namespace BrineBattle.Hunting
             reel.Step(Time.deltaTime, HeldReel(), PressedTension());
             // The catch comes closer as the meter fills, and drifts back out as it drains.
             t = reel.Meter;
+            // A ratchet tick while the catch is inside the green zone.
+            if (reel.Inside && (reelTick -= Time.deltaTime) <= 0f) { reelTick = 0.12f; SfxPlayer.Play(Sfx.ReelTick); }
             // Reeled in until its body touches the raft's edge, not over the planks (owner's ask: no overlap).
             float stop = Mathf.Max(raft.EdgeDistance, (raft.Grid.Radius + 0.5f) * Raft.CellSize + target.BodyRadius + 0.1f);
             var edge = raft.transform.position + (reelFrom - raft.transform.position).normalized * stop;
@@ -279,7 +285,7 @@ namespace BrineBattle.Hunting
                 line.widthMultiplier = 1f;
                 line.startColor = line.endColor = Color.white;
                 if (reel.Clean) { First("clean_reel"); Juice.Shake(0.5f); Juice.Pop("CLEAN REEL!", target.transform.position + Vector3.up * 0.6f, new Color(0.5f, 1f, 0.6f)); }
-                else if (reel.Escaped) Juice.Pop("It got away...", target.transform.position, new Color(1f, 0.6f, 0.5f));
+                else if (reel.Escaped) { Juice.Pop("It got away...", target.transform.position, new Color(1f, 0.6f, 0.5f)); SfxPlayer.Play(Sfx.Splash); }
                 Resolve();
             }
         }
@@ -401,6 +407,8 @@ namespace BrineBattle.Hunting
             Destroy(d.gameObject);
         }
 
+        float reelTick;
+
         void Finish(string message, bool keepLoot, bool destroy)
         {
             if (keepLoot && pendingLoot != null)
@@ -428,6 +436,7 @@ namespace BrineBattle.Hunting
         /// <summary>C-21: a splash where the catch lands and a "+2 Shellback" for each drop.</summary>
         static void PopLoot(List<Drop<ItemDefinition>> drops, Vector3 at)
         {
+            if (drops.Count > 0) SfxPlayer.Play(drops.Any(x => x.Item.rarity >= Rarity.Rare) ? Sfx.Rare : Sfx.Loot);
             Juice.Splash(at, 0.8f);
             for (int i = 0; i < drops.Count; i++)
                 Juice.Pop($"+{drops[i].Quantity} {drops[i].Item.displayName}", at + Vector3.up * (0.35f * i), Raft.PartColor(drops[i].Item.rarity));
@@ -934,6 +943,7 @@ namespace BrineBattle.Hunting
             Companions.Add(pet);
             Mastery.Add(AlchemyMastery.TamePoints);
             Fame.Tame(m.rarity, Voyage.Difficulty);
+            SfxPlayer.Play(Sfx.Tame);
             First("tame");
             pendingPet = null;
             MonsterTamed?.Invoke(m);

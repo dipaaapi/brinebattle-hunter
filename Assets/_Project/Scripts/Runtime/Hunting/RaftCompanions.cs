@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Linq;
 using System.Collections.Generic;
 using BrineBattle.Companions;
@@ -460,6 +461,7 @@ namespace BrineBattle.Hunting
             if (recipe == null || !CraftRules.Craft(hook.Inventory, recipe)) return false;
             string what = CraftRules.Describe(recipe.outputs);
             Work(who, $"crafted {what}");
+            SfxPlayer.Play(Sfx.CraftDone);
             Incantation(who);
             hook.Log($"{who.Name} ({skill}) crafted {what}.");
             StorageBox.Instance?.Crafted($"{what} ({who.Name})");
@@ -491,6 +493,7 @@ namespace BrineBattle.Hunting
             if (vessel != null && g.InstallVessel(vessel, hook.Inventory))
             {
                 Work(who, $"put on the {vessel.displayName}");
+                SfxPlayer.Play(Sfx.Hammer);
                 hook.Log($"{who.Name} (Builder) put the {vessel.displayName} on the raft.");
                 return;
             }
@@ -500,6 +503,8 @@ namespace BrineBattle.Hunting
                 if (path != null && g.TryUpgrade(hook.Inventory, path.Value))
                 {
                     Work(who, $"leveled up to {g.LevelName}");
+                    SfxPlayer.Play(Sfx.Hammer);
+                    SfxPlayer.Play(Sfx.LevelUp);
                     hook.Log($"{who.Name} (Builder) leveled it up: {g.LevelName}, {g.FormName}!");
                     return;
                 }
@@ -584,7 +589,7 @@ namespace BrineBattle.Hunting
         public static string FeedLine(Companion c, ItemDefinition item, FeedResult r, int levelBefore, List<MinionSkill> learned)
         {
             string line = $"{c.Name} ate the {item.displayName} (+{CompanionGrowth.FeedPoints(item, c)} EXP){(MinionRules.IsFavourite(item, c) ? ", its favourite!" : ".")}";
-            if (c.Level > levelBefore) line += $" Lv {c.Level}!";
+            if (c.Level > levelBefore) { line += $" Lv {c.Level}!"; SfxPlayer.Play(Sfx.MinionLevel); }
             if (r == FeedResult.Evolved) line += $" Evolved into an {c.StageName}!";
             if (learned != null && learned.Count > 0) line += $" Learned {string.Join(", ", learned)}.";
             return line;

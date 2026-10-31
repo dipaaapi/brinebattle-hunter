@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using BrineBattle.Items;
@@ -304,7 +305,7 @@ namespace BrineBattle.Hunting
                 GUILayout.EndHorizontal();
                 string why = g.ChooseBlocker();
                 if (why != null) Step(false, why);
-                else if (HuntStyles.ColorButton($"Make it a {EvolutionRules.LineName(path)} ({EvolutionRules.Stat(path)})", HuntStyles.Go) && g.Choose(path))
+                else if (HuntStyles.ColorButton($"Make it a {EvolutionRules.LineName(path)} ({EvolutionRules.Stat(path)})", HuntStyles.Go) && g.Choose(path) && SfxPlayer.Played(Sfx.ShipPick))
                 {
                     treeTab = path;
                     hook.Log($"Your boat is now a {EvolutionRules.LineName(path)}: {EvolutionRules.FormName(path, 1)}, Lv 1. It evolves up to Lv {EvolutionRules.ShipMax}.");
@@ -321,7 +322,7 @@ namespace BrineBattle.Hunting
                 string blocker = g.UpgradeBlocker(hook.Inventory);
                 if (blocker == null)
                 {
-                    if (HuntStyles.ColorButton($"Level up → {EvolutionRules.Label(chosen, g.Level + 1)}", HuntStyles.Go) && g.TryUpgrade(hook.Inventory))
+                    if (HuntStyles.ColorButton($"Level up → {EvolutionRules.Label(chosen, g.Level + 1)}", HuntStyles.Go) && g.TryUpgrade(hook.Inventory) && SfxPlayer.Played(Sfx.LevelUp))
                         hook.Log($"{g.LevelName}! {g.FormName}, max HP {g.MaxHp}.");
                 }
                 else
