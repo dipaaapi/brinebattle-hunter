@@ -88,6 +88,22 @@ Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown b
 
 ## 6. Raft (Builder)
 
+**Raft and ship evolution (Ed's ask, 2026-10-31; replaces raft Lv 1-6, Fortress/Sky/Beast, the vehicles and leaving the sea).** Numbers are *Claude's defaults until Ed confirms*:
+- **Raft Lv 1 → 50**, a little more every level, with a new look every 10 levels: Plank Raft (1), Lashed Raft (10, lashings), Railed Raft (20, railings), Sailing Raft (30, second mast), Cabin Raft (40, cabin), **Simple Boat** (50, plank sides and a bow).
+- **At raft Lv 50 the player picks a ship line, once** (the Rare boss must be beaten): **Sea level = STR** (tough and strong: +30% raft HP, +2 ATK, +2 DEF; Sloop → Brigantine → Frigate → Galleon → Flagship), **Aerial = INT** (reaches far: +4 m hook reach, +1 ATK, +1 SPD; Glider → Balloon Skiff → Airship → Sky Cruiser → Sky Citadel), **Undersea = DEX** (fastest: +3 SPD, +1 ATK, −10% raft HP; Diving Bell → Mini-sub → Submarine → Deep Cruiser → Abyss Ark). The bonus grows with the ship's level (× (1 + level / 50)). The old kinds keep their saved numbers: Fortress → Sea, Sky → Aerial, Beast → Undersea.
+- **The ship starts again at Lv 1 and evolves to Lv 100** (Ed: ships have more parts to build). After Lv 100 the next evolution shows as **"Coming soon"** (locked, no content yet).
+- **Tiers over the whole climb** (what parts, hammers, essence and the boss must be): raft Lv 1-16 Common, 17-33 Uncommon, 34-50 Rare; ship Lv 1-33 Epic, 34-66 Legendary, 67-100 Mythic.
+- **Each level-up** needs: kills 2 + tier step, monster materials 2 + 2 × step, essence (tier or better) 1 + 2 × step, modules on half the left edge, a hammer of the tier.
+- **Bosses still gate levels**: the end of each tier band needs its boss (raft Lv 16, 33, 50 = before the pick; ship Lv 33, 66, 99). Same six bosses and cores.
+- **Ship parts** (the old vehicle parts, renamed; assets and ids kept): five per line, needed to go past ship Lv 20, 40, 60, 80 and 99. Sea: Hull Walls, Cannons, Bow & Bowsprit, Masts & Sails, Stern Castle. Aerial: Wings, Tail Fin, Propeller, Engine, Cockpit. Undersea: Pressure Hull, Ballast Tanks, Screw Propeller, Periscope, Sonar Dome. Recipe unchanged (two typed parts + a boss core). Each shows on the ship; every ship flies a pennant that grows with its level (a gold star every 25 levels).
+- **Typed parts and the material tree** open only for the picked line, up to its tier (no typed recipes before the pick).
+- **No leaving the sea.** The goal is **fame** (§ Fame). Difficulty: monsters ×1/×1.25/×1.5, loot ×1/×0.8/×0.6, **fame ×1/×1.5/×2** ("types to win" is gone).
+- **Older saves**: old raft Lv n → raft Lv 1 + 8 × (n − 1) (1, 9, 17, 25, 33, 41); the old type and vehicle parts are dropped; bosses beaten stay beaten.
+
+**Fame and achievements (Ed's ask, first version, local only):** fame from monsters (1 + rarity step), bosses (25 × (1 + step)), tames (3 + step), crafts (1), each new best raft level (5) and ship level (10), times the difficulty; 14 achievements add a lump once (first catch … Fully Evolved at ship Lv 100). Ranks: Castaway, Deckhand (50), Sailor (250), Captain (1000), Famed Captain (5000), Legend of the Brine (20000). Shown in the HUD and Quest tab → Fame. Online leaderboards: idea U-45.
+
+*Below: the raft design before ship evolution, kept for history.*
+
 - Built from monster parts. The parts decide the vessel type:
   - **Fortress Raft:** shells and scales; slow but sturdy.
   - **Sky Raft:** wings and gas bladders; can fly.

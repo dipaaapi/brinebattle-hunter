@@ -51,6 +51,15 @@
 - **Raft type look:** once the type is picked the vehicle's frame shows right away (low hull sides / stub wings / bare rails) instead of the katig; each vehicle part (Workbench → Vehicle, then Build) adds its full piece.
 - 268/268 EditMode tests pass (headless).
 
+## 2026-10-31 — Phase 10: ship evolution & fame (laptop)
+- Ed's ask: raft Lv 1-50 into a simple boat, then a ship line (Aerial INT / Sea STR / Undersea DEX) Lv 1-100, then "Coming soon"; no leaving the sea; the goal is fame. Branch `phase/10-ship-evolution` from `tools/dev-mode`.
+- `Rafts/EvolutionRules` (tiers over the climb, per-level costs, boss gates at tier ends, ship parts at 20/40/60/80/99, form names, growing line bonus). `RaftGrid`: Level + line (`Chosen`), `UpgradeBlocker`/`TryUpgrade` per level, `ChooseBlocker`/`Choose` at Lv 50, `RestoreEvolution`, `DevSetLevel`. `RaftKind` renamed Fortress/Sky/Beast → Sea/Aerial/Undersea (same numbers). `RaftTree` opens only the picked line up to its tier. `VesselRules` ship part names (legacy names kept for asset files/ids); `BossRules.Due` uses the gate.
+- UI: Raft tree page (evolution road with "Coming soon", ship pick cards, requirements, ship parts), HUD raft line, Quest rules (level, pick, boss, next ship part, next evolution; no leave), dev panel level slider (raft 1-50, ship 1-100) and line buttons, Builder minion levels raft or ship.
+- `RaftDecor`: raft grows every 10 levels; Sea = galleon, Aerial = skyship, Undersea = new submarine; pennant by level.
+- `Rafts/FameBook`: fame, 14 achievements, ranks; HUD line and Quest tab → Fame; saved. Difficulty text: fame ×1/×1.5/×2.
+- Saves: `hasEvolution`, line, level, fame; older saves migrate (old Lv n → raft Lv 1 + 8(n−1), type and vehicle dropped). DataVersion 14 (ship part names). FAQ: Raft, ship lines, Bosses & fame.
+- Tests: new `EvolutionTests` (6), `FameTests` (4); updated raft tree, voyage, raft grid, raft type, quest and dev tests. Compiles (also as a release build); Ed runs the Test Runner.
+
 ## 2026-10-31 — Developer mode (laptop)
 - Ed's ask: a developer mode for fast QA of the real game, no login (it ends up on Steam). Branch `tools/dev-mode` from main 7c1f4a4.
 - `Hunting/DevMode` (Available only under `UNITY_EDITOR || DEVELOPMENT_BUILD`, `Used` marks the game DEV, god mode, action log) and `Hunting/DevPanel` (F1; Raft with "Why not?", Bag, Minions, Battle, World, Saves snapshots, Log). Dev-only hooks: `RaftGrid.DevSetTier`, `BattleState.DevFinish/DevHeal`, `DriftSpawner.DevSummonBoss/DevSpawn`, `HookController.SummonBoss(dev)`. `SaveData.dev`; Settings shows "(DEV)".

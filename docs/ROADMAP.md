@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Current phase** | Phase 9 — Art and sound pass 🟨 on `phase/9-audio`: BGM done, SFX next, Blender last |
-| **Dev tools** | Developer mode (F1, Editor/development builds only) on `tools/dev-mode`; next: raft Lv 1–50 → ship lines (Ed's ask 2026-10-31) |
+| **Phase 10** | Ship evolution & fame on `phase/10-ship-evolution` (from `tools/dev-mode`), waiting for Ed's Unity test |
 | **Next step** | Ed listens to the BGM in Play (Settings → Music volume). Then SFX. PR #8 (summon boss) waits for Ed; `phase/9-audio` is based on it. Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
@@ -177,8 +177,20 @@ Order (Ed, 2026-10-31): **BGM → SFX → Blender** (Blender last, it's the bigg
 - [ ] SFX: cast, reel (line creak by the meter), splash, hit, loot, craft, level-up, thunder (C-21 sounds)
 - [ ] Blender pipeline (chibi hunter, raft part, monster; pirate ship first), `_col` collision meshes, toon shader + inverted-hull outline
 
-### 🟨 Phase 10 — Other hunters & party
-Trade, tied rafts, RO-style EXP/item share. Starts with a multiplayer feasibility study.
+### 🟨 Phase 10 — Ship evolution & fame (Ed's ask, 2026-10-31)
+- [x] Developer mode (U-44, `tools/dev-mode`): F1 panel, Editor and development builds only
+- [x] Raft Lv 1-50 → ship line pick (Sea STR / Aerial INT / Undersea DEX) → ship Lv 1-100 → "Coming soon" (U-43)
+- [x] Tiers spread over the climb; per-level costs; bosses at tier ends; ship parts at ship Lv 20/40/60/80/99
+- [x] Raft tree page (evolution road, pick, requirements, ship parts), quests, HUD, minion Builder
+- [x] Raft looks every 10 levels; galleon / skyship / submarine with a growing pennant
+- [x] No leaving the sea; fame and 14 achievements (local), difficulty multiplies fame
+- [x] Older saves migrate (raft level, no old type)
+- [ ] Ed's Unity test (Test Runner, then Play with the F1 panel), then merge
+
+**Done when:** a raft can be taken from Lv 1 to 50, a ship line picked and levelled to 100 (fast with F1), the look changes along the way, and fame and achievements count up.
+
+### 🟨 Phase 11 — Other hunters & party
+Trade, tied rafts, RO-style EXP/item share. Starts with a multiplayer feasibility study. Online leaderboards (U-45) belong here.
 
 ## Ideas
 
