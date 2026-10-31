@@ -32,6 +32,8 @@ namespace BrineBattle.Hunting
         /// <summary>Set by the raft from its level (<see cref="Rafts.RaftRules.SeaShare"/>); 1 = full waves.</summary>
         public static float CalmShare = 1f;
         public const float CalmFade = 5f;
+        /// <summary>Weather's wave height (Idea Round 4): rough seas and storms swell, fog flattens. Set by the WorldClock.</summary>
+        public static float WeatherScale = 1f;
 
         static float Calm(float x, float z)
         {
@@ -53,7 +55,7 @@ namespace BrineBattle.Hunting
                 float k = 2f * Mathf.PI / w.w;
                 h += amplitude[i] * Mathf.Sin(k * (dir.x * x + dir.y * z) - speed[i] * t * k * 1.2f + i * 1.7f);
             }
-            return h * Calm(x, z);
+            return h * Calm(x, z) * WeatherScale;
         }
 
         /// <summary>How the water leans around a point, as the surface's up direction.</summary>

@@ -31,17 +31,22 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void FeedingLootGrowsThenEvolves()
+        public void FeedingLootGivesExpLevelsAndEvolvesAtTen()
         {
             var c = Pet();
             var scale = Item(ItemType.Material, Rarity.Common, Element.Water);
             int hp = c.MaxHp;
             Assert.AreEqual(2, CompanionGrowth.FeedPoints(scale, c), "favourite element counts double");
+            Assert.AreEqual(10, MinionRules.ExpToNext(1));
             for (int i = 0; i < 4; i++) Assert.AreEqual(FeedResult.Grew, CompanionGrowth.Feed(c, scale));
-            Assert.AreEqual(FeedResult.Evolved, CompanionGrowth.Feed(c, scale));
+            Assert.AreEqual(FeedResult.LevelUp, CompanionGrowth.Feed(c, scale));
+            Assert.AreEqual(2, c.Level);
+            Assert.AreEqual(hp + 2, c.MaxHp);
+            var sword = Item(ItemType.Weapon, Rarity.Epic);   // (1 + 3) × 3 = 12 EXP a bite
+            var result = FeedResult.Grew;
+            while (c.Level < 10) result = CompanionGrowth.Feed(c, sword);
+            Assert.AreEqual(FeedResult.Evolved, result);
             Assert.AreEqual(GrowthStage.Adult, c.Stage);
-            Assert.AreEqual(0, c.Growth);
-            Assert.Greater(c.MaxHp, hp);
         }
 
         [Test]
@@ -59,10 +64,13 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void GearAndRaftPartsAreNotFood()
+        public void LootIsFoodButEssenceHabitatsAndVehiclePartsAreNot()
         {
-            Assert.AreEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Weapon)));
-            Assert.AreEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Raft)));
+            Assert.AreNotEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Weapon)));
+            Assert.AreNotEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Raft)));
+            Assert.AreEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Essence)));
+            Assert.AreEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Habitat)));
+            Assert.AreEqual(FeedResult.CantEat, CompanionGrowth.Feed(Pet(), Item(ItemType.Vessel)));
         }
 
         [Test]

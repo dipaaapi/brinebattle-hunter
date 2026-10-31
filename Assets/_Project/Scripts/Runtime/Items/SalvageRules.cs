@@ -9,7 +9,7 @@ namespace BrineBattle.Items
         /// strength is their level, and a raft that levels up still needs modules on its left edge (Ed's playtest).
         /// </summary>
         public static bool IsEquippable(ItemType t) =>
-            t == ItemType.Raft || t == ItemType.Weapon || t == ItemType.Armor || t == ItemType.Companion;
+            t == ItemType.Raft || t == ItemType.Weapon || t == ItemType.Armor || t == ItemType.Accessory || t == ItemType.Companion;
 
         /// <summary>
         /// An equippable item fits only if its rarity is at least the target's tier

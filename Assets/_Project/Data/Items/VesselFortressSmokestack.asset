@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba14ad3ca32a55e44a5c155db19158a4, type: 3}
+  m_Name: VesselFortressSmokestack
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.ItemDefinition
+  id: fortress_smokestack
+  displayName: Smokestack
+  type: 11
+  rarity: 4
+  element: 3
+  maxStack: 1
+  moduleLevel: 1
+  raftKind: 1
+  vesselSlot: 4
+  gearPower: 0
+  passives: 
+  actives: 
+  effect: 0
+  cures: 0
+  effectAmount: 0
+  icon: {fileID: 0}
+  description: "Part 4 of 5 of the sea train. Opens at raft Lv 5. Put it on in Build
+    \u2192 Raft tree."

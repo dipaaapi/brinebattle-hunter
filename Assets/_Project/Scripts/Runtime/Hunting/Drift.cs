@@ -62,7 +62,7 @@ namespace BrineBattle.Hunting
             bobPhase = Random.value * 10f;
             name = $"Drift ({monster.displayName})";
             Tint.Apply(GetComponent<Renderer>(), monster.isFlotsam ? Raft.PartColor(monster.rarity) : Tint.Of(monster.element));
-            float s = 0.6f + 0.35f * monster.sizeClass;
+            float s = (0.6f + 0.35f * monster.sizeClass) * (monster.isBoss ? 1.3f : 1f);   // bosses loom large, but never hide the raft (Ed's ask)
             // Floating loot is a flat crate-like slab; creatures keep their capsule shape.
             transform.localScale = monster.isFlotsam ? new Vector3(s, s * 0.3f, s) : new Vector3(s, s * 0.5f, s * 1.4f);
         }
@@ -107,7 +107,49 @@ namespace BrineBattle.Hunting
         }
 
         /// <summary>How this drift fights: its monster's stats, grown by any raft parts it ate.</summary>
-        public Combatant Fighter => Rafts.AbsorbRules.Gorge(Combatant.FromMonster(Monster), GorgedParts);
+        public Combatant Fighter
+        {
+            get
+            {
+                var c = Rafts.AbsorbRules.Gorge(Combatant.FromMonster(Monster), GorgedParts);
+                // Each new sea and a harder difficulty make monsters stronger (Ed's ask).
+                if (HookController.CurrentVoyage != null) Rafts.Voyage.Scale(c, HookController.CurrentVoyage.EnemyScale);
+                WorldClock.Empower(c);   // Idea Round 4: sun/moon and weather
+                return c;
+            }
+        }
+
+        /// <summary>A raft part the sea took on Reset raft (Ed's ask): it floats off and can still be caught back.</summary>
+        public Items.ItemDefinition Carried { get; private set; }
+
+        /// <summary>Turns this floating loot into a lost raft part: its colour and name, slower, and it stays longer.</summary>
+        public void CarryPart(Items.ItemDefinition part)
+        {
+            Carried = part;
+            name = $"Drift (Lost {part.displayName})";
+            Tint.Apply(GetComponent<Renderer>(), Raft.PartColor(part));
+            transform.localScale = new Vector3(0.9f, 0.3f, 0.9f);
+            lifetime = -60f;   // 120 s on the water instead of 60, so the hunter or a minion can chase it
+        }
+
+        /// <summary>A shipwrecked survivor on a plank (Claude's C-17): hook them for a thank-you gift.</summary>
+        public bool Survivor { get; private set; }
+
+        public void MakeSurvivor()
+        {
+            Survivor = true;
+            name = "Drift (Survivor)";
+            Tint.Apply(GetComponent<Renderer>(), new Color(0.6f, 0.45f, 0.3f));   // the plank
+            transform.localScale = new Vector3(1.1f, 0.2f, 0.6f);
+            // The survivor sitting on it, waving an orange vest.
+            var who = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            Destroy(who.GetComponent<Collider>());
+            who.transform.SetParent(transform, false);
+            who.transform.localPosition = new Vector3(0f, 2.2f, 0f);
+            who.transform.localScale = new Vector3(0.3f, 2f, 0.55f);
+            Tint.Apply(who.GetComponent<Renderer>(), new Color(1f, 0.55f, 0.15f));
+            lifetime = -30f;   // 90 s before the current takes them
+        }
 
         /// <summary>After a successful sedate (GDD §4).</summary>
         public void MakeWeakened() => Actual = DriftState.Weakened;
@@ -195,7 +237,29 @@ namespace BrineBattle.Hunting
             Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(transform.position + Vector3.up));
             if (sp.z < 0) return;
             var rect = new Rect(sp.x - 70, HuntStyles.H - sp.y - 22, 140, 22);
+            // Fog and night (U-21): far drifts are only shapes; get closer to read them.
+            if (raft != null && WorldClock.Now != null)
+            {
+                var d = transform.position - raft.transform.position;
+                d.y = 0f;
+                if (d.magnitude > World.WorldRules.SightRange(WorldClock.Weather, WorldClock.Time, WorldClock.Lantern)
+                    && !World.WorldRules.Glows(Monster.element, WorldClock.Time))
+                {
+                    GUI.Label(rect, "???\n<i>Too far to see</i>", HuntStyles.WorldLabel);
+                    return;
+                }
+            }
             // "Danger!" before a fight (Ed's call): this monster would likely beat the hunter and pet.
+            if (Survivor)
+            {
+                GUI.Label(rect, "Survivor!\n<i><color=#ffb36b>Hook them before the current takes them</color></i>", HuntStyles.WorldLabel);
+                return;
+            }
+            if (Carried != null)
+            {
+                GUI.Label(rect, $"{Carried.displayName}\n<i><color=#ffd866>Your lost raft part!</color></i>", HuntStyles.WorldLabel);
+                return;
+            }
             if (Monster.isFlotsam)
             {
                 GUI.Label(rect, $"{Monster.displayName}\n<i>Floating loot · {Monster.rarity}</i>", HuntStyles.WorldLabel);

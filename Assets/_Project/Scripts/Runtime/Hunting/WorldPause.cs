@@ -1,6 +1,6 @@
 namespace BrineBattle.Hunting
 {
-    public enum Menu { None, Bag, Book, Build, Settings, Pets }
+    public enum Menu { None, Bag, Book, Build, Settings, Pets, Bin, Voyage, Quests }
 
     /// <summary>
     /// Holds the world around the raft still (drifts, spawner, current, modules) while the player
@@ -15,7 +15,12 @@ namespace BrineBattle.Hunting
         public static Menu Open { get; private set; }
         public static bool Active => BattleController.InBattle || Prompt || Asleep || Open != Menu.None;
 
-        public static void Toggle(Menu m) => Open = Open == m ? Menu.None : m;
+        public static void Toggle(Menu m)
+        {
+            // Leaving the sea plays out to the end; other menus wait (Ed's ask).
+            if (Open == Menu.Voyage && m != Menu.Voyage) return;
+            Open = Open == m ? Menu.None : m;
+        }
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetOnPlay() { Prompt = false; Asleep = false; Open = Menu.None; }
 

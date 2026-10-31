@@ -6,11 +6,11 @@
 
 | | |
 |---|---|
-| **Current phase** | Phase 8 ✅ (merged). Next: Idea Round 4, then Phase 9 — Art pass |
-| **Next step** | Ed picks Idea Round 4 (or goes straight to Phase 9). Open: Sky raft real flight? Module battles eat parts? (defaults: no, no) |
+| **Current phase** | Phase 9 — Art pass ⬜ (Idea Round 4 merged into `main`, 2026-10-31) |
+| **Next step** | Start Phase 9 on `phase/9-art`: Blender pipeline and a first model (pirate ship suggested), toon shader + outline, then BGM/SFX (U-20, C-20 layered audio, C-21 sounds). Open: module battles eat parts? (default: no) |
 | **Unity version** | 6000.3.11f1 (URP 17.3, template Universal 3D) |
 | **Project folder** | `D:\Repository\brinebattle-hunter` (office desktop); `C:\Users\USER\brinebattle-hunter` (laptop) |
-| **Last updated** | 2026-10-30 |
+| **Last updated** | 2026-10-31 |
 
 > Start every session by reading this box. Finish every session by updating it.
 
@@ -148,6 +148,27 @@ Fortress / Sky / Beast-Driven, hybrids, monsters eating raft parts and recovery.
 - [x] Ed's Unity test on the office desktop; Unity-generated data committed (68aac4a). Sky flight and module-battle absorption stay open questions (defaults kept)
 
 **Done when:** building with one kind of part changes the raft's type and its bonuses show in battle, and a monster that ate a part comes back gorged and gives the part back when beaten.
+
+### ✅ Idea Round 4 (after Phase 8) — World conditions
+Ed's pick (2026-10-30): row 3 of the combined plan, as one system.
+- [x] **U-10 Day/night** with Sun/Moon affinity for monsters, pets and the hunter (via gear element); sky and light follow the clock
+- [x] **U-15 Rough seas and thunderstrikes**: bigger waves, faster drifts, shorter throws, smaller reel sweet spot; lightning sets raft parts on fire (click to douse, Crew helps, Fortress resists)
+- [x] **C-3 Weather decides what drifts**: storms/night more alive and more floating loot, clear days more dead; Sun/Moon creatures by time
+- [x] **U-21 Fog**: far drifts show "???", scene fog, hints worse
+- [x] Claude's **C-12 Forecast** (next weather + countdown in the HUD) and **C-13 Wreck field** (rarer floating loot after a storm)
+- [x] Saved; FAQ topic "Day & weather"; rules tests (`WorldTests`)
+- [x] Ed's asks while testing: hunter faces the monster in battle; sun and moon on screen (sky strip, shadows)
+- [x] Ed's U-39 **Minions** (laptop): one kind of minion, levels from eating loot, 12 skills in four branches, auto jobs with Chores switches, skill tree page, HUD minion list
+- [x] Ed's U-40 **Quest tab**: right-edge tab (J), quests from game state with ✔/✘ have/need and a Go button
+- [x] Ed's U-41 **grand boss fights**: warning + rise + aura, top HP bar, enrage and tidal waves, all minions help, slow-mo finish, treasure burst + BOSS DEFEATED card
+- [x] Ed's ask: new HUD and UI everywhere (deep-sea theme on every menu, HUD in sections)
+- [x] Ed's Unity test of U-39/40/41 (Test Runner, then Play)
+- [x] Fixes from Ed's test: lost parts float after Reset raft, Looter net/hook/harpoon, incantation circle visible, horizon haze, vehicle frame after the pick
+- [x] Ed's raft/workbench batch (U-34): workbench sub-tabs, accessories, Salvage Bin, planks-only walking, raft looks by type, one raft skill tree with a single type pick, Mystic circle, Crew hammering
+- [x] Ed's Unity test, then merge (2026-10-31, 281/281 tests)
+- [x] Also in this round: U-42 reel minigame, smaller boss, battles follow the Settings mode, Claude's C-14…C-19, C-21, C-23, refreshed Build/Book/Bag, knocked-out countdown
+
+**Done when:** the day turns to night and back, weather changes with a forecast, storms strike the raft, fog hides far drifts, and sun/moon creatures are stronger at their time.
 
 ### ⬜ Phase 9 — Art pass
 Blender pipeline (chibi hunter, raft part, monster), `_col` collision meshes, toon shader + inverted-hull outline.

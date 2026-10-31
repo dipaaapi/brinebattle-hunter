@@ -22,12 +22,27 @@ namespace BrineBattle.Tests
         {
             Assert.AreEqual(RecipeCategory.Gear, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Weapon)));
             Assert.AreEqual(RecipeCategory.Gear, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Armor)));
-            Assert.AreEqual(RecipeCategory.Potions, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.HealHunter)));
-            Assert.AreEqual(RecipeCategory.Potions, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.RepairRaft)));
-            Assert.AreEqual(RecipeCategory.Oils, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.CoatWeapon)));
+            Assert.AreEqual(RecipeCategory.Player, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.HealHunter)));
+            Assert.AreEqual(RecipeCategory.Player, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.RepairRaft)));
+            Assert.AreEqual(RecipeCategory.Player, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.CoatWeapon)));
+            Assert.AreEqual(RecipeCategory.Pet, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.HealCompanion)));
+            Assert.AreEqual(RecipeCategory.Pet, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Habitat)));
             Assert.AreEqual(RecipeCategory.Raft, CraftRules.CategoryOf(Recipe(RecipeKind.Craft, ItemType.Module)));
             Assert.AreEqual(RecipeCategory.Raft, CraftRules.CategoryOf(Recipe(RecipeKind.Upgrade, ItemType.Module)));
             Assert.AreEqual(RecipeCategory.Dismantle, CraftRules.CategoryOf(Recipe(RecipeKind.Dismantle, ItemType.Material)));
+        }
+
+        [Test]
+        public void SubTabsSplitRaftGearAndPotions()
+        {
+            Assert.AreEqual(RecipeSub.Hammers, CraftRules.SubOf(Recipe(RecipeKind.Craft, ItemType.Tool)));
+            Assert.AreEqual(RecipeSub.Parts, CraftRules.SubOf(Recipe(RecipeKind.Craft, ItemType.Raft)));
+            Assert.AreEqual(RecipeSub.Modules, CraftRules.SubOf(Recipe(RecipeKind.Craft, ItemType.Module)));
+            Assert.AreEqual(RecipeSub.Accessory, CraftRules.SubOf(Recipe(RecipeKind.Craft, ItemType.Accessory)));
+            Assert.AreEqual(RecipeSub.Oils, CraftRules.SubOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.CoatWeapon)));
+            Assert.AreEqual(RecipeSub.Treats, CraftRules.SubOf(Recipe(RecipeKind.Craft, ItemType.Consumable, ConsumableEffect.HealCompanion)));
+            foreach (RecipeCategory c in System.Enum.GetValues(typeof(RecipeCategory)))
+                foreach (var sub in CraftRules.SubsOf(c)) Assert.AreEqual(c, CraftRules.CategoryOf(sub));
         }
 
         [Test]

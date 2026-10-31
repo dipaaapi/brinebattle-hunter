@@ -6,8 +6,21 @@ namespace BrineBattle.Items
 {
     public enum RecipeKind { Craft = 0, Upgrade = 1, Dismantle = 2 }
 
-    /// <summary>Workbench tab a recipe shows under.</summary>
-    public enum RecipeCategory { Gear = 0, Potions = 1, Oils = 2, Raft = 3, Dismantle = 4 }
+    /// <summary>
+    /// Workbench tab a recipe shows under (Ed's ask): gear, the player's potions and oils, things for
+    /// pets, the raft. Dismantle recipes live in the Salvage Bin, not the workbench.
+    /// </summary>
+    public enum RecipeCategory { Gear = 0, Player = 1, Pet = 2, Raft = 3, Dismantle = 4 }
+
+    /// <summary>Sub-tab inside a workbench tab (Ed's ask: hammers, planks and auto-loot apart; weapon, armor, accessory apart).</summary>
+    public enum RecipeSub
+    {
+        Weapon = 0, Armor = 1, Accessory = 2,
+        Potions = 10, Oils = 11,
+        Treats = 20, Habitats = 21,
+        Parts = 30, Modules = 31, Hammers = 32, Vehicle = 33,
+        Dismantle = 40,
+    }
 
     [Serializable]
     public class Ingredient
@@ -50,35 +63,63 @@ namespace BrineBattle.Items
             return true;
         }
 
-        public static readonly string[] CategoryLabels = { "Gear", "Potions", "Oils", "Raft", "Dismantle" };
+        public static readonly string[] CategoryLabels = { "Gear", "Player", "Minion", "Raft", "Dismantle" };
 
         /// <summary>What each workbench tab is for.</summary>
         public static readonly string[] CategoryHints =
         {
-            "Weapons and armor. Equip them from the Bag (B).",
-            "Heal the hunter or repair the raft in battle.",
-            "Coat your weapon: attacks take the oil's element for a few rounds.",
-            "Raft modules and their upgrades. Take a module off the raft to upgrade it.",
-            "Take crafted things apart to get materials back.",
+            "Weapons, armor and accessories. Equip them from the Bag (B).",
+            "Potions for you and the raft, and oils for your weapon.",
+            "Treats for your minions and habitats where they live.",
+            "Planks and parts, auto-loot modules, hammers, and the vehicle parts of your raft type.",
+            "Take crafted things apart to get materials back (Salvage Bin).",
         };
 
-        /// <summary>Dismantle recipes by kind; the rest by what the first output is.</summary>
-        public static RecipeCategory CategoryOf(RecipeDefinition r)
+        /// <summary>The sub-tabs of each tab, in order.</summary>
+        public static RecipeSub[] SubsOf(RecipeCategory c)
         {
-            if (r.kind == RecipeKind.Dismantle) return RecipeCategory.Dismantle;
-            var item = r.outputs.Count > 0 ? r.outputs[0].item : null;
-            if (item == null) return RecipeCategory.Raft;
-            switch (item.type)
+            switch (c)
             {
-                case ItemType.Weapon:
-                case ItemType.Armor:
-                    return RecipeCategory.Gear;
-                case ItemType.Consumable:
-                    return item.effect == ConsumableEffect.CoatWeapon ? RecipeCategory.Oils : RecipeCategory.Potions;
-                default:
-                    return RecipeCategory.Raft;
+                case RecipeCategory.Gear: return new[] { RecipeSub.Weapon, RecipeSub.Armor, RecipeSub.Accessory };
+                case RecipeCategory.Player: return new[] { RecipeSub.Potions, RecipeSub.Oils };
+                case RecipeCategory.Pet: return new[] { RecipeSub.Treats, RecipeSub.Habitats };
+                case RecipeCategory.Raft: return new[] { RecipeSub.Parts, RecipeSub.Modules, RecipeSub.Hammers, RecipeSub.Vehicle };
+                default: return new[] { RecipeSub.Dismantle };
             }
         }
+
+        public static string Label(RecipeSub s) => s == RecipeSub.Parts ? "Planks & parts" : s == RecipeSub.Modules ? "Auto-loot" : s.ToString();
+
+        /// <summary>Dismantle recipes by kind; the rest by what the first output is.</summary>
+        public static RecipeSub SubOf(RecipeDefinition r)
+        {
+            if (r.kind == RecipeKind.Dismantle) return RecipeSub.Dismantle;
+            var item = r.outputs.Count > 0 ? r.outputs[0].item : null;
+            if (item == null) return RecipeSub.Parts;
+            switch (item.type)
+            {
+                case ItemType.Weapon: return RecipeSub.Weapon;
+                case ItemType.Armor: return RecipeSub.Armor;
+                case ItemType.Accessory: return RecipeSub.Accessory;
+                case ItemType.Consumable:
+                    if (item.effect == ConsumableEffect.CoatWeapon) return RecipeSub.Oils;
+                    return item.effect == ConsumableEffect.HealCompanion ? RecipeSub.Treats : RecipeSub.Potions;
+                case ItemType.Habitat: return RecipeSub.Habitats;
+                case ItemType.Module: return RecipeSub.Modules;
+                case ItemType.Tool: return RecipeSub.Hammers;
+                case ItemType.Vessel: return RecipeSub.Vehicle;
+                default: return RecipeSub.Parts;
+            }
+        }
+
+        public static RecipeCategory CategoryOf(RecipeSub s) =>
+            s <= RecipeSub.Accessory ? RecipeCategory.Gear
+            : s <= RecipeSub.Oils ? RecipeCategory.Player
+            : s <= RecipeSub.Habitats ? RecipeCategory.Pet
+            : s < RecipeSub.Dismantle ? RecipeCategory.Raft
+            : RecipeCategory.Dismantle;
+
+        public static RecipeCategory CategoryOf(RecipeDefinition r) => CategoryOf(SubOf(r));
 
         /// <summary>How many more items the bag needs before this recipe can be made (0 = ready). Ed: show what is missing.</summary>
         public static int Missing(Inventory inv, RecipeDefinition r)

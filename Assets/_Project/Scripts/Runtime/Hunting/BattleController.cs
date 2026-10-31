@@ -20,15 +20,19 @@ namespace BrineBattle.Hunting
         public bool Active => state != null;
         /// <summary>True while any battle runs: the world around the raft holds still.</summary>
         public static bool InBattle { get; private set; }
+        /// <summary>The monster being fought, so the hunter can face it (Ed's ask).</summary>
+        public static Drift Foe { get; private set; }
+        /// <summary>The battle being fought, or null (the boss show reads its HP and enrage).</summary>
+        public static BattleState Current { get; private set; }
         /// <summary>True while the battle camera is still easing back; the camera rig waits for it.</summary>
         public static bool CameraBusy { get; private set; }
 
         /// <summary>
-        /// True for a battle an auto-loot module started (an aggressive live catch, owner's call):
-        /// it plays in Auto whatever the setting, and the mode can't be switched.
+        /// True for a battle an auto-loot module started (an aggressive live catch). It plays in the mode
+        /// set in Settings like any other battle (Ed: Manual means manual everywhere).
         /// </summary>
-        public bool ForceAuto { get; set; }
-        BattleMode Mode => ForceAuto ? BattleMode.Auto : BattleSettings.Mode;
+        public bool ModuleCatch { get; set; }
+        static BattleMode Mode => BattleSettings.Mode;
 
         BattleState state;
         BattleStage stage;
@@ -50,19 +54,34 @@ namespace BrineBattle.Hunting
             drift = target;
             onEnd = onFinished;
             InBattle = true;
+            Foe = target;
             endTimer = 0f;
             var hook = FindFirstObjectByType<HookController>();
             state = new BattleState(hook != null ? hook.Fighter() : Combatant.Hunter(), target.Fighter, raft.MaxHp, new System.Random());
             state.FirstRound = firstRound;
+            Current = state;
             state.Weapon = hook?.Harpoon;
             state.Bag = hook?.Inventory;
             // A knocked-out pet (U-32: HP carries over) stays on the raft and rests.
             if (hook?.Companions.Active != null && !hook.Companions.Active.KnockedOut) state.Companion = Combatant.FromCompanion(hook.Companions.Active);
+            WorldClock.Empower(state.Companion);
             fighter = state.Companion != null ? hook.Companions.Active : null;
-            var crew = hook?.Companions.Best(Companions.CompanionRole.Crew);
-            if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rarity);
-            var mystic = hook?.Companions.Best(Companions.CompanionRole.Mystic);
-            if (mystic != null) state.SupportHeal = Companions.CompanionRules.MysticBattleHeal(mystic.Rarity);
+            var crew = hook?.Companions.Best(Companions.MinionSkill.Crewmate);
+            if (crew != null) state.CrewRepair = Companions.CompanionRules.CrewRaftRepair(crew.Rank);
+            var mystic = hook?.Companions.Best(Companions.MinionSkill.Alchemist);
+            if (mystic != null) state.SupportHeal = Companions.CompanionRules.MysticBattleHeal(mystic.Rank);
+            // Grand boss fights (Ed's ask): every minion helps, and the boss show plays the entrance first.
+            if (target.Monster.isBoss)
+            {
+                state.IsBoss = true;
+                if (hook != null)
+                {
+                    state.AllyAttack = BossFightRules.AllyStrike(hook.Companions.All, hook.Companions.Active);
+                    foreach (var line in BossFightRules.Contributions(hook.Companions.All, hook.Companions.Active)) state.Log.Add(line + ".");
+                }
+                if (!TryGetComponent(out bossShow)) bossShow = gameObject.AddComponent<BossShow>();
+                bossShow.Intro(target);
+            }
             // Battle visuals (idea U-19): created here so older Hook scenes get them without a rebuild.
             if (stage == null && !TryGetComponent(out stage)) stage = gameObject.AddComponent<BattleStage>();
             stage.Begin(raft, target, state.Companion);
@@ -73,7 +92,18 @@ namespace BrineBattle.Hunting
                 state.Actives.AddRange(hook.Gear.Actives);
             }
             string first = firstRound == Initiative.Hunter ? " You strike first." : firstRound == Initiative.Monster ? " It strikes first." : "";
-            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)Mode]}{(ForceAuto ? " (module catch)" : "")}.{first}");
+            state.Log.Add($"{target.Monster.displayName} attacks! Mode: {BattleSettings.Labels[(int)Mode]}{(ModuleCatch ? " (a module caught it)" : "")}.{first}");
+            // Idea Round 4: say who the time and weather favour (the stats were already changed).
+            if (WorldClock.Now != null)
+            {
+                string Note(Combatant c) => c == null ? "" : World.WorldRules.Note(c.Element, WorldClock.Time, WorldClock.Weather);
+                var notes = new System.Collections.Generic.List<string>();
+                void Add(string who, Combatant c) { var n = Note(c); if (n.Length > 0) notes.Add($"{who}: {n}"); }
+                Add(target.Monster.displayName, state.Monster);
+                Add("You", state.Hunter);
+                Add(state.Companion?.Name, state.Companion);
+                if (notes.Count > 0) state.Log.Add($"{WorldClock.Summary}. {string.Join("; ", notes)}.");
+            }
             timer = 0f;
             driftHome = target.transform.position;
 
@@ -96,12 +126,12 @@ namespace BrineBattle.Hunting
             if (!Active) return;
 
             Feed();
-            if (stage.Busy) { timer = 0f; return; }
+            if (stage.Busy || (bossShow != null && bossShow.Busy)) { timer = 0f; return; }
 
             if (state.Outcome != BattleOutcome.Ongoing)
             {
                 endTimer += Time.deltaTime;
-                if (endTimer >= 1.2f) End();
+                if (endTimer >= (state.IsBoss ? 2.4f : 1.2f)) End();
                 return;
             }
             var autoItem = AutoItem();
@@ -162,18 +192,23 @@ namespace BrineBattle.Hunting
             timer = 0f;
         }
 
+        BossShow bossShow;
+
         /// <summary>The pet fighting in this battle, so its HP and ailment can be kept afterwards (U-32).</summary>
         Companions.Companion fighter;
 
         void End()
         {
             var outcome = state.Outcome;
+            if (state.IsBoss && outcome != BattleOutcome.Won) bossShow?.Stop();
+            Current = null;
             FindFirstObjectByType<HookController>()?.TakeVitals(state.Hunter, fighter, state.Companion);
             fighter = null;
             stage.Clear();
             state = null;
             InBattle = false;
-            ForceAuto = false;
+            Foe = null;
+            ModuleCatch = false;
             drift = null;
             onEnd?.Invoke(outcome);
         }
@@ -195,8 +230,7 @@ namespace BrineBattle.Hunting
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Mode", GUILayout.Width(60));
-            if (ForceAuto) GUILayout.Label("Auto (a module caught it)");
-            else BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
+            BattleSettings.Mode = (BattleMode)GUILayout.Toolbar((int)BattleSettings.Mode, BattleSettings.Labels);
             GUILayout.EndHorizontal();
 
             int from = Mathf.Max(0, state.Log.Count - 3);
@@ -247,7 +281,7 @@ namespace BrineBattle.Hunting
                     var item = kv.Key;
                     string what = item.effect == ConsumableEffect.HealHunter ? $"+{item.effectAmount} HP"
                         : item.effect == ConsumableEffect.RepairRaft ? $"+{item.effectAmount} raft"
-                        : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} pet"
+                        : item.effect == ConsumableEffect.HealCompanion ? $"+{item.effectAmount} minion"
                         : $"{item.element}, {item.effectAmount} rounds";
                     GUI.enabled = waiting && state.CanUseItem(item);
                     if (GUILayout.Button($"{item.displayName} ×{kv.Value} ({what})")) UseItem(item);

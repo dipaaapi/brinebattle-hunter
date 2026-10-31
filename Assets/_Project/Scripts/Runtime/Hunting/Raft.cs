@@ -24,7 +24,7 @@ namespace BrineBattle.Hunting
         public Rarity Tier => Grid.Tier;
         /// <summary>Distance from the centre to just past the outer parts.</summary>
         public float EdgeDistance => (Grid.Radius + 1.2f) * CellSize;
-        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach;
+        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach - World.WorldRules.ReachPenalty(WorldClock.Weather);
 
         readonly Dictionary<Cell, GameObject> tiles = new Dictionary<Cell, GameObject>();
 
@@ -50,6 +50,9 @@ namespace BrineBattle.Hunting
         /// <summary>Where the water meets the raft, in raft space: thicker planks at higher levels lift the deck.</summary>
         public float WaterLine => DeckTop - RaftRules.Freeboard(Tier);
 
+        /// <summary>Height above the water while the plane takes off (Ed's ask: leaving the sea).</summary>
+        public float Lift { get; set; }
+
         /// <summary>Rides the swell: rises and falls with the water under its centre and leans with the slope (owner's ask).</summary>
         void LateUpdate()
         {
@@ -60,7 +63,7 @@ namespace BrineBattle.Hunting
             Waves.CalmRadius = (Grid.Radius + 2f) * CellSize;
             Waves.CalmShare = RaftRules.SeaShare(Tier);
             float span = Mathf.Max(1.5f, Grid.Radius * CellSize);
-            p.y = restY + Waves.Height(p.x, p.z) - WaterLine;   // the planks' water line sits on the water
+            p.y = restY + Waves.Height(p.x, p.z) - WaterLine + Lift;   // the planks' water line sits on the water
             transform.position = p;
             var up = Vector3.Slerp(Vector3.up, Waves.Normal(p.x, p.z, span), Rock);
             transform.rotation = Quaternion.FromToRotation(Vector3.up, up);
@@ -70,6 +73,12 @@ namespace BrineBattle.Hunting
         public Vector3 CellToWorld(Cell c) => transform.TransformPoint(Local(c));
 
         static Vector3 Local(Cell c) => new Vector3(c.X * CellSize, 0.15f, c.Z * CellSize);
+
+        /// <summary>The cell under a point in the raft's local space.</summary>
+        public static Cell LocalToCell(Vector3 local) => new Cell(Mathf.RoundToInt(local.x / CellSize), Mathf.RoundToInt(local.z / CellSize));
+
+        /// <summary>True when a local point is over a plank the hunter and pets may stand on (not a module or habitat).</summary>
+        public bool WalkableAt(Vector3 local) => Grid.Walkable(LocalToCell(local));
 
         public Cell WorldToCell(Vector3 p)
         {

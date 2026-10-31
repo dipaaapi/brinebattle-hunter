@@ -24,6 +24,8 @@ namespace BrineBattle.Items
         readonly Dictionary<EssenceKey, int> essence = new Dictionary<EssenceKey, int>();
 
         public event Action Changed;
+        /// <summary>Raised after a salvage with what was broken down and the essence it gave (the Salvage Bin animates it).</summary>
+        public event Action<ItemDefinition, int> Salvaged;
 
         public IEnumerable<KeyValuePair<ItemDefinition, int>> Items =>
             items.OrderBy(kv => kv.Key.type).ThenByDescending(kv => kv.Key.rarity).ThenBy(kv => kv.Key.displayName);
@@ -110,6 +112,7 @@ namespace BrineBattle.Items
             int gained = per * quantity;
             essence[key] = EssenceCount(key) + gained;
             Changed?.Invoke();
+            Salvaged?.Invoke(item, gained);
             return gained;
         }
 

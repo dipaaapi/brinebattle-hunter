@@ -44,16 +44,103 @@ namespace BrineBattle.Hunting
         void Start()
         {
             flotsam.AddRange(monsters.FindAll(m => m != null && m.isFlotsam));
-            monsters.RemoveAll(m => m == null || m.isFlotsam);
+            bosses.AddRange(monsters.FindAll(m => m != null && m.isBoss));
+            monsters.RemoveAll(m => m == null || m.isFlotsam || m.isBoss);
             hook = FindFirstObjectByType<HookController>();
             // A few drifts already in reach so there is something to hook right away.
             for (int i = 0; i < 3; i++) Spawn(Random.Range(-8f, 4f));
+        }
+
+        /// <summary>Raft-level bosses (Ed's ask), split from the creature list at start.</summary>
+        readonly List<MonsterDefinition> bosses = new List<MonsterDefinition>();
+        float bossTimer = Rafts.BossRules.SpawnSeconds - 5f;
+
+        /// <summary>The boss of a raft level (by its rarity), or null.</summary>
+        public MonsterDefinition BossFor(Items.Rarity level) => bosses.Find(b => b.rarity == level);
+
+        /// <summary>The boss of the raft's level, once it's due (one at a time).</summary>
+        void SpawnBoss()
+        {
+            if (raft == null || !Rafts.BossRules.Due(raft.Grid) || live.Exists(d => d != null && d.Monster.isBoss)) { bossTimer = 0f; return; }
+            bossTimer += Time.deltaTime;
+            if (bossTimer < Rafts.BossRules.SpawnSeconds) return;
+            bossTimer = 0f;
+            var boss = bosses.Find(b => b.rarity == raft.Tier);
+            if (boss == null) return;
+            var dir = currentDirection.normalized;
+            var side = Vector3.Cross(Vector3.up, dir);
+            var pos = raft.transform.position + dir * -spawnDistance + side * Random.Range(-4f, 4f);
+            pos.y = 0.1f;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            go.transform.SetParent(transform, true);
+            go.transform.position = pos;
+            var drift = go.AddComponent<Drift>();
+            // Slow, so there's time to hook it; always alive and hostile, and the hint never lies.
+            drift.Init(boss, DriftState.Alive, DriftState.Alive, dir * driftSpeed * 0.6f);
+            drift.Aggression = 1f;
+            live.Add(drift);
+            if (hook != null) hook.Log($"BOSS! {boss.displayName} rises from the deep. Beat it to level up the raft.");
+        }
+
+        // ---- Distress flares (Claude's C-17) ----
+
+        [Header("Survivors (C-17)")]
+        [Tooltip("Seconds between chances of a distress flare.")]
+        public float survivorInterval = 150f;
+        [Range(0f, 1f)] public float survivorChance = 0.5f;
+        float survivorTimer;
+
+        /// <summary>Now and then a flare goes up far upstream and a survivor on a plank drifts toward the raft.</summary>
+        void SpawnSurvivor()
+        {
+            survivorTimer += Time.deltaTime;
+            if (survivorTimer < survivorInterval) return;
+            survivorTimer = 0f;
+            if (raft == null || flotsam.Count == 0 || rng.NextDouble() >= survivorChance || live.Exists(d => d != null && d.Survivor)) return;
+            var tier = raft.Tier;
+            var basis = flotsam.Find(f => f.rarity == (tier < Items.Rarity.Mythic ? tier + 1 : tier)) ?? flotsam.Find(f => f.rarity == tier) ?? flotsam[0];
+            var dir = currentDirection.normalized;
+            var side = Vector3.Cross(Vector3.up, dir);
+            var pos = raft.transform.position + dir * -spawnDistance + side * Random.Range(-5f, 5f);
+            pos.y = 0.1f;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.transform.SetParent(transform, true);
+            go.transform.position = pos;
+            var drift = go.AddComponent<Drift>();
+            drift.Init(basis, DriftState.Dead, DriftState.Dead, dir * driftSpeed * 0.6f);
+            drift.MakeSurvivor();
+            live.Add(drift);
+            StartCoroutine(Flare(pos));
+            if (hook != null) hook.Log("A distress flare goes up! A survivor on a plank is drifting your way. Hook them for a thank-you gift.");
+        }
+
+        /// <summary>A red flare that shoots up, hangs, and fades.</summary>
+        static System.Collections.IEnumerator Flare(Vector3 from)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            go.name = "Distress flare";
+            Destroy(go.GetComponent<Collider>());
+            go.transform.localScale = Vector3.one * 0.35f;
+            Tint.Apply(go.GetComponent<Renderer>(), new Color(1f, 0.25f, 0.15f));
+            var light = go.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(1f, 0.3f, 0.2f);
+            light.range = 14f;
+            for (float t = 0f; t < 4f && go != null; t += Time.deltaTime)
+            {
+                go.transform.position = from + Vector3.up * (Mathf.Min(1f, t / 1.2f) * 9f);
+                light.intensity = 3f * (1f - Mathf.Clamp01((t - 2.5f) / 1.5f));
+                yield return null;
+            }
+            if (go != null) Destroy(go);
         }
 
         void Update()
         {
             live.RemoveAll(d => d == null);
             if (WorldPause.Active) return;
+            SpawnBoss();
+            SpawnSurvivor();
             timer += Time.deltaTime;
             if (timer >= spawnInterval && live.Count < maxDrifts)
             {
@@ -68,8 +155,12 @@ namespace BrineBattle.Hunting
         /// </summary>
         MonsterDefinition PickFlotsam()
         {
-            if (flotsam.Count == 0 || rng.NextDouble() >= flotsamShare) return null;
+            if (flotsam.Count == 0) return null;
+            // Idea C-13: after a storm, wreckage one rarity higher drifts by.
+            bool wreck = WorldClock.Now != null && WorldClock.Now.TakeWreck();
+            if (!wreck && rng.NextDouble() >= flotsamShare + World.WorldRules.FlotsamBonus(WorldClock.Weather)) return null;
             var tier = raft != null ? raft.Tier : Items.Rarity.Common;
+            if (wreck && tier < Items.Rarity.Mythic) tier++;
             var fits = flotsam.FindAll(f => f.rarity <= tier + 1);
             if (fits.Count == 0) return null;
             float total = 0f;
@@ -83,12 +174,51 @@ namespace BrineBattle.Hunting
             return fits[fits.Count - 1];
         }
 
+        /// <summary>Sun creatures turn up more by day, Moon creatures by night (U-10).</summary>
+        MonsterDefinition PickCreature()
+        {
+            float total = 0f;
+            foreach (var m in monsters) total += World.WorldRules.SpawnWeight(World.WorldRules.AffinityOf(m.element), WorldClock.Time);
+            float roll = (float)rng.NextDouble() * total;
+            foreach (var m in monsters)
+            {
+                roll -= World.WorldRules.SpawnWeight(World.WorldRules.AffinityOf(m.element), WorldClock.Time);
+                if (roll <= 0f) return m;
+            }
+            return monsters[monsters.Count - 1];
+        }
+
         static float Weight(Items.Rarity r, Items.Rarity tier) => r == tier ? 3f : r > tier ? 0.5f : 1f;
+
+        /// <summary>
+        /// Reset raft (Ed's ask): the parts the sea takes don't vanish. Each floats off the raft's edge as
+        /// slow floating loot, so the hunter, a module or a Looter minion can still catch it back.
+        /// </summary>
+        public void WashOff(IReadOnlyList<Items.ItemDefinition> parts)
+        {
+            if (raft == null || parts == null) return;
+            var dir = currentDirection.normalized;
+            foreach (var part in parts)
+            {
+                var basis = flotsam.Find(f => f.rarity == part.rarity) ?? (flotsam.Count > 0 ? flotsam[0] : null);
+                if (basis == null) return;
+                // Off the downstream half of the raft's edge, so it drifts away from the raft, not into it.
+                var pos = raft.transform.position + Quaternion.Euler(0f, Random.Range(-70f, 70f), 0f) * dir * (raft.EdgeDistance + 0.8f);
+                pos.y = 0.1f;
+                var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                go.transform.SetParent(transform, true);
+                go.transform.position = pos;
+                var drift = go.AddComponent<Drift>();
+                drift.Init(basis, DriftState.Dead, DriftState.Dead, dir * driftSpeed * 0.45f);
+                drift.CarryPart(part);
+                live.Add(drift);
+            }
+        }
 
         void Spawn(float alongCurrent)
         {
             if (monsters.Count == 0 || raft == null) return;
-            var monster = monsters[rng.Next(monsters.Count)];
+            var monster = PickCreature();
             var loot = PickFlotsam();
             if (loot != null) monster = loot;
             // Phase 8: a monster that ate raft parts comes back now and then (one at a time).
@@ -101,14 +231,17 @@ namespace BrineBattle.Hunting
             var pos = raft.transform.position + dir * alongCurrent + side * Random.Range(-9f, 9f);
             pos.y = 0.1f;
 
-            var state = monster.isFlotsam ? DriftState.Dead : EncounterRules.RollState(deadWeight, weakenedWeight, aliveWeight, rng);
-            var hint = monster.isFlotsam ? DriftState.Dead : EncounterRules.Hint(state, Accuracy, rng);
+            // Idea Round 4: night and storms stir creatures up, fog and night spoil hints.
+            var w = WorldClock.Weather;
+            var t = WorldClock.Time;
+            var state = monster.isFlotsam ? DriftState.Dead : EncounterRules.RollState(deadWeight * World.WorldRules.DeadScale(w, t), weakenedWeight, aliveWeight * World.WorldRules.AliveScale(w, t), rng);
+            var hint = monster.isFlotsam ? DriftState.Dead : EncounterRules.Hint(state, World.WorldRules.HintAccuracy(Accuracy, w, t), rng);
 
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.transform.SetParent(transform, true);
             go.transform.position = pos;
             var drift = go.AddComponent<Drift>();
-            drift.Init(monster, state, hint, dir * driftSpeed * Random.Range(0.7f, 1.3f));
+            drift.Init(monster, state, hint, dir * driftSpeed * World.WorldRules.DriftSpeedScale(w) * Random.Range(0.7f, 1.3f));
             drift.Aggression = Encounters.EncounterRules.RollAggression(monster.aggression, new System.Random(Random.Range(0, int.MaxValue)));
             if (back != null && monster.id == back.MonsterId) drift.MakeGorged(back.Parts);
             live.Add(drift);

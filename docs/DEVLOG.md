@@ -2,6 +2,70 @@
 
 *Newest first. One entry per working session or finished task: what changed, what was decided, what is next.*
 
+## 2026-10-31 — Knocked-out countdown; Idea Round 4 merged
+- Knocked out: a "KNOCKED OUT · back on your feet in N s" banner with a bar mid-screen and "Zzz… N" over the hunter (`HookController.DrawRespawn`). Ed: 281/281 tests pass.
+- PR #7 merged into `main` on Ed's word. Next: Phase 9.
+
+## 2026-10-31 — Menus refreshed (Ed: Build scrolled sideways, Book and Bag looked outdated)
+- Build panel 460 → 640 wide, vertical scrolling only, content kept to the panel width.
+- `HuntStyles.TileGrid` / `GridTile` (rounded tiles with a swatch, rarity rim and a count badge) and `HuntStyles.Chip`.
+- **Collection Book:** wider and centred; tile grid on the left (items with type filters and bag counts, BOSS badge), detail card on the right with chips (type, rarity, element, HP/ATK/DEF/SPD) and drops with chances. **Recipes:** the Workbench's tabs and sub-tabs with known/total counts, two cards a row with have/need per ingredient.
+- **Bag → Items:** tile grid with counts (red rim = below your tier) and a card for the picked item with Equip / Use / Salvage 1 / Salvage all.
+
+## 2026-10-31 — Claude's ideas C-14 to C-23 (Ed: apply what doesn't touch Phase 9)
+- Ed asked for more of Claude's ideas: logged C-14…C-23, then built all but C-20 (audio → Phase 9) and C-22 (daily sea → Phase 10).
+- **C-14** catch styles on the reel (`CatchStyle`, `ReelGame.StyleOf`). **C-21** `Hunting/Juice` (splash, pop-ups, shake) + reel line colour. **C-23** `Hunting/EdgeArrows`.
+- **C-19** `WorldRules.SightRange(w, t, lantern)`, `Glows`; `WorldClock` lantern (Lv 2+) and glow tint. **C-18** `Rafts/SetBonusRules` (module line reach, cozy habitats for healing), shown in Build.
+- **C-16** `FoodKind`, `Companion.Favourite/SinceFavourite/Sulking`, `MinionRules.IsFavourite/WorkSpeed`; saved (`favourite`, older saves pick from the id); "<3 Yum!" and "sulking" tags. **C-15** `World/Firsts` + `HookController.First`, journal in the Quest tab, saved. **C-17** survivors and flares in `DriftSpawner`, gift in `HookController.LootOf`.
+- +9 `ClaudeIdeasTests`. Runtime and tests compiled with Unity's Roslyn (Editor open); Ed runs the Test Runner.
+
+## 2026-10-31 — Reel minigame (U-42), smaller boss, one battle mode everywhere
+- **Reel minigame** (Ed's co-worker's idea, fishing-game feel): `Encounters/ReelGame` (plain C#): the catch darts on a vertical bar, hold/tap Space lifts the green zone, the catch meter fills inside and drains outside (caught / slips off). Zone width by size, rarity, weather, Alchemy Mastery and a Looter minion. Semi-auto pulls the zone toward the catch; Auto plays it. `HookController.DrawTension` draws the bar and meter; the catch is pulled in as the meter fills. +5 `ReelGameTests`. Ed: works in Manual.
+- **Boss:** rises to normal size (was ×1.6 on top of ×1.8), boss drift ×1.3, no flat aura disc (it covered the raft, hunter and minions); enraged tints the boss red. Ed: OK now.
+- **Battle mode:** module catches used to force Auto. Now every battle uses the Settings mode (`BattleController.ModuleCatch` only marks the no-raft-part-loss rule). GDD updated.
+- Runtime compiled with Unity's Roslyn while the Editor was open; Ed runs the Test Runner.
+
+## 2026-10-31 — Idea Round 4 fixes from Ed's Unity test (office desktop)
+- Desktop synced to `idea-round/4-world` 2b3a5cd; its old local changes are in `git stash` (nothing pushed from the desktop before this).
+- **Reset raft:** the ~20% the sea takes now float off as "Your lost raft part!" drifts (`DriftSpawner.WashOff`, `Drift.CarryPart`), slow and on the water 120 s. Hooking one, a module or a Looter gives that exact part back (`HookController.LootOf`).
+- **Looter minion:** you see it work: it throws a net, casts its hook or fires a harpoon from its body, pulls the catch to the edge, then loots it (`HookController.Fetch`). Reach past the edge 4 → 8 m; it waits for a target instead of losing its turn.
+- **Incantation circle:** it was drawn inside the planks (y 0.2 < deck 0.3); now just above the deck, lasts 2.4 s, waits while a menu is open, and shows for every craft you make at the Workbench while an Alchemist is aboard.
+- **Sea edge on clear days:** a light horizon haze always on (`WorldClock.NearestSeaEdge`): fog ends just before the nearest on-screen edge of the ocean plane, in the sky's colour.
+- **Raft type look:** once the type is picked the vehicle's frame shows right away (low hull sides / stub wings / bare rails) instead of the katig; each vehicle part (Workbench → Vehicle, then Build) adds its full piece.
+- 268/268 EditMode tests pass (headless).
+
+## 2026-10-30 — Minions (Ed's U-39), on the laptop
+- Laptop is now Ed's main machine. Pulled `idea-round/4-world` (16b0e66), committed Unity's missing metas (e780813, pushed on Ed's OK).
+- Pets became **minions**: `Companions/Minion.cs` (plain C#: `MinionSkill`, `MinionRules` levels/EXP/skill order/gates/room/junk/tree states). `Companion` has Level, Exp, Skills, `GainExp`, `CatchUp`, `Learn`; `CompanionRoster.Best(MinionSkill)`; Fighter-only battle minion. Feeding gives EXP; fusion keeps the higher level and passes a skill. `CompanionWork`: Builder (vehicle parts, modules, reinforce, level-up), Tinker, junk picks, Hungriest.
+- `RaftCompanions`: jobs by skill with Chores switches (Mender, Alchemist, Smith, Tinker, Builder, Salvager, Glutton); taming has no role pick. `PetsPanel` is the Minions menu (My minions / Skill tree / Chores); HUD lists minions with level, EXP and current job (`MinionActivity`). Wording "Pets" → "Minions" in menus and FAQ (new Minions topic).
+- Save: level, exp, skills; older saves turn roles into skills (Familiar → Fighter + Looter, Crew → Crewmate + Mender, Mystic → Alchemist + Smith) and stage into a level.
+- **Quest tab** (Ed's U-40): `Rafts/QuestRules` builds quests from the raft, bag and known recipes (type, next level, boss, modules, hammer, next vehicle part, leave) with have/need lines and a target; `Hunting/QuestPanel` draws the slim right-edge tab (J) and the list/checklist with a Go button (`RaftBuilder.OpenBench` is public now). +4 `QuestTests`.
+- **Grand boss fights** (Ed's U-41): `Battle/BossFightRules` (enrage at 50% ×1.3 ATK, tidal wave every 3 rounds for 12% raft HP, other Fighters chip in ATK/3, Looters add up to 3 lucky loot rolls, treasure essence); `BattleState.IsBoss/AllyAttack/Enraged`; `Hunting/BossShow` (warning banner, rise + splash + aura, camera shake, top HP bar, ENRAGED flash, slow-mo finish, treasure burst, BOSS DEFEATED card); `HookController.BossTreasure`. No new data (cores already feed the vehicle recipes). +5 `BossFightTests`.
+- **New UI everywhere** (Ed's ask): `HuntStyles` is now a "deep sea" theme. `Begin()` puts a themed `GUISkin` on every panel (procedural rounded textures: navy panels, teal title bar and rim, gold when pressed, teal toolbar selection, themed toggles, sliders, scroll bars, text fields), so Bag, Build, Settings, Book, battle, Minions and Quests all change at once. HUD left panel in sections (Hunter & raft, Minions, Sea) via `HuntStyles.Section`; dock tiles with rims.
+- Tests: new `MinionTests` (12), updated companion/save tests. Compiled with Unity's Roslyn while the Editor was open; Ed runs the Test Runner.
+
+## 2026-10-30 — Idea Round 4: World conditions
+- Ed picked World conditions after Phase 8 (row 3 of the combined plan: U-10, U-15, C-3, U-21). Branch `idea-round/4-world` from main d60cfa8.
+- `World/WorldRules` (plain C#): time of day (8-minute day), Sun/Moon affinity from the element (+20% ATK/+10% DEF at its time, −10% ATK against), weather effects (waves, drift speed, hook reach, reel sweet spot, alive/dead rolls, floating-loot share, hint accuracy, sight range), weather transitions (storms only after rain/rough seas), thunderstrike chance (Fortress ½, Sky ×1.5). `World/WorldState`: clock, weather, forecast, wreck field, events.
+- `Hunting/WorldClock` (added at runtime by `HookController`): runs the clock outside menus/battles, sky colour, sun angle/colour, ambient, scene fog from the sight range, `Waves.WeatherScale`, lightning bolts and `RaftFire` (click twice to douse, Crew douses after 5 s, burns the part away after 15 s via `RaftGrid.Burn`; the hook is jammed while a fire burns).
+- Hooked in: `DriftSpawner` (affinity-weighted creature pick, state roll, hints, speed, floating loot, wreck field), `Drift` (far drifts "???", `Fighter` empowered), `HookController.Fighter` and the pet (empowered), `BattleController` (pet empowered, a log line says who the time/weather favours), `Raft.HookReach`, reel sweet spot, HUD line with the forecast.
+- Claude's ideas, per Ed's ask to add my own: **C-12 Forecast** and **C-13 Wreck field**.
+- Save: time, day, weather, forecast, wrecks (`hasWorld`; older saves start in the morning). FAQ topic "Day & weather". No data/builder changes (DataVersion stays 11). +10 rules tests (226 in the cloud check); Runtime compiles. Unity test on Ed's PC next.
+- Ed's Unity test: the hunter didn't face the monster in battle, and no sun or moon could be seen. Fixes: `HunterMotion` turns the hunter toward `BattleController.Foe` during battles; `WorldClock` draws a sky strip (top-right) with the sun or a crescent moon on its arc (`WorldRules.SkyArc`), clouds in bad weather, and turns on soft sun shadows. +1 test (227).
+- Ed's raft/workbench batch (build now, not later):
+  - Workbench tabs → Gear (Weapon/Armor/Accessory), Player (Potions/Oils), Pet (Treats/Habitats), Raft (Planks & parts/Auto-loot/Hammers): `RecipeSub`, `CraftRules.SubOf/SubsOf`.
+  - Accessories: `ItemType.Accessory`, `GearSlot.Accessory`, power splits ATK/DEF, element when the weapon is neutral, `GearPassive.Swift`; four accessories + recipes (`SampleDataBuilder.Accessory`, DataVersion 12); saved.
+  - `SalvageBin`: its own box next to the storage box; `Inventory.Salvaged` and dismantle crafts fly essence orbs into it; click to open (essence + dismantle).
+  - Planks only: `RaftGrid.Walkable`, `Raft.WalkableAt`; hunter and pets never step on modules or habitats.
+  - Raft looks by type (`RaftDecor`): sea train, winged plane, pirate ship.
+  - Raft tree: Level up + Tree in one page; type picked once (`RaftGrid.Chosen/CanChoose/Choose`, `RaftTree.PickLevel` = 2: Ed picked one choice at the first level-up, since raft levels stop at 6); unpicked types lock.
+  - Mystic: incantation circle when it crafts/refines. Crew: walks over and hammers for 4 s with a progress bar (`CompanionWork.CrewInstall`).
+  - FAQ updated. +5 rules tests (232 in the cloud check).
+  - Ed's test: his Sky raft showed as a sea train (Fortress) because the Crew had built Shellback Plates. Fix: the picked type is the raft's type (`RaftGrid.Type`), so look and bonuses follow the pick.
+  - Ed (U-35): once the type is picked, parts of other types come off by themselves. `RaftGrid.ResetOffType` sends them to the Bag and puts basic planks (the starter part) in their cells; `FitsType` / `PlaceResult.WrongType` block placing them (Build greys them out "not for a Sky raft"; the Crew skips them since it uses `CanPlace`).
+  - Ed (U-37/U-38): **bosses per raft level, vehicles and difficulty.** `Rafts/Voyage.cs`: `DifficultyRules` (Easy/Normal/Hard = 1/2/3 types to win, monsters ×1/1.25/1.5, loot ×1/0.8/0.6), `VesselRules` (five parts per type, slot n opens at Lv n+1), `BossRules.Due`, `Voyage` (sea, escaped types, enemy scale +35% per sea). `RaftGrid`: `BossesNeeded`, `MarkBoss`, boss step in `UpgradeBlocker`, `InstallVessel`/`VesselBlocker`, `LeaveBlocker`, `NewSea`. `ItemType.Vessel`, `ItemDefinition.vesselSlot`, `RecipeSub.Vehicle`, `MonsterDefinition.isBoss`. Data: 6 bosses + cores, 15 vehicle parts + recipes (DataVersion 13). Game: boss drifts (`DriftSpawner.SpawnBoss`), monster scaling in `Drift.Fighter`, loot scaling in `HookController.RollLoot`, Vehicle section + leave button in the Raft tree, `RaftDecor` builds the look piece by piece, `VoyageController` (departure, ending screen, next sea), difficulty pick on New game. Saved (`hasVoyage`; older saves count passed levels' bosses as beaten). FAQ topic "Bosses & leaving". Ed picked: after leaving, a new sea back at Lv 1. +5 tests (239 in the cloud check).
+  - Ed (U-36): Settings → Game → **Reset raft** (asks twice). `RaftGrid.ResetRaft`: back to the starter 3x3, level and type stay, a fifth of the parts that come off float away (`WashAwayShare` 0.2), the rest go to the Bag, habitats are never lost (back on the square's edge). +2 tests (234 in the cloud check).
+
 ## 2026-10-30 — Phase 8 (raft types & absorption) + Ed's asks
 - Office desktop synced to main 0edfa79 (git bundle; old local changes stashed).
 - Ed's playtest: the Familiar moved with the hunter while hooking, as if attached. Now it walks after the hunter at its own pace and stays put, hopping, while the hunter casts and reels (`RaftCompanions`).

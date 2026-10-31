@@ -37,6 +37,8 @@ namespace BrineBattle.Rafts
         NeedsHammer = 7,
         /// <summary>Replace: the new part is the same as the one already there.</summary>
         Same = 8,
+        /// <summary>A typed part of a raft type that wasn't picked (Ed's ask: it's disabled once a type is picked).</summary>
+        WrongType = 9,
     }
 
     public enum RemoveResult
@@ -138,7 +140,11 @@ namespace BrineBattle.Rafts
         /// <summary>Battle HP: every part's HP, with the raft type's bonus (Phase 8).</summary>
         public int MaxHp => parts.Count == 0 ? 0 : RaftTypeRules.WithHpBonus(parts.Values.Sum(p => RaftRules.PartHp(p.rarity, Tier)), Type.Bonus);
         /// <summary>Fortress, Sky, Beast, a hybrid or Plain, from the raft parts (Phase 8).</summary>
-        public RaftType Type => RaftTypeRules.Classify(parts.Values);
+        /// <summary>
+        /// The type picked in the raft tree wins (Ed: a Sky raft must look and fight like Sky even with
+        /// Fortress planks on it). Before a pick, the parts decide (Phase 8).
+        /// </summary>
+        public RaftType Type => Chosen != RaftKind.Plain ? new RaftType(Chosen) : RaftTypeRules.Classify(parts.Values);
         /// <summary>Companion habitats on the raft; each adds room for one companion.</summary>
         public int HabitatCount => parts.Values.Count(p => p.type == ItemType.Habitat);
         public int Radius => parts.Count == 0 ? 0 : parts.Keys.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Z)));
@@ -153,6 +159,9 @@ namespace BrineBattle.Rafts
         }
 
         public bool Has(Cell c) => parts.ContainsKey(c);
+
+        /// <summary>Planks only (Ed's ask): the hunter and pets walk on raft parts, never on modules or habitats.</summary>
+        public bool Walkable(Cell c) => parts.TryGetValue(c, out var p) && p.type == ItemType.Raft;
 
         /// <summary>Rows of the raft, and how many of them end upstream in an auto-loot module.</summary>
         public (int guarded, int rows) UpstreamModules()
@@ -200,6 +209,7 @@ namespace BrineBattle.Rafts
             if (parts.ContainsKey(c)) return PlaceResult.Occupied;
             if (parts.Count > 0 && !c.Neighbours().Any(parts.ContainsKey)) return PlaceResult.NotAdjacent;
             if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
+            if (!FitsType(part)) return PlaceResult.WrongType;
             if (part.type == ItemType.Raft && !ModulesReady) return PlaceResult.NeedsModules;
             if (!HammerReady) return PlaceResult.NeedsHammer;
             return PlaceResult.Ok;
@@ -215,6 +225,7 @@ namespace BrineBattle.Rafts
             if (!parts.TryGetValue(c, out var old)) return PlaceResult.NotAdjacent;
             if (old == part) return PlaceResult.Same;
             if (!SalvageRules.IsCompatible(part.type, part.rarity, Tier)) return PlaceResult.BelowTier;
+            if (!FitsType(part)) return PlaceResult.WrongType;
             if (!HammerReady) return PlaceResult.NeedsHammer;
             return PlaceResult.Ok;
         }
@@ -277,6 +288,7 @@ namespace BrineBattle.Rafts
             var (guarded, _) = UpstreamModules();
             if (guarded < ModulesNeeded) missing.Add($"{ModulesNeeded - guarded} more auto-loot module{(ModulesNeeded - guarded == 1 ? "" : "s")} on the left edge");
             if (!HammerReady) missing.Add($"a {Tier} hammer or better");
+            if (BossesNeeded && !BossBeaten(Tier)) missing.Add($"beat the Lv {(int)Tier + 1} boss");
             return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
         }
 
@@ -286,7 +298,11 @@ namespace BrineBattle.Rafts
         /// </summary>
         public bool TryUpgrade(Inventory inv) => TryUpgrade(inv, RaftKind.Plain);
 
-        /// <summary>Levels up and records the raft type picked for the new level (U-31's material tree).</summary>
+        /// <summary>
+        /// Levels up (U-31's material tree). The raft type is picked once (Ed's ask): before
+        /// <see cref="RaftTree.PickLevel"/> every level is Plain; the level-up that reaches it records
+        /// <paramref name="path"/> as the raft's type, and after that every level goes to that type.
+        /// </summary>
         public bool TryUpgrade(Inventory inv, RaftKind path)
         {
             if (UpgradeBlocker(inv) != null) return false;
@@ -294,9 +310,199 @@ namespace BrineBattle.Rafts
             inv.SpendEssence(Tier, RaftRules.UpgradeCost(Tier));
             Kills = 0;
             Tier++;
-            paths.Add(path);
+            int level = (int)Tier + 1;
+            paths.Add(Chosen != RaftKind.Plain ? Chosen : level >= RaftTree.PickLevel ? path : RaftKind.Plain);
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>The raft type picked once in the raft tree (Ed's ask), or Plain before it's picked.</summary>
+        public RaftKind Chosen
+        {
+            get
+            {
+                for (int i = paths.Count - 1; i >= 0; i--) if (paths[i] != RaftKind.Plain) return paths[i];
+                return RaftKind.Plain;
+            }
+        }
+
+        /// <summary>True when the raft is at the pick level or past it and no type is picked yet.</summary>
+        public bool CanChoose => Chosen == RaftKind.Plain && (int)Tier + 1 >= RaftTree.PickLevel;
+
+        /// <summary>
+        /// Picks the raft type now, without a level-up (for a raft already at the pick level). It counts
+        /// from the pick level up to the current level, so that branch opens that far. Once only.
+        /// </summary>
+        public bool Choose(RaftKind kind)
+        {
+            if (!CanChoose || kind == RaftKind.Plain) return false;
+            for (int i = 0; i < paths.Count; i++) if (i + 2 >= RaftTree.PickLevel) paths[i] = kind;
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// False for a typed raft part of a type that wasn't picked (Ed's ask). Plain parts, modules,
+        /// habitats and every part before the pick always fit.
+        /// </summary>
+        public bool FitsType(ItemDefinition part) =>
+            part == null || part.type != ItemType.Raft || part.raftKind == RaftKind.Plain
+            || Chosen == RaftKind.Plain || part.raftKind == Chosen;
+
+        /// <summary>
+        /// Once the type is picked (Ed's ask), every placed part of another type goes back to the bag and
+        /// a basic plank takes its cell, so the raft keeps its shape. Returns the parts sent to the bag.
+        /// </summary>
+        public List<ItemDefinition> ResetOffType(ItemDefinition basic, Inventory bag)
+        {
+            var back = new List<ItemDefinition>();
+            if (basic == null || Chosen == RaftKind.Plain) return back;
+            foreach (var c in parts.Keys.ToList())
+            {
+                var p = parts[c];
+                if (FitsType(p)) continue;
+                parts[c] = basic;
+                bag?.Add(p, 1);
+                back.Add(p);
+            }
+            if (back.Count > 0) Changed?.Invoke();
+            return back;
+        }
+
+        /// <summary>Share of the parts the sea takes when the raft is reset from Settings (Ed's ask).</summary>
+        public const float WashAwayShare = 0.2f;
+
+        /// <summary>
+        /// Reset raft (Settings, Ed's ask): the raft goes back to the starter square of basic planks so it
+        /// can be rebuilt. Level and type stay. Every other part comes off: about
+        /// <see cref="WashAwayShare"/> of them float away, the rest go to the bag. Habitats are never lost
+        /// (companions live in them): they go back on the edge of the square. Returns what the sea took.
+        /// </summary>
+        public List<ItemDefinition> ResetRaft(ItemDefinition basic, Inventory bag, Random rng) => Strip(basic, bag, rng, WashAwayShare);
+
+        /// <summary>
+        /// Back to the starter square: every other part comes off, <paramref name="share"/> of them are lost,
+        /// the rest go to the bag; habitats go back on the square's edge.
+        /// </summary>
+        List<ItemDefinition> Strip(ItemDefinition basic, Inventory bag, Random rng, float share)
+        {
+            var lost = new List<ItemDefinition>();
+            if (basic == null) return lost;
+            var square = new List<Cell>();
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++) square.Add(new Cell(x, z));
+            var off = new List<ItemDefinition>();
+            var habitats = new List<ItemDefinition>();
+            foreach (var kv in parts)
+            {
+                // Basic planks already in the square just stay.
+                if (kv.Value == basic && square.Contains(kv.Key)) continue;
+                if (kv.Value.type == ItemType.Habitat) habitats.Add(kv.Value);
+                else off.Add(kv.Value);
+            }
+            int wash = (int)Math.Round(off.Count * share);
+            for (int i = 0; i < wash && off.Count > 0; i++)
+            {
+                int k = rng.Next(off.Count);
+                lost.Add(off[k]);
+                off.RemoveAt(k);
+            }
+            foreach (var p in off) bag?.Add(p, 1);
+            parts.Clear();
+            foreach (var c in square) parts[c] = basic;
+            var ring = new List<Cell>();
+            for (int x = -2; x <= 2; x++)
+                for (int z = -2; z <= 2; z++)
+                    if (Math.Max(Math.Abs(x), Math.Abs(z)) == 2 && Math.Abs(x) + Math.Abs(z) < 4) ring.Add(new Cell(x, z));
+            ring = ring.OrderByDescending(c => c.X).ThenBy(c => Math.Abs(c.Z)).ToList();
+            for (int i = 0; i < habitats.Count; i++)
+            {
+                if (i < ring.Count) parts[ring[i]] = habitats[i];
+                else bag?.Add(habitats[i], 1);
+            }
+            Changed?.Invoke();
+            return lost;
+        }
+
+        // ---- Vehicle and bosses (Ed's ask) ----
+
+        /// <summary>Bosses gate the level-ups. Off for bare grids in tests; the game turns it on.</summary>
+        public bool BossesNeeded { get; set; }
+        readonly HashSet<Rarity> bosses = new HashSet<Rarity>();
+        /// <summary>Raft levels whose boss is beaten (by the level's rarity).</summary>
+        public IEnumerable<Rarity> BossesBeaten => bosses;
+        public bool BossBeaten(Rarity level) => bosses.Contains(level);
+        public void MarkBoss(Rarity level)
+        {
+            if (bosses.Add(level)) Changed?.Invoke();
+        }
+
+        readonly HashSet<int> vessel = new HashSet<int>();
+        /// <summary>The vehicle parts on the raft (slots 1-5) for the picked type.</summary>
+        public IEnumerable<int> Vessel => vessel;
+        public bool HasVessel(int slot) => vessel.Contains(slot);
+        public int VesselCount => vessel.Count;
+        public bool VesselComplete => vessel.Count >= VesselRules.Parts;
+
+        /// <summary>Why this vehicle part can't go on yet, or null when it can.</summary>
+        public string VesselBlocker(ItemDefinition part, Inventory bag)
+        {
+            if (part == null || part.type != ItemType.Vessel || part.vesselSlot < 1) return "That isn't a vehicle part.";
+            if (Chosen == RaftKind.Plain) return "Pick the raft's type first.";
+            if (part.raftKind != Chosen) return $"That part is for a {VesselRules.Vehicle(part.raftKind)}.";
+            if (vessel.Contains(part.vesselSlot)) return "It's already on.";
+            int need = VesselRules.UnlockLevel(part.vesselSlot);
+            if ((int)Tier + 1 < need) return $"Opens at raft Lv {need}.";
+            if (bag != null && bag.Count(part) <= 0) return "Make it at the Workbench first.";
+            if (!HammerReady) return $"Needs a {Tier} hammer or better.";
+            return null;
+        }
+
+        public bool InstallVessel(ItemDefinition part, Inventory bag)
+        {
+            if (VesselBlocker(part, bag) != null) return false;
+            bag?.Remove(part, 1);
+            vessel.Add(part.vesselSlot);
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>Why the vehicle can't leave the sea yet, or null when it can.</summary>
+        public string LeaveBlocker()
+        {
+            if (Chosen == RaftKind.Plain) return "Pick the raft's type first.";
+            var missing = new List<string>();
+            if (Tier < Rarity.Mythic) missing.Add("reach raft Lv 6");
+            if (!VesselComplete) missing.Add($"put on {VesselRules.Parts - vessel.Count} more vehicle part{(VesselRules.Parts - vessel.Count == 1 ? "" : "s")}");
+            if (!BossBeaten(Rarity.Mythic)) missing.Add("beat the Lv 6 boss");
+            return missing.Count == 0 ? null : "Needs " + string.Join(", ", missing) + ".";
+        }
+
+        public bool CanLeave => LeaveBlocker() == null;
+
+        /// <summary>
+        /// A new sea (Ed's ask): the raft goes back to the starter square at Lv 1 with no type, no vehicle
+        /// and no bosses beaten. Every part that comes off goes to the bag; habitats stay on.
+        /// </summary>
+        public void NewSea(ItemDefinition basic, Inventory bag)
+        {
+            Strip(basic, bag, new Random(0), 0f);
+            Tier = Rarity.Common;
+            Kills = 0;
+            paths.Clear();
+            vessel.Clear();
+            bosses.Clear();
+            Changed?.Invoke();
+        }
+
+        /// <summary>Loads the vehicle and bosses from a save.</summary>
+        public void RestoreVoyage(IEnumerable<int> vesselSlots, IEnumerable<Rarity> beaten)
+        {
+            vessel.Clear();
+            bosses.Clear();
+            if (vesselSlots != null) foreach (var v in vesselSlots) vessel.Add(v);
+            if (beaten != null) foreach (var b in beaten) bosses.Add(b);
+            Changed?.Invoke();
         }
 
         readonly List<RaftKind> paths = new List<RaftKind>();
@@ -341,6 +547,19 @@ namespace BrineBattle.Rafts
             eaten = options[rng.Next(options.Count)];
             var part = parts[eaten];
             parts.Remove(eaten);
+            Changed?.Invoke();
+            return part;
+        }
+
+        /// <summary>
+        /// A fire left burning takes this part (Idea Round 4, U-15). Only an edge part that can go without
+        /// splitting the raft; returns the part lost, or null if it can't burn away now.
+        /// </summary>
+        public ItemDefinition Burn(Cell c)
+        {
+            if (!EdibleParts().Contains(c)) return null;
+            var part = parts[c];
+            parts.Remove(c);
             Changed?.Invoke();
             return part;
         }

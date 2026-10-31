@@ -1,45 +1,43 @@
+using System.Collections.Generic;
 using System;
 using BrineBattle.Items;
 
 namespace BrineBattle.Companions
 {
     /// <summary>What feeding did.</summary>
-    public enum FeedResult { CantEat, Grew, Evolved, Infused, Full }
+    public enum FeedResult { CantEat, Grew, LevelUp, Evolved, Infused, Full }
 
     /// <summary>The outcome of a fusion in the Transmutation Circle.</summary>
     public enum FuseResult { Upgraded, Hybrid, Failed, NotAllowed }
 
     /// <summary>
-    /// Growing companions without EXP (GDD §10): feeding loot and infusing potions, fusing two in the
-    /// Transmutation Circle (the source is consumed and leaves an echo), and their looks. Plain C# for EditMode tests.
+    /// Growing minions (GDD §10, Ed's U-39): eating loot gives EXP and levels (<see cref="MinionRules"/>), potions
+    /// infuse, fusing two in the Transmutation Circle (the source is consumed and leaves an echo and one skill),
+    /// and their looks. Plain C# for EditMode tests.
     /// </summary>
     public static class CompanionGrowth
     {
         // --- Feeding / infusion ---
 
-        /// <summary>Feeding points needed for the next evolution: Young 10, Adult 20.</summary>
-        public static int GrowthToEvolve(GrowthStage stage) => 10 * ((int)stage + 1);
-
-        /// <summary>Points a material gives: 1 + its rarity step, doubled when its element matches the companion's.</summary>
-        public static int FeedPoints(ItemDefinition item, Companion c)
-        {
-            int p = 1 + (int)item.rarity;
-            return item.element == c.Element && item.element != Elements.Element.None ? p * 2 : p;
-        }
+        /// <summary>EXP one item gives this minion (see <see cref="MinionRules.ExpFor"/>).</summary>
+        public static int FeedPoints(ItemDefinition item, Companion c) => MinionRules.ExpFor(item, c) * (MinionRules.IsFavourite(item, c) ? 2 : 1);
 
         /// <summary>Potions a companion can take: 3 when Young, +2 per stage.</summary>
         public static int InfusionCap(GrowthStage stage) => 3 + 2 * (int)stage;
 
-        /// <summary>Monster loot (materials) feeds; consumables infuse. Gear, raft parts and modules aren't food.</summary>
+        /// <summary>Loot feeds (materials, gear, raft parts, modules, tools); consumables infuse.</summary>
         public static bool CanFeed(ItemDefinition item) =>
-            item != null && (item.type == ItemType.Material || item.type == ItemType.Consumable);
+            MinionRules.IsFood(item) || (item != null && item.type == ItemType.Consumable);
+
+        public static FeedResult Feed(Companion c, ItemDefinition item) => Feed(c, item, null);
 
         /// <summary>
-        /// Feeds one <paramref name="item"/> to <paramref name="c"/>. Materials add growth (an evolution when it
-        /// fills up); a consumable infuses a permanent stat: heals +3 HP, oils +1 ATK, raft patches +1 DEF.
-        /// The caller takes the item from the bag unless the result is CantEat or Full.
+        /// Feeds one <paramref name="item"/> to <paramref name="c"/>. Loot gives EXP (levels, evolutions at
+        /// Lv 10/20 and new skills, listed in <paramref name="learned"/>); a consumable infuses a permanent stat:
+        /// heals +3 HP, oils +1 ATK, raft patches +1 DEF. The caller takes the item from the bag unless the result
+        /// is CantEat or Full.
         /// </summary>
-        public static FeedResult Feed(Companion c, ItemDefinition item)
+        public static FeedResult Feed(Companion c, ItemDefinition item, List<MinionSkill> learned)
         {
             if (c == null || !CanFeed(item)) return FeedResult.CantEat;
             if (item.type == ItemType.Consumable)
@@ -54,12 +52,11 @@ namespace BrineBattle.Companions
                 }
                 return FeedResult.Infused;
             }
-            if (c.Stage >= GrowthStage.Elder) return FeedResult.Full;
-            c.Growth += FeedPoints(item, c);
-            if (c.Growth < GrowthToEvolve(c.Stage)) return FeedResult.Grew;
-            c.Growth = 0;
-            c.Evolve();
-            return FeedResult.Evolved;
+            if (c.Level >= MinionRules.MaxLevel) return FeedResult.Full;
+            var stage = c.Stage;
+            int levels = c.GainExp(FeedPoints(item, c), learned);
+            if (MinionRules.IsFavourite(item, c)) c.SinceFavourite = 0f;   // its favourite (C-16): happy again
+            return c.Stage > stage ? FeedResult.Evolved : levels > 0 ? FeedResult.LevelUp : FeedResult.Grew;
         }
 
         // --- Fusion (U-8 + C-5) ---
@@ -103,8 +100,20 @@ namespace BrineBattle.Companions
             keep.Defense = Better(keep.Defense, source.Defense, boost) + source.Defense / 4;
             keep.Speed = Math.Max(keep.Speed, source.Speed);
             if (source.Stage > keep.Stage) keep.Stage = source.Stage;
+            if (source.Level > keep.Level) { keep.Level = source.Level; keep.Exp = 0; }
             keep.Echo = $"Echo of {source.Name}";
+            // The echo carries one skill over (U-39), even past the keeper's usual room.
+            var gift = EchoSkill(keep, source);
+            if (gift != null) keep.Learn(gift.Value);
+            keep.CatchUp();
             return same ? FuseResult.Upgraded : FuseResult.Hybrid;
+        }
+
+        /// <summary>The skill a fusion passes on: the source's first learned skill the keeper doesn't have, or null.</summary>
+        public static MinionSkill? EchoSkill(Companion keep, Companion source)
+        {
+            foreach (var s in source.Skills) if (!keep.Has(s)) return s;
+            return null;
         }
 
         static int Better(int a, int b, float boost) => Math.Max(Math.Max(a, b) + 1, (int)Math.Round(Math.Max(a, b) * boost));

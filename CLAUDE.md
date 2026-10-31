@@ -7,7 +7,7 @@
 
 ## Project
 
-BrineBattle Hunter: top-down, turn-based survival-builder × alchemy monster-hunting game on an endless ocean. Unity (URP), C#. Chibi 2.5D art from Blender, added in Phase 9; until then placeholder primitives only. Design: `docs/GAME_DESIGN.md`. Phases: `docs/ROADMAP.md`.
+BrineBattle Hunter: top-down, turn-based survival-builder × alchemy monster-hunting game on an endless ocean. Unity (URP), C#. Chibi 3D art from Blender, added in Phase 9; until then placeholder primitives only. Design: `docs/GAME_DESIGN.md`. Phases: `docs/ROADMAP.md`.
 
 ## Working rules
 

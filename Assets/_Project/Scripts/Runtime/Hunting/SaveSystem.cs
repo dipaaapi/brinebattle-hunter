@@ -49,6 +49,21 @@ namespace BrineBattle.Hunting
             CaptureSettings(data, hook, book);
             data.hasMastery = true;
             data.mastery = hook.Mastery.Points;
+            data.difficulty = (int)hook.Voyage.Difficulty;
+            data.sea = hook.Voyage.Sea;
+            data.escaped = hook.Voyage.Escaped.Select(k => (int)k).ToList();
+            var world = WorldClock.Now;
+            if (world != null)
+            {
+                data.hasWorld = true;
+                data.worldTime = world.Time01;
+                data.day = world.Day;
+                data.weather = (int)world.Weather;
+                data.nextWeather = (int)world.Next;
+                data.weatherLeft = world.WeatherLeft;
+                data.wrecks = world.WrecksLeft;
+            }
+            data.firsts = hook.Firsts.Done.ToList();
             foreach (var e in hook.Gorged.Entries)
                 data.gorged.Add(new SaveData.Gorge { monster = e.MonsterId, parts = e.Parts.Select(p => p.id).ToList() });
             try
@@ -182,7 +197,18 @@ namespace BrineBattle.Hunting
             foreach (var g in data.gorged ?? new List<SaveData.Gorge>())
                 foreach (var id in g.parts)
                     if (known.TryGetValue(id ?? "", out var part)) hook.Gorged.Add(g.monster, part);
+            if (data.hasVoyage)
+                hook.Voyage.Restore((Difficulty)data.difficulty, data.sea, (data.escaped ?? new List<int>()).Select(k => (RaftKind)k));
+            else hook.Voyage.Restore(Difficulty.Normal, 1, null);
+            var clock = UnityEngine.Object.FindFirstObjectByType<WorldClock>();
+            if (clock != null && data.hasWorld)
+                clock.Restore(new World.WorldState
+                {
+                    Time01 = data.worldTime, Day = Math.Max(1, data.day), Weather = (World.Weather)data.weather,
+                    Next = (World.Weather)data.nextWeather, WeatherLeft = data.weatherLeft, WrecksLeft = data.wrecks,
+                });
             hook.Mastery.Restore(data.hasMastery ? data.mastery : AlchemyMastery.StartingPoints(hook.raft.Tier));
+            hook.Firsts.Restore(data.firsts);
             // Saves from before hammers existed get the starter hammer, so building isn't locked out.
             if (RaftRules.BestHammer(hook.Inventory) == null && hook.starterHammer != null && !data.items.Any(s => s.id != null && s.id.EndsWith("_hammer")))
                 hook.Inventory.Add(hook.starterHammer, 1);

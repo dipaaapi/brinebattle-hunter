@@ -4,17 +4,36 @@ using BrineBattle.Items;
 namespace BrineBattle.Rafts
 {
     /// <summary>
-    /// Material tree by raft type (Ed's U-31): at every raft level-up the player picks the type they're
-    /// building toward (Fortress, Sky or Beast). That opens the kind's branch up to the new level: its
-    /// refined material and its typed part of that level. Picking a kind later opens its whole branch up
-    /// to that level, so switching is never a dead end. Lv 1 of every kind is always open.
-    /// Plain C# for EditMode tests.
+    /// Material tree by raft type (Ed's U-31, reworked on his ask): the raft type is picked once, at
+    /// <see cref="PickLevel"/>. Before that, Lv 1 of every type is open to try. After it, only the
+    /// picked type's branch grows, one level per raft level-up (its refined material and typed part);
+    /// the other types stay locked and never branch out. Plain C# for EditMode tests.
     /// </summary>
     public static class RaftTree
     {
+        /// <summary>The raft level at which the type is picked, once: the first level-up (Ed's call; raft levels stop at 6).</summary>
+        public const int PickLevel = 2;
+
+        /// <summary>STR/INT/DEX tag and look for each type (Ed's ask).</summary>
+        public static string Look(RaftKind kind)
+        {
+            switch (kind)
+            {
+                case RaftKind.Fortress: return "Sea Train · STR, tank";
+                case RaftKind.Sky: return "Winged Plane · INT";
+                case RaftKind.Beast: return "Pirate Ship · DEX";
+                default: return "Raft";
+            }
+        }
+
         /// <summary>True when the kind's branch is open at <paramref name="level"/> (1 = Common … 6 = Mythic).</summary>
-        public static bool Unlocked(RaftGrid g, RaftKind kind, int level) =>
-            kind == RaftKind.Plain || level <= 1 || (g != null && g.PathLevel(kind) >= level);
+        public static bool Unlocked(RaftGrid g, RaftKind kind, int level)
+        {
+            if (kind == RaftKind.Plain) return true;
+            var chosen = g != null ? g.Chosen : RaftKind.Plain;
+            if (chosen == RaftKind.Plain) return level <= 1;
+            return kind == chosen && (level <= 1 || g.PathLevel(kind) >= level);
+        }
 
         /// <summary>The raft level a typed item belongs to (its rarity + 1).</summary>
         public static int LevelOf(ItemDefinition item) => item == null ? 1 : (int)item.rarity + 1;

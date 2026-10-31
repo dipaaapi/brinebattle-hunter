@@ -9,7 +9,7 @@
 | **Genre** | Survival-builder × Alchemy, turn-based monster hunting |
 | **View** | Top-down exploration/building + separate battle view |
 | **Engine** | Unity |
-| **Art** | Chibi 2.5D, outlined characters, Blender-made models |
+| **Art** | Chibi 3D, outlined characters, Blender-made models |
 | **Modes** | Single-player with optional party (other hunters) |
 
 ## 2. World & Lore
@@ -17,6 +17,29 @@
 The world is an endless ocean full of monsters. Only a handful of humans remain, all of them **Monster Hunters**. Each lives on a raft built from monster remains and artifacts. Meeting another hunter is rare and valuable.
 
 Hunters have **no magic**. Their strength comes from alchemy and gear made from monsters.
+
+### World conditions (Idea Round 4: U-10, U-15, U-21, C-3, C-12, C-13)
+
+Numbers are tunable, in `WorldRules`; the clock is `WorldState` (saved), shown by the `WorldClock` in the Hook scene. Time stops in menus and battles.
+
+- **Day and night (U-10):** a full day is 8 minutes: dawn (8%), day, dusk (8%), night (42%). New games start in the morning. The sky, sun and ambient light follow the clock; night keeps a dim blue moonlight.
+- **Sun and Moon affinity (U-10):** taken from the element, so gear gives the hunter one too. Sun = fire, magma, sand, steam; Moon = water, ice, mud; earth, wind, lightning = neither. In their own time: +20% ATK, +10% DEF; in the opposite time: −10% ATK; dawn and dusk: nothing. Counts for monsters, pets and the hunter (and for the "Danger!" check). Sun creatures spawn ×2 by day and ×0.5 at night, Moon creatures the other way.
+- **Night:** alive rolls ×1.4, hints −10%, drift names readable only within 16 m.
+- **Weather (U-15, C-3):** Clear, Rain, Rough sea, Storm, Fog; each lasts 60–150 s. A storm only follows rain or a rough sea and never twice in a row; fog is likelier at night and dawn.
+
+| Weather | Waves | Drifts | Hunting | Fighters |
+|---|---|---|---|---|
+| Clear | ×1 | clear days: dead rolls ×1.3 | — | — |
+| Rain | ×1.15 | — | hints −5% | water +25% ATK |
+| Rough sea | ×1.5 | ×1.35 speed, alive ×1.3, +5% floating loot | hook reach −2 m, reel sweet spot ×0.75 | — |
+| Storm | ×1.8 | ×1.6 speed, alive ×1.6, +15% floating loot | reach −3 m, sweet spot ×0.6, hints −5%, sight 18 m, lightning | lightning +25% ATK |
+| Fog | ×0.6 | — | hints −25%, sight 10 m (8 m at night) | wind +25% ATK |
+
+- **Fog and sight (U-21):** beyond the sight range a drift shows only "???"; scene fog starts at the raft. Hints never drop below 34%.
+- **Thunderstrikes (U-15):** in a storm, every 20 s a 35% chance (Fortress raft half, Sky raft ×1.5) that lightning sets an edge raft part on fire. While any fire burns the hook is jammed. Click the fire twice to put it out; a Crew pet does it by itself after 5 s; after 15 s the part burns away (never one that would split the raft). Answers U-15's open questions: Fortress parts protect, storms bring more floating loot.
+- **Sun and moon on screen:** the camera looks down at the sea, so a small sky strip (top-right) shows the sun by day and a crescent moon at night moving along their arc, behind clouds in rain, storms and fog. The sun light casts soft shadows that swing round as it moves (Ed: he couldn't see a sun or moon).
+- **Forecast (C-12):** the HUD shows the day, time, weather and the next weather with a countdown, so a storm is never a surprise.
+- **Wreck field (C-13):** when a storm clears, the next 3 drifts are floating loot one rarity higher.
 
 ## 3. Core Loop
 
@@ -39,10 +62,14 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 | Weakened | Finish for loot, or **tame** it. |
 | Alive | Sudden battle launch (Pokémon-style). |
 
-- Hints (shadows, movement, alchemy readings) may suggest the state but are not always accurate.
+- Hints (shadows, movement, alchemy readings) may suggest the state but are not always accurate. Fog, rain and night make them worse (§2 World conditions).
+- **Catch styles (Claude's C-14):** on the reel bar a dead catch hangs limp (slow, small moves), a big live one (size 4+) keeps sinking, and the rest move by element: water/ice/steam zig-zag, earth/mud/sand/magma sit then jump, wind/lightning sink slowly then dart up, fire swims evenly. A weakened catch moves at 70%. The label under the bar says how it fights.
+- **Feel (Claude's C-21, visual now, sounds in Phase 9):** the line goes from strained red to green as the catch meter fills and thickens inside the zone; a splash and "+N item" pop-ups where loot lands; "CLEAN REEL!" and a small camera shake on a clean reel.
+- **Edge arrows (Claude's C-23):** off-screen bosses, gorged monsters, your lost raft parts and survivors get an arrow at the screen edge.
+- **Survivors (Claude's C-17):** every 150 s, a 50% chance of a distress flare far upstream; a survivor on a plank drifts toward the raft (90 s). Hooking them (or a module or Looter catching them) gives two rolls of flotsam one rarity above the raft's level plus 3 neutral essence of that rarity.
 - **Raft size gate:** you can only fight once your raft is big and strong enough. If it isn't, cut the line, flee, or sedate the creature.
 - Formats: **1 vs 1**, **1 vs Many**, **Many vs Many** (player + companions + party).
-- **Line tension (C-2):** while reeling, one timing press in a sweet spot (smaller and faster for bigger monsters). No press → the catch slips away. Sloppy → normal result, and an Alive monster acts first. Clean → +1 per drop, and the hunter acts first against an Alive monster. In **Auto** mode the reel presses itself: 50% clean (from U-9), never slips; the bar is shown greyed out as AUTO. In **Semi-auto** the bar stays active and labelled SEMI-AUTO: the player may press first, otherwise it presses itself at 80% of the reel (50% clean).
+- **Reel minigame (Ed's U-42, replaces the one-press line tension):** when the hook sets, a tall bar opens. The catch darts up and down it; holding or tapping Space (or the mouse) lifts the green catch zone, letting go lets it sink. Inside the zone the catch meter fills (starts at 25%, about 2–3 s to fill); outside it drains. Full → caught; empty → it slips off the hook. Zone width: 0.34 − 0.03 per size step − 0.025 per rarity step, × weather (rough ×0.75, storm ×0.6), + Alchemy Mastery (0.5% a level, up to 6%) + a Looter minion (4%), between 10% and 50% of the bar. Bigger and rarer catches also move faster. **Clean reel** = caught with at most 0.3 s outside the zone: +1 per drop, and the hunter acts first against an Alive monster. **Semi-auto:** the same minigame, but the zone is pulled toward the catch. **Auto:** the computer plays it (no input).
 
 ## 5. Battle
 
@@ -73,10 +100,23 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **Modules before growth (owner's call):** the raft can only be **widened** (raft parts) or **upgraded** while at least **50%** of its rows end on the left (upstream) edge in an auto-loot module (3 rows → 2 modules). Modules themselves can always be installed.
 - **Upgrade guide (owner's ask):** Build has a guide that lists each tier requirement as done / to do, says how to get it, offers a shortcut button, and highlights in yellow the left-edge spots that still need a module.
 - **Modules hook everything that touches them (Ed's ask):** any monster, any state. A drift pressed against the raft next to a module counts as touching, even in a notch between parts. A **weakened, calm** catch is brought to the hunter as a Finish / Tame choice (in Auto with no pet room it is finished for loot); if the hunter is busy the module holds it until they're free. A drift that bit a module is left alone for 20 s while it swims off, not forever.
-- **Module catches a live monster (owner's call):** it can't swim off; a battle starts at once and plays in **Auto** (mode can't be switched), the monster striking first. It comes first: if the hunter is casting or reeling, that line is dropped. Only during another battle or a prompt does the module hold it on the line, and its battle starts right after. This ignores the raft-size gate: even a monster too big for the raft is fought (owner's call).
+- **Module catches a live monster (owner's call):** it can't swim off; a battle starts at once in the battle mode set in Settings, like any other battle (Ed, 2026-10-31: Manual means manual everywhere), the monster striking first. It comes first: if the hunter is casting or reeling, that line is dropped. Only during another battle or a prompt does the module hold it on the line, and its battle starts right after. This ignores the raft-size gate: even a monster too big for the raft is fought (owner's call).
 - Raft holds weapon stations, alchemy stations, Transmutation Circle, and companion habitats.
 - **Absorption / downgrade:** when you lose, flee, or are exhausted, monsters eat raft parts. The monster grows stronger; defeating it later recovers your parts plus a bonus.
-- **Raft tree (Ed's U-31):** at each raft level-up the player picks a type to build toward (Fortress, Sky or Beast). That opens the type's branch up to the new level: one refined material per level (Fortress: Hardened Scale, Shell Weave, Coral Bulwark, Leviathan Hide, Abyssal Carapace; Sky: Gale Down, Storm Silk, Cloud Bladder, Tempest Plume, Aether Membrane; Beast: Fang Rope, Sinew Strap, Bone Yoke, Leviathan Tendon, Abyssal Chain) made from the level's base part + level × the kind's raw material, and the typed part of that level (last level's part + the material). Picking a type later opens its whole branch up to that level. Lv 1 is open for all. Build → Tree shows it; locked recipes say which pick they need. Tree materials aren't spent as "monster materials".
+- **Raft tree (Ed's U-31, reworked 2026-10-30 on his ask):** the type is picked **once**, at `RaftTree.PickLevel` (Lv 2, the first level-up: Ed's call 2026-10-30, since raft levels stop at 6). Lv 1 typed parts of every type are open before that. After the pick only that type's branch grows, one level per level-up; the other types lock for good (even Lv 1) and don't branch out. A raft already past the pick level with no type picks it in the tree without leveling up. Build → **Raft tree** is one page: level, type, requirements and the Level-up button on top, then one tab per type (the picked one opens by default, the others show 🔒). Each type's branch: one refined material per level (Fortress: Hardened Scale, Shell Weave, Coral Bulwark, Leviathan Hide, Abyssal Carapace; Sky: Gale Down, Storm Silk, Cloud Bladder, Tempest Plume, Aether Membrane; Beast: Fang Rope, Sinew Strap, Bone Yoke, Leviathan Tendon, Abyssal Chain) made from the level's base part + level × the kind's raw material, and the typed part of that level (last level's part + the material). Locked recipes say why.
+- **Looks by type (Ed's ask):** Fortress (STR, tank) is a **sea train**: locomotive with a smoking stack, cowcatcher, rails and turning wheels. Sky (INT) is a **winged plane**: wings to both sides, a spinning propeller, a tail. Beast (DEX) is a **pirate ship**: hull walls with cannons, pointed bow and bowsprit, stern castle, two masts with square sails and a skull flag. Plain keeps the katig and small sail. Once a type is picked in the raft tree it is the raft's type (look and bonuses) whatever parts are on it (Ed: a Sky raft turned into a train because the Crew built Shellback Plates); before the pick, the parts decide.
+- **Off-type parts (Ed's ask):** when the type is picked, every placed part of another type goes back to the Bag and a basic plank takes its cell (the raft keeps its shape); from then on those parts can't be placed (Build greys them out, the Crew skips them). Plain parts, modules and habitats always fit.
+- **Bosses (Ed's ask, numbers tunable):** one per raft level (Reefjaw Brute, Tidecaller Eel, Stormwing Roc, Magma Kraken, Frost Leviathan, The Abyss King). The level's boss turns up once the level-up kill count is reached (every 25 s while due, one at a time, slow, always Alive, hint never lies, can't be tamed, 1.8× size). Beating it is a level-up requirement; the Lv 6 boss guards the way out. Each drops a core (always, whatever the difficulty).
+- **Grand boss fights (Ed's ask, 2026-10-30, tunable):** entrance: the screen dims, the camera shakes, a red BOSS banner with its name and level, then it rises 1.6× big with a splash and an aura in its element colour. A boss HP bar runs across the top. At 50% HP it **enrages** (ATK ×1.3, red aura) and from then on sends a **tidal wave** at the raft every 3 rounds (12% of the raft's max HP; Shell Guard blocks it, Bulwark softens it). **Every minion helps** (`Battle/BossFightRules`): the battle minion fights; every other Fighter adds a third of its ATK each round; Alchemist heals and Crewmate patches as usual; each Looter adds one more roll of the boss's loot (up to 3, "Lucky"). Defeat: slow motion on the last hit, a treasure burst onto the raft and a BOSS DEFEATED card. Treasure: the core (+ lucky rolls) and 3 + 2 × level step + lucky essence of the boss's rarity and element.
+- **Vehicle (Ed's ask):** each type builds into a vehicle, five parts, one opening per raft level from Lv 2: Fortress = sea train (Sea Track, Iron Wheels, Boiler, Smokestack, Locomotive Cab), Sky = plane (Wings, Tail Fin, Propeller, Engine, Cockpit), Beast = pirate ship (Hull Walls, Cannons, Bow & Bowsprit, Masts & Sails, Stern Castle). Recipe: two typed parts of that level + the core of the boss before it (Workbench → Raft → Vehicle); put on in Build → Raft tree (needs the hammer). The look builds up piece by piece; with none on, the raft keeps the katig. This answers the old open question "Sky raft real flight?": yes, the finished plane flies out of the sea.
+- **Leaving the sea (Ed's ask):** Lv 6 + all five parts + Lv 6 boss → the plane takes off, the train rides out, the ship sails off; an ending screen; then a **new sea** (Ed's pick) back at Lv 1 with no type, no vehicle and no bosses beaten, keeping pets, gear, bag and habitats. Monsters +35% per sea. A type that left can't be picked again until the game is won.
+- **Difficulty (Ed's ask, picked on New game):** Easy = finish 1 raft type to win, Normal = 2 (monsters ×1.25, loot ×0.8), Hard = 3 (×1.5, ×0.6). Loot amounts scale with the leftover as a chance of one more, so some drops come to nothing on Hard. Winning opens every type again; play goes on.
+- **Reset raft (Settings, Ed's ask):** puts the raft back to the starter 3x3 of basic planks to rebuild it. Level and type stay. About 20% of the parts that come off are washed away by the sea; the rest go to the Bag. Habitats are never lost (companions live in them): they go back on the square's edge.
+- **Lantern and glow (Claude's C-19):** from raft Lv 2 a lantern hangs at the back of the raft and lights at dusk and night: night sight +6 m (not against fog by day). Moon creatures (water, ice, mud) glow at night and can be read from any distance in the dark.
+- **Layout bonuses (Claude's C-18):** 3 or more modules side by side in a row or column each reach +1 m; a habitat with planks on all four sides is "cozy" and counts twice for minion healing. Build (R) lists the active ones.
+- **Walking (Ed's ask):** the hunter and pets only stand on planks (raft parts), never on auto-loot modules or habitats.
+- **Crew installs take time (Ed's ask):** the Crew walks to a plank next to the spot and hammers for 4 s with a progress bar and a ghost of the part; the part is taken from the bag only when it's done (and only if the spot still fits).
+- **Salvage Bin (Ed's ask):** a metal bin on its own plank next to the storage box. Salvaging (Bag, auto-salvage) and dismantling send glowing essence orbs flying from the storage box into it, with a label. Clicking it opens it: the essence inside and the dismantle recipes (no longer a Workbench tab). Tree materials aren't spent as "monster materials".
 - **Modules by rarity and floating loot (Ed's U-30):** Tarred Net (U), Shell Trap (R), Coral Snare (E), Leviathan Grapple (L), Abyssal Maw (M), each upgraded from the last. Floating loot (Driftwood Bundle C, Tar Barrel U, Shell Wreck R, Coral Chunk E, Leviathan Bones L, Abyssal Driftwood M) drifts in (30% of drifts, up to one rarity above the raft) carrying raft materials; a module only catches floating loot up to its own rarity, creatures at any rarity.
 - **Absorption (Phase 8, tunable):** losing a battle or pressing Flee lets the monster eat **one raft part on the edge** (not modules or habitats, never one that would split the raft, never when the raft has 5 parts or fewer). Losing a battle a module started costs no part (Claude's default; open question below). The monster swims off **gorged** and is kept in the save. While no gorged drift is on the water, each new drift has a 30% chance to be the oldest gorged monster coming back: always alive, bigger, "Gorged! Ate N raft parts" over it, and +20% HP/ATK/DEF per part (up to double). Beating it (by hand or by a module) puts every eaten part back in the Bag plus one extra loot roll per part. Cut line costs nothing.
 
@@ -85,6 +125,8 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
 - **The Unsinkable:** strongest raft in the world.
 - **The Self-Sustained:** fully self-sufficient raft.
 - **The Apex Hunter:** most powerful living hunter.
+
+**Quests (Ed's ask, 2026-10-30):** a slim **Quest** tab on the right edge of the screen (or **J**) opens a list of current quests and a checklist for the picked one, each line ✔/✘ with have/need, and a button to the place that fixes it (Raft tree, Build, the right Workbench sub-tab, or Leave). Quests are built from the game state every time (`Rafts/QuestRules`): pick the raft type, next raft level (kills, materials, essence, modules, hammer, boss), the level's boss, guard the left edge (with the module recipe's ingredients), the next hammer (its recipe's ingredients), the next vehicle part (make it or put it on) and leaving the sea. Status only; how-to text stays in Settings → FAQ.
 
 ## 7. Player Progression
 
@@ -96,6 +138,7 @@ Hunters have **no magic**. Their strength comes from alchemy and gear made from 
   - **Recipe knowledge (U-14):** a recipe needs mastery by its output's rarity (Common 1 … Mythic 6, one per raft level; dismantling always known). Unknown recipes show as "???" with the level that reveals them, in the Workbench and in a new **Book → Recipes** tab; a level-up names the new recipes. The Mystic only crafts known recipes.
   - **Essence combining (U-6):** from Lv 3, 5 essence of one rarity and element → 1 of the next rarity (Bag → Essence).
   - Older saves start at the mastery level of their raft, so nothing they already used is hidden. Fusion, taming and quality effects are still open.
+- **Sea journal (Claude's C-15):** nine one-time firsts (first clean reel, first minion, a happy minion, catching back a lost part, first raft level-up, weathering a storm, rescuing a survivor, first vehicle part, first boss), each giving a little neutral essence of the raft's level and Alchemy Mastery. Shown at the end of the Quest tab; saved.
 - **Power comes from gear.**
 
 ## 8. Elements
@@ -119,7 +162,7 @@ Applies to gear, companions, and monsters (type chart).
 
 ## 9. Gear
 
-- Weapons and armor crafted from monster parts via alchemy.
+- Weapons, armor and **accessories** (Ed's ask, a third slot) crafted from monster parts via alchemy. An accessory's power (+ refine) splits into ATK (larger half) and DEF; its worth is its skills by rarity and its element, which counts when the weapon is neutral (and gives sun/moon affinity). New passive **Swift** (+2 SPD). Accessories: Shell Charm (U, Earth), Gale Feather Earring (R, Wind, Swift), Moonpearl Amulet (E, Water, Second Wind + Tidal Strike), Sunstone Band (L, Fire, Leech + Swift + Shell Guard).
 - Rarity decides skills (proposed):
 
 | Rarity | Skills |
@@ -133,7 +176,18 @@ Applies to gear, companions, and monsters (type chart).
 - **Implemented skills (Phase 6, tunable):** slots by rarity — Common/Uncommon element only, Rare 1 passive, Epic 1 passive + 1 active, Legendary 2 + 2 (secondary element still to come), Mythic 3 + 2. Passives: Leech, Thorns, Second Wind, Bulwark. Actives (cost stamina, take the turn): Tidal Strike, Shell Guard. The same passive on weapon and armor doesn't stack.
 - **Implemented (Phase 6, tunable):** one weapon and one armor slot. Gear has a power value (weapon = attack, armor = defense) added to the hunter; the weapon's element is the hunter's attack element. Equipping needs rarity ≥ the slot's tier. Refine +1…+10: each + adds ¼ of base power (min 1) and costs 2 × the new level in essence of the item's rarity or higher; no failure yet (Alchemy Mastery later). Gear is crafted at the workbench from monster parts.
 
-## 10. Companions
+## 10. Companions (Minions)
+
+**Minions (Ed's U-39, 2026-10-30, numbers tunable, *Claude's mix per Ed's "ikaw na bahala"*):** a tamed monster is a **minion**. There is one kind; the old Familiar / Crew / Mystic roles are gone (older saves turn into skills below). Minions differ by what they learn as they level up.
+- **Levels 1–30 from eating loot** (Minions → Feed, or the Glutton on its own). EXP per item = (1 + rarity step) × 1 material / 2 raft part, module or tool / 3 gear, doubled for its own element. EXP to the next level = 5 + 5 × level. Each level: +2 HP, +1 ATK on odd levels / +1 DEF on even, +1 SPD every 5. **Evolves** at Lv 10 (Adult) and Lv 20 (Elder) with the old ×1.25 boost. Potions still infuse stats.
+- **Skills** (12, four branches): **Battle** Fighter (can be the battle minion), Hardy (+20% HP/DEF, Adult+), Ferocious (+20% ATK, +1 SPD, Elder); **Crew** Crewmate (installs modules, builds parts, patches the raft in battle, douses fires), Mender (harpoon + module repair), Builder (Uncommon+: crafts vehicle parts, modules and raft parts of the raft's level, puts vehicle parts on, levels the raft up once the type is picked); **Alchemy** Alchemist (potions, oils, treats; heals in battle; extra craft chance), Smith (hammer, refines gear, cheaper refines), Tinker (Rare+: crafts better weapon/armor/accessory and equips it); **Looter** Looter (fetches dead drifts and floating loot), Salvager (takes junk apart), Glutton (eats junk, feeds the lowest-level minion).
+- **Learning:** every minion starts with Fighter. Slots open at Lv 1, 3, 6, 9, 12, 15, 18, 22, 26, 30; room = 2 + rarity step + stage (Common Young 2 … Mythic Elder 9). Order: Fighter, the element's two skills (Water Looter/Mender, Fire Smith/Ferocious, Earth Crewmate/Hardy, Wind Looter/Builder, Steam Alchemist/Tinker, Mud Crewmate/Salvager, Ice Mender/Alchemist, Magma Smith/Builder, Lightning Tinker/Ferocious, Sand Salvager/Glutton, None Glutton/Salvager), then a fixed order per monster kind. Skills it can't take yet are skipped and taken later. **Fusion** keeps the higher level and passes one skill (even past the room).
+- **Junk** (Ed's ask): weapons/armor below their Bag tier, accessories/raft parts/modules below the raft's level, hammers below the best one. Never materials or potions, never parts a recipe still uses. At or under the Chores rarity (default Uncommon) the **Salvager** dismantles it (or salvages it to essence); rarer junk the **Glutton** eats.
+- **Jobs:** each job is done by the strongest minion with that skill (rank = rarity step + stage, then level); knocked-out minions rest. Every 20 s per job; each one has a switch in Minions → Chores, and the log names who did what. Strength: raft patch 2 + 2 × rank, heal 3 + 2 × rank, fetch every max(6, 20 − 2 × rank) s.
+- **UI:** Minions menu (P): My minions, **Skill tree** (four branches; learned / next at Lv N / later / locked) and Chores. The HUD lists up to four minions with level, EXP bar and what each is doing.
+
+*Below: the companion design before U-39, kept for history.*
+
 
 - Tamed from **weakened** monsters.
 - **Three roles (owner idea U-23):** **Crew** looks after the raft (repairs, upkeep); **Mystic** helps craft and do alchemy for everything but the raft (gear, weapons, consumables); **Familiar** fights beside the hunter. Varieties within a role change only looks and outfit.
@@ -157,6 +211,8 @@ Applies to gear, companions, and monsters (type chart).
 **On the raft (Ed's ask):** companions are visible on the raft. The Familiar waits beside the hunter; the Mystic works at a workbench and, every 20 s, refines the equipped piece with the lower + if the bag has the essence; the Crew walks from tile to tile (never off the raft) and, every 20 s, installs an auto-loot module from the bag on the upstream side (left, where drifts come from), or else builds the rarest fitting raft part on the downstream side (right) (owner's call). Both chores can be switched off in the Bag.
 
 **Storage box (Ed's ask):** one object on the raft is both the loot storage and the crafting/alchemy table (no separate workbench). It has its own tile next to the raft's centre and nothing overlaps it: the hunter, pets and modules keep clear, and it rides the raft on the calm water. Whenever loot is stored or something is crafted or refined (by the hunter or a pet) it animates (lid opens, box bounces, an item flies in or pops out, a short label says what).
+
+**Favourite food (Claude's C-16):** each minion loves one kind of food (materials, raft parts, gear, or modules and hammers), picked when tamed and shown in Minions. It gives double EXP and a "<3 Yum!" hop. Ten minutes without it and the minion sulks: its chores run 20% slower until it gets some.
 
 **More chores (Ed's ask):** the Crew also **repairs auto-loot modules** once one drops to a share set **per module kind** in Build (R) (slider, default 50%), paying the module's normal repair cost; between fights it mends the harpoon +1 every 15 s. The Mystic **restocks consumables first**: when a potion or oil the workbench can make is below the "keep at least" amount (Bag slider, default 2) it crafts one (potions before oils), otherwise it refines gear. In battle the Mystic **supports**: at the end of each round it heals whichever of the hunter or the Familiar is lower on HP (Common 3, +2 per rarity step).
 
@@ -221,20 +277,22 @@ Potions and items for health, companions, raft (repair, coatings), and weapons (
 
 - **Unity**, top-down camera; dedicated battle view.
 - **Chibi** characters with **outlines** (inverted hull / URP renderer feature).
-- **Blender** 3D models rendered as 2.5D.
+- **Blender** 3D models, shown in full 3D (top-down camera that zooms and turns).
 - **Collision** meshes authored in Blender (simplified, `_col` naming) for easy iteration.
 - **Modular, grid-based** raft parts.
 
 ### HUD and menus (owner idea U-25)
 
 Placeholder IMGUI until Phase 9 art, kept simple for a kid. **HUD:** a status card top-left (raft level and HP, harpoon wear with Fix, pets) and a bottom **dock of picture buttons**: Bag (B), Pets (P), Book (C), Build (R), Settings (Esc). A button lights up while its menu is open. Every menu has a red **×** and is split into **tabs**, so each page is short:
-- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Level up (✔/✘ requirements and the button).
+- **Build:** Build (parts, hammer, place/remove) · Workbench · Modules · Raft tree (✔/✘ requirements, the button, the type pick and the branches).
+- **Workbench tabs (Ed's ask):** Gear (Weapon · Armor · Accessory), Player (Potions · Oils), Pet (Treats · Habitats), Raft (Planks & parts · Auto-loot · Hammers). Dismantling is in the Salvage Bin.
+- **Mystic crafting (Ed's ask):** a glowing magic circle with spinning runes opens under the Mystic for a moment whenever it crafts or refines.
 - **Workbench:** each recipe is a card listing every ingredient as have/need, green ✔ or red ✘ with "need N more". Ready recipes come first, each tab shows how many are ready, and a box hides what can't be made yet (Ed's ask).
 - **Bag:** Items (filter by kind; one line on what each item is for) · Equipment · Essence · Auto-salvage.
 - **Pets:** the list of pets on the left, the picked pet on the right (life and growth bars, Feed, Fuse, Look, battle, Release) · Chores.
 - **Book:** tab labels show found/total; a progress bar.
 - **Settings:** Game · Save · Controls · **FAQ**.
-- **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
+- **Guide only in Settings → FAQ (Ed's call):** no hint text on the play screen and no how-to text in the other menus; they show status only (have/need, ✔/✘). The FAQ holds the whole guide by topic (Start, Hunting, Day & weather, Battle, Bag & loot, Workbench, Raft, Pets, Book & saving), each question opening to its answer. Its text lives in `Faq` so the player manual (U-22) can reuse it.
 
 ### Camera (Ed's ask)
 
@@ -242,7 +300,7 @@ The view orbits the raft: mouse wheel or + / − zooms (8–45 m), right-drag or
 
 ### Hunter on the raft (Ed's ask)
 
-Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces. The Familiar walks after the hunter at its own pace and stays where it is, hopping, while the hunter hooks (Ed: it used to move as if stuck to the hunter).
+Outside battles the hunter isn't a statue: every 3–7 s a small idle move (look around, hop, stretch, a few steps). When casting or reeling, the hunter walks to the raft's edge nearest the catch, faces it, and leans back and tugs while reeling; the line starts at the hunter's hands. A visor shows which way the hunter faces. In battle the hunter turns to face the monster (Ed's ask). The Familiar walks after the hunter at its own pace and stays where it is, hopping, while the hunter hooks (Ed: it used to move as if stuck to the hunter).
 
 ### Away pause (Ed's call)
 
@@ -257,7 +315,6 @@ The game opens on its own **MainMenu scene** before the game (Hook) scene: **Con
 - Action resource in battle (stamina vs weapon charge).
 - Companion growth: confirm feeding, fusion and treat numbers in §10 (aging was replaced by health, Ed's U-32).
 - Level-range limits on item share?
-- Sky raft: real flight (over waves, other monsters) or keep it a speed and reach bonus? (Phase 8 default: bonus only.)
 - Should losing a module battle also cost a raft part? (Phase 8 default: no.)
 - Target platform(s): PC standalone and WebGL both look possible (U-27); mobile still open.
 - Title trademark check.

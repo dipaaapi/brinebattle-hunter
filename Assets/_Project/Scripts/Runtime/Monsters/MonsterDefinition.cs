@@ -10,6 +10,8 @@ namespace BrineBattle.Monsters
     {
         [Tooltip("Floating loot, not a creature (Ed's U-30): always harvestable, never fights, not in the Book's monster pages.")]
         public bool isFlotsam;
+        [Tooltip("A raft-level boss (Ed's ask): comes once enough monsters are beaten; beat the boss of the raft's level (its rarity) to level up. Never spawns as a normal drift, always fights.")]
+        public bool isBoss;
         [Tooltip("Stable id used by saves, bestiary and loot. Never rename once in use.")]
         public string id;
         public string displayName;

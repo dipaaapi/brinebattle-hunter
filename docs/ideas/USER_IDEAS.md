@@ -37,7 +37,7 @@ A toggle when harvesting a monster.
 
 Open: what Manual asks of the player (timing input? see C-2), and what a miss costs (lose the loot, or just less?).
 
-### U-10 Day/night cycle (sun & moon) that boosts or weakens — 2026-10-28 · 💡 · new system (GDD §4, §5, §10, §12)
+### U-10 Day/night cycle (sun & moon) that boosts or weakens — 2026-10-28 · ✅ Idea Round 4 · new system (GDD §4, §5, §10, §12)
 Add a day/night cycle as its own system. Some monsters, dead or alive, are tied to the sun or the moon, and the time of day boosts (or weakens) them. The same system also affects the hunter, the party, and companions/pets.
 
 Open: which stats it changes (attack, catch/tame chance, hint accuracy, drift spawns?), whether gear or alchemy can grant sun/moon affinity, and how long a full day lasts.
@@ -90,7 +90,7 @@ The book should also show **how to craft** things, but you only know a recipe on
 
 Open: is the skill the same as Alchemy Mastery (GDD §7) or separate per craft (smithing, raft-building, potions)? Do harvests of a monster type give knowledge of that monster's recipes?
 
-### U-15 Rough seas and thunderstrikes — 2026-10-28 · 💡 · GDD §2, §4, §6
+### U-15 Rough seas and thunderstrikes — 2026-10-28 · ✅ Idea Round 4 · GDD §2, §4, §6
 The ocean isn't always calm. Sometimes the sea gets rough, which makes hunting and looting harder. Sometimes the enemy is the weather itself: **thunderstrikes** hit the raft, damaging it or stopping the hunter from looting further until it's dealt with.
 
 Related: C-3 (weather and currents decide what drifts) and U-10 (day/night). These three could become one **World conditions** system.
@@ -117,7 +117,7 @@ Battles have no visual effects yet: no projectiles (thrown harpoon, spit, dive),
 ### U-20 Music and sound effects — 2026-10-29 · 💡 · new system
 No music or sound effects yet. Add ocean ambience, battle music and SFX (cast, reel, hit, loot, craft).
 
-### U-21 Fog and time-of-day look — 2026-10-29 · 💡 · GDD §2, Phase 9
+### U-21 Fog and time-of-day look — 2026-10-29 · ✅ Idea Round 4 · GDD §2, Phase 9
 No fog and no day/night look yet. Fog at night (and maybe in rough seas) that limits how far you can see drifts. Pairs with U-10 (day/night cycle) and U-15 (rough seas).
 
 ### U-22 Player manual — 2026-10-29 · 💡 · after the game is finalized
@@ -163,3 +163,37 @@ No more aging for pets. Instead, pets have health that drops when the enemy atta
 
 ### U-33 Status-curing potions — 2026-10-30 · ✅ Phase 8 · GDD §11 Consumables
 Consumable potions in variants: HP, toxic relief (poison), confusion relief, a blood-clotting patch (bleeding) and an eye cleanser (for silence/blindness). Needs status effects in battle first.
+
+### U-34 Raft, workbench and pets polish — 2026-10-30 · ✅ Idea Round 4 (built at Ed's ask) · GDD §6, §9, §13
+- Workbench sub-tabs: hammers, planks and auto-loot apart; player (potions + oils) and pet apart; weapon, armor and accessory apart.
+- Accessories with unique skills by rarity, element and + refine.
+- Dismantling in its own Salvage Bin, with essence flying into it from the Bag and Build menus.
+- Pets and the player walk on planks only, never on auto-loot modules.
+- Raft looks by type: Fortress (STR tank) = sea train, Sky (INT) = winged plane, Beast (DEX) = pirate ship.
+- Raft skill tree: Level up and Tree in one page; pick the type once (Ed: at Lv 10, after the 10 levels of basics); the picked type's tab is the default, the others lock and don't branch out.
+- Mystic crafting shows a glowing incantation circle; the Crew hammers each install with a loading bar, never instant.
+Ed's call: the raft levels stop at 6, so the type is picked once at the first level-up (Lv 2).
+
+### U-35 Picking a type resets the off-type parts — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+Once the raft type is picked, parts that don't suit it reset to basic by themselves and can't be used any more. The parts that come off go to the inventory; nothing is lost from the bag or the Salvage Bin.
+
+### U-36 Reset raft in Settings — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+A Reset raft button in Settings to rebuild the raft, but about 20% of the parts that come off are washed away by the sea.
+
+### U-37 Vehicles to leave the sea, and a boss per tier — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+The raft type's parts are modules that build into a whole vehicle: Sky a plane, Fortress a sea train with its track, Beast a pirate ship. Finished at the final tier, it can leave the sea (the plane flies). To go further, kill the boss of each tier first. Ed picked: after leaving, a new, harder sea back at Lv 1, keeping pets, gear and the bag.
+
+### U-38 Difficulty by raft types — 2026-10-30 · ✅ Idea Round 4 · GDD §6
+Easy: unlock (finish) 1 raft type; Normal: 2 types; Hard: all 3. Harder means less loot and tougher monsters in battle.
+
+### U-39 Minions instead of pets — 2026-10-30 · 🟨 Idea Round 4 · GDD §10
+A tamed monster becomes a minion, one kind, no Mystic/Crew/Familiar split. It levels up by eating loot, mostly the low-quality stuff that would be thrown away or dismantled, and gains new skills as it levels: alchemy, battle companion, crewmate, looter and more, depending on rarity, fusion, evolution and level. Skills include auto-repair, auto-upgrade, auto-craft and auto-install on the raft and on equipment (the hammer, its own food, the player's gear, weapons and accessories). On auto, minions also take junk apart by the Bag's rarity settings and use what comes out to craft higher-rarity raft parts, gear and consumables, toward leaving the sea. A new UI goes with it: a skill tree page, the HUD showing minions and what they do, and "Minions" instead of "Pets".
+
+### U-40 Quest tab — 2026-10-30 · 🟨 Idea Round 4 · GDD §6
+A separate Quest UI, apart from the workbench: a slim tab at the screen edge opens a list of current quests and a description of the picked one, so the player always knows what's missing to upgrade or craft the next thing, with a button that jumps there.
+
+### U-41 Grand boss fights — 2026-10-30 · 🟨 Idea Round 4 · GDD §6
+Boss fights grand from start to loot: a warning (dim, rumble, red BOSS banner with name and level), the boss rising big with a splash, camera shake and an aura in its element colour; a boss HP bar, phases (enraged at half HP, a special move like a tidal wave), every minion helping with its own skill; a slow-motion last hit, then a treasure burst onto the raft with a BOSS DEFEATED card listing the drops.
+
+### U-42 Reel minigame like a fishing game — 2026-10-31 · 🟨 Idea Round 4 · GDD §4
+From Ed's co-worker. Reeling in a drift should feel like a classic fishing minigame instead of one timed press: the catch moves up and down a vertical bar and the player keeps a green catch zone on it (hold to lift, let go to drop) while a progress meter fills; outside the zone it drains. Manual: full control. Semi-auto: the same minigame, but assisted (the zone nudges toward the catch). Auto: still shown, computer-played, no input needed. The green zone's width depends on the loot's rarity and how it is handled (size, clean handling, gear, Alchemy Mastery, minions): rarer and bigger means narrower.

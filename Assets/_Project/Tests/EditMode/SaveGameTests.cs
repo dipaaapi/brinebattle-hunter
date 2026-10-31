@@ -47,8 +47,8 @@ namespace BrineBattle.Tests
             raft.Place(new Cell(2, 0), net);
             raft.Kills = 4;
             var pets = new CompanionRoster();
-            pets.Add(new Companion { Id = "gull", Name = "Gale Gull", Element = Element.Wind, Habitat = Habitat.Sky, Rarity = Rarity.Common, Role = CompanionRole.Crew, MaxHp = 12 });
-            pets.Add(new Companion { Id = "eel", Name = "Brinefang Eel", Role = CompanionRole.Familiar, MaxHp = 18, Attack = 4, Age = 12, Stage = GrowthStage.Adult, Growth = 7, Infusions = 2, Look = 3, Echo = "Echo of Gale Gull" });
+            pets.Add(new Companion { Id = "gull", Name = "Gale Gull", Element = Element.Wind, Habitat = Habitat.Sky, Rarity = Rarity.Common, MaxHp = 12, Level = 7, Exp = 3, Skills = { MinionSkill.Crewmate, MinionSkill.Mender } });
+            pets.Add(new Companion { Id = "eel", Name = "Brinefang Eel", Skills = { MinionSkill.Fighter }, MaxHp = 18, Attack = 4, Age = 12, Stage = GrowthStage.Adult, Growth = 7, Infusions = 2, Look = 3, Echo = "Echo of Gale Gull" });
             pets.RestoreMemorials(new[] { new Memorial { Id = "crab", Name = "Old Crab", Rarity = Rarity.Common, Role = CompanionRole.Crew, Age = 40 } });
 
             var data = SaveGame.Capture(bag, gear, harpoon, raft,
@@ -74,7 +74,9 @@ namespace BrineBattle.Tests
             Assert.AreEqual(4, raft2.Kills, "kills toward the next raft tier");
             Assert.AreEqual(9, modules[new Cell(2, 0)]);
             Assert.AreEqual(2, pets2.All.Count);
-            Assert.AreEqual(CompanionRole.Crew, pets2.All[0].Role);
+            CollectionAssert.AreEqual(new[] { MinionSkill.Crewmate, MinionSkill.Mender }, pets2.All[0].Skills);
+            Assert.AreEqual(7, pets2.All[0].Level);
+            Assert.AreEqual(3, pets2.All[0].Exp);
             Assert.AreEqual("Brinefang Eel", pets2.Active.Name);
             Assert.AreEqual(12, pets2.Active.Age);
             Assert.AreEqual(GrowthStage.Adult, pets2.Active.Stage);

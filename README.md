@@ -5,7 +5,7 @@
 The world has drowned. The last few humans alive are **Monster Hunters**, each surviving alone on a raft built from the bodies of slain sea monsters. You hook whatever the current carries toward you — but not everything that floats is dead.
 
 **Status:** Concept / pre-production (initial patch)
-**Engine:** Unity · **Art:** Chibi 2.5D with outlines (Blender) · **View:** Top-down
+**Engine:** Unity · **Art:** Chibi 3D with outlines (Blender) · **View:** Top-down 3D camera (zoom and rotate)
 
 ---
 
@@ -47,7 +47,7 @@ Full details: **[docs/GAME_DESIGN.md](docs/GAME_DESIGN.md)**
 
 - **Engine:** Unity
 - **Style:** Chibi, cute, outlined characters (toon shader, inverted-hull outline)
-- **Pipeline:** 3D models made in Blender, rendered as 2.5D in a top-down view
+- **Pipeline:** 3D models made in Blender, shown in real 3D from a top-down camera you can zoom and turn
 - **Collision:** simplified collision meshes authored in Blender (e.g. `_col` suffix) for easy iteration
 - **Raft parts:** modular, grid-snapped pieces
 

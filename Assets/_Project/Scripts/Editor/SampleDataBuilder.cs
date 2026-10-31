@@ -175,15 +175,20 @@ namespace BrineBattle.Editor
             // Ed's U-31: each level of a type also has its own refined material (the tree's node), opened by
             // picking that type at a raft level-up. Bases per level: Tarred, Shellback, Coralbound, Leviathan, Abyssal.
             var bases = new[] { tarred, shell, coral, leviathan, abyssal };
-            TypedParts(RaftKind.Fortress, "ShellPlating", "shell_plating", "Shell Plating", Element.Earth, plank, scale, bases,
+            var fortressParts = TypedParts(RaftKind.Fortress, "ShellPlating", "shell_plating", "Shell Plating", Element.Earth, plank, scale, bases,
                 new[] { "Hardened Scale", "Shell Weave", "Coral Bulwark", "Leviathan Hide", "Abyssal Carapace" },
                 "Scales riveted over planks. Fortress part: slow but sturdy.");
-            TypedParts(RaftKind.Sky, "WingSail", "wing_sail", "Wing Sail", Element.Wind, plank, feather, bases,
+            var skyParts = TypedParts(RaftKind.Sky, "WingSail", "wing_sail", "Wing Sail", Element.Wind, plank, feather, bases,
                 new[] { "Gale Down", "Storm Silk", "Cloud Bladder", "Tempest Plume", "Aether Membrane" },
                 "A feathered sail on a frame. Sky part: quick, with a longer hook reach.");
-            TypedParts(RaftKind.Beast, "BeastHarness", "beast_harness", "Beast Harness", Element.Water, plank, fang, bases,
+            var beastParts = TypedParts(RaftKind.Beast, "BeastHarness", "beast_harness", "Beast Harness", Element.Water, plank, fang, bases,
                 new[] { "Fang Rope", "Sinew Strap", "Bone Yoke", "Leviathan Tendon", "Abyssal Chain" },
                 "Fang-studded straps for a monster to pull the raft. Beast part: hits harder and moves faster.");
+            // Ed's ask: a boss per raft level, and the vehicle of each type (five parts, one per level from Lv 2).
+            var cores = Bosses();
+            VesselParts(RaftKind.Fortress, fortressParts, cores);
+            VesselParts(RaftKind.Sky, skyParts, cores);
+            VesselParts(RaftKind.Beast, beastParts, cores);
             // Ed's ask: building needs a hammer of the raft's level or better; each hammer upgrades from the last.
             var hammers = new[]
             {
@@ -260,6 +265,22 @@ namespace BrineBattle.Editor
             Recipe("craft_shell_maul", "Shell Maul", RecipeKind.Craft, new[] { (shell, 3), (fang, 2) }, new[] { (maul, 1) });
             Recipe("craft_tidecaller_lance", "Tidecaller Lance", RecipeKind.Craft, new[] { (spear, 1), (fang, 4), (shell, 3) }, new[] { (lance, 1) });
             Recipe("craft_shellback_carapace", "Shellback Carapace", RecipeKind.Craft, new[] { (shell, 5), (scale, 4) }, new[] { (carapace, 1) });
+            // Ed's ask: accessories, a third gear slot. Their worth is their skills (by rarity), element and + refine.
+            var charm = Accessory("ShellCharm", "shell_charm", "Shell Charm", Rarity.Uncommon, Element.Earth, 2, null, null,
+                "A crab-shell bead on a cord. A little sturdier, a little stronger. Earth gives the hunter no sun or moon.");
+            var earring = Accessory("GaleEarring", "gale_earring", "Gale Feather Earring", Rarity.Rare, Element.Wind, 3,
+                new[] { GearPassive.Swift }, null, "A feather that never stops fluttering. Swift: +2 SPD in battle.");
+            var amulet = Accessory("MoonpearlAmulet", "moonpearl_amulet", "Moonpearl Amulet", Rarity.Epic, Element.Water, 4,
+                new[] { GearPassive.SecondWind }, new[] { GearActive.TidalStrike },
+                "A pearl that glows at night. Water (Moon): stronger after dark. Second Wind, and Tidal Strike in battle.");
+            var sunstone = Accessory("SunstoneBand", "sunstone_band", "Sunstone Band", Rarity.Legendary, Element.Fire, 5,
+                new[] { GearPassive.Leech, GearPassive.Swift }, new[] { GearActive.ShellGuard },
+                "A ring of tar-baked stone that holds the day's heat. Fire (Sun): stronger by day. Leech, Swift, Shell Guard.");
+            Recipe("craft_shell_charm", "Shell Charm", RecipeKind.Craft, new[] { (shell, 1), (fang, 1) }, new[] { (charm, 1) });
+            Recipe("craft_gale_earring", "Gale Feather Earring", RecipeKind.Craft, new[] { (feather, 4), (fang, 1) }, new[] { (earring, 1) });
+            Recipe("craft_moonpearl_amulet", "Moonpearl Amulet", RecipeKind.Craft, new[] { (scale, 6), (shell, 2), (fang, 2) }, new[] { (amulet, 1) });
+            Recipe("craft_sunstone_band", "Sunstone Band", RecipeKind.Craft, new[] { (charm, 1), (tarred, 3), (shell, 4) }, new[] { (sunstone, 1) });
+            Recipe("dismantle_shell_charm", "Shell Charm", RecipeKind.Dismantle, new[] { (charm, 1) }, new[] { (shell, 1) });
             // Phase 6: elemental oils coat the weapon for a few rounds (Wind beats the eel, Earth the gull, Fire the crab).
             var galeOil = Oil("GaleOil", "gale_oil", "Gale Oil", Element.Wind, "Feather down steeped in fish oil. Attacks turn Wind for 3 rounds.");
             var gritOil = Oil("GritOil", "grit_oil", "Grit Oil", Element.Earth, "Ground crab shell in a paste. Attacks turn Earth for 3 rounds.");
@@ -361,9 +382,10 @@ namespace BrineBattle.Editor
         /// 2 of the kind's raw material. From Lv 2 the level's refined material (node) = the level's base part
         /// + level × raw material, and the part = the last level's part + that node. Names say the level.
         /// </summary>
-        static void TypedParts(RaftKind kind, string file, string id, string name, Element element,
+        static ItemDefinition[] TypedParts(RaftKind kind, string file, string id, string name, Element element,
             ItemDefinition plank, ItemDefinition material, ItemDefinition[] bases, string[] nodeNames, string description)
         {
+            var made = new ItemDefinition[6];
             ItemDefinition last = null;
             for (var r = Rarity.Common; r <= Rarity.Mythic; r++)
             {
@@ -389,6 +411,82 @@ namespace BrineBattle.Editor
                     Recipe($"reinforce_{id}_{lv}", name + suffix, RecipeKind.Upgrade, new[] { (last, 1), (node, 1) }, new[] { (part, 1) });
                 }
                 last = part;
+                made[(int)r] = part;
+            }
+            return made;
+        }
+
+        /// <summary>
+        /// One boss per raft level (Ed's ask, numbers tunable): beat the boss of the raft's level to level
+        /// up; the Lv 6 boss guards the way out of the sea. Each drops a core used for that level's vehicle part.
+        /// Returns the cores by level (index 0 = Lv 1 boss).
+        /// </summary>
+        static ItemDefinition[] Bosses()
+        {
+            var specs = new (string file, string id, string name, Element el, Habitat hab, int hp, int atk, int def, int spd, StatusEffect inflicts, string core, string about)[]
+            {
+                ("ReefjawBrute", "reefjaw_brute", "Reefjaw Brute", Element.Earth, Habitat.Sea, 60, 9, 5, 4, StatusEffect.Bleed, "Reefjaw Tusk",
+                    "A coral-crusted brute that rams small rafts. The Lv 1 boss."),
+                ("TidecallerEel", "tidecaller_eel", "Tidecaller Eel", Element.Water, Habitat.Sea, 110, 14, 7, 8, StatusEffect.Poison, "Tidecaller Pearl",
+                    "An eel that calls the tide to swamp the raft. The Lv 2 boss."),
+                ("StormwingRoc", "stormwing_roc", "Stormwing Roc", Element.Lightning, Habitat.Sky, 170, 20, 10, 11, StatusEffect.Blind, "Storm Heart",
+                    "A giant bird wreathed in lightning. The Lv 3 boss."),
+                ("MagmaKraken", "magma_kraken", "Magma Kraken", Element.Magma, Habitat.Sea, 260, 28, 15, 7, StatusEffect.Bleed, "Kraken Ember",
+                    "Glowing tentacles that boil the sea around them. The Lv 4 boss."),
+                ("FrostLeviathan", "frost_leviathan", "Frost Leviathan", Element.Ice, Habitat.Sea, 380, 38, 22, 9, StatusEffect.Confusion, "Leviathan Frost-Eye",
+                    "A sea serpent that freezes the waves it swims through. The Lv 5 boss."),
+                ("AbyssKing", "abyss_king", "The Abyss King", Element.Steam, Habitat.Sea, 560, 52, 30, 10, StatusEffect.Poison, "Abyss Crown",
+                    "The ruler of this sea. Beat it to leave. The Lv 6 boss."),
+            };
+            var cores = new ItemDefinition[specs.Length];
+            for (int i = 0; i < specs.Length; i++)
+            {
+                var sp = specs[i];
+                var r = (Rarity)i;
+                var core = LoadOrCreate<ItemDefinition>($"{Root}/Items/{sp.core.Replace(" ", "").Replace("-", "")}.asset", it =>
+                {
+                    it.id = sp.core.ToLowerInvariant().Replace(" ", "_").Replace("-", "_"); it.displayName = sp.core;
+                    it.type = ItemType.Material; it.rarity = r; it.element = sp.el;
+                    it.description = $"Dropped by {sp.name}. Used for a vehicle part.";
+                });
+                var loot = LoadOrCreate<LootTable>($"{Root}/Loot/{sp.file}_Loot.asset", t =>
+                    t.entries.Add(new LootEntry { item = core, chance = 1f, minQuantity = 1, maxQuantity = 1 }));
+                var boss = LoadOrCreate<MonsterDefinition>($"{Root}/Monsters/{sp.file}.asset", m =>
+                {
+                    m.id = sp.id; m.displayName = sp.name; m.element = sp.el; m.habitat = sp.hab; m.rarity = r;
+                    m.sizeClass = 1; m.aggression = 1f; m.isBoss = true;
+                    m.stats = new MonsterStats { hp = sp.hp, attack = sp.atk, defense = sp.def, speed = sp.spd };
+                    m.inflicts = sp.inflicts; m.inflictChance = 0.3f;
+                    m.loot = loot;
+                    m.description = sp.about;
+                });
+                if (!boss.isBoss) { boss.isBoss = true; EditorUtility.SetDirty(boss); }
+                cores[i] = core;
+            }
+            return cores;
+        }
+
+        /// <summary>
+        /// The vehicle of a raft type (Ed's ask): five parts, slot n opening at raft Lv n+1. Each takes two
+        /// typed parts of its level and the core of the boss before it.
+        /// </summary>
+        static void VesselParts(RaftKind kind, ItemDefinition[] typed, ItemDefinition[] cores)
+        {
+            string vehicle = VesselRules.Vehicle(kind);
+            for (int slot = 1; slot <= VesselRules.Parts; slot++)
+            {
+                string name = VesselRules.PartName(kind, slot);
+                string id = $"{kind.ToString().ToLowerInvariant()}_{name.ToLowerInvariant().Replace(" & ", "_").Replace(" ", "_")}";
+                string file = $"Vessel{kind}{name.Replace(" & ", "").Replace(" ", "")}";
+                int lv = VesselRules.UnlockLevel(slot);
+                var part = LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", it =>
+                {
+                    it.id = id; it.displayName = name; it.type = ItemType.Vessel; it.maxStack = 1;
+                    it.rarity = VesselRules.RarityOf(slot); it.element = typed[slot].element;
+                    it.raftKind = kind; it.vesselSlot = slot;
+                    it.description = $"Part {slot} of 5 of the {vehicle}. Opens at raft Lv {lv}. Put it on in Build → Raft tree.";
+                });
+                Recipe($"craft_{id}", name, RecipeKind.Craft, new[] { (typed[slot], 2), (cores[slot - 1], 1) }, new[] { (part, 1) });
             }
         }
 
@@ -476,6 +574,17 @@ namespace BrineBattle.Editor
             table.entries.Add(new LootEntry { item = item, chance = chance, minQuantity = min, maxQuantity = max });
             EditorUtility.SetDirty(table);
         }
+
+        static ItemDefinition Accessory(string file, string id, string name, Rarity rarity, Element element, int power,
+            GearPassive[] passives, GearActive[] actives, string description) =>
+            LoadOrCreate<ItemDefinition>($"{Root}/Items/{file}.asset", i =>
+            {
+                i.id = id; i.displayName = name; i.type = ItemType.Accessory;
+                i.rarity = rarity; i.element = element; i.maxStack = 1; i.gearPower = power;
+                i.passives = passives ?? new GearPassive[0];
+                i.actives = actives ?? new GearActive[0];
+                i.description = description;
+            });
 
         static T LoadOrCreate<T>(string path, System.Action<T> init = null) where T : ScriptableObject
         {

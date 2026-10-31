@@ -17,6 +17,8 @@ namespace BrineBattle.Items
         [Range(1, 5)] public int moduleLevel = 1;
         [Tooltip("Raft parts only: the raft type this part builds toward (Phase 8). Plain counts toward none.")]
         public Rafts.RaftKind raftKind;
+        [Tooltip("Vehicle parts only: which of the type's five pieces it is, 1-5 (Ed's ask). 0 = not a vehicle part.")]
+        [Range(0, 5)] public int vesselSlot;
         [Tooltip("Gear only: attack (weapon) or defense (armor) added to the hunter. Refine (+) raises it.")]
         [Min(0)] public int gearPower;
         [Tooltip("Gear only: passive skills. Only as many count as the rarity allows (Rare 1, Legendary 2, Mythic 3).")]
