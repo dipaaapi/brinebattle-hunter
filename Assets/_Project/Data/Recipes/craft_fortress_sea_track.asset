@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_fortress_sea_track
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_fortress_sea_track
-  displayName: Sea Track
+  displayName: Hull Walls
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: 781377c6830a10341963d8af93a1bc0f, type: 2}

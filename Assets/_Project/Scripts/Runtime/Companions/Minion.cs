@@ -299,7 +299,7 @@ namespace BrineBattle.Companions
                 case MinionSkill.Smith: return "refines your gear and makes the next hammer";
                 case MinionSkill.Glutton: return "eats junk from the bag and shares it";
                 case MinionSkill.Salvager: return "dismantles or salvages junk";
-                case MinionSkill.Builder: return "reinforces raft parts, makes modules and vehicle parts, levels the raft up";
+                case MinionSkill.Builder: return "reinforces raft parts, makes modules and vehicle parts, levels the raft or ship up";
                 case MinionSkill.Tinker: return "crafts better weapons, armor and accessories and equips them";
                 case MinionSkill.Hardy: return "+20% HP and DEF";
                 default: return "+20% ATK, +1 SPD";

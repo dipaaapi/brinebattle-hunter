@@ -14,6 +14,8 @@ namespace BrineBattle.Hunting
         public HookController hook;
 
         static readonly Vector3 Home = new Vector3(0f, 0.8f, 0f);
+        /// <summary>The hunter's body radius on the deck (as the minions' spacing uses).</summary>
+        const float BodyRadius = 0.3f;
         enum Idle { None, Look, Hop, Stretch, Wander }
 
         Transform hunter;
@@ -93,10 +95,12 @@ namespace BrineBattle.Hunting
             yaw = Mathf.MoveTowardsAngle(yaw, wantYaw, 360f * dt);
             var local = hunter.localPosition;
             var flatGoal = goal + offset;
-            hunter.localPosition = new Vector3(
+            var next = new Vector3(
                 Mathf.MoveTowards(local.x, flatGoal.x, speed * dt),
                 Mathf.Lerp(local.y, flatGoal.y, 12f * dt),
                 Mathf.MoveTowards(local.z, flatGoal.z, speed * dt));
+            // Ed: never half off the planks (floating) or inside a wall: the whole body stays on the deck.
+            hunter.localPosition = Raft.ClampToDeck(next, BodyRadius);
             hunter.localRotation = Quaternion.Slerp(hunter.localRotation, Quaternion.Euler(pitch, yaw, roll), 10f * dt);
             hunter.localScale = Vector3.Lerp(hunter.localScale, new Vector3(baseScale.x / Mathf.Sqrt(stretch), baseScale.y * stretch, baseScale.z / Mathf.Sqrt(stretch)), 10f * dt);
         }

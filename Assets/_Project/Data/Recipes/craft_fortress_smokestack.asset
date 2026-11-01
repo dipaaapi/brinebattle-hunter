@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_fortress_smokestack
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_fortress_smokestack
-  displayName: Smokestack
+  displayName: Masts & Sails
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: d87a53f6bf22ee04a8bd42e42f9d32a4, type: 2}

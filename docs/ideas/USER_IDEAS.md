@@ -197,3 +197,27 @@ Boss fights grand from start to loot: a warning (dim, rumble, red BOSS banner wi
 
 ### U-42 Reel minigame like a fishing game — 2026-10-31 · 🟨 Idea Round 4 · GDD §4
 From Ed's co-worker. Reeling in a drift should feel like a classic fishing minigame instead of one timed press: the catch moves up and down a vertical bar and the player keeps a green catch zone on it (hold to lift, let go to drop) while a progress meter fills; outside the zone it drains. Manual: full control. Semi-auto: the same minigame, but assisted (the zone nudges toward the catch). Auto: still shown, computer-played, no input needed. The green zone's width depends on the loot's rarity and how it is handled (size, clean handling, gear, Alchemy Mastery, minions): rarer and bigger means narrower.
+
+### U-43 Raft to ship evolution — 2026-10-31 · 🟨 Phase 10 · GDD §6
+The raft evolves slowly from Lv 1 to Lv 50 into a simple boat. Then the player picks a ship type: aerial (INT), sea level (STR) or undersea (DEX, the fastest). The ship starts again at Lv 1 and evolves to Lv 100 (ships have more parts to build and craft); after that another evolution set comes later ("Coming soon"). Replaces Fortress/Sky/Beast and their vehicles, which don't evolve. No more leaving the sea: the goal is achievements and fame for leaderboards.
+
+### U-44 Developer mode — 2026-10-31 · ✅ tools/dev-mode · TOOLING
+A developer mode to QA the real game fast (jump levels, see why something didn't happen) without waiting. No login, since the game goes to Steam: only in the Editor and development builds.
+
+### U-45 Leaderboards — 2026-10-31 · 💡 · later (needs Steam)
+Fame and achievements on an online leaderboard (Steam leaderboards and achievements). The local fame and achievements are the first step.
+
+### U-46 Shipyard (customise the raft in its own view) — 2026-10-31 · 🟨 Phase 10 · GDD §6
+The Build menu covered the raft, so customising at sea didn't work. A separate mode where only the raft or ship is shown, turnable left/right/up/down, modified from the loot you have; minions don't help there; and the whole game is halted while it's open. Claude named it the Shipyard.
+
+### U-47 Customizable shortcut keys — 2026-10-31 · 💡 Next patch, not now
+Shortcut keys for every menu (Bag, Journal, Settings, Build, Shipyard, Minions, Quests, …) with defaults 1, 2, 3, 4, 5, 6, 7, 8, 9, 0. Settings gets a "Shortcut keys" section to rebind them, with Reset to defaults. The same section lists Controllers as "Coming soon": keyboard only for now, gamepad / Joy-Con later.
+
+### U-48 Blueprints and a blueprint store — 2026-10-31 · 🟨 Phase 10 · GDD §6
+Save raft designs as blueprints; load one as a ghost and build it from your own loot (missing parts become a quest the minions work on; copying never gives parts for free). Share designs with others; every copy keeps the original author's credit. First version: share codes, no server and no login.
+
+### U-49 Bigger module shapes — 2026-10-31 · 🟨 Phase 10 · GDD §6
+Modules in more shapes than a square (1×2, 2×2, L, T, 1×3), unlocking at higher levels and made by minions through alchemy, since the hunter is an ordinary person. Parts can be turned in the Shipyard.
+
+### U-50 Online blueprint store / Steam Workshop — 2026-10-31 · 💡 later (needs Steam)
+A real online store for raft designs (browse, rate, copy), on Steam Workshop. The share codes are the first step.

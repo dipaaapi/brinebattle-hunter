@@ -11,28 +11,30 @@ namespace BrineBattle.Rafts
     /// </summary>
     public static class RaftTree
     {
-        /// <summary>The raft level at which the type is picked, once: the first level-up (Ed's call; raft levels stop at 6).</summary>
-        public const int PickLevel = 2;
+        /// <summary>The raft level at which the ship line is picked, once (Ed's ask, 2026-10-31).</summary>
+        public const int PickLevel = EvolutionRules.RaftMax;
 
-        /// <summary>STR/INT/DEX tag and look for each type (Ed's ask).</summary>
+        /// <summary>STR/INT/DEX tag and look for each ship line (Ed's ask).</summary>
         public static string Look(RaftKind kind)
         {
             switch (kind)
             {
-                case RaftKind.Fortress: return "Sea Train · STR, tank";
-                case RaftKind.Sky: return "Winged Plane · INT";
-                case RaftKind.Beast: return "Pirate Ship · DEX";
+                case RaftKind.Sea: return "Sea-level ship · STR (Sloop → Galleon → Flagship)";
+                case RaftKind.Aerial: return "Aerial ship · INT (Glider → Airship → Sky Citadel)";
+                case RaftKind.Undersea: return "Undersea ship · DEX (Diving Bell → Submarine → Abyss Ark)";
                 default: return "Raft";
             }
         }
 
-        /// <summary>True when the kind's branch is open at <paramref name="level"/> (1 = Common … 6 = Mythic).</summary>
+        /// <summary>
+        /// True when the line's branch is open at <paramref name="level"/> (an item's rarity + 1): only the picked
+        /// ship line, up to its current tier. Before the pick no ship-line recipes are open.
+        /// </summary>
         public static bool Unlocked(RaftGrid g, RaftKind kind, int level)
         {
             if (kind == RaftKind.Plain) return true;
             var chosen = g != null ? g.Chosen : RaftKind.Plain;
-            if (chosen == RaftKind.Plain) return level <= 1;
-            return kind == chosen && (level <= 1 || g.PathLevel(kind) >= level);
+            return chosen != RaftKind.Plain && kind == chosen && level <= (int)g.Tier + 1;
         }
 
         /// <summary>The raft level a typed item belongs to (its rarity + 1).</summary>
@@ -43,6 +45,8 @@ namespace BrineBattle.Rafts
         {
             if (r == null || r.kind == RecipeKind.Dismantle || r.outputs.Count == 0) return true;
             var item = r.outputs[0].item;
+            // Shaped module kits open with the raft's growth (Ed's ask).
+            if (item != null && ShapeRules.IsKit(item) && !ShapeRules.Unlocked(g, item.shape)) return false;
             if (item == null || item.raftKind == RaftKind.Plain) return true;
             return Unlocked(g, item.raftKind, LevelOf(item));
         }
@@ -51,6 +55,6 @@ namespace BrineBattle.Rafts
         public static RaftKind KindOf(RecipeDefinition r) =>
             r != null && r.outputs.Count > 0 && r.outputs[0].item != null ? r.outputs[0].item.raftKind : RaftKind.Plain;
 
-        public static readonly RaftKind[] Kinds = { RaftKind.Fortress, RaftKind.Sky, RaftKind.Beast };
+        public static readonly RaftKind[] Kinds = { RaftKind.Sea, RaftKind.Aerial, RaftKind.Undersea };
     }
 }

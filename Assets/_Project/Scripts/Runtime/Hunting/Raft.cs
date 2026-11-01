@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using BrineBattle.Items;
 using BrineBattle.Rafts;
 using UnityEngine;
@@ -18,13 +19,32 @@ namespace BrineBattle.Hunting
         [Tooltip("How far the hook reaches beyond the raft's edge.")]
         public float hookRange = 12f;
 
-        public RaftGrid Grid { get; } = new RaftGrid { ModulesToGrow = RaftRules.ModuleShareToGrow };
+        public RaftGrid Grid { get; } = new RaftGrid { ModulesToGrow = RaftRules.ModuleShareToGrow, NeedsPieces = true };
         public int size => Grid.Size;
         public int MaxHp => Grid.MaxHp;
         public Rarity Tier => Grid.Tier;
         /// <summary>Distance from the centre to just past the outer parts.</summary>
         public float EdgeDistance => (Grid.Radius + 1.2f) * CellSize;
-        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Type.Bonus.Reach - World.WorldRules.ReachPenalty(WorldClock.Weather);
+        /// <summary>Footprints of the raft's decor (walls, floats, bow, stern, hull...), set by <see cref="RaftDecor"/>; bodies in the water stay out of them.</summary>
+        public readonly List<DeckBox> Solid = new List<DeckBox>();
+        HashSet<Cell> walk;
+
+        /// <summary>Ed's ask: a body on the raft stays fully on walkable planks, never half over the edge or in a wall.</summary>
+        public Vector3 ClampToDeck(Vector3 local, float radius)
+        {
+            walk ??= new HashSet<Cell>(Grid.Parts.Keys.Where(Grid.Walkable));
+            var (x, z) = DeckRules.Clamp(local.x, local.z, radius, CellSize, walk);
+            return new Vector3(x, local.y, z);
+        }
+
+        /// <summary>How far the raft and its decor reach from the centre toward a world direction: a body coming from there stops past it.</summary>
+        public float ReachToward(Vector3 worldDir)
+        {
+            var d = transform.InverseTransformDirection(worldDir);
+            return Mathf.Max((Grid.Radius + 0.5f) * CellSize, DeckRules.Reach(Solid, d.x, d.z));
+        }
+
+        public float HookReach => hookRange + Grid.Radius * CellSize + Grid.Bonus.Reach - World.WorldRules.ReachPenalty(WorldClock.Weather);
 
         readonly Dictionary<Cell, GameObject> tiles = new Dictionary<Cell, GameObject>();
 
@@ -88,6 +108,7 @@ namespace BrineBattle.Hunting
 
         void Rebuild()
         {
+            walk = null;
             foreach (var kv in new List<KeyValuePair<Cell, GameObject>>(tiles))
                 if (!Grid.Has(kv.Key)) { Destroy(kv.Value); tiles.Remove(kv.Key); }
 
@@ -123,9 +144,9 @@ namespace BrineBattle.Hunting
             var c = PartColor(part.rarity);
             switch (part.raftKind)
             {
-                case RaftKind.Fortress: return Color.Lerp(c, new Color(0.45f, 0.4f, 0.38f), 0.55f);
-                case RaftKind.Sky: return Color.Lerp(c, new Color(0.75f, 0.9f, 1f), 0.55f);
-                case RaftKind.Beast: return Color.Lerp(c, new Color(0.75f, 0.35f, 0.3f), 0.55f);
+                case RaftKind.Sea: return Color.Lerp(c, new Color(0.45f, 0.4f, 0.38f), 0.55f);
+                case RaftKind.Aerial: return Color.Lerp(c, new Color(0.75f, 0.9f, 1f), 0.55f);
+                case RaftKind.Undersea: return Color.Lerp(c, new Color(0.75f, 0.35f, 0.3f), 0.55f);
                 default: return c;
             }
         }

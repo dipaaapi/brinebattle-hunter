@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_beast_stern_castle
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_beast_stern_castle
-  displayName: Stern Castle
+  displayName: Sonar Dome
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: 7a54a1260dc36d649b9d333e22e20aa4, type: 2}

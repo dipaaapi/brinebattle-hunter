@@ -31,11 +31,9 @@ namespace BrineBattle.Rafts
         /// <summary>Loot amounts: ×1, ×0.8, ×0.6.</summary>
         public static float LootScale(Difficulty d) => 1f - 0.2f * (int)d;
 
-        public static string Describe(Difficulty d)
-        {
-            string types = TypesToWin(d) == 1 ? "1 raft type" : $"{TypesToWin(d)} raft types";
-            return $"Finish {types} to win. Monsters ×{EnemyScale(d):0.##}, loot ×{LootScale(d):0.##}.";
-        }
+        /// <summary>The new-game text: monsters, loot and fame (the goal is fame now, Ed's ask 2026-10-31).</summary>
+        public static string Describe(Difficulty d) =>
+            $"Monsters ×{EnemyScale(d):0.##}, loot ×{LootScale(d):0.##}, fame ×{FameBook.Multiplier(d):0.#}.";
 
         /// <summary>
         /// A loot amount after the difficulty: scaled, with the leftover fraction as a chance of one more.
@@ -58,29 +56,37 @@ namespace BrineBattle.Rafts
     {
         public const int Parts = 5;
 
-        static readonly string[] Train = { "Sea Track", "Iron Wheels", "Boiler", "Smokestack", "Locomotive Cab" };
-        static readonly string[] Plane = { "Wings", "Tail Fin", "Propeller", "Engine", "Cockpit" };
-        static readonly string[] Ship = { "Hull Walls", "Cannons", "Bow & Bowsprit", "Masts & Sails", "Stern Castle" };
+        // Ship parts per line (Ed's ask, 2026-10-31): five per ship, opening at ship Lv 20, 40, 60, 80 and 99.
+        static readonly string[] Galleon = { "Hull Walls", "Cannons", "Bow & Bowsprit", "Masts & Sails", "Stern Castle" };
+        static readonly string[] Skyship = { "Wings", "Tail Fin", "Propeller", "Engine", "Cockpit" };
+        static readonly string[] Submarine = { "Pressure Hull", "Ballast Tanks", "Screw Propeller", "Periscope", "Sonar Dome" };
+        // The vehicles before ship lines, by the same saved kind number: their asset files and ids stay, only the names change.
+        static readonly string[] OldTrain = { "Sea Track", "Iron Wheels", "Boiler", "Smokestack", "Locomotive Cab" };
+        static readonly string[] OldShip = { "Hull Walls", "Cannons", "Bow & Bowsprit", "Masts & Sails", "Stern Castle" };
 
         /// <summary>The part's name; <paramref name="slot"/> is 1-5.</summary>
-        public static string PartName(RaftKind kind, int slot)
-        {
-            var names = kind == RaftKind.Fortress ? Train : kind == RaftKind.Sky ? Plane : kind == RaftKind.Beast ? Ship : null;
-            return names == null || slot < 1 || slot > Parts ? "" : names[slot - 1];
-        }
+        public static string PartName(RaftKind kind, int slot) => Pick(kind == RaftKind.Sea ? Galleon : kind == RaftKind.Aerial ? Skyship : kind == RaftKind.Undersea ? Submarine : null, slot);
 
-        /// <summary>The raft level a part opens at: slot 1 at Lv 2 … slot 5 at Lv 6.</summary>
-        public static int UnlockLevel(int slot) => slot + 1;
+        /// <summary>The part's old (vehicle) name, which its asset file and id still use.</summary>
+        public static string LegacyName(RaftKind kind, int slot) => Pick(kind == RaftKind.Sea ? OldTrain : kind == RaftKind.Aerial ? Skyship : kind == RaftKind.Undersea ? OldShip : null, slot);
+
+        /// <summary>The old kind name (Fortress, Sky, Beast) in asset files and ids.</summary>
+        public static string LegacyKind(RaftKind kind) => kind == RaftKind.Sea ? "Fortress" : kind == RaftKind.Aerial ? "Sky" : kind == RaftKind.Undersea ? "Beast" : "Plain";
+
+        static string Pick(string[] names, int slot) => names == null || slot < 1 || slot > Parts ? "" : names[slot - 1];
+
+        /// <summary>The ship level a part opens at (see <see cref="EvolutionRules.PartOpensAt"/>).</summary>
+        public static int UnlockLevel(int slot) => EvolutionRules.PartOpensAt(slot);
 
         /// <summary>The rarity of the part for a slot (its level's rarity).</summary>
         public static Rarity RarityOf(int slot) => (Rarity)slot;
 
         public static string Vehicle(RaftKind kind) =>
-            kind == RaftKind.Fortress ? "sea train" : kind == RaftKind.Sky ? "plane" : kind == RaftKind.Beast ? "pirate ship" : "raft";
+            kind == RaftKind.Sea ? "galleon" : kind == RaftKind.Aerial ? "skyship" : kind == RaftKind.Undersea ? "submarine" : "raft";
 
         /// <summary>What leaving looks like, for the button.</summary>
         public static string LeaveVerb(RaftKind kind) =>
-            kind == RaftKind.Fortress ? "Ride the track out of this sea" : kind == RaftKind.Sky ? "Take off and fly out of this sea" : "Set sail out of this sea";
+            kind == RaftKind.Sea ? "Ride the track out of this sea" : kind == RaftKind.Aerial ? "Take off and fly out of this sea" : "Set sail out of this sea";
     }
 
     /// <summary>
@@ -91,7 +97,7 @@ namespace BrineBattle.Rafts
     {
         /// <summary>The boss turns up once the level-up kill count is reached.</summary>
         public static bool Due(RaftGrid g) =>
-            g.BossesNeeded && !g.BossBeaten(g.Tier) && g.Kills >= RaftRules.KillsToUpgrade(g.Tier);
+            g.BossPending && g.Kills >= g.KillsNeeded;
 
         /// <summary>Seconds between boss sightings while one is due.</summary>
         public const float SpawnSeconds = 25f;

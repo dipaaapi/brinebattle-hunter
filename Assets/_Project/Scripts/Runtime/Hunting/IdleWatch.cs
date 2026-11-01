@@ -40,6 +40,7 @@ namespace BrineBattle.Hunting
                 if (input) Wake();
                 return;
             }
+            if (!ShipyardRules.TimersRun(Shipyard.IsOpen)) return;   // halted in the Shipyard
             if (clock.Tick(Time.unscaledDeltaTime, input, IdleRules.Minutes)) due = true;
             if (input) due = false;
             // Let a running battle end (it plays itself in Auto) before dozing off.

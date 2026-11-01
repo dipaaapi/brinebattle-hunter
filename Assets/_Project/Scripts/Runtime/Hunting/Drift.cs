@@ -1,6 +1,7 @@
 using BrineBattle.Battle;
 using BrineBattle.Encounters;
 using BrineBattle.Monsters;
+using BrineBattle.Rafts;
 using UnityEngine;
 
 namespace BrineBattle.Hunting
@@ -209,6 +210,19 @@ namespace BrineBattle.Hunting
                 float slide = velocity.magnitude * Time.deltaTime;
                 if (ox < oz) { p.x += Mathf.Sign(d.x) * ox; p.z += SlideSign(d.z, velocity.z) * slide; }
                 else { p.z += Mathf.Sign(d.z) * oz; p.x += SlideSign(d.x, velocity.x) * slide; }
+            }
+            // And out of the decor (floats, bow, stern deck, wings...): Ed's ask, nothing overlaps the ship.
+            if (raft.Solid.Count > 0)
+            {
+                var local = raft.transform.InverseTransformPoint(p);
+                float x = local.x, z = local.z;
+                foreach (var box in raft.Solid)
+                {
+                    var (nx, nz) = DeckRules.PushOut(box, x, z, BodyRadius);
+                    if (nx != x || nz != z) TouchingRaft = true;
+                    x = nx; z = nz;
+                }
+                p = raft.transform.TransformPoint(new Vector3(x, local.y, z));
             }
             return p;
         }

@@ -23,9 +23,9 @@ namespace BrineBattle.Tests
         static List<ItemDefinition> Mix(int fortress, int sky, int beast, int plain)
         {
             var list = new List<ItemDefinition>();
-            list.AddRange(Enumerable.Range(0, fortress).Select(_ => Part(RaftKind.Fortress)));
-            list.AddRange(Enumerable.Range(0, sky).Select(_ => Part(RaftKind.Sky)));
-            list.AddRange(Enumerable.Range(0, beast).Select(_ => Part(RaftKind.Beast)));
+            list.AddRange(Enumerable.Range(0, fortress).Select(_ => Part(RaftKind.Sea)));
+            list.AddRange(Enumerable.Range(0, sky).Select(_ => Part(RaftKind.Aerial)));
+            list.AddRange(Enumerable.Range(0, beast).Select(_ => Part(RaftKind.Undersea)));
             list.AddRange(Enumerable.Range(0, plain).Select(_ => Part(RaftKind.Plain)));
             return list;
         }
@@ -43,9 +43,9 @@ namespace BrineBattle.Tests
         public void HalfOneKindSetsTheType()
         {
             var t = RaftTypeRules.Classify(Mix(5, 0, 0, 4));
-            Assert.AreEqual(RaftKind.Fortress, t.Main);
+            Assert.AreEqual(RaftKind.Sea, t.Main);
             Assert.IsFalse(t.IsHybrid);
-            Assert.AreEqual("Fortress", t.Name);
+            Assert.AreEqual("Sea-level ship (STR)", t.Name);
         }
 
         [Test]
@@ -66,12 +66,12 @@ namespace BrineBattle.Tests
         {
             var t = RaftTypeRules.Classify(Mix(4, 0, 3, 2));
             Assert.IsTrue(t.IsHybrid);
-            Assert.AreEqual(RaftKind.Fortress, t.Main);
-            Assert.AreEqual(RaftKind.Beast, t.Second);
-            var f = RaftTypeRules.BonusOf(RaftKind.Fortress);
-            var b = RaftTypeRules.BonusOf(RaftKind.Beast);
-            Assert.AreEqual(f.RaftHpPercent / 2, t.Bonus.RaftHpPercent);
-            Assert.AreEqual(b.Attack / 2, t.Bonus.Attack);
+            Assert.AreEqual(RaftKind.Sea, t.Main);
+            Assert.AreEqual(RaftKind.Undersea, t.Second);
+            var f = RaftTypeRules.BonusOf(RaftKind.Sea);
+            var b = RaftTypeRules.BonusOf(RaftKind.Undersea);
+            Assert.AreEqual(f.RaftHpPercent / 2 + b.RaftHpPercent / 2, t.Bonus.RaftHpPercent, "half of each line's HP bonus");
+            Assert.AreEqual(f.Attack / 2 + b.Attack / 2, t.Bonus.Attack);
             StringAssert.StartsWith("Hybrid", t.Name);
         }
 
@@ -80,25 +80,25 @@ namespace BrineBattle.Tests
         {
             var parts = Mix(3, 0, 0, 3);
             parts.AddRange(Enumerable.Range(0, 6).Select(_ => Part(RaftKind.Plain, ItemType.Module)));
-            Assert.AreEqual(RaftKind.Fortress, RaftTypeRules.Classify(parts).Main);
+            Assert.AreEqual(RaftKind.Sea, RaftTypeRules.Classify(parts).Main);
         }
 
         [Test]
-        public void FortressRaisesRaftHp()
+        public void SeaPartsRaiseRaftHp()
         {
             var g = new RaftGrid();
-            g.FillSquare(Part(RaftKind.Fortress), 1);
-            // 9 Common parts = 90 HP, +40% for a Fortress raft.
-            Assert.AreEqual(126, g.MaxHp);
+            g.FillSquare(Part(RaftKind.Sea), 1);
+            // 9 Common parts = 90 HP, +30% for Sea level (STR).
+            Assert.AreEqual(117, g.MaxHp);
         }
 
         [Test]
         public void BonusAppliesToTheHunter()
         {
-            var h = RaftTypeRules.Apply(Combatant.Hunter(), RaftTypeRules.BonusOf(RaftKind.Beast));
+            var h = RaftTypeRules.Apply(Combatant.Hunter(), RaftTypeRules.BonusOf(RaftKind.Undersea));
             var plain = Combatant.Hunter();
-            Assert.AreEqual(plain.Attack + 4, h.Attack);
-            Assert.AreEqual(plain.Speed + 1, h.Speed);
+            Assert.AreEqual(plain.Attack + 1, h.Attack);
+            Assert.AreEqual(plain.Speed + 3, h.Speed, "Undersea (DEX) is the fastest");
         }
 
         [Test]
@@ -106,13 +106,13 @@ namespace BrineBattle.Tests
         {
             var slow = Combatant.Hunter();
             slow.Speed = 1;
-            Assert.AreEqual(1, RaftTypeRules.Apply(slow, RaftTypeRules.BonusOf(RaftKind.Fortress)).Speed);
+            Assert.AreEqual(1, RaftTypeRules.Apply(slow, new RaftBonus { Speed = -3 }).Speed);
         }
 
         [Test]
         public void BonusTextReadsClearly()
         {
-            Assert.AreEqual("+40% raft HP, +3 DEF, −1 SPD", RaftTypeRules.BonusOf(RaftKind.Fortress).ToString());
+            Assert.AreEqual("+30% raft HP, +2 ATK, +2 DEF", RaftTypeRules.BonusOf(RaftKind.Sea).ToString());
             Assert.AreEqual("no bonus", default(RaftBonus).ToString());
         }
     }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_beast_cannons
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_beast_cannons
-  displayName: Cannons
+  displayName: Ballast Tanks
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: 20cfdb202a731684cb34a07c9047635e, type: 2}

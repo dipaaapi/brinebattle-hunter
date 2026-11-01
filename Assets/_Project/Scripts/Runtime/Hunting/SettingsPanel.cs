@@ -33,6 +33,7 @@ namespace BrineBattle.Hunting
         void AutoSave()
         {
             if (!inGame || BattleSettings.Mode == BattleMode.Manual || !SaveSystem.Exists) return;
+            if (!ShipyardRules.TimersRun(Shipyard.IsOpen)) return;   // the whole game is halted in the Shipyard
             autoTimer += Time.unscaledDeltaTime;
             if (autoTimer < SaveSystem.AutoSaveSeconds) return;
             if (BattleController.InBattle || WorldPause.Open != Menu.None || WorldPause.Prompt || WorldPause.Asleep) return;
@@ -94,8 +95,19 @@ namespace BrineBattle.Hunting
             if (GUILayout.Button("Mute music", GUILayout.Height(28))) MusicSettings.Volume = 0f;
             if (GUILayout.Button("Default (60%)", GUILayout.Height(28))) MusicSettings.Volume = 0.6f;
             GUILayout.EndHorizontal();
+            GUILayout.Space(16);
+            GUILayout.Label($"Sound effects  <size=12>{Mathf.RoundToInt(SfxSettings.Volume * 100)}%</size>", HuntStyles.Heading);
+            float before = SfxSettings.Volume;
+            SfxSettings.Volume = GUILayout.HorizontalSlider(SfxSettings.Volume, 0f, 1f);
+            // A sample click when the slider is let go at a new level, so the player hears how loud it is.
+            if (Event.current.type == EventType.MouseUp && !Mathf.Approximately(before, SfxSettings.Volume)) SfxPlayer.Play(Audio.Sfx.Click);
+            GUILayout.Space(14);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Mute effects", GUILayout.Height(28))) SfxSettings.Volume = 0f;
+            if (GUILayout.Button($"Default ({Mathf.RoundToInt(Audio.SfxRules.DefaultVolume * 100)}%)", GUILayout.Height(28))) { SfxSettings.Volume = Audio.SfxRules.DefaultVolume; SfxPlayer.Play(Audio.Sfx.Click); }
+            GUILayout.EndHorizontal();
             GUILayout.Space(10);
-            GUILayout.Label("Play each piece of the soundtrack in the Journal (C) → Music. Sound effects come next.", HuntStyles.Hint);
+            GUILayout.Label("Play each piece of the soundtrack in the Journal (C) → Music.", HuntStyles.Hint);
         }
 
         int page;
@@ -145,6 +157,7 @@ namespace BrineBattle.Hunting
             ("B", "Bag"),
             ("P", "Minions"),
             ("J", "Quests (or the tab on the right edge)"),
+            ("Y", "Shipyard: customise the raft"),
             ("C", "Journal (collection and music)"),
             ("R", "Build the raft and the Workbench"),
             ("Esc", "Settings, or close a menu"),

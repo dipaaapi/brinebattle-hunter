@@ -42,53 +42,50 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void LevelOneIsOpenForEveryKind()
+        public void NoShipBranchIsOpenBeforeThePick()
         {
             var g = Ready();
-            foreach (var k in RaftTree.Kinds) Assert.IsTrue(RaftTree.Unlocked(g, k, 1));
-            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Sky, 2));
+            foreach (var k in RaftTree.Kinds) Assert.IsFalse(RaftTree.Unlocked(g, k, 1));
+            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Plain, 6));
         }
 
         [Test]
-        public void PickingATypeAtLevelUpOpensItsBranch()
+        public void PickingAShipLineAtFiftyOpensItsBranchUpToItsTier()
         {
             var g = Ready();
-            Assert.IsTrue(g.TryUpgrade(Rich(), RaftKind.Sky));
-            Assert.AreEqual(2, g.PathLevel(RaftKind.Sky));
-            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Sky, 2));
-            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Fortress, 2));
-            Assert.IsTrue(RaftTree.Knows(g, Makes(Item(RaftKind.Sky, Rarity.Uncommon))));
-            Assert.IsFalse(RaftTree.Knows(g, Makes(Item(RaftKind.Beast, Rarity.Uncommon))));
+            g.RestoreEvolution(RaftKind.Plain, EvolutionRules.RaftMax);
+            Assert.IsTrue(g.CanChoose);
+            Assert.IsTrue(g.Choose(RaftKind.Aerial));
+            Assert.AreEqual(RaftKind.Aerial, g.Chosen);
+            Assert.AreEqual(1, g.Level, "the ship starts again at Lv 1");
+            Assert.AreEqual(Rarity.Epic, g.Tier);
+            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Aerial, 4));
+            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Aerial, 5), "Legendary opens at ship Lv 34");
+            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Sea, 1));
+            Assert.IsTrue(RaftTree.Knows(g, Makes(Item(RaftKind.Aerial, Rarity.Uncommon))));
+            Assert.IsFalse(RaftTree.Knows(g, Makes(Item(RaftKind.Undersea, Rarity.Uncommon))));
         }
 
         [Test]
-        public void TheTypeIsPickedOnceAndTheOthersStayLocked()
+        public void TheLineIsPickedOnceAndTheOthersStayLocked()
         {
             var g = Ready();
-            var inv = Rich();
-            g.TryUpgrade(inv, RaftKind.Sky);
-            g.Kills = 999;
-            g.TryUpgrade(inv, RaftKind.Beast);   // ignored: the raft is already Sky
-            Assert.AreEqual(RaftKind.Sky, g.Chosen);
-            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Sky, 3));
-            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Beast, 2));
-            Assert.IsFalse(RaftTree.Unlocked(g, RaftKind.Fortress, 1), "unpicked types lock, even Lv 1");
-            CollectionAssert.AreEqual(new[] { RaftKind.Sky, RaftKind.Sky }, g.Paths);
-            Assert.IsFalse(g.Choose(RaftKind.Beast));
-            Assert.AreEqual(RaftKind.Sky, g.Type.Main, "the picked type is the raft's type, whatever the parts");
+            g.RestoreEvolution(RaftKind.Plain, EvolutionRules.RaftMax);
+            g.Choose(RaftKind.Aerial);
+            Assert.IsFalse(g.Choose(RaftKind.Undersea));
+            Assert.AreEqual(RaftKind.Aerial, g.Chosen);
+            Assert.AreEqual(RaftKind.Aerial, g.Type.Main, "the picked line is the raft's type, whatever the parts");
         }
 
         [Test]
-        public void ARaftPastThePickLevelCanChooseWithoutLevelingUp()
+        public void ARaftBelowFiftyCantPick()
         {
             var g = new RaftGrid();
             g.Restore(new[] { new KeyValuePair<Cell, ItemDefinition>(new Cell(0, 0), Item(RaftKind.Plain, Rarity.Rare)) }, Rarity.Rare);
-            g.RestorePaths(null);
-            Assert.IsTrue(g.CanChoose);
-            Assert.IsTrue(g.Choose(RaftKind.Fortress));
-            Assert.AreEqual(RaftKind.Fortress, g.Chosen);
-            Assert.IsTrue(RaftTree.Unlocked(g, RaftKind.Fortress, 3));
+            Assert.AreEqual(34, g.Level, "first Rare level");
             Assert.IsFalse(g.CanChoose);
+            StringAssert.Contains("Lv 50", g.ChooseBlocker());
+            Assert.IsFalse(g.Choose(RaftKind.Sea));
         }
 
         [Test]
@@ -96,19 +93,18 @@ namespace BrineBattle.Tests
         {
             var g = Ready();
             Assert.IsTrue(RaftTree.Knows(g, Makes(Item(RaftKind.Plain, Rarity.Mythic))));
-            var d = Makes(Item(RaftKind.Sky, Rarity.Mythic));
+            var d = Makes(Item(RaftKind.Aerial, Rarity.Mythic));
             d.kind = RecipeKind.Dismantle;
             Assert.IsTrue(RaftTree.Knows(g, d));
         }
 
         [Test]
-        public void OlderSavesGetPlainPathsUpToTheirLevel()
+        public void OlderSavesKeepTheirPathsButHaveNoShipLine()
         {
             var g = new RaftGrid();
-            g.Restore(new[] { new KeyValuePair<Cell, ItemDefinition>(new Cell(0, 0), Item(RaftKind.Plain, Rarity.Rare)) }, Rarity.Rare);
-            g.RestorePaths(null);
+            g.RestorePaths(new[] { RaftKind.Sea, RaftKind.Sea });
             Assert.AreEqual(2, g.Paths.Count);
-            Assert.AreEqual(1, g.PathLevel(RaftKind.Fortress));
+            Assert.AreEqual(RaftKind.Plain, g.Chosen);
         }
 
         [Test]
@@ -116,7 +112,7 @@ namespace BrineBattle.Tests
         {
             var inv = new Inventory();
             var raw = Item(RaftKind.Plain, Rarity.Common, ItemType.Material);
-            var node = Item(RaftKind.Fortress, Rarity.Uncommon, ItemType.Material);
+            var node = Item(RaftKind.Sea, Rarity.Uncommon, ItemType.Material);
             inv.Add(raw, 2);
             inv.Add(node, 3);
             Assert.AreEqual(2, inv.MaterialCount());
@@ -133,18 +129,19 @@ namespace BrineBattle.Tests
         }
 
         [Test]
-        public void PickingATypeSendsOtherTypesPartsBackToTheBag()
+        public void PickingALineSendsOtherLinesPartsBackToTheBag()
         {
             var basic = Item(RaftKind.Plain, Rarity.Common);
             var g = new RaftGrid();
             g.FillSquare(basic, 1);
             g.Kills = 999;
-            var fortress = Item(RaftKind.Fortress, Rarity.Rare);
-            var sky = Item(RaftKind.Sky, Rarity.Rare);
+            var fortress = Item(RaftKind.Sea, Rarity.Mythic);
+            var sky = Item(RaftKind.Aerial, Rarity.Mythic);
             g.Place(new Cell(2, 0), fortress);
             g.Place(new Cell(-2, 0), sky);
             var bag = Rich();
-            Assert.IsTrue(g.TryUpgrade(bag, RaftKind.Sky));
+            g.RestoreEvolution(RaftKind.Plain, EvolutionRules.RaftMax);
+            Assert.IsTrue(g.Choose(RaftKind.Aerial));
             var back = g.ResetOffType(basic, bag);
             CollectionAssert.AreEqual(new[] { fortress }, back);
             Assert.AreEqual(basic, g.Parts[new Cell(2, 0)], "a basic plank keeps the raft's shape");

@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Collections.Generic;
 using BrineBattle.Battle;
 using BrineBattle.Rafts;
@@ -140,6 +141,7 @@ namespace BrineBattle.Hunting
 
         void Bolt(Vector3 at)
         {
+            SfxPlayer.Play(Sfx.Thunder);
             var bolt = GameObject.CreatePrimitive(PrimitiveType.Cube);
             bolt.name = "Lightning";
             Destroy(bolt.GetComponent<Collider>());

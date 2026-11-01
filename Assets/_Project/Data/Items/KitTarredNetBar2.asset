@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba14ad3ca32a55e44a5c155db19158a4, type: 3}
+  m_Name: KitTarredNetBar2
+  m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.ItemDefinition
+  id: tarred_net_bar2
+  displayName: "Tarred Net 1\xD72"
+  type: 7
+  rarity: 1
+  element: 0
+  maxStack: 20
+  moduleLevel: 2
+  raftKind: 0
+  vesselSlot: 0
+  shape: 1
+  segment: {fileID: 11400000, guid: a2b163194f83fea44b41eadbff5aaaa2, type: 2}
+  gearPower: 0
+  passives: 
+  actives: 
+  effect: 0
+  cures: 0
+  effectAmount: 0
+  icon: {fileID: 0}
+  description: "A 1\xD72 kit: lays 2 Tarred Nets at once. Turn it in the Shipyard
+    (R). Made by a Builder or Alchemist minion. Opens at raft Lv 10."

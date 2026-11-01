@@ -1,3 +1,4 @@
+using BrineBattle.Audio;
 using System.Collections.Generic;
 using BrineBattle.Battle;
 using UnityEngine;
@@ -47,6 +48,7 @@ namespace BrineBattle.Hunting
             introAt = Now;
             shake = 0.6f;
             wasEnraged = finished = false;
+            SfxPlayer.Play(Sfx.BossRumble);
             // No flat aura disc any more (Ed: it covered the raft, the hunter and the minions).
         }
 
@@ -54,6 +56,7 @@ namespace BrineBattle.Hunting
         public void Victory(string bossName, List<string> drops)
         {
             cardTitle = $"BOSS DEFEATED — {bossName}";
+            SfxPlayer.Play(Sfx.BossDown);
             cardLines = drops;
             cardUntil = Now + 7f;
             var raft = FindFirstObjectByType<Raft>();
@@ -130,6 +133,7 @@ namespace BrineBattle.Hunting
                 if (state != null && state.Enraged && !wasEnraged)
                 {
                     wasEnraged = true;
+                    SfxPlayer.Play(Sfx.Enrage);
                     enragedAt = Now;
                     shake = 1f;
                     // Enraged: the boss itself turns red instead of a disc around it.

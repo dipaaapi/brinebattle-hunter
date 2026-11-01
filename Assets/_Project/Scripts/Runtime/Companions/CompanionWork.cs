@@ -25,7 +25,7 @@ namespace BrineBattle.Companions
         {
             cell = default;
             var candidates = bag.Items.Select(kv => kv.Key)
-                .Where(i => (i.type == ItemType.Module || i.type == ItemType.Raft) && SalvageRules.IsCompatible(i.type, i.rarity, raft.Tier))
+                .Where(i => (i.type == ItemType.Module || i.type == ItemType.Raft) && !ShapeRules.IsKit(i) && SalvageRules.IsCompatible(i.type, i.rarity, raft.Tier))
                 .OrderBy(i => i.type == ItemType.Module ? 0 : 1).ThenByDescending(i => i.rarity).ThenByDescending(i => i.moduleLevel);
             foreach (var p in candidates)
             {
@@ -45,6 +45,8 @@ namespace BrineBattle.Companions
 
         /// <summary>Seconds the Crew hammers to install one part or module (Ed's ask: never instant).</summary>
         public const float InstallSeconds = 4f;
+        /// <summary>Seconds a Builder or Crewmate hammers on a ship piece; its scaffold grows on the raft meanwhile (Ed: little by little).</summary>
+        public const float PieceSeconds = 6f;
 
         /// <summary>
         /// Finishes an install the Crew started: the part must still be in the bag and the cell still fit
@@ -103,6 +105,11 @@ namespace BrineBattle.Companions
 
         // ---- Minion jobs added with U-39 (Builder, Tinker, junk) ----
 
+        /// <summary>A ship piece in the bag that can go on the raft now (Builder), lowest level first, or null.</summary>
+        public static ItemDefinition BuilderPiecePick(RaftGrid raft, Inventory bag) =>
+            bag.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.ShipPiece).OrderBy(i => ShipPieceRules.Find(i.id)?.Level ?? 99)
+                .FirstOrDefault(i => raft.PieceBlocker(i, bag) == null);
+
         /// <summary>A vehicle part in the bag that can go on the raft now (Builder), or null.</summary>
         public static ItemDefinition BuilderVesselPick(RaftGrid raft, Inventory bag) =>
             bag.Items.Select(kv => kv.Key).Where(i => i.type == ItemType.Vessel).OrderBy(i => i.vesselSlot)
@@ -113,19 +120,31 @@ namespace BrineBattle.Companions
         /// the raft is missing, an auto-loot module while the left edge needs more, then a raft part of the raft's
         /// level (reinforce) while the bag has fewer than <paramref name="keepParts"/> that fit. Null if none.
         /// </summary>
-        public static RecipeDefinition BuilderCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, RaftGrid raft, int keepParts = 2)
+        public static RecipeDefinition BuilderCraftPick(IEnumerable<RecipeDefinition> recipes, Inventory bag, RaftGrid raft, int keepParts = 2, ISet<string> wanted = null)
         {
             var ready = recipes.Where(r => r != null && r.kind != RecipeKind.Dismantle && r.outputs.Count > 0 && r.outputs[0].item != null
                 && CraftRules.CanCraft(bag, r)).ToList();
+            // A loaded blueprint's missing parts come first (Ed's ask: the minions make what the design needs).
+            if (wanted != null && wanted.Count > 0)
+            {
+                var forBlueprint = ready.FirstOrDefault(r => wanted.Contains(r.outputs[0].item.id));
+                if (forBlueprint != null) return forBlueprint;
+            }
+            // The next ship piece the raft is missing (from 2 levels before it opens).
+            var piece = ready.Where(r => r.outputs[0].item.type == ItemType.ShipPiece)
+                .Select(r => (r, p: ShipPieceRules.Find(r.outputs[0].item.id)))
+                .Where(x => x.p != null && !raft.HasPiece(x.p.Id) && bag.Count(x.r.outputs[0].item) == 0 && ShipPieceRules.MakeBlocker(x.p, raft.PieceLevel, raft.Pieces) == null)
+                .OrderBy(x => x.p.Level).Select(x => x.r).FirstOrDefault();
+            if (piece != null) return piece;
             var vessel = ready.Where(r => r.outputs[0].item.type == ItemType.Vessel)
                 .Where(r => { var o = r.outputs[0].item; return o.raftKind == raft.Chosen && raft.Chosen != RaftKind.Plain && !raft.HasVessel(o.vesselSlot) && bag.Count(o) == 0
-                    && (int)raft.Tier + 1 >= VesselRules.UnlockLevel(o.vesselSlot); })
+                    && raft.Level >= EvolutionRules.PartOpensAt(o.vesselSlot) - 5; })
                 .OrderBy(r => r.outputs[0].item.vesselSlot).FirstOrDefault();
             if (vessel != null) return vessel;
             bool moduleInBag = bag.Items.Any(kv => kv.Key.type == ItemType.Module);
             if (!raft.ModulesReady && !moduleInBag)
             {
-                var module = ready.Where(r => r.outputs[0].item.type == ItemType.Module).OrderByDescending(r => r.outputs[0].item.moduleLevel).FirstOrDefault();
+                var module = ready.Where(r => r.outputs[0].item.type == ItemType.Module && !ShapeRules.IsKit(r.outputs[0].item)).OrderByDescending(r => r.outputs[0].item.moduleLevel).FirstOrDefault();
                 if (module != null) return module;
             }
             int fitting = bag.Items.Where(kv => kv.Key.type == ItemType.Raft && kv.Key.rarity >= raft.Tier && raft.FitsType(kv.Key)).Sum(kv => kv.Value);
@@ -135,11 +154,11 @@ namespace BrineBattle.Companions
         }
 
         /// <summary>
-        /// The raft type the Builder levels up toward, or null when it shouldn't: only once the type is picked
-        /// (the pick is the player's) and when nothing blocks the level-up.
+        /// The line the Builder levels up on (raft or ship), or null when something blocks the level-up. The
+        /// ship pick at raft Lv 50 is always the player's: at that point the blocker says so.
         /// </summary>
         public static RaftKind? BuilderLevelUp(RaftGrid raft, Inventory bag) =>
-            raft.Chosen != RaftKind.Plain && raft.UpgradeBlocker(bag) == null ? raft.Chosen : (RaftKind?)null;
+            raft.UpgradeBlocker(bag) == null ? raft.Chosen : (RaftKind?)null;
 
         /// <summary>
         /// A weapon, armor or accessory recipe whose result beats what's equipped in that slot and fits its tier

@@ -247,7 +247,7 @@ namespace BrineBattle.Hunting
             switch (f)
             {
                 case 1: return t == ItemType.Material || t == ItemType.Essence;
-                case 2: return t == ItemType.Raft || t == ItemType.Module || t == ItemType.Vessel;
+                case 2: return t == ItemType.Raft || t == ItemType.Module || t == ItemType.Vessel || t == ItemType.ShipPiece;
                 case 3: return GearRules.IsGear(t);
                 case 4: return t == ItemType.Consumable;
                 case 5: return t == ItemType.Companion || t == ItemType.Habitat;
@@ -373,6 +373,7 @@ namespace BrineBattle.Hunting
                 case ItemType.Tool: return new Color(0.75f, 0.6f, 0.4f);
                 case ItemType.Module: return new Color(0.3f, 0.65f, 0.55f);
                 case ItemType.Vessel: return new Color(0.55f, 0.5f, 0.75f);
+                case ItemType.ShipPiece: return new Color(0.72f, 0.55f, 0.36f);
                 case ItemType.Essence: return new Color(0.6f, 0.9f, 1f);
                 default: return HuntStyles.RarityTint(i.rarity);
             }
@@ -452,7 +453,7 @@ namespace BrineBattle.Hunting
         }
 
         static string TypeName(ItemType t) =>
-            t == ItemType.Consumable ? "Potion / oil" : t == ItemType.Raft ? "Raft part" : t == ItemType.Vessel ? "Vehicle part" : t == ItemType.Tool ? "Hammer" : t.ToString();
+            t == ItemType.Consumable ? "Potion / oil" : t == ItemType.Raft ? "Raft part" : t == ItemType.Vessel ? "Vehicle part" : t == ItemType.ShipPiece ? "Ship piece" : t == ItemType.Tool ? "Hammer" : t.ToString();
 
         static void Silhouette(Rect r, bool known, Color color)
         {

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: craft_beast_bow_bowsprit
   m_EditorClassIdentifier: BrineBattle.Runtime::BrineBattle.Items.RecipeDefinition
   id: craft_beast_bow_bowsprit
-  displayName: Bow & Bowsprit
+  displayName: Screw Propeller
   kind: 0
   inputs:
   - item: {fileID: 11400000, guid: fb08b25062b88994390217b7be515cef, type: 2}

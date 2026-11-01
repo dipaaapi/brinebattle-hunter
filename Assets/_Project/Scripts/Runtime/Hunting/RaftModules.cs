@@ -228,14 +228,20 @@ namespace BrineBattle.Hunting
         {
             HuntStyles.Begin();
             if (Camera.main == null || WorldPause.Active) return;
+            // Ed: side by side the labels ran into one unreadable line. Only the module under the mouse shows its
+            // durability and timer; a broken one always says so.
+            var mouse = Event.current.mousePosition;
             foreach (var kv in slots)
             {
                 Vector3 sp = HuntStyles.Ui(Camera.main.WorldToScreenPoint(raft.CellToWorld(kv.Key) + Vector3.up * 0.6f));
                 if (sp.z < 0) continue;
                 var s = kv.Value;
+                var at = new Vector2(sp.x, HuntStyles.H - sp.y);
+                bool near = (mouse - at).sqrMagnitude < 30f * 30f;
+                if (!near && !s.Durability.Broken) continue;
                 string text = s.Durability.Broken ? "<color=#f77>BROKEN</color>"
-                    : s.Timer > 0f ? $"{s.Durability} · {Mathf.CeilToInt(s.Timer)}s" : $"{s.Durability} · <color=#8f8>ready</color>";
-                GUI.Label(new Rect(sp.x - 40, HuntStyles.H - sp.y - 18, 80, 18), text, HuntStyles.WorldLabel);
+                    : s.Timer > 0f ? $"{s.Item.displayName} · {s.Durability} · {Mathf.CeilToInt(s.Timer)}s" : $"{s.Item.displayName} · {s.Durability} · <color=#8f8>ready</color>";
+                GUI.Label(new Rect(at.x - 90, at.y - 18, 180, 18), text, HuntStyles.WorldLabel);
             }
         }
 
